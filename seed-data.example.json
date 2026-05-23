@@ -1,0 +1,45 @@
+{
+  "_aciklama": "Bu dosya seed-data.json için örnek/şablon. Gerçek müşteri verisini bu dosyaya yazmayın - kendi seed-data.json'unuzu oluşturun (gitignore'da).",
+  "kurbanlar": [
+    {
+      "kesim_sirasi": 1,
+      "kesim_saati": "07:10",
+      "kupe_no": "TR-001",
+      "ad_soyad": "ÖRNEK MÜŞTERİ 1",
+      "hisse_sayisi": 7,
+      "satis_bedeli": 336000,
+      "satis_fiyati_toplam": 336000,
+      "toplam_odenen": 10000,
+      "kalan": 326000,
+      "karkas_agirlik": 0,
+      "canli_agirlik": 0,
+      "verim": 0,
+      "hisseler": [
+        {
+          "no": 1,
+          "hissedar": "ÖRNEK MÜŞTERİ 1",
+          "telefon": "05000000001",
+          "hisse_fiyati": 48000,
+          "odemeler": [],
+          "toplam_odenen": 0,
+          "kalan": 48000
+        },
+        {
+          "no": 2,
+          "hissedar": "ÖRNEK MÜŞTERİ 2",
+          "telefon": "05000000002",
+          "hisse_fiyati": 48000,
+          "odemeler": [
+            {
+              "sira": 1,
+              "tutar": 10000,
+              "tarih": "2026-01-20"
+            }
+          ],
+          "toplam_odenen": 10000,
+          "kalan": 38000
+        }
+      ]
+    }
+  ]
+}
