@@ -15,9 +15,8 @@ export async function GET(_req: Request, { params }: RouteParams) {
     return NextResponse.json({ hata: "Yetki yok" }, { status: 401 });
   }
 
-  const { id } = await params;
-  const odemeId = Number.parseInt(id, 10);
-  if (Number.isNaN(odemeId)) {
+  const { id: odemeId } = await params;
+  if (!odemeId) {
     return NextResponse.json({ hata: "Geçersiz id" }, { status: 400 });
   }
 

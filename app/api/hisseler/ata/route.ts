@@ -4,10 +4,11 @@ import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { yuvarla } from "@/shared/lib/para";
 import { yayinla } from "@/shared/lib/events";
+import { auditLog, ipCikar } from "@/shared/lib/audit";
 
 const AtamaSchema = z.object({
-  hisseIds: z.array(z.number().int().positive()).min(1),
-  musteriId: z.number().int().positive(),
+  hisseIds: z.array(z.string().min(1)).min(1),
+  musteriId: z.string().min(1),
   hisseFiyati: z.number().positive("Fiyat 0'dan büyük olmalı"),
 });
 
@@ -65,6 +66,20 @@ export async function POST(req: Request) {
     data: {
       musteriId: veri.musteriId,
       hisseFiyati: yuvarla(veri.hisseFiyati),
+    },
+  });
+
+  await auditLog({
+    eylem: "hisse-atama",
+    model: "Hisse",
+    kayitId: veri.hisseIds[0],
+    kullaniciId: oturum.kullaniciId,
+    ip: ipCikar(req),
+    detaylar: {
+      hisseIds: veri.hisseIds,
+      musteriId: veri.musteriId,
+      hisseFiyati: yuvarla(veri.hisseFiyati),
+      toplam: yuvarla(veri.hisseFiyati * veri.hisseIds.length),
     },
   });
 

@@ -18,10 +18,20 @@ export const AVATAR_RENKLERI: AvatarRenk[] = [
   { bg: "from-cyan-100 to-cyan-200", text: "text-cyan-900" },
 ];
 
-/** Müşteri ID'sine göre tutarlı renk seçer. */
-export function avatarRenk(musteriId: number): AvatarRenk {
-  const idx = Math.abs(musteriId) % AVATAR_RENKLERI.length;
+/** Müşteri ID'sine göre tutarlı renk seçer (string cuid veya number). */
+export function avatarRenk(musteriId: string | number): AvatarRenk {
+  const idx = idHash(musteriId) % AVATAR_RENKLERI.length;
   return AVATAR_RENKLERI[idx]!;
+}
+
+/** String/number ID'yi pozitif int'e hash'ler (renk seçimi için deterministik). */
+function idHash(id: string | number): number {
+  if (typeof id === "number") return Math.abs(id);
+  let h = 0;
+  for (let i = 0; i < id.length; i++) {
+    h = (h * 31 + id.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h);
 }
 
 /** Ad-Soyad'dan ilk harfleri çıkarır (max 2 harf). */

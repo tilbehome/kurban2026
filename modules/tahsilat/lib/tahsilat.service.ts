@@ -17,7 +17,7 @@ export interface BugunkuOzet {
 }
 
 export interface BugunkuTahsilatSatiri {
-  id: number;
+  id: string;
   dekontNo: string;
   saat: string;
   musteriAdi: string;
@@ -103,12 +103,12 @@ export async function bugunkuTahsilatlar(): Promise<BugunkuTahsilatSatiri[]> {
 
 export interface MusteriTahsilatVerisi {
   musteri: {
-    id: number;
+    id: string;
     adSoyad: string;
     telefon: string | null;
   };
   hisseler: {
-    id: number;
+    id: string;
     no: number;
     kurbanKesimSirasi: number;
     hisseFiyati: number;
@@ -119,7 +119,7 @@ export interface MusteriTahsilatVerisi {
   toplamOdenen: number;
   kalanBakiye: number;
   oncekiOdemeler: {
-    id: number;
+    id: string;
     dekontNo: string;
     tarih: Date;
     toplam: number;
@@ -129,10 +129,10 @@ export interface MusteriTahsilatVerisi {
 }
 
 export async function musteriTahsilatVerisi(
-  musteriId: number,
+  musteriId: string,
 ): Promise<MusteriTahsilatVerisi | null> {
-  const musteri = await prisma.musteri.findUnique({
-    where: { id: musteriId },
+  const musteri = await prisma.musteri.findFirst({
+    where: { id: musteriId, silindiMi: false },
     include: {
       hisseler: {
         orderBy: [{ kurban: { kesimSirasi: "asc" } }, { no: "asc" }],

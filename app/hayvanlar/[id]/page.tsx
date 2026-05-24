@@ -17,10 +17,9 @@ interface PageProps {
 
 export default async function KurbanDetayPage({ params }: PageProps) {
   const { id } = await params;
-  const kurbanId = Number.parseInt(id, 10);
-  if (Number.isNaN(kurbanId)) notFound();
+  if (!id) notFound();
 
-  const kurban = await kurbanDetayi(kurbanId);
+  const kurban = await kurbanDetayi(id);
   if (!kurban) notFound();
 
   const toplamBedel = yuvarla(topla(...kurban.hisseler.map((h) => h.hisseFiyati)));

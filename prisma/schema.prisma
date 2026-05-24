@@ -1,5 +1,11 @@
-// Tilbe Kurban - Prisma Schema
-// Modüler mimari: tüm modüllerin DB modelleri burada birleşir.
+// Tilbe Kurban — Prisma Schema (MIMARI.md §5 uyumlu)
+//
+// Standartlar:
+//  - ID: String @id @default(cuid())
+//  - Tüm modellerde: silindiMi, silinmeTarihi, olusturanId, createdAt, updatedAt
+//  - Soft delete: kayıt fiziksel silinmez, silindiMi=true yapılır
+//  - Audit log: AuditLog tablosu tüm kritik işlemleri saklar
+//  - İndeksler: sık sorgulanan + silindiMi alanı
 
 generator client {
   provider = "prisma-client-js"
@@ -11,33 +17,44 @@ datasource db {
 }
 
 // ===========================================================================
-// CORE — Auth, Ayarlar, Modül durumu
+// CORE — Auth, Ayarlar, Modül durumu, Audit
 // ===========================================================================
 
 model Kullanici {
-  id           Int       @id @default(autoincrement())
+  id           String    @id @default(cuid())
   kullaniciAdi String    @unique
   sifreHash    String
   adSoyad      String
-  rol          String // "admin" | "kasiyer"
+  rol          String // "admin" | "kasiyer" | "izleyici"
   aktif        Boolean   @default(true)
   sonGiris     DateTime?
-  createdAt    DateTime  @default(now())
 
+  // Soft delete + audit
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  olusturanId   String?
+
+  // Standart timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // İlişkiler
   odemeler    Odeme[]
   kasaHareket KasaHareketi[]
+  auditlar    AuditLog[]
 
   @@index([kullaniciAdi])
+  @@index([silindiMi])
 }
 
 model Ayar {
-  anahtar     String   @id // "firma_adi", "firma_telefon", "firma_adres", "dekont_alt_yazi" vb.
+  anahtar     String   @id // "firma_adi", "firma_telefon" vb.
   deger       String
   guncelTarih DateTime @default(now())
 }
 
 model ModulDurum {
-  id          String   @id // modül id'si: "tahsilat", "kasa" vb.
+  id          String   @id // modül id'si
   aktif       Boolean  @default(true)
   versiyon    String
   ayarlar     String? // JSON string
@@ -45,24 +62,52 @@ model ModulDurum {
   guncelTarih DateTime @updatedAt
 }
 
+/// Tüm kritik işlemler için audit log (MIMARI.md §12)
+model AuditLog {
+  id          String   @id @default(cuid())
+  eylem       String // "olustur" | "guncelle" | "sil" | "giris" | "cikis" | "odeme" | "yedek"
+  model       String? // Etkilenen model adı: "Musteri", "Odeme" vb.
+  kayitId     String? // Etkilenen kayıt ID
+  kullaniciId String?
+  kullanici   Kullanici? @relation(fields: [kullaniciId], references: [id])
+  ip          String?
+  detaylar    String? // JSON string (önceki/sonraki değer vb.)
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([eylem])
+  @@index([kullaniciId])
+  @@index([model, kayitId])
+}
+
 // ===========================================================================
 // MUSTERILER
 // ===========================================================================
 
 model Musteri {
-  id        Int      @id @default(autoincrement())
+  id        String  @id @default(cuid())
   adSoyad   String
   telefon   String?
   tcKimlik  String?
   adres     String?
   notlar    String?
+  etiketler String? // JSON: ["VIP", "Düzenli"]
+
+  // Soft delete + audit
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  olusturanId   String?
+
+  // Standart timestamp
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // İlişkiler
   hisseler Hisse[]
 
   @@index([adSoyad])
   @@index([telefon])
+  @@index([silindiMi])
 }
 
 // ===========================================================================
@@ -70,43 +115,61 @@ model Musteri {
 // ===========================================================================
 
 model Kurban {
-  id            Int      @id @default(autoincrement())
+  id            String   @id @default(cuid())
   kesimSirasi   Int      @unique
   kesimSaati    String? // "07:10" gibi planlanan saat
   kupeNo        String?
   hisseSayisi   Int      @default(7)
-  satisBedeli   Float    @default(0) // Toplam satış bedeli
+  satisBedeli   Float    @default(0)
   canliAgirlik  Float?   @default(0)
   karkasAgirlik Float?   @default(0)
   durum         String   @default("aktif") // aktif | bekliyor | kesimde | kesildi | parcalandi | teslim | iptal
   notlar        String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 
+  // Soft delete + audit
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  olusturanId   String?
+
+  // Standart timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // İlişkiler
   hisseler Hisse[]
 
   @@index([kesimSirasi])
   @@index([durum])
+  @@index([silindiMi])
 }
 
 model Hisse {
-  id            Int       @id @default(autoincrement())
-  kurbanId      Int
+  id            String    @id @default(cuid())
+  kurbanId      String
   kurban        Kurban    @relation(fields: [kurbanId], references: [id], onDelete: Cascade)
   no            Int // 1-7 arası
-  musteriId     Int?
+  musteriId     String?
   musteri       Musteri?  @relation(fields: [musteriId], references: [id])
   hisseFiyati   Float     @default(0)
   vekaletAlindi Boolean   @default(false)
   vekaletTarihi DateTime?
   notlar        String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
 
+  // Soft delete + audit
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  olusturanId   String?
+
+  // Standart timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // İlişkiler
   odemeler Odeme[]
 
   @@unique([kurbanId, no])
   @@index([musteriId])
+  @@index([silindiMi])
 }
 
 // ===========================================================================
@@ -114,8 +177,8 @@ model Hisse {
 // ===========================================================================
 
 model Odeme {
-  id          Int       @id @default(autoincrement())
-  hisseId     Int
+  id          String    @id @default(cuid())
+  hisseId     String
   hisse       Hisse     @relation(fields: [hisseId], references: [id], onDelete: Cascade)
   tarih       DateTime  @default(now())
   nakit       Float     @default(0)
@@ -125,16 +188,29 @@ model Odeme {
   yontem      String // "nakit" | "havale" | "kart" | "karisik"
   notlar      String?
   dekontNo    String    @unique // "TKR-2026-000001"
-  kullaniciId Int
+  kullaniciId String
   kullanici   Kullanici @relation(fields: [kullaniciId], references: [id])
+
+  // İptal alanları (Odeme için özel)
   iptal       Boolean   @default(false)
   iptalSebep  String?
   iptalTarihi DateTime?
-  createdAt   DateTime  @default(now())
+  iptalKulId  String?
+
+  // Soft delete + audit (Odeme'ler genelde iptal yapılır, silinmez ama yine de standart)
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  olusturanId   String?
+
+  // Standart timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([hisseId])
   @@index([tarih])
   @@index([dekontNo])
+  @@index([silindiMi])
+  @@index([iptal])
 }
 
 // ===========================================================================
@@ -142,15 +218,26 @@ model Odeme {
 // ===========================================================================
 
 model KasaHareketi {
-  id          Int       @id @default(autoincrement())
+  id          String    @id @default(cuid())
   tip         String // "tahsilat" | "gider" | "acilis" | "kapanis"
   tutar       Float
   yontem      String // "nakit" | "havale" | "kart"
   aciklama    String
-  odemeId     Int?
-  kullaniciId Int
+  odemeId     String?
+  kullaniciId String
   kullanici   Kullanici @relation(fields: [kullaniciId], references: [id])
   tarih       DateTime  @default(now())
 
+  // Soft delete + audit
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  olusturanId   String?
+
+  // Standart timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([tarih])
+  @@index([tip])
+  @@index([silindiMi])
 }

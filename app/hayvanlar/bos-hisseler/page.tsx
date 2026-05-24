@@ -18,7 +18,7 @@ export default async function BosHisselerPage() {
     orderBy: [{ kurban: { kesimSirasi: "asc" } }, { no: "asc" }],
   });
 
-  const grupla = new Map<number, typeof bosHisseler>();
+  const grupla = new Map<string, typeof bosHisseler>();
   for (const h of bosHisseler) {
     const k = h.kurbanId;
     if (!grupla.has(k)) grupla.set(k, []);

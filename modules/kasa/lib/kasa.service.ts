@@ -18,7 +18,7 @@ export interface GunlukKasaRapor {
 }
 
 export interface KasaHareketSatiri {
-  id: number;
+  id: string;
   saat: string;
   dekontNo: string | null;
   musteri: string;

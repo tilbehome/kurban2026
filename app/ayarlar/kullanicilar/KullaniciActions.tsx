@@ -27,7 +27,7 @@ import { UserPlus, Pencil } from "lucide-react";
 
 interface KullaniciActionsProps {
   mod: "ekle" | "duzenle";
-  kullaniciId?: number;
+  kullaniciId?: string;
 }
 
 export function KullaniciActions({ mod, kullaniciId }: KullaniciActionsProps) {

@@ -11,14 +11,14 @@ import { formatPara, parsePara } from "@/shared/lib/para";
 import { Check, Search, UserPlus } from "lucide-react";
 
 interface HisseKisa {
-  id: number;
+  id: string;
   no: number;
   dolu: boolean;
   hisseFiyati: number;
 }
 
 interface KurbanKisa {
-  id: number;
+  id: string;
   kesimSirasi: number;
   kupeNo: string | null;
   hisseSayisi: number;
@@ -27,7 +27,7 @@ interface KurbanKisa {
 }
 
 interface AramaSonucu {
-  id: number;
+  id: string;
   adSoyad: string;
   telefon: string | null;
 }
@@ -41,7 +41,7 @@ export function HisseAtamaPanel({ kurbanlar }: HisseAtamaPanelProps) {
   const [bekleniyor, startTransition] = useTransition();
 
   const [secilenKurban, setSecilenKurban] = useState<KurbanKisa | null>(null);
-  const [secilenHisseler, setSecilenHisseler] = useState<number[]>([]);
+  const [secilenHisseler, setSecilenHisseler] = useState<string[]>([]);
   const [hisseFiyati, setHisseFiyati] = useState("");
   const [musteriQuery, setMusteriQuery] = useState("");
   const [sonuclar, setSonuclar] = useState<AramaSonucu[]>([]);
@@ -75,7 +75,7 @@ export function HisseAtamaPanel({ kurbanlar }: HisseAtamaPanelProps) {
     if (ilk) setHisseFiyati(String(ilk.hisseFiyati));
   }
 
-  function hisseToggle(hisseId: number) {
+  function hisseToggle(hisseId: string) {
     setSecilenHisseler((eski) =>
       eski.includes(hisseId)
         ? eski.filter((id) => id !== hisseId)

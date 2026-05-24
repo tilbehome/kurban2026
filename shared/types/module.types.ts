@@ -6,7 +6,19 @@
  * burada tutulan sayfa metadata'sı sidebar/permissions/navigation içindir.
  */
 
-export type Rol = "admin" | "kasiyer" | "misafir";
+/** Kullanıcı rolleri — MIMARI.md §10.1 */
+export type Rol = "admin" | "kasiyer" | "izleyici" | "misafir";
+
+/** Rol hiyerarşisi (büyük → küçük yetki) */
+export const ROL_HIYERARSI: Rol[] = ["admin", "kasiyer", "izleyici", "misafir"];
+
+/** Türkçe etiketler */
+export const ROL_ADLARI: Record<Rol, string> = {
+  admin: "Yönetici",
+  kasiyer: "Kasiyer",
+  izleyici: "İzleyici",
+  misafir: "Misafir",
+};
 
 export type HttpMetod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 
@@ -52,6 +64,8 @@ export interface ModuleConfig {
   sira: number;
   /** lucide-react ikon adı (örn. "Wallet", "Users") */
   ikon: string;
+  /** Tema rengi (hex, opsiyonel) — MIMARI §4.3 */
+  renk?: string;
   anaRota: string;
   izinler: Rol[];
   bagimliliklar?: string[];
@@ -61,10 +75,14 @@ export interface ModuleConfig {
   olaylar?: ModulOlay;
   /** Modül sidebar'da hiç gösterilmesin (örn. _core) */
   sidebarGoster?: boolean;
+  /** Modül yüklenirken çalışan lifecycle hook (opsiyonel) */
+  onYukle?: () => Promise<void>;
+  /** Modül kapatılırken çalışan lifecycle hook (opsiyonel) */
+  onKapat?: () => Promise<void>;
 }
 
 export interface AuthOturum {
-  kullaniciId: number;
+  kullaniciId: string;
   kullaniciAdi: string;
   adSoyad: string;
   rol: Rol;

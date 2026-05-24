@@ -18,9 +18,9 @@ interface PageProps {
 
 export default async function HesapEkstrePage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const musteriId = sp.id ? Number.parseInt(sp.id, 10) : NaN;
+  const musteriId = sp.id?.trim() ?? "";
 
-  if (Number.isNaN(musteriId)) {
+  if (!musteriId) {
     const { liste } = await musterileriListele({
       durum: "borclu",
       limit: 50,

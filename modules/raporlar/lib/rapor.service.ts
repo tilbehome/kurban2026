@@ -6,7 +6,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
 
 export interface BorcluSatir {
-  musteriId: number;
+  musteriId: string;
   adSoyad: string;
   telefon: string | null;
   hisseSayisi: number;
@@ -17,8 +17,10 @@ export interface BorcluSatir {
 
 export async function borclular(): Promise<BorcluSatir[]> {
   const musteriler = await prisma.musteri.findMany({
+    where: { silindiMi: false },
     include: {
       hisseler: {
+        where: { silindiMi: false },
         include: {
           odemeler: { where: { iptal: false }, select: { toplamTutar: true } },
         },
@@ -49,7 +51,7 @@ export async function borclular(): Promise<BorcluSatir[]> {
 }
 
 export interface KurbanRaporSatir {
-  kurbanId: number;
+  kurbanId: string;
   kesimSirasi: number;
   hisseSayisi: number;
   dolu: number;
@@ -61,9 +63,11 @@ export interface KurbanRaporSatir {
 
 export async function kurbanRaporu(): Promise<KurbanRaporSatir[]> {
   const kurbanlar = await prisma.kurban.findMany({
+    where: { silindiMi: false },
     orderBy: { kesimSirasi: "asc" },
     include: {
       hisseler: {
+        where: { silindiMi: false },
         include: {
           musteri: { select: { adSoyad: true } },
           odemeler: { where: { iptal: false }, select: { toplamTutar: true } },

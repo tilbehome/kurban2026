@@ -23,9 +23,8 @@ export async function PATCH(req: Request, { params }: RouteParams) {
     return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 403 });
   }
 
-  const { id } = await params;
-  const kullaniciId = Number.parseInt(id, 10);
-  if (Number.isNaN(kullaniciId)) {
+  const { id: kullaniciId } = await params;
+  if (!kullaniciId) {
     return NextResponse.json({ basarili: false, hata: "Geçersiz id" }, { status: 400 });
   }
 

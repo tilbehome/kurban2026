@@ -4,7 +4,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
 
 interface AramaSonucu {
-  id: number;
+  id: string;
   adSoyad: string;
   telefon: string | null;
   hisseSayisi: number;

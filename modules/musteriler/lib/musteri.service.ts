@@ -8,7 +8,7 @@ import { topla, yuvarla } from "@/shared/lib/para";
 import { alfabeHarfi } from "./avatar";
 
 export interface MusteriOzet {
-  id: number;
+  id: string;
   adSoyad: string;
   telefon: string | null;
   hisseSayisi: number;
@@ -40,7 +40,8 @@ export interface ListeSonucu {
 export async function musterileriListele(
   filtreler: ListeFiltreleri = {},
 ): Promise<ListeSonucu> {
-  const where: Record<string, unknown> = {};
+  // Soft delete: silinenler hariç (MIMARI §5.3)
+  const where: Record<string, unknown> = { silindiMi: false };
 
   if (filtreler.arama && filtreler.arama.trim().length >= 2) {
     const q = filtreler.arama.trim();
@@ -57,6 +58,7 @@ export async function musterileriListele(
 
   // Önce tüm baş harflere bak (alfabe şeridi için, filtreden bağımsız)
   const tumMusteriIsimleri = await prisma.musteri.findMany({
+    where: { silindiMi: false },
     select: { adSoyad: true },
   });
   const doluHarfler = new Set<string>();
@@ -140,9 +142,9 @@ function musteriOzetiBul(hisseler: HisseIle[]): {
   return { hisseSayisi, toplamBedel, toplamOdenen, kalan, durum };
 }
 
-export async function musteriDetayi(id: number) {
-  return prisma.musteri.findUnique({
-    where: { id },
+export async function musteriDetayi(id: string) {
+  return prisma.musteri.findFirst({
+    where: { id, silindiMi: false },
     include: {
       hisseler: {
         include: {
@@ -160,6 +162,6 @@ export async function ayniIsimSayisi(adSoyad: string): Promise<number> {
   const ilkKelime = adSoyad.trim().split(/\s+/)[0];
   if (!ilkKelime || ilkKelime.length < 3) return 0;
   return prisma.musteri.count({
-    where: { adSoyad: { startsWith: ilkKelime } },
+    where: { adSoyad: { startsWith: ilkKelime }, silindiMi: false },
   });
 }

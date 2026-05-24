@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { yayinla } from "@/shared/lib/events";
+import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { musterileriListele } from "@/modules/musteriler/lib/musteri.service";
 
 const MusteriSchema = z.object({
@@ -71,7 +72,17 @@ export async function POST(req: Request) {
       tcKimlik: veri.tcKimlik,
       adres: veri.adres,
       notlar: veri.notlar,
+      olusturanId: oturum.kullaniciId,
     },
+  });
+
+  await auditLog({
+    eylem: "olustur",
+    model: "Musteri",
+    kayitId: yeni.id,
+    kullaniciId: oturum.kullaniciId,
+    ip: ipCikar(req),
+    detaylar: { adSoyad: yeni.adSoyad, telefon: yeni.telefon },
   });
 
   yayinla("musteri:olusturuldu", { id: yeni.id, adSoyad: yeni.adSoyad });

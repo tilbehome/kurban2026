@@ -18,7 +18,7 @@ import { formatPara, parsePara, topla, yuvarla } from "@/shared/lib/para";
 import { Banknote, ArrowUpRight, CreditCard, Check } from "lucide-react";
 
 interface Hisse {
-  id: number;
+  id: string;
   no: number;
   kurbanKesimSirasi: number;
   hisseFiyati: number;
@@ -27,7 +27,7 @@ interface Hisse {
 }
 
 interface OdemeFormuProps {
-  musteriId: number;
+  musteriId: string;
   hisseler: Hisse[];
   kalanBakiye: number;
 }

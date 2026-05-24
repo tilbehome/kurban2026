@@ -21,8 +21,10 @@ export interface MusteriIstatistik {
 
 export async function musteriIstatistik(): Promise<MusteriIstatistik> {
   const musteriler = await prisma.musteri.findMany({
+    where: { silindiMi: false },
     include: {
       hisseler: {
+        where: { silindiMi: false },
         select: {
           hisseFiyati: true,
           odemeler: { where: { iptal: false }, select: { toplamTutar: true } },

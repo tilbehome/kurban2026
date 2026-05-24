@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { yuvarla } from "@/shared/lib/para";
+import { auditLog, ipCikar } from "@/shared/lib/audit";
 
 const HareketSchema = z.object({
   tip: z.enum(["gider", "acilis", "kapanis"]),
@@ -36,7 +37,22 @@ export async function POST(req: Request) {
       yontem: veri.yontem,
       aciklama: veri.aciklama,
       kullaniciId: oturum.kullaniciId,
+      olusturanId: oturum.kullaniciId,
       tarih: new Date(),
+    },
+  });
+
+  await auditLog({
+    eylem: "olustur",
+    model: "KasaHareketi",
+    kayitId: hareket.id,
+    kullaniciId: oturum.kullaniciId,
+    ip: ipCikar(req),
+    detaylar: {
+      tip: veri.tip,
+      tutar: yuvarla(veri.tutar),
+      yontem: veri.yontem,
+      aciklama: veri.aciklama,
     },
   });
 

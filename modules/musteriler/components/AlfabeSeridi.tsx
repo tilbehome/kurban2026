@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 /** Türkçe alfabesi A-Z + Ç Ğ İ Ö Ş Ü */
 export const ALFABE = [

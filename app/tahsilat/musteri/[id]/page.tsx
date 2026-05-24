@@ -19,10 +19,9 @@ interface PageProps {
 
 export default async function TahsilatMusteriPage({ params }: PageProps) {
   const { id } = await params;
-  const musteriId = Number.parseInt(id, 10);
-  if (Number.isNaN(musteriId)) notFound();
+  if (!id) notFound();
 
-  const veri = await musteriTahsilatVerisi(musteriId);
+  const veri = await musteriTahsilatVerisi(id);
   if (!veri) notFound();
 
   const { musteri, hisseler, toplamBedel, toplamOdenen, kalanBakiye, oncekiOdemeler } = veri;

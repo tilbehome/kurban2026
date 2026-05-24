@@ -37,10 +37,9 @@ interface PageProps {
 
 export default async function MusteriDetayPage({ params }: PageProps) {
   const { id } = await params;
-  const musteriId = Number.parseInt(id, 10);
-  if (Number.isNaN(musteriId)) notFound();
+  if (!id) notFound();
 
-  const musteri = await musteriDetayi(musteriId);
+  const musteri = await musteriDetayi(id);
   if (!musteri) notFound();
 
   const ayniIsim = await ayniIsimSayisi(musteri.adSoyad);
@@ -360,7 +359,7 @@ function HisselerKart({ musteri }: { musteri: MusteriIle }) {
 }
 
 interface OdemeSatir {
-  id: number;
+  id: string;
   dekontNo: string;
   tarih: Date;
   toplam: number;

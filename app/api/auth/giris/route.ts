@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import { prisma } from "@/shared/lib/prisma";
 import { getOturum } from "@/shared/lib/session";
+import { auditLog, ipCikar } from "@/shared/lib/audit";
 import type { Rol } from "@/shared/types/module.types";
 
 const GirisSchema = z.object({
@@ -11,6 +12,8 @@ const GirisSchema = z.object({
 });
 
 export async function POST(req: Request) {
+  const ip = ipCikar(req);
+
   let veri: z.infer<typeof GirisSchema>;
   try {
     const govde = (await req.json()) as unknown;
@@ -27,6 +30,11 @@ export async function POST(req: Request) {
   });
 
   if (!kullanici || !kullanici.aktif) {
+    await auditLog({
+      eylem: "giris-basarisiz",
+      ip,
+      detaylar: { kullaniciAdi: veri.kullaniciAdi, sebep: "kullanici-yok-veya-pasif" },
+    });
     return NextResponse.json(
       { basarili: false, hata: "Kullanıcı adı veya şifre hatalı." },
       { status: 401 },
@@ -35,6 +43,12 @@ export async function POST(req: Request) {
 
   const dogru = await bcrypt.compare(veri.sifre, kullanici.sifreHash);
   if (!dogru) {
+    await auditLog({
+      eylem: "giris-basarisiz",
+      kullaniciId: kullanici.id,
+      ip,
+      detaylar: { kullaniciAdi: veri.kullaniciAdi, sebep: "yanlis-sifre" },
+    });
     return NextResponse.json(
       { basarili: false, hata: "Kullanıcı adı veya şifre hatalı." },
       { status: 401 },
@@ -55,6 +69,14 @@ export async function POST(req: Request) {
     girisTarihi: new Date().toISOString(),
   };
   await session.save();
+
+  await auditLog({
+    eylem: "giris",
+    kullaniciId: kullanici.id,
+    model: "Kullanici",
+    kayitId: kullanici.id,
+    ip,
+  });
 
   return NextResponse.json({
     basarili: true,

@@ -6,7 +6,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
 
 export interface KurbanOzet {
-  id: number;
+  id: string;
   kesimSirasi: number;
   kupeNo: string | null;
   kesimSaati: string | null;
@@ -21,9 +21,11 @@ export interface KurbanOzet {
 
 export async function kurbanlariListele(): Promise<KurbanOzet[]> {
   const kurbanlar = await prisma.kurban.findMany({
+    where: { silindiMi: false },
     orderBy: { kesimSirasi: "asc" },
     include: {
       hisseler: {
+        where: { silindiMi: false },
         include: {
           odemeler: { where: { iptal: false }, select: { toplamTutar: true } },
         },
@@ -62,11 +64,12 @@ export async function kurbanlariListele(): Promise<KurbanOzet[]> {
   });
 }
 
-export async function kurbanDetayi(id: number) {
-  return prisma.kurban.findUnique({
-    where: { id },
+export async function kurbanDetayi(id: string) {
+  return prisma.kurban.findFirst({
+    where: { id, silindiMi: false },
     include: {
       hisseler: {
+        where: { silindiMi: false },
         include: {
           musteri: true,
           odemeler: { where: { iptal: false }, select: { toplamTutar: true } },

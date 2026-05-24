@@ -43,6 +43,26 @@ export function sidebarModulleri(rol?: Rol): ModuleConfig[] {
   });
 }
 
+let lifecycleCalisti = false;
+
+/**
+ * Tüm aktif modüllerin onYukle hook'larını çalıştırır.
+ * Server startup'ta bir kez çağrılır (idempotent).
+ */
+export async function modulleriYukle(): Promise<void> {
+  if (lifecycleCalisti) return;
+  lifecycleCalisti = true;
+  for (const m of tumModuller) {
+    if (m.aktif && m.onYukle) {
+      try {
+        await m.onYukle();
+      } catch (e) {
+        console.error(`[module-loader] ${m.id}.onYukle hatası:`, e);
+      }
+    }
+  }
+}
+
 interface RotaEslesme {
   modul: ModuleConfig;
   sayfa: ModuleConfig["sayfalar"][number];

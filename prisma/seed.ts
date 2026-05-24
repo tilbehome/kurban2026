@@ -106,7 +106,7 @@ async function varsayilanAyarlar() {
 async function musteriBulVeyaOlustur(
   ad: string,
   telefon: string | null,
-): Promise<number> {
+): Promise<string> {
   const adNorm = normalize(ad);
   if (!adNorm) {
     throw new Error("Hissedar adı boş");
@@ -138,7 +138,7 @@ function yeniDekontNo(prefix = "TKR-2026-"): string {
   return prefix + String(dekontSayac).padStart(6, "0");
 }
 
-async function seedKurbanlar(kullaniciId: number) {
+async function seedKurbanlar(kullaniciId: string) {
   const dosyaYolu = path.join(process.cwd(), "seed-data.json");
   if (!fs.existsSync(dosyaYolu)) {
     console.log("! seed-data.json bulunamadı, kurban seed atlanıyor");

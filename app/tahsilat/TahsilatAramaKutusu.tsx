@@ -11,7 +11,7 @@ import { formatPara } from "@/shared/lib/para";
 import { buttonVariants } from "@/components/ui/button";
 
 interface AramaSonucu {
-  id: number;
+  id: string;
   adSoyad: string;
   telefon: string | null;
   hisseSayisi: number;

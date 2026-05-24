@@ -1,8 +1,8 @@
 import { avatarRenk, ilkHarfler } from "../lib/avatar";
-import { cn } from "@/lib/utils";
+import { cn } from "@/shared/lib/utils";
 
 interface MusteriAvatarProps {
-  musteriId: number;
+  musteriId: string | number;
   adSoyad: string;
   /** "sm" 28px, "md" 36px, "lg" 56px */
   boyut?: "sm" | "md" | "lg";

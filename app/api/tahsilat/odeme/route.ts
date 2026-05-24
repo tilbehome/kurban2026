@@ -6,10 +6,11 @@ import { yedekAl } from "@/shared/lib/backup";
 import { yayinla } from "@/shared/lib/events";
 import { yuvarla, topla } from "@/shared/lib/para";
 import { sonrakiDekontNo } from "@/modules/tahsilat/lib/tahsilat.service";
+import { auditLog, ipCikar } from "@/shared/lib/audit";
 
 const OdemeSchema = z.object({
-  musteriId: z.number().int().positive(),
-  hisseIds: z.array(z.number().int().positive()).min(1),
+  musteriId: z.string().min(1),
+  hisseIds: z.array(z.string().min(1)).min(1),
   nakit: z.number().min(0).default(0),
   havale: z.number().min(0).default(0),
   kart: z.number().min(0).default(0),
@@ -83,7 +84,7 @@ export async function POST(req: Request) {
 
   const yontem = belirleYontem(nakit, havale, kart);
 
-  const odemeIds: number[] = [];
+  const odemeIds: string[] = [];
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -176,9 +177,32 @@ export async function POST(req: Request) {
     console.error("[odeme] Yedek hatası:", e),
   );
 
-  const ilk = await prisma.odeme.findUnique({
-    where: { id: odemeIds[0] },
-    select: { dekontNo: true },
+  const ilkId = odemeIds[0];
+  const ilk = ilkId
+    ? await prisma.odeme.findUnique({
+        where: { id: ilkId },
+        select: { dekontNo: true },
+      })
+    : null;
+
+  // Audit log — kritik işlem
+  await auditLog({
+    eylem: "odeme",
+    model: "Odeme",
+    kayitId: ilkId,
+    kullaniciId: oturum.kullaniciId,
+    ip: ipCikar(req),
+    detaylar: {
+      odemeIds,
+      musteriId: veri.musteriId,
+      hisseIds: veri.hisseIds,
+      toplam,
+      yontem,
+      nakit,
+      havale,
+      kart,
+      dekontNo: ilk?.dekontNo,
+    },
   });
 
   yayinla("odeme:tamamlandi", {
@@ -207,20 +231,20 @@ function belirleYontem(n: number, h: number, k: number): string {
 }
 
 interface Tahsis {
-  hisseId: number;
+  hisseId: string;
   tutar: number;
 }
 
 function hisselereDagit(
   toplam: number,
-  kalanlar: { id: number; kalan: number }[],
+  kalanlar: { id: string; kalan: number }[],
   yontem: "esit" | "sirayla" | "manuel",
   manuel?: Record<string, number>,
 ): Tahsis[] {
   if (yontem === "manuel" && manuel) {
     const sonuc = kalanlar.map((k) => ({
       hisseId: k.id,
-      tutar: yuvarla(manuel[String(k.id)] ?? 0),
+      tutar: yuvarla(manuel[k.id] ?? 0),
     }));
     return sonuc;
   }
