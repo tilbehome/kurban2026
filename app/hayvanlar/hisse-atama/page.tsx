@@ -1,46 +1,54 @@
+import { redirect } from "next/navigation";
 import { AppShell } from "@/shared/components/AppShell";
-import { SayfaBaslik } from "@/shared/components/SayfaBaslik";
-import { prisma } from "@/shared/lib/prisma";
-import { HisseAtamaPanel } from "./HisseAtamaPanel";
+import { aktifOturum } from "@/shared/lib/session";
+import { izinKontrol, adminMi } from "@/shared/lib/izinler";
+import {
+  stableGridVerisi,
+  eksikHisseliMusteriler,
+  atamaIstatistik,
+} from "@/modules/hayvanlar/lib/hisse-atama.service";
+import { HisseAtamaClient } from "@/modules/hayvanlar/components/hisse-atama/HisseAtamaClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function HisseAtamaPage() {
-  const kurbanlar = await prisma.kurban.findMany({
-    orderBy: { kesimSirasi: "asc" },
-    include: {
-      hisseler: {
-        select: { id: true, no: true, musteriId: true, hisseFiyati: true },
-        orderBy: { no: "asc" },
-      },
-    },
-  });
+  const oturum = await aktifOturum();
+  if (!oturum) redirect("/giris");
 
-  // Sadece en az 1 boş hissesi olan kurbanları gönder
-  const aktifKurbanlar = kurbanlar
-    .map((k) => ({
-      id: k.id,
-      kesimSirasi: k.kesimSirasi,
-      kupeNo: k.kupeNo,
-      hisseSayisi: k.hisseSayisi,
-      bosHisseSayisi: k.hisseler.filter((h) => h.musteriId === null).length,
-      hisseler: k.hisseler.map((h) => ({
-        id: h.id,
-        no: h.no,
-        dolu: h.musteriId !== null,
-        hisseFiyati: h.hisseFiyati,
-      })),
-    }))
-    .filter((k) => k.bosHisseSayisi > 0);
+  if (!izinKontrol(oturum, "hayvanlar.goruntule")) {
+    return (
+      <AppShell>
+        <div className="p-8 text-center">
+          <p className="text-muted-foreground">
+            Hisse görüntüleme yetkiniz yok.
+          </p>
+        </div>
+      </AppShell>
+    );
+  }
+
+  // Paralel veri çekme
+  const [kurbanlar, musteriler, istatistik] = await Promise.all([
+    stableGridVerisi(),
+    eksikHisseliMusteriler(),
+    atamaIstatistik(),
+  ]);
+
+  const yetkiler = {
+    atamaYap: izinKontrol(oturum, "hisseler.ata"),
+    iptal: izinKontrol(oturum, "hisseler.iptal"),
+    transfer: izinKontrol(oturum, "hisseler.transfer") || adminMi(oturum.rol),
+  };
 
   return (
     <AppShell>
-      <SayfaBaslik
-        baslik="Hisse Atama"
-        altBaslik={`${aktifKurbanlar.length} kurbanda boş hisse var`}
-      />
-      <div className="p-6 sm:p-8">
-        <HisseAtamaPanel kurbanlar={aktifKurbanlar} />
+      <div className="p-4 sm:p-6">
+        <HisseAtamaClient
+          ilkKurbanlar={kurbanlar}
+          ilkMusteriler={musteriler}
+          ilkIstatistik={istatistik}
+          yetkiler={yetkiler}
+        />
       </div>
     </AppShell>
   );

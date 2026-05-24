@@ -21,6 +21,9 @@ export type AuditEylem =
   | "yedek"
   | "yedek-geri-yukle"
   | "hisse-atama"
+  | "hisse-toplu-atama"
+  | "hisse-transfer"
+  | "hisse-iptal"
   | "ayar-degisti";
 
 export interface AuditVeri {
