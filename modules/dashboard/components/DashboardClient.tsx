@@ -160,7 +160,13 @@ export function DashboardClient({
             <SonIslemlerFeed islemler={veri.islemler} />
           </div>
           <div className="flex flex-col gap-4">
-            {kasaGoster && veri.kasa && <KasaDurumuKart durum={veri.kasa} />}
+            {/* Çift katmanlı yetki: kasaGoster sahte true olsa bile durum=null kalır;
+                yetkili=false ise KasaYetkisizKart render edilir */}
+            {kasaGoster ? (
+              <KasaDurumuKart durum={veri.kasa} yetkili />
+            ) : (
+              <KasaDurumuKart durum={null} yetkili={false} />
+            )}
             <WhatsAppBildirimKart metrik={veri.whatsapp} />
           </div>
         </div>

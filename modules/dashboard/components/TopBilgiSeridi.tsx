@@ -8,10 +8,13 @@ import {
   Database,
   ServerCog,
   ChevronRight,
+  PartyPopper,
 } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-
-const BAYRAM_TARIHI = new Date("2026-06-05T00:00:00+03:00");
+import {
+  bayramTemasi,
+  type BayramTemasi,
+} from "@/modules/dashboard/lib/tema-tokens";
 
 interface TopBilgiSeridiProps {
   /** Sidebar bildirimleri — WhatsApp kuyruğu sayısı için */
@@ -21,46 +24,74 @@ interface TopBilgiSeridiProps {
 }
 
 /**
- * Dashboard'un en üstündeki bilgilendirme şeridi.
- * Bayram sayacı + WhatsApp + yedek + sistem durumu.
+ * Dashboard üst bilgilendirme şeridi — TASARIM-BRIEF §3 renk paleti uyumlu.
+ *
+ * **Dinamik tema:** bayrama yaklaştıkça turuncu yoğunlaşır, bayram günü
+ * yeşil kutlama tonuna geçer (bayramTemasi() helper'ı).
  */
 export function TopBilgiSeridi({
   bekleyenMesaj = 0,
   sonYedek,
 }: TopBilgiSeridiProps) {
-  const [kalanGun, setKalanGun] = useState<number | null>(null);
+  const [tema, setTema] = useState<BayramTemasi | null>(null);
 
   useEffect(() => {
     function hesapla() {
-      const fark = BAYRAM_TARIHI.getTime() - Date.now();
-      setKalanGun(Math.max(0, Math.ceil(fark / (1000 * 60 * 60 * 24))));
+      setTema(bayramTemasi());
     }
     hesapla();
+    // Saatte bir tema yeniden hesaplanır (gece yarısı geçişi için)
     const i = setInterval(hesapla, 60 * 60 * 1000);
     return () => clearInterval(i);
   }, []);
 
-  const bayramGectiMi = kalanGun === 0;
+  if (!tema) {
+    // Hidrasyon önyükleme — boş bant
+    return (
+      <div className="h-12 border-l-4 border-l-orange-400 bg-orange-50/50" />
+    );
+  }
+
+  const Ikon = tema.bayramMi ? PartyPopper : Sparkles;
+  const ikonRengi = tema.bayramMi ? "bg-emerald-600" : "bg-orange-500";
 
   return (
     <div
       className={cn(
-        "from-orange-50 to-amber-50 border-l-4 border-l-orange-500 bg-linear-to-r",
+        "border-l-4 bg-linear-to-r",
+        tema.topSerit,
+        tema.topSeritBorder,
         "flex flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-6",
+        "transition-colors duration-500",
       )}
     >
       <div className="flex items-center gap-2.5">
-        <span className="bg-orange-500 text-white flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
-          <Sparkles size={13} />
+        <span
+          className={cn(
+            "text-white flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors",
+            ikonRengi,
+            // Bayram-yaklaşıyor ise hafif puls
+            tema.durum === "cok-yakin" && "animate-pulse",
+          )}
+        >
+          <Ikon size={13} />
         </span>
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-bold text-orange-900">
-            {bayramGectiMi
-              ? "🎉 Bayramınız Mübarek Olsun"
-              : `Kurban Bayramına ${kalanGun ?? "—"} gün kaldı`}
+          <span
+            className={cn(
+              "text-sm font-bold transition-colors",
+              tema.topSeritText,
+            )}
+          >
+            {tema.banner}
           </span>
-          <span className="text-[11px] text-orange-700/80">
-            5 Haziran 2026 · Operasyon planlamasını hazırlayın
+          <span
+            className={cn(
+              "text-[11px] opacity-80 transition-colors",
+              tema.topSeritText,
+            )}
+          >
+            {tema.altMesaj}
           </span>
         </div>
       </div>
@@ -85,7 +116,12 @@ export function TopBilgiSeridi({
         />
         <Link
           href="/ayarlar/sistem"
-          className="flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 text-orange-800 ring-1 ring-orange-200 transition-colors hover:bg-white"
+          className={cn(
+            "flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1 ring-1 transition-colors hover:bg-white",
+            tema.bayramMi
+              ? "text-emerald-800 ring-emerald-200"
+              : "text-orange-800 ring-orange-200",
+          )}
         >
           <ServerCog size={12} />
           <span className="font-medium">Sistem</span>

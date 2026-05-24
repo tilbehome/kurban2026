@@ -1,16 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Coins, Landmark, CreditCard, ChevronRight } from "lucide-react";
+import { Coins, Landmark, CreditCard, ChevronRight, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatPara } from "@/shared/lib/para";
 import type { KasaDurumu } from "@/modules/dashboard/types";
 
 interface KasaDurumuKartProps {
-  durum: KasaDurumu;
+  durum: KasaDurumu | null;
+  /** Yetki guard — server-side karar; false ise kilit kartı render edilir */
+  yetkili?: boolean;
 }
 
-export function KasaDurumuKart({ durum }: KasaDurumuKartProps) {
+export function KasaDurumuKart({ durum, yetkili = true }: KasaDurumuKartProps) {
+  // Defensive client-side guard — server zaten filtrelese de double check
+  if (!yetkili) return <KasaYetkisizKart />;
+  if (!durum) return null;
   return (
     <Card className="flex h-full flex-col">
       <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
@@ -64,6 +69,28 @@ export function KasaDurumuKart({ durum }: KasaDurumuKartProps) {
           Kasa Raporuna Git
           <ChevronRight size={12} />
         </Link>
+      </CardContent>
+    </Card>
+  );
+}
+
+function KasaYetkisizKart() {
+  return (
+    <Card className="flex h-full flex-col">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-base text-muted-foreground">
+          <Lock size={14} />
+          Kasa Durumu
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
+        <Lock className="text-muted-foreground/50" size={32} />
+        <p className="text-muted-foreground text-sm font-medium">
+          Kasa bilgilerini görme yetkiniz yok
+        </p>
+        <p className="text-muted-foreground/70 text-[11px]">
+          Yöneticiden &quot;kasa.goruntule&quot; izni isteyin
+        </p>
       </CardContent>
     </Card>
   );
