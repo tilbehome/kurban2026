@@ -5,7 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
-export function MusteriAramaInput({ baslangic }: { baslangic: string }) {
+interface MusteriAramaInputProps {
+  baslangic: string;
+  /** Aramanın yönlendirileceği yol (default /musteriler) */
+  hedef?: string;
+}
+
+export function MusteriAramaInput({
+  baslangic,
+  hedef = "/musteriler",
+}: MusteriAramaInputProps) {
   const router = useRouter();
   const sp = useSearchParams();
   const [deger, setDeger] = useState(baslangic);
@@ -18,7 +27,7 @@ export function MusteriAramaInput({ baslangic }: { baslangic: string }) {
       } else {
         yeni.delete("arama");
       }
-      router.push(`/musteriler${yeni.toString() ? `?${yeni}` : ""}`);
+      router.push(`${hedef}${yeni.toString() ? `?${yeni}` : ""}`);
     }, 250);
     return () => clearTimeout(handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
