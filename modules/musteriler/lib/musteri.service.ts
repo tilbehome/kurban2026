@@ -1,9 +1,11 @@
 /**
  * Müşteri sorgulamaları ve özet hesaplama.
+ * Geriye uyumlu: musterileriListele() eski parametrelerle de çalışır.
  */
 
 import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
+import { alfabeHarfi } from "./avatar";
 
 export interface MusteriOzet {
   id: number;
@@ -14,19 +16,30 @@ export interface MusteriOzet {
   toplamOdenen: number;
   kalan: number;
   durum: "odendi" | "kismi" | "odenmedi" | "yok";
+  kayitTarihi: Date;
+  ilkKurbanNo: number | null;
+  ilkHisseNo: number | null;
 }
 
-interface ListeFiltreleri {
+export interface ListeFiltreleri {
   arama?: string;
-  durum?: "hepsi" | "borclu" | "odendi";
+  durum?: "hepsi" | "borclu" | "odendi" | "kismi";
+  /** Belirli harfle başlayan müşteriler (örn. "A", "Ç") */
+  harf?: string;
   limit?: number;
   offset?: number;
 }
 
-export async function musterileriListele(filtreler: ListeFiltreleri = {}): Promise<{
+export interface ListeSonucu {
   liste: MusteriOzet[];
   toplam: number;
-}> {
+  /** Veritabanındaki tüm müşterilerin baş harfleri (alfabe şeridi için) */
+  doluHarfler: Set<string>;
+}
+
+export async function musterileriListele(
+  filtreler: ListeFiltreleri = {},
+): Promise<ListeSonucu> {
   const where: Record<string, unknown> = {};
 
   if (filtreler.arama && filtreler.arama.trim().length >= 2) {
@@ -38,6 +51,19 @@ export async function musterileriListele(filtreler: ListeFiltreleri = {}): Promi
     ];
   }
 
+  if (filtreler.harf) {
+    where.adSoyad = { startsWith: filtreler.harf };
+  }
+
+  // Önce tüm baş harflere bak (alfabe şeridi için, filtreden bağımsız)
+  const tumMusteriIsimleri = await prisma.musteri.findMany({
+    select: { adSoyad: true },
+  });
+  const doluHarfler = new Set<string>();
+  for (const m of tumMusteriIsimleri) {
+    doluHarfler.add(alfabeHarfi(m.adSoyad));
+  }
+
   const [musteriler, toplam] = await Promise.all([
     prisma.musteri.findMany({
       where,
@@ -47,8 +73,10 @@ export async function musterileriListele(filtreler: ListeFiltreleri = {}): Promi
       include: {
         hisseler: {
           include: {
+            kurban: { select: { kesimSirasi: true } },
             odemeler: { where: { iptal: false } },
           },
+          orderBy: [{ kurban: { kesimSirasi: "asc" } }, { no: "asc" }],
         },
       },
     }),
@@ -56,25 +84,32 @@ export async function musterileriListele(filtreler: ListeFiltreleri = {}): Promi
   ]);
 
   const liste: MusteriOzet[] = musteriler.map((m) => {
-    const ozetiHesapla = musteriOzetiBul(m.hisseler);
+    const ozet = musteriOzetiBul(m.hisseler);
+    const ilkHisse = m.hisseler[0];
     return {
       id: m.id,
       adSoyad: m.adSoyad,
       telefon: m.telefon,
-      ...ozetiHesapla,
+      kayitTarihi: m.createdAt,
+      ilkKurbanNo: ilkHisse?.kurban.kesimSirasi ?? null,
+      ilkHisseNo: ilkHisse?.no ?? null,
+      ...ozet,
     };
   });
 
-  const filtreli = filtreler.durum
-    ? liste.filter((l) => {
-        if (filtreler.durum === "borclu") return l.kalan > 0;
-        if (filtreler.durum === "odendi")
-          return l.kalan <= 0 && l.hisseSayisi > 0;
-        return true;
-      })
-    : liste;
+  const filtreli =
+    filtreler.durum && filtreler.durum !== "hepsi"
+      ? liste.filter((l) => {
+          if (filtreler.durum === "borclu") return l.kalan > 0 && l.toplamOdenen === 0;
+          if (filtreler.durum === "kismi")
+            return l.kalan > 0 && l.toplamOdenen > 0;
+          if (filtreler.durum === "odendi")
+            return l.kalan <= 0 && l.hisseSayisi > 0;
+          return true;
+        })
+      : liste;
 
-  return { liste: filtreli, toplam };
+  return { liste: filtreli, toplam, doluHarfler };
 }
 
 interface HisseIle {
@@ -117,5 +152,14 @@ export async function musteriDetayi(id: number) {
         orderBy: [{ kurban: { kesimSirasi: "asc" } }, { no: "asc" }],
       },
     },
+  });
+}
+
+/** İsmi verilen müşterinin ilk kelimesiyle aynı başlayan diğer müşterilerin sayısı */
+export async function ayniIsimSayisi(adSoyad: string): Promise<number> {
+  const ilkKelime = adSoyad.trim().split(/\s+/)[0];
+  if (!ilkKelime || ilkKelime.length < 3) return 0;
+  return prisma.musteri.count({
+    where: { adSoyad: { startsWith: ilkKelime } },
   });
 }
