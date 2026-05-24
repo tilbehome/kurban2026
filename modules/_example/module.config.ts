@@ -6,7 +6,7 @@
  *  2. Bu dosyada: id, ad, aciklama, ikon, renk, anaRota, sayfalar düzenle
  *  3. index.ts'i de güncelle (public API)
  *  4. shared/lib/module-loader.ts'a import + tumModuller dizisine ekle
- *  5. shared/components/menu.config.ts'a menu girişi ekle (akordiyon)
+ *  5. shared/lib/sidebar-config.ts'a 12 ana menü içine girişi ekle (akordiyon)
  *  6. (DB modeli gerekirse) prisma/schema.prisma'ya model ekle:
  *     pnpm prisma migrate dev --name yeni-modul-tablosu
  *  7. app/<yol>/page.tsx — gerçek sayfa dosyalarını oluştur

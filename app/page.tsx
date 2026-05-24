@@ -1,8 +1,7 @@
 import Link from "next/link";
-import * as Icons from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { AppShell } from "@/shared/components/AppShell";
 import { aktifOturum } from "@/shared/lib/session";
+import { izinKontrol } from "@/shared/lib/izinler";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import {
   bugunkuTahsilatlar,
 } from "@/modules/tahsilat/lib/tahsilat.service";
 import { borclular } from "@/modules/raporlar/lib/rapor.service";
-import { MENU, menuyuFiltrele } from "@/shared/components/menu.config";
+import { sidebarMenuleri } from "@/shared/lib/sidebar-config";
 import { formatPara } from "@/shared/lib/para";
 import { formatTarih } from "@/shared/lib/tarih";
 
@@ -19,8 +18,12 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const oturum = await aktifOturum();
-  const rol = oturum?.rol ?? "misafir";
-  const menu = menuyuFiltrele(MENU, rol).filter((m) => m.children && m.label !== "Dashboard");
+  const rolStub = { rol: oturum?.rol ?? "misafir" };
+  // Hızlı erişim: alt menüsü olan + Dashboard hariç + izinli + ilk 6
+  const hizliMenuler = sidebarMenuleri
+    .filter((m) => m.id !== "ana-sayfa" && m.altMenuler && m.altMenuler.length > 0)
+    .filter((m) => !m.izin || izinKontrol(rolStub, m.izin))
+    .slice(0, 6);
 
   const [ozet, borc, sonTahsilatlar] = await Promise.all([
     bugunkuOzet(),
@@ -192,21 +195,20 @@ export default async function DashboardPage() {
         <section>
           <h2 className="mb-4 text-lg font-semibold">Hızlı Erişim</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {menu.map((m) => {
-              const Icon =
-                (Icons as unknown as Record<string, LucideIcon | undefined>)[m.ikon] ??
-                Icons.Square;
-              const ilkAlt = m.children?.[0];
+            {hizliMenuler.map((m) => {
+              const Icon = m.ikon;
+              const ilkAlt = m.altMenuler?.[0];
               return (
                 <Link
-                  key={m.label}
-                  href={ilkAlt?.href ?? "/"}
-                  className={buttonVariants({
-                    variant: "outline",
-                  }) + " h-auto flex-col gap-2 py-4"}
+                  key={m.id}
+                  href={ilkAlt?.rota ?? m.rota ?? "/"}
+                  className={
+                    buttonVariants({ variant: "outline" }) +
+                    " h-auto flex-col gap-2 py-4"
+                  }
                 >
                   <Icon size={20} className="text-primary" />
-                  <span className="text-xs font-medium">{m.label}</span>
+                  <span className="text-xs font-medium">{m.ad}</span>
                 </Link>
               );
             })}
