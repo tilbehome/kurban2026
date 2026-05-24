@@ -39,9 +39,10 @@ model Kullanici {
   updatedAt DateTime @updatedAt
 
   // İlişkiler
-  odemeler    Odeme[]
-  kasaHareket KasaHareketi[]
-  auditlar    AuditLog[]
+  odemeler           Odeme[]
+  kasaHareket        KasaHareketi[]
+  auditlar           AuditLog[]
+  whatsappGonderimleri WhatsAppGonderim[] @relation("WhatsAppGonderen")
 
   @@index([kullaniciAdi])
   @@index([silindiMi])
@@ -290,4 +291,68 @@ model KasaHareketi {
   @@index([tarih])
   @@index([tip])
   @@index([silindiMi])
+}
+
+// ===========================================================================
+// WHATSAPP — FAZ 8
+// ===========================================================================
+
+model WhatsAppSablonu {
+  id         String  @id @default(cuid())
+  ad         String
+  kategori   String // "tahsilat" | "bayram" | "kesim" | "genel"
+  icerik     String // metin + {degisken}
+  aktifMi    Boolean @default(true)
+  varsayilan Boolean @default(false) // sistem şablonu, silinemez
+
+  // Audit
+  olusturanId   String?
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+
+  // Standart timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  gonderilenler WhatsAppGonderim[]
+
+  @@index([aktifMi, silindiMi])
+  @@index([kategori])
+}
+
+model WhatsAppGonderim {
+  id       String          @id @default(cuid())
+  sablonId String
+  sablon   WhatsAppSablonu @relation(fields: [sablonId], references: [id])
+
+  baslamaTarihi DateTime  @default(now())
+  bitisTarihi   DateTime?
+
+  hedefSayisi    Int @default(0)
+  acilanSayisi   Int @default(0)
+  atlananSayisi  Int @default(0)
+  hataSayisi     Int @default(0)
+  telefonsuzSayisi Int @default(0)
+
+  not String?
+
+  // Hedeflenen müşteriler (JSON dizi)
+  // [{musteriId, musteriAdSoyad, telefon, durum, acilmaZamani}]
+  hedefler String
+
+  // Audit
+  kullaniciId   String
+  kullanici     Kullanici @relation("WhatsAppGonderen", fields: [kullaniciId], references: [id])
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  olusturanId   String?
+
+  // Standart timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sablonId])
+  @@index([kullaniciId])
+  @@index([silindiMi])
+  @@index([baslamaTarihi])
 }

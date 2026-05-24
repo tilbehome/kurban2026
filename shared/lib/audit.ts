@@ -24,7 +24,11 @@ export type AuditEylem =
   | "hisse-toplu-atama"
   | "hisse-transfer"
   | "hisse-iptal"
-  | "ayar-degisti";
+  | "ayar-degisti"
+  | "whatsapp-sablon-olustur"
+  | "whatsapp-sablon-guncelle"
+  | "whatsapp-sablon-sil"
+  | "whatsapp-toplu-gonderim";
 
 export interface AuditVeri {
   eylem: AuditEylem;

@@ -47,6 +47,9 @@ const IZINLER: Record<Rol, Izin[]> = {
     // Raporlar
     "raporlar.goruntule",
     "raporlar.excel",
+    // WhatsApp
+    "whatsapp.gonderim",
+    "whatsapp.gecmis",
     // Yedek
     "yedek.manuel",
   ],
@@ -56,6 +59,7 @@ const IZINLER: Record<Rol, Izin[]> = {
     "tahsilat.goruntule",
     "kasa.goruntule",
     "raporlar.goruntule",
+    "whatsapp.gecmis",
   ],
   misafir: [],
 };
