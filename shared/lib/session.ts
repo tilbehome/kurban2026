@@ -34,7 +34,27 @@ export async function getOturum() {
   return getIronSession<SessionVerisi>(cookieStore, sessionOptions);
 }
 
+/**
+ * Aktif oturum — DEFENSIVE GUARD ile.
+ *
+ * Tarihsel sebep: Faz 1'de kullaniciId int (1,2,3) idi. MIMARI.md refactor'unda
+ * cuid (string) yapıldı. Eski tarayıcılarda hâlâ int taşıyan cookie kalmış
+ * olabilir — bu durumda Prisma "Expected String, provided Int" atıyordu.
+ *
+ * Burada bozuk format tespit edilirse oturum imha edilir → kullanıcı
+ * /giris'e yönlendirilir, taze giriş ile cuid alır.
+ */
 export async function aktifOturum(): Promise<AuthOturum | null> {
   const session = await getOturum();
-  return session.oturum ?? null;
+  const o = session.oturum;
+  if (!o) return null;
+
+  // GUARD: kullaniciId mutlaka string + cuid uzunluğu (cuid ~24-25 char)
+  if (typeof o.kullaniciId !== "string" || o.kullaniciId.length < 10) {
+    // Bozuk cookie — temizle, null dön (kullanıcı tekrar giriş yapar)
+    session.destroy();
+    return null;
+  }
+
+  return o;
 }
