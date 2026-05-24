@@ -103,7 +103,8 @@ model Musteri {
   updatedAt DateTime @updatedAt
 
   // İlişkiler
-  hisseler Hisse[]
+  hisseler  Hisse[]
+  musteriNotlari Not[]
 
   @@index([adSoyad])
   @@index([telefon])
@@ -166,9 +167,58 @@ model Hisse {
 
   // İlişkiler
   odemeler Odeme[]
+  vekalet  Vekalet?
 
   @@unique([kurbanId, no])
   @@index([musteriId])
+  @@index([silindiMi])
+}
+
+// ===========================================================================
+// NOT (müşteri notları)
+// ===========================================================================
+
+model Not {
+  id          String  @id @default(cuid())
+  musteriId   String
+  musteri     Musteri @relation(fields: [musteriId], references: [id], onDelete: Cascade)
+
+  icerik       String // max 1000 char
+  renk         String  @default("bilgi") // bilgi | uyari | onemli | hatirlat
+  sabitlendiMi Boolean @default(false)
+
+  // Soft delete + audit
+  olusturanId   String
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([musteriId])
+  @@index([silindiMi])
+  @@index([renk])
+}
+
+// ===========================================================================
+// VEKALET (hisse başına bir belge)
+// ===========================================================================
+
+model Vekalet {
+  id      String @id @default(cuid())
+  hisseId String @unique
+  hisse   Hisse  @relation(fields: [hisseId], references: [id], onDelete: Cascade)
+
+  dosyaUrl    String // /uploads/vekalet/<cuid>.pdf
+  dosyaTipi   String // pdf | jpg | png
+  dosyaBoyutu Int // bytes
+
+  // Soft delete + audit
+  olusturanId   String
+  silindiMi     Boolean   @default(false)
+  silinmeTarihi DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
   @@index([silindiMi])
 }
 
