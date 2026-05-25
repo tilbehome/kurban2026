@@ -18,6 +18,7 @@ export function YeniKurbanForm() {
     hisseSayisi: "7",
     satisBedeli: "",
     notlar: "",
+    hisseGrubu: "",
   });
 
   function alanGuncelle<K extends keyof typeof veri>(k: K, v: string) {
@@ -38,6 +39,7 @@ export function YeniKurbanForm() {
             hisseSayisi: Number.parseInt(veri.hisseSayisi, 10) || 7,
             satisBedeli: Number.parseFloat(veri.satisBedeli) || 0,
             notlar: veri.notlar.trim() || undefined,
+            hisseGrubu: veri.hisseGrubu || null,
           }),
         });
         const sonuc = (await yanit.json()) as {
@@ -105,6 +107,26 @@ export function YeniKurbanForm() {
             onChange={(e) => alanGuncelle("kesimSaati", e.target.value)}
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="hisseGrubu">Hisse Grubu (kg aralığı)</Label>
+        <select
+          id="hisseGrubu"
+          value={veri.hisseGrubu}
+          onChange={(e) => alanGuncelle("hisseGrubu", e.target.value)}
+          className="border-input bg-background flex h-9 w-full rounded-md border px-3 py-1 text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          <option value="">Belirsiz</option>
+          <option value="30-35">30-35 KG</option>
+          <option value="35-40">35-40 KG</option>
+          <option value="40-45">40-45 KG</option>
+          <option value="45-50">45-50 KG</option>
+          <option value="50-55">50-55 KG</option>
+        </select>
+        <p className="text-muted-foreground text-xs">
+          Sadece bilgi amaçlı — fiyatlandırma etkilenmez.
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">

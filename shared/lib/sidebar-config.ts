@@ -140,6 +140,8 @@ export interface SidebarAltMenu {
   aciklama?: string;
   /** Placeholder sayfasında listelenecek özellikler */
   ozellikler?: string[];
+  /** TV/dışa açılan sayfalar gibi yeni sekmede açılacak */
+  yeniSekme?: boolean;
 }
 
 /** Ana menü öğesi (akordeon grubu veya tek sayfa) */
@@ -432,148 +434,89 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
     ],
   },
 
-  // 4) KESİM OPERASYONU — 10 alt (çoğu placeholder, bayram sonrası)
+  // 4) KESİM TAKİP EKRANI — tüm operasyon merkezi (canlı + kontrol + saha)
   {
-    id: "kesim",
-    ad: "Kesim Operasyonu",
+    id: "kesim-takip",
+    ad: "Kesim Takip Ekranı",
     ikon: Scissors,
     izin: "hayvanlar.goruntule",
     altMenuler: [
       {
-        id: "canli-akis",
-        ad: "Canlı Akış Paneli",
-        ikon: Tv,
-        rota: "/kesim/canli-akis",
-        placeholder: true,
-        faz: "bayram",
-        aciklama:
-          "Tüm kesim aşamalarını canlı izleyin: bekleme → kesim → tartım → paketleme → teslim.",
-        ozellikler: [
-          "SSE ile gerçek zamanlı güncelleme",
-          "7 aşamalı pipeline görünümü",
-          "Aşama bazlı sayım",
-          "Aşırı bekleme uyarısı",
-        ],
+        id: "kontrol-paneli",
+        ad: "Kontrol Paneli",
+        ikon: LayoutTemplate,
+        rota: "/tv/kontrol",
+        izin: "tv.kontrol",
+        aciklama: "Operasyon sırasını yönet, aşama başlat/bitir",
       },
       {
-        id: "kesim-sirasi",
-        ad: "Kesim Sırası",
+        id: "personel-paneli",
+        ad: "Personel Saha Paneli",
+        ikon: Smartphone,
+        rota: "/tv/personel",
+        izin: "tv.kontrol",
+        aciklama: "Saha personeli için mobil görev paneli (swipe + geri al)",
+      },
+      {
+        id: "tv-canli",
+        ad: "TV Canlı Ekran",
+        ikon: Tv,
+        rota: "/tv",
+        yeniSekme: true,
+        aciklama: "Kesim alanı TV ekranında gösterilen 4 sütunlu canlı yayın",
+      },
+      {
+        id: "vekalet-yonetim",
+        ad: "Vekalet Yönetimi",
+        ikon: ScrollText,
+        rota: "/hayvanlar/vekalet",
+        bildirimAnahtari: "eksikVekalet",
+        aciklama: "Hisse bazlı vekalet kayıt ve takip",
+      },
+      {
+        id: "tartim-keypad",
+        ad: "Tartım Girişi",
+        ikon: Scale,
+        rota: "/kesim/tartim",
+        izin: "tv.kontrol",
+        aciklama: "Karkas kg girişi (büyük keypad, eldivenle dokunmaya uygun)",
+      },
+      {
+        id: "teslim-paneli",
+        ad: "Teslim Paneli",
+        ikon: PackageCheck,
+        rota: "/kesim/teslim",
+        izin: "tv.kontrol",
+        aciklama: "Paketlenen hisseleri müşteriye teslim et + WhatsApp ile haber",
+      },
+      {
+        id: "tv-musteri",
+        ad: "Müşteri Giriş Ekranı",
+        ikon: Users,
+        rota: "/tv/m",
+        yeniSekme: true,
+        aciklama: "Müşterilerin telefon/küpe ile kendi kurbanını bulduğu ekran",
+      },
+      {
+        id: "tv-ayarlar",
+        ad: "TV Ayarları",
+        ikon: Plug,
+        rota: "/tv/ayarlar",
+        izin: "tv.kontrol",
+        aciklama: "Yayın kaynakları, alan adları, sesli anons ayarları",
+      },
+      {
+        id: "sira-yonetim",
+        ad: "Sıra Yönetimi",
         ikon: ClipboardList,
         rota: "/kesim/sira",
         placeholder: true,
-        faz: "bayram",
-        aciklama:
-          "Sıradaki kurbanları görün, sırayı manuel yeniden düzenleyin, çağrı yapın.",
-        ozellikler: [
-          "Drag-and-drop sıra düzenleme",
-          "Müşteri çağrı (WhatsApp)",
-          "Acil sıra atlama (VIP)",
-        ],
-      },
-      {
-        id: "aktif-kesimler",
-        ad: "Aktif Kesimler",
-        ikon: Scissors,
-        rota: "/kesim/aktif",
-        placeholder: true,
-        faz: "bayram",
-        aciklama:
-          "Şu anda kesilen kurbanlar — kimin başladığı, süresi, hangi pad'de.",
-        ozellikler: [
-          "Pad/bölme atama",
-          "Personel atama",
-          "Süre takibi",
-        ],
-      },
-      {
-        id: "veteriner",
-        ad: "Veteriner Kontrol",
-        ikon: Stethoscope,
-        rota: "/kesim/veteriner",
-        placeholder: true,
         faz: "sonrasi",
-        aciklama:
-          "Sağlık muayenesi, onay/red kayıtları, gıda güvenliği uyumu (inecta + TRAX-IT esinli).",
+        aciklama: "Drag-drop ile kesim sırasını yeniden düzenle.",
         ozellikler: [
-          "Muayene formu",
-          "Foto ek",
-          "Onay/red kararı + sebep",
-          "Sağlık raporu PDF",
-        ],
-      },
-      {
-        id: "tartim",
-        ad: "Tartım & Sınıflandırma",
-        ikon: Scale,
-        rota: "/kesim/tartim",
-        placeholder: true,
-        faz: "sonrasi",
-        aciklama:
-          "Canlı kg, karkas kg, sınıf belirleme (slaughterhouse standardı).",
-        ozellikler: [
-          "Elektronik tartı entegrasyonu",
-          "Sınıf belirleme",
-          "Kayıp oranı hesaplama",
-        ],
-      },
-      {
-        id: "parcalama",
-        ad: "Parçalama",
-        ikon: Slice,
-        rota: "/kesim/parcalama",
-        placeholder: true,
-        faz: "sonrasi",
-        aciklama:
-          "Karkasın hisseye göre parçalanması, kg dağıtım takibi.",
-        ozellikler: [
-          "Hisse başı kg hesabı",
-          "Kayıp/fire takibi",
-          "Parça türü işaretleme",
-        ],
-      },
-      {
-        id: "paketleme",
-        ad: "Paketleme",
-        ikon: Box,
-        rota: "/kesim/paketleme",
-        placeholder: true,
-        faz: "sonrasi",
-        aciklama:
-          "Hisse paketleme, etiketleme, soğuk depo yerleştirme.",
-        ozellikler: [
-          "Paket sayısı/ağırlığı",
-          "Soğuk depo lokasyon takibi",
-          "Etiket yazdırma entegrasyonu",
-        ],
-      },
-      {
-        id: "teslimat-hazirlik",
-        ad: "Teslimat Hazırlığı",
-        ikon: PackageCheck,
-        rota: "/kesim/teslimat-hazirlik",
-        placeholder: true,
-        faz: "sonrasi",
-        aciklama:
-          "Müşteriye teslime hazır paketler, çıkış kapısı listesi.",
-        ozellikler: [
-          "Müşteriye hazır SMS/WhatsApp",
-          "Çıkış kapısı yönlendirme",
-          "Eksik evrak uyarısı",
-        ],
-      },
-      {
-        id: "sakatat",
-        ad: "Sakatat Dağıtımı",
-        ikon: Drumstick,
-        rota: "/kesim/sakatat",
-        placeholder: true,
-        faz: "sonrasi",
-        aciklama:
-          "Karaciğer, böbrek, işkembe — kim aldı, kim almadı (Türk kültürü için kritik).",
-        ozellikler: [
-          "Sakatat tercih anketi",
-          "Dağıtım listesi",
-          "Yetim/öksüz bağış kanalı",
+          "Drag-drop sıralama",
+          "Acil sıra atlama",
+          "WhatsApp ile çağrı",
         ],
       },
       {
@@ -584,11 +527,11 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         placeholder: true,
         faz: "sonrasi",
         aciklama:
-          "Günlük operasyon özeti, pad doluluk, personel verimliliği.",
+          "Saatlik kesim grafiği, personel performansı, kapasite analizi.",
         ozellikler: [
           "Saatlik kesim grafiği",
           "Personel performansı",
-          "Aşama bazlı süre dağılımı",
+          "Aşama bazlı süre",
         ],
       },
     ],
@@ -1385,16 +1328,8 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
     ],
   },
 
-  // 11) TV EKRANI — tek sayfa, yeni sekme
-  {
-    id: "tv",
-    ad: "TV Ekranı",
-    ikon: Tv,
-    rota: "/tv",
-    yeniSekme: true,
-  },
-
-  // 12) AYARLAR & SİSTEM — 10 alt
+  // 11) AYARLAR & SİSTEM — 10 alt
+  // (TV Ekranı menüsü 4. sıraya "Kesim Takip Ekranı" altına taşındı)
   {
     id: "ayarlar",
     ad: "Ayarlar & Sistem",

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import { SidebarBildirimRozet } from "./SidebarBildirimRozet";
 import type { SidebarAltMenu } from "@/shared/lib/sidebar-config";
@@ -28,9 +29,14 @@ export function SidebarMenuItem({
       ? (bildirimler[alt.bildirimAnahtari] ?? 0)
       : 0;
 
+  const linkProps = alt.yeniSekme
+    ? { target: "_blank" as const, rel: "noopener noreferrer" }
+    : {};
+
   return (
     <Link
       href={alt.rota}
+      {...linkProps}
       onClick={onTiklama}
       className={cn(
         "group flex items-center gap-2.5 rounded-md border-l-2 px-2.5 py-1.5 text-[13px] transition-colors",
@@ -49,6 +55,9 @@ export function SidebarMenuItem({
         )}
       />
       <span className="flex-1 truncate">{alt.ad}</span>
+      {alt.yeniSekme && (
+        <ExternalLink size={11} className="text-muted-foreground/60 shrink-0" />
+      )}
       {alt.placeholder && (
         <span className="text-muted-foreground bg-muted rounded px-1 py-0 text-[9px] font-medium tracking-wider uppercase">
           Yakında

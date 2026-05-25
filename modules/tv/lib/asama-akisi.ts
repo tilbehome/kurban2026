@@ -80,7 +80,20 @@ export function sonrakiAsama(
   if (mevcut === "iptal" || mevcut === "tamamlandi") return null;
   const idx = ASAMA_SIRASI.indexOf(mevcut);
   if (idx === -1 || idx === ASAMA_SIRASI.length - 1) return null;
-  return ASAMA_SIRASI[idx + 1];
+  return ASAMA_SIRASI[idx + 1] ?? null;
+}
+
+/**
+ * Verilen aşamadan bir öncekini döner (geri alma için).
+ * İlk aşamada veya iptalse null.
+ */
+export function oncekiAsama(
+  mevcut: KurbanKesimDurumu,
+): KurbanKesimDurumu | null {
+  if (mevcut === "iptal") return null;
+  const idx = ASAMA_SIRASI.indexOf(mevcut);
+  if (idx <= 0) return null;
+  return ASAMA_SIRASI[idx - 1] ?? null;
 }
 
 /**

@@ -12,6 +12,10 @@ const KurbanSchema = z.object({
   hisseSayisi: z.number().int().min(1).max(7).default(7),
   satisBedeli: z.number().min(0).default(0),
   notlar: z.string().trim().max(500).optional(),
+  hisseGrubu: z
+    .enum(["30-35", "35-40", "40-45", "45-50", "50-55"])
+    .nullable()
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -49,6 +53,7 @@ export async function POST(req: Request) {
       hisseSayisi: veri.hisseSayisi,
       satisBedeli: yuvarla(veri.satisBedeli),
       notlar: veri.notlar ?? null,
+      hisseGrubu: veri.hisseGrubu ?? null,
       hisseler: {
         create: Array.from({ length: veri.hisseSayisi }, (_, i) => ({
           no: i + 1,

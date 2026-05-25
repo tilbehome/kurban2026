@@ -45,7 +45,7 @@ interface Props {
 export function PersonelAnaClient({
   kullaniciAd,
   baslangicGorev,
-  kurbanlar,
+  kurbanlar: ilkKurbanlar,
 }: Props) {
   const router = useRouter();
   const { aktif: sesAktif, aktifEt: sesAktifEt, destek: sesDestek } =
@@ -54,6 +54,7 @@ export function PersonelAnaClient({
   const [aktifGorev, setAktifGorev] = useState<PersonelGorev>(baslangicGorev);
   const [aktifIsId, setAktifIsId] = useState<string | null>(null);
   const [sorunKurban, setSorunKurban] = useState<PersonelKurbanVeri | null>(null);
+  const [kurbanlar, setKurbanlar] = useState<PersonelKurbanVeri[]>(ilkKurbanlar);
 
   useEffect(() => {
     try {
@@ -85,6 +86,32 @@ export function PersonelAnaClient({
     }
   }, [aktifIsId]);
 
+  // 5sn polling — yeni endpoint, sayfa yenilemeden güncel kurban listesi
+  useEffect(() => {
+    let iptal = false;
+    async function cek() {
+      try {
+        const yanit = await fetch("/api/tv/personel-gorevler", {
+          cache: "no-store",
+        });
+        if (!yanit.ok || iptal) return;
+        const veri = (await yanit.json()) as {
+          kurbanlar: PersonelKurbanVeri[];
+        };
+        if (!iptal && Array.isArray(veri.kurbanlar)) {
+          setKurbanlar(veri.kurbanlar);
+        }
+      } catch {
+        /* network hatasını sessizce yut, sonraki tick'te tekrar dene */
+      }
+    }
+    const id = setInterval(cek, 5000);
+    return () => {
+      iptal = true;
+      clearInterval(id);
+    };
+  }, []);
+
   const sayilar = useMemo(() => {
     const sayim = Object.fromEntries(
       PERSONEL_GOREVLERI.map((g) => [g, 0]),
@@ -109,7 +136,21 @@ export function PersonelAnaClient({
       .filter((k) => k.id !== aktifIsId);
   }, [kurbanlar, aktifGorev, aktifIsId]);
 
-  function yenile() {
+  async function yenile() {
+    // Hem polling endpoint'inden hem RSC'den yenile — anlık ve tutarlı
+    try {
+      const yanit = await fetch("/api/tv/personel-gorevler", {
+        cache: "no-store",
+      });
+      if (yanit.ok) {
+        const veri = (await yanit.json()) as {
+          kurbanlar: PersonelKurbanVeri[];
+        };
+        if (Array.isArray(veri.kurbanlar)) setKurbanlar(veri.kurbanlar);
+      }
+    } catch {
+      /* sessiz */
+    }
     router.refresh();
   }
 

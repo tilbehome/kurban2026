@@ -130,6 +130,10 @@ model Kurban {
   durum         String   @default("aktif") // aktif | bekliyor | kesimde | kesildi | parcalandi | teslim | iptal
   notlar        String?
 
+  // Hisse grup notu (sadece bilgi amaçlı, fiyatlandırma yapmaz)
+  // "30-35" | "35-40" | "40-45" | "45-50" | "50-55" | null (belirsiz)
+  hisseGrubu    String?
+
   // KESİM TAKİP — KURBAN BAZLI (FAZ 9.5)
   // Tartıma kadar tüm hisseler birlikte hareket eder
   kesimDurumu     String   @default("beklemede") // beklemede|vekalet_bekliyor|siradaki|hazirlik|kesimde|deri_yuzme|parcalama|tartimda|paketleme|teslime_hazir|tamamlandi|iptal
@@ -159,6 +163,7 @@ model Kurban {
   @@index([silindiMi])
   @@index([kesimDurumu])
   @@index([operasyonSira])
+  @@index([hisseGrubu])
 }
 
 model Hisse {
