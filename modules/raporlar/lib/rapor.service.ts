@@ -13,6 +13,7 @@ export interface BorcluSatir {
   toplamBedel: number;
   toplamOdenen: number;
   kalan: number;
+  etiketler: string[];
 }
 
 export async function borclular(): Promise<BorcluSatir[]> {
@@ -44,10 +45,26 @@ export async function borclular(): Promise<BorcluSatir[]> {
         toplamBedel,
         toplamOdenen,
         kalan: yuvarla(toplamBedel - toplamOdenen),
+        etiketler: etiketleriParse(m.etiketler),
       };
     })
     .filter((m) => m.kalan > 0 && m.hisseSayisi > 0)
     .sort((a, b) => b.kalan - a.kalan);
+}
+
+function etiketleriParse(metin: string | null): string[] {
+  if (!metin) return [];
+  try {
+    const j = JSON.parse(metin) as unknown;
+    if (Array.isArray(j))
+      return j.filter((s): s is string => typeof s === "string");
+  } catch {
+    return metin
+      .split(/[,;|]/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+  }
+  return [];
 }
 
 export interface KurbanRaporSatir {
