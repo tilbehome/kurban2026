@@ -244,19 +244,37 @@ export async function getTvAyarlari(): Promise<TvAyariKisa> {
 // 5) Tek seferde tüm veriler (SSE payload)
 // =============================================================================
 
-export async function getTumVeriler(): Promise<TvTumVeri> {
-  const [kpi, sutunlar, operasyonIstatistik, ayarlar] = await Promise.all([
-    getKpiVerileri(),
-    getSutunVerileri(),
-    getOperasyonIstatistik(),
-    getTvAyarlari(),
+/** Acil durum mesajı + durumu (TV ekranında MOLA gösterimi) */
+export async function getAcilDurum(): Promise<{
+  aktif: boolean;
+  mesaj: string | null;
+}> {
+  const [k, m] = await Promise.all([
+    prisma.tvAyari.findUnique({ where: { anahtarKey: "acil_durum_aktif" } }),
+    prisma.tvAyari.findUnique({ where: { anahtarKey: "acil_durum_mesaj" } }),
   ]);
+  return {
+    aktif: k?.deger === "true",
+    mesaj: m?.deger ?? null,
+  };
+}
+
+export async function getTumVeriler(): Promise<TvTumVeri> {
+  const [kpi, sutunlar, operasyonIstatistik, ayarlar, acilDurum] =
+    await Promise.all([
+      getKpiVerileri(),
+      getSutunVerileri(),
+      getOperasyonIstatistik(),
+      getTvAyarlari(),
+      getAcilDurum(),
+    ]);
 
   return {
     kpi,
     sutunlar,
     operasyonIstatistik,
     ayarlar,
+    acilDurum,
     serverZamani: new Date().toISOString(),
   };
 }

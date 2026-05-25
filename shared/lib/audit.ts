@@ -31,7 +31,11 @@ export type AuditEylem =
   | "whatsapp-toplu-gonderim"
   | "tv-durum-degisikligi"
   | "tv-ilerleme-guncelle"
-  | "tv-ayar-guncelle";
+  | "tv-ayar-guncelle"
+  | "tv-kurban-asama"
+  | "tv-sira-degisikligi"
+  | "tv-acil-durum"
+  | "tv-push-abonelik";
 
 export interface AuditVeri {
   eylem: AuditEylem;

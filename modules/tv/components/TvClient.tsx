@@ -72,6 +72,27 @@ export function TvClient({ ilkVeri }: TvClientProps) {
 
       {/* Footer altı boşluk */}
       <div className="flex-1" />
+
+      {/* ACİL DURUM Overlay — TV'yi MOLA modunda örter */}
+      {aktifVeri.acilDurum?.aktif && (
+        <div className="bg-red-950/95 fixed inset-0 z-50 flex flex-col items-center justify-center text-white backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-6 px-8 text-center">
+            <div className="bg-red-500 flex h-32 w-32 animate-pulse items-center justify-center rounded-full shadow-2xl">
+              <span className="text-6xl">⏸️</span>
+            </div>
+            <h1 className="text-7xl font-black tracking-tight sm:text-9xl">
+              MOLA
+            </h1>
+            <p className="text-2xl font-semibold text-red-100 sm:text-3xl">
+              {aktifVeri.acilDurum.mesaj ??
+                "Operasyona kısa bir mola verildi"}
+            </p>
+            <p className="text-red-200/80 text-sm">
+              Devam bildirilince otomatik kaldırılır
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

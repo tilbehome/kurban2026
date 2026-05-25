@@ -110,11 +110,17 @@ export interface TvAyariKisa {
 // SSE payload — tüm veriler tek pakette
 // =============================================================================
 
+export interface TvAcilDurum {
+  aktif: boolean;
+  mesaj: string | null;
+}
+
 export interface TvTumVeri {
   kpi: TvKpi;
   sutunlar: TvSutunlar;
   operasyonIstatistik: OperasyonIstatistik;
   ayarlar: TvAyariKisa;
+  acilDurum: TvAcilDurum;
   /** Server-side timestamp (canlı saat senkronu) */
   serverZamani: string; // ISO
 }

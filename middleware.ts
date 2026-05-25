@@ -18,9 +18,14 @@ export function middleware(req: NextRequest) {
     // TV public display: ana ekran + SSE + REST fallback auth GEREKTİRMEZ
     // (/tv/kontrol ve /tv/ayarlar AppShell içinde kendi auth kontrolünü yapar)
     pathname === "/tv" ||
+    pathname.startsWith("/tv/m") ||
     pathname === "/api/tv/yayin" ||
     pathname === "/api/tv/veriler" ||
-    pathname === "/api/tv/operasyon-istatistik"
+    pathname === "/api/tv/operasyon-istatistik" ||
+    pathname === "/api/tv/musteri-bul" ||
+    pathname === "/api/tv/push-abonelik" ||
+    pathname.startsWith("/api/tv/push-gonder") ||
+    pathname === "/api/tv/acil-durum"
   ) {
     return NextResponse.next();
   }

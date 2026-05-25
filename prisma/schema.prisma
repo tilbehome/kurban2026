@@ -106,6 +106,7 @@ model Musteri {
   // İlişkiler
   hisseler  Hisse[]
   musteriNotlari Not[]
+  pushAbonelikleri PushAbonelik[] @relation("MusteriPushAbonelik")
 
   @@index([adSoyad])
   @@index([telefon])
@@ -118,7 +119,7 @@ model Musteri {
 
 model Kurban {
   id            String   @id @default(cuid())
-  kesimSirasi   Int      @unique
+  kesimSirasi   Int      @unique // Kurban kayıt sırası (DANA-1, DANA-2 ...)
   kesimSaati    String? // "07:10" gibi planlanan saat
   kupeNo        String?
   hisseSayisi   Int      @default(7)
@@ -127,6 +128,18 @@ model Kurban {
   karkasAgirlik Float?   @default(0)
   durum         String   @default("aktif") // aktif | bekliyor | kesimde | kesildi | parcalandi | teslim | iptal
   notlar        String?
+
+  // KESİM TAKİP — KURBAN BAZLI (FAZ 9.5)
+  // Tartıma kadar tüm hisseler birlikte hareket eder
+  kesimDurumu     String   @default("beklemede") // beklemede|vekalet_bekliyor|siradaki|hazirlik|kesimde|deri_yuzme|parcalama|tartimda|paketleme|teslime_hazir|tamamlandi|iptal
+  operasyonSira   Int? // operasyonel sıra (1, 2, 3 ...)
+  asama           String? // "Kesim" | "Deri Yüzme" | "Parçalama" | "Tartım"
+  ilerlemeYuzde   Int      @default(0) // 0-100
+  kalanSureDk     Int?
+  kesimBaslama    DateTime?
+  kesimBitis      DateTime?
+  toplamKg        Float? // tartım sonucu toplam et
+  karkasKg        Float? // karkas ağırlığı
 
   // Soft delete + audit
   silindiMi     Boolean   @default(false)
@@ -143,6 +156,8 @@ model Kurban {
   @@index([kesimSirasi])
   @@index([durum])
   @@index([silindiMi])
+  @@index([kesimDurumu])
+  @@index([operasyonSira])
 }
 
 model Hisse {
@@ -157,9 +172,9 @@ model Hisse {
   vekaletTarihi DateTime?
   notlar        String?
 
-  // KESİM TAKİP (FAZ 9 — TV ekranı için)
-  // kesimDurumu: "beklemede" | "vekalet_onay" | "siradaki" | "kesimde" |
-  //              "parcalama" | "tartimda" | "teslime_hazir" | "teslim_edildi" | "iptal"
+  // KESİM TAKİP (FAZ 9 — TV ekranı için, hisse bazlı geçmiş)
+  // NOT: Tartıma kadar Kurban.kesimDurumu kullanılır.
+  //      Paketleme'den sonra her hisse ayrı (Hisse.paketDurumu).
   kesimDurumu   String    @default("beklemede")
   siraNo        Int? // sıra numarası (1, 2, 3...)
   asama         String? // "Kesim" | "Deri Yüzme" | "Parçalama Hazırlık" | "Parçalama" | "Tartım" | "Paketleme" | "Teslim"
@@ -169,6 +184,11 @@ model Hisse {
   kesimBitis    DateTime?
   teslimNoktasi String? // "Teslim Noktası 1"
   teslimDurumu  String? // "Hazır" | "Teslim Edildi"
+
+  // PAKETLEME + TESLİM (FAZ 9.5 - hisse bazlı, tartım sonrası)
+  paketDurumu   String? // "Bekliyor" | "Paketlendi" | "Teslim Hazır" | "Teslim Edildi"
+  paketKg       Float? // Bu hisseye düşen et kg
+  teslimTarihi  DateTime?
 
   // Soft delete + audit
   silindiMi     Boolean   @default(false)
@@ -188,6 +208,7 @@ model Hisse {
   @@index([silindiMi])
   @@index([kesimDurumu])
   @@index([siraNo])
+  @@index([paketDurumu])
 }
 
 // ===========================================================================
@@ -388,4 +409,55 @@ model TvAyari {
   updatedAt DateTime @updatedAt
 
   @@index([aktif])
+}
+
+// ===========================================================================
+// PUSH ABONELİK — FAZ 9.5 (browser push notifications)
+// ===========================================================================
+
+model PushAbonelik {
+  id        String   @id @default(cuid())
+  musteriId String?
+  musteri   Musteri? @relation("MusteriPushAbonelik", fields: [musteriId], references: [id])
+  // PushSubscription endpoint (Web Push API)
+  endpoint  String   @unique
+  p256dh    String // ECDH public key
+  auth      String // shared auth secret
+  // Anonim oturum için (giriş yapmadan dana takip eden müşteri)
+  oturumKey String? // örn: kurbanId veya geçici kod
+  aktif     Boolean  @default(true)
+  // Cihaz tanımı (debugging için)
+  userAgent String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bildirimler BildirimLog[]
+
+  @@index([musteriId])
+  @@index([oturumKey])
+  @@index([aktif])
+}
+
+// ===========================================================================
+// BİLDİRİM LOG — FAZ 9.5 (her gönderim kayıtlı)
+// ===========================================================================
+
+model BildirimLog {
+  id           String   @id @default(cuid())
+  musteriId    String?
+  abonelikId   String?
+  abonelik     PushAbonelik? @relation(fields: [abonelikId], references: [id])
+  kanal        String // "push" | "whatsapp" | "sesli" | "sms"
+  sablon       String? // "kesim_basladi" | "tartim_basladi" | "paket_hazir" | "sira_yaklasti" vs
+  baslik       String
+  mesaj        String
+  durum        String   @default("gonderildi") // "gonderildi" | "hata" | "okundu"
+  hata         String?
+
+  createdAt DateTime @default(now())
+
+  @@index([musteriId])
+  @@index([kanal])
+  @@index([createdAt])
 }
