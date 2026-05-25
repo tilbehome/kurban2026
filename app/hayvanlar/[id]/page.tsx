@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { kurbanDetayi } from "@/modules/hayvanlar/lib/kurban.service";
 import { formatPara, topla, yuvarla } from "@/shared/lib/para";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { HissedarAtamaModal } from "@/modules/hayvanlar/components/hissedar-atama/HissedarAtamaModal";
+import { HissedarCikarDialog } from "@/modules/hayvanlar/components/hissedar-atama/HissedarCikarDialog";
 
 export const dynamic = "force-dynamic";
 
@@ -140,14 +142,20 @@ export default async function KurbanDetayPage({ params }: PageProps) {
                           Ödendi
                         </Badge>
                       )}
+                      {dolu && h.musteri && (
+                        <HissedarCikarDialog
+                          hisseId={h.id}
+                          hisseNo={h.no}
+                          kurbanKesimSirasi={kurban.kesimSirasi}
+                          musteriAdi={h.musteri.adSoyad}
+                        />
+                      )}
                       {!dolu && (
-                        <Link
-                          href={`/musteriler/yeni?next=/hayvanlar/${kurban.id}`}
-                          className={buttonVariants({ size: "sm" })}
-                        >
-                          <UserPlus size={14} className="mr-1" />
-                          Hissedar Ekle
-                        </Link>
+                        <HissedarAtamaModal
+                          hisseId={h.id}
+                          hisseNo={h.no}
+                          kurbanKesimSirasi={kurban.kesimSirasi}
+                        />
                       )}
                     </div>
                   </div>
