@@ -26,7 +26,7 @@ export function SidebarBayramSayaci({
     function hesapla() {
       setTema(bayramTemasi());
       const fark =
-        new Date("2026-06-05T00:00:00+03:00").getTime() - Date.now();
+        new Date("2026-05-27T00:00:00+03:00").getTime() - Date.now();
       setKalanGun(Math.max(0, Math.ceil(fark / (1000 * 60 * 60 * 24))));
     }
     hesapla();
@@ -105,7 +105,7 @@ export function SidebarBayramSayaci({
             gün kaldı
           </div>
           <div className="text-muted-foreground/70 mt-0.5 text-[10px]">
-            5 Haziran 2026
+            27 Mayıs 2026
           </div>
         </>
       )}

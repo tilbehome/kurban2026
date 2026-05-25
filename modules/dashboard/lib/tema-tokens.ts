@@ -42,14 +42,22 @@ export const BEYAZ = "#ffffff";
 // =============================================================================
 // Bayram tarihi + dinamik tema durumları
 // =============================================================================
-export const BAYRAM_TARIHI = new Date("2026-06-05T00:00:00+03:00");
+// Diyanet onaylı 2026 Kurban Bayramı tarihleri:
+//   Arife: 26 Mayıs 2026 Salı
+//   1. Gün: 27 Mayıs 2026 Çarşamba
+//   2. Gün: 28 Mayıs 2026 Perşembe
+//   3. Gün: 29 Mayıs 2026 Cuma
+//   4. Gün: 30 Mayıs 2026 Cumartesi
+export const BAYRAM_TARIHI = new Date("2026-05-27T00:00:00+03:00");
+export const BAYRAM_ARIFE = new Date("2026-05-26T00:00:00+03:00");
+export const BAYRAM_SON_GUN = new Date("2026-05-30T23:59:59+03:00");
 
 export type BayramDurumu =
   | "uzak" // > 14 gün
   | "yakin" // 4-14 gün
   | "cok-yakin" // 1-3 gün
-  | "bugun" // bayram günü (5-7 Haziran)
-  | "sonra"; // > 7 Haziran
+  | "bugun" // bayram günü (27-30 Mayıs)
+  | "sonra"; // > 30 Mayıs
 
 /**
  * Bugüne göre bayram durumunu hesapla.
@@ -62,8 +70,8 @@ export function bayramDurumu(bugun: Date = new Date()): BayramDurumu {
   if (farkGun > 14) return "uzak";
   if (farkGun > 3) return "yakin";
   if (farkGun >= 1) return "cok-yakin";
-  // Bayram 5-7 Haziran (3 gün)
-  if (farkGun >= -2) return "bugun";
+  // Bayram 4 gün: 27-30 Mayıs (farkGun 0, -1, -2, -3)
+  if (farkGun >= -3) return "bugun";
   return "sonra";
 }
 
@@ -108,7 +116,7 @@ export function bayramTemasi(bugun: Date = new Date()): BayramTemasi {
         vurguButon: "bg-orange-500 hover:bg-orange-600",
         bayramMi: false,
         banner: `Kurban Bayramına ${kalan} gün`,
-        altMesaj: "5 Haziran 2026 · Hazırlığa devam",
+        altMesaj: "27 Mayıs 2026 · Hazırlığa devam",
       };
     case "yakin":
       return {
@@ -120,7 +128,7 @@ export function bayramTemasi(bugun: Date = new Date()): BayramTemasi {
         vurguButon: "bg-orange-500 hover:bg-orange-600",
         bayramMi: false,
         banner: `⏳ Kurban Bayramına ${kalan} gün kaldı`,
-        altMesaj: "5 Haziran 2026 · Son hazırlık dönemi",
+        altMesaj: "27 Mayıs 2026 · Son hazırlık dönemi",
       };
     case "cok-yakin":
       return {

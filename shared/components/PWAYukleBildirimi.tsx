@@ -107,7 +107,7 @@ export function PWAYukleBildirimi() {
     <div className="border-stone-200 fixed right-4 bottom-4 left-4 z-50 flex items-start gap-3 rounded-xl border bg-white p-4 shadow-2xl md:left-auto md:w-96">
       <Image
         src="/icons/icon-192.png"
-        alt="Tilbe"
+        alt="Ada Bereket"
         width={48}
         height={48}
         className="shrink-0 rounded-lg"
@@ -115,10 +115,10 @@ export function PWAYukleBildirimi() {
       />
       <div className="min-w-0 flex-1">
         <div className="text-sm font-bold text-slate-900">
-          Tilbe Kurban Uygulaması
+          Ada Bereket Uygulaması
         </div>
         <div className="text-muted-foreground mt-0.5 text-xs">
-          Telefonunuza yükleyin — internetsiz bile takip edin
+          Telefonunuza yükleyin — kurbanınızı kolayca takip edin
         </div>
         <div className="mt-3 flex gap-2">
           <button

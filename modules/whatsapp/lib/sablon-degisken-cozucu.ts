@@ -8,7 +8,7 @@ import { formatPara } from "@/shared/lib/para";
 import { formatTarih } from "@/shared/lib/tarih";
 import type { HedefMusteri } from "../types";
 
-const BAYRAM_TARIHI = new Date("2026-06-05T00:00:00+03:00");
+const BAYRAM_TARIHI = new Date("2026-05-27T00:00:00+03:00");
 
 export interface DegiskenContext {
   sirketAdi: string;

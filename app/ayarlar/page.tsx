@@ -37,11 +37,12 @@ export default async function AyarlarPage() {
           </TabsList>
 
           <TabsContent value="genel" className="mt-6">
-            <Card className="max-w-2xl">
+            <Card className="max-w-4xl">
               <CardHeader>
                 <CardTitle>Firma Bilgileri</CardTitle>
                 <CardDescription>
-                  Dekont ve raporlarda gösterilecek bilgiler.
+                  Dekont, müşteri ekranı, TV ve raporlarda kullanılan tüm
+                  bilgiler. Tüm değerler canlı düzenlenebilir.
                 </CardDescription>
               </CardHeader>
               <CardContent>

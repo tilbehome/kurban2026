@@ -11,15 +11,18 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Tilbe Kurban Bayramı 2026",
+  title: {
+    default: "Ada Bereket Hayvancılık · Kurban 2026",
+    template: "%s · Ada Bereket",
+  },
   description:
-    "Kurban Bayramı 2026 — Müşteri, kesim, tahsilat ve operasyon takibi",
-  applicationName: "Tilbe Kurban",
+    "Ada Bereket Hayvancılık — Kurban Bayramı 2026 müşteri, kesim, tahsilat ve operasyon takibi. Güvenilir Hizmet, Bereketli Kazanç.",
+  applicationName: "Ada Bereket Kurban",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Tilbe Kurban",
+    title: "Ada Bereket",
   },
   icons: {
     icon: [
@@ -38,7 +41,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#BD2C31",
+  themeColor: "#DE0B1E",
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
