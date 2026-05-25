@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-import { formatPara } from "@/shared/lib/para";
+import { formatParaKisa } from "@/shared/lib/para";
 import {
   KART_RENKLERI,
   type DashboardKpiKart,
@@ -112,7 +112,7 @@ function KpiKart({ kart }: { kart: DashboardKpiKart }) {
 }
 
 function formatDeger(kart: DashboardKpiKart): string {
-  if (kart.birim === "₺") return formatPara(kart.sayi);
+  if (kart.birim === "₺") return formatParaKisa(kart.sayi);
   if (kart.birim === "%") return `%${kart.sayi}`;
   return kart.sayi.toLocaleString("tr-TR");
 }
