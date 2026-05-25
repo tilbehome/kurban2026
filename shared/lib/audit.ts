@@ -35,7 +35,8 @@ export type AuditEylem =
   | "tv-kurban-asama"
   | "tv-sira-degisikligi"
   | "tv-acil-durum"
-  | "tv-push-abonelik";
+  | "tv-push-abonelik"
+  | "pwa-yukleme";
 
 export interface AuditVeri {
   eylem: AuditEylem;

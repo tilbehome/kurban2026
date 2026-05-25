@@ -53,3 +53,9 @@ next-env.d.ts
 # Müşteri verisi — PII içerir, repo'ya KOYMA
 /seed-data.json
 
+
+# PWA (next-pwa runtime output — build sırasında üretilir)
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map

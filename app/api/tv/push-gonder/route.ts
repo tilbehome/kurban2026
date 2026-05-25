@@ -3,15 +3,24 @@ import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
+import { auditLog, ipCikar } from "@/shared/lib/audit";
+import {
+  pushFiltreliGonder,
+  vapidHazirMi,
+  type PushPayload,
+} from "@/shared/lib/web-push";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Push gönder — Web Push API olmadığı için DB'ye log atar.
- * Client tarayıcı polling ile (her 10sn) çekecek (BildirimLog).
+ * Push gönder — FAZ 9.6: web-push ile gerçek arka plan bildirim + DB log.
+ *
+ * İki katman:
+ * 1. BildirimLog DB'ye yazılır (foreground polling için — FAZ 9.5 davranışı)
+ * 2. web-push ile abonelere arka plan push (sayfa kapalıyken de bildirim)
  *
  * Tetikleyiciler:
- *  - Aşama değişikliği (otomatik, /api/tv/kurban-asama tarafından çağırılabilir)
+ *  - Aşama değişikliği (otomatik, /api/tv/kurban-asama içinden tetiklenir)
  *  - Admin manuel (TV kontrol panelinden)
  */
 
@@ -20,7 +29,11 @@ const PushSchema = z.object({
   kurbanId: z.string().nullable().optional(),
   baslik: z.string().min(1).max(200),
   mesaj: z.string().min(1).max(500),
+  url: z.string().max(500).optional(),
   sablon: z.string().max(80).optional(),
+  onemli: z.boolean().optional(),
+  /** true ise tüm aktif abonelere yayın (sadece admin) */
+  tumune: z.boolean().optional(),
 });
 
 /** POST: bildirim gönder (admin/kasiyer) */
@@ -48,6 +61,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
   }
 
+  // KATMAN 1 — DB log (foreground polling fallback)
   const log = await prisma.bildirimLog.create({
     data: {
       musteriId: veri.musteriId ?? null,
@@ -59,7 +73,63 @@ export async function POST(req: Request) {
     },
   });
 
-  return NextResponse.json({ basarili: true, logId: log.id });
+  // KATMAN 2 — web-push ile arka plan bildirim
+  let pushSonuc = { basarili: 0, hata: 0, toplam: 0 };
+  if (vapidHazirMi()) {
+    const payload: PushPayload = {
+      baslik: veri.baslik,
+      govde: veri.mesaj,
+      url: veri.url ?? "/",
+      etiket: veri.sablon,
+      bildirimId: log.id,
+      onemli: veri.onemli,
+    };
+
+    if (veri.tumune) {
+      pushSonuc = await pushFiltreliGonder(
+        { tumune: true },
+        payload,
+        oturum.kullaniciId,
+      );
+    } else if (veri.musteriId) {
+      pushSonuc = await pushFiltreliGonder(
+        { musteriId: veri.musteriId },
+        payload,
+        oturum.kullaniciId,
+      );
+    } else if (veri.kurbanId) {
+      pushSonuc = await pushFiltreliGonder(
+        { oturumKey: veri.kurbanId },
+        payload,
+        oturum.kullaniciId,
+      );
+    }
+  }
+
+  await auditLog({
+    eylem: "tv-push-abonelik",
+    model: "BildirimLog",
+    kayitId: log.id,
+    kullaniciId: oturum.kullaniciId,
+    ip: ipCikar(req),
+    detaylar: {
+      baslik: veri.baslik,
+      pushSonuc,
+      hedef: veri.tumune
+        ? "tumune"
+        : veri.musteriId
+          ? "musteri"
+          : veri.kurbanId
+            ? "kurban"
+            : "log-only",
+    },
+  });
+
+  return NextResponse.json({
+    basarili: true,
+    logId: log.id,
+    push: pushSonuc,
+  });
 }
 
 /**

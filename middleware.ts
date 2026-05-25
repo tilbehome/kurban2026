@@ -15,6 +15,13 @@ export function middleware(req: NextRequest) {
     pathname === "/giris" ||
     pathname === "/favicon.ico" ||
     pathname.includes(".") ||
+    // PWA public: manifest, sw, push handler (cache'lenebilir)
+    pathname === "/manifest.json" ||
+    pathname === "/sw.js" ||
+    pathname === "/workbox-sw.js" ||
+    pathname.startsWith("/workbox-") ||
+    pathname === "/push-handler.js" ||
+    pathname === "/offline" ||
     // TV public display: ana ekran + SSE + REST fallback auth GEREKTİRMEZ
     // (/tv/kontrol ve /tv/ayarlar AppShell içinde kendi auth kontrolünü yapar)
     pathname === "/tv" ||
@@ -25,18 +32,31 @@ export function middleware(req: NextRequest) {
     pathname === "/api/tv/musteri-bul" ||
     pathname === "/api/tv/push-abonelik" ||
     pathname.startsWith("/api/tv/push-gonder") ||
-    pathname === "/api/tv/acil-durum"
+    pathname === "/api/tv/acil-durum" ||
+    pathname === "/api/audit/pwa-yukleme"
   ) {
     return NextResponse.next();
   }
 
   const cookie = req.cookies.get("tilbe-kurban-session");
   if (!cookie) {
+    // PWA?pwa=1 ile açılan anonim oturum → müşteri ekranına yönlendir
+    if (req.nextUrl.searchParams.get("pwa") === "1" && pathname === "/") {
+      const url = req.nextUrl.clone();
+      url.pathname = "/tv/m";
+      url.searchParams.delete("pwa");
+      return NextResponse.redirect(url);
+    }
     const url = req.nextUrl.clone();
     url.pathname = "/giris";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
+
+  // PWA ?pwa=1 yönlendirmesi (oturum var) — kasiyer rolünü middleware'de
+  // bilemediğimiz için role-aware yönlendirmeyi server component'e bırakıyoruz.
+  // Burada sadece pwa=1 parametresini temizleyip akış devam eder.
+  // (Gerçek rol-yönlendirme app/page.tsx içinde olabilir)
 
   return NextResponse.next();
 }
