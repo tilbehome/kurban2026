@@ -50,6 +50,8 @@ const IZINLER: Record<Rol, Izin[]> = {
     // WhatsApp
     "whatsapp.gonderim",
     "whatsapp.gecmis",
+    // TV
+    "tv.kontrol",
     // Yedek
     "yedek.manuel",
   ],

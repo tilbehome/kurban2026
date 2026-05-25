@@ -14,7 +14,13 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/api/auth") ||
     pathname === "/giris" ||
     pathname === "/favicon.ico" ||
-    pathname.includes(".")
+    pathname.includes(".") ||
+    // TV public display: ana ekran + SSE + REST fallback auth GEREKTİRMEZ
+    // (/tv/kontrol ve /tv/ayarlar AppShell içinde kendi auth kontrolünü yapar)
+    pathname === "/tv" ||
+    pathname === "/api/tv/yayin" ||
+    pathname === "/api/tv/veriler" ||
+    pathname === "/api/tv/operasyon-istatistik"
   ) {
     return NextResponse.next();
   }

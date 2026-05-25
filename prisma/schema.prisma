@@ -157,6 +157,19 @@ model Hisse {
   vekaletTarihi DateTime?
   notlar        String?
 
+  // KESİM TAKİP (FAZ 9 — TV ekranı için)
+  // kesimDurumu: "beklemede" | "vekalet_onay" | "siradaki" | "kesimde" |
+  //              "parcalama" | "tartimda" | "teslime_hazir" | "teslim_edildi" | "iptal"
+  kesimDurumu   String    @default("beklemede")
+  siraNo        Int? // sıra numarası (1, 2, 3...)
+  asama         String? // "Kesim" | "Deri Yüzme" | "Parçalama Hazırlık" | "Parçalama" | "Tartım" | "Paketleme" | "Teslim"
+  ilerlemeYuzde Int       @default(0) // 0-100
+  kalanSureDk   Int?
+  kesimBaslama  DateTime?
+  kesimBitis    DateTime?
+  teslimNoktasi String? // "Teslim Noktası 1"
+  teslimDurumu  String? // "Hazır" | "Teslim Edildi"
+
   // Soft delete + audit
   silindiMi     Boolean   @default(false)
   silinmeTarihi DateTime?
@@ -173,6 +186,8 @@ model Hisse {
   @@unique([kurbanId, no])
   @@index([musteriId])
   @@index([silindiMi])
+  @@index([kesimDurumu])
+  @@index([siraNo])
 }
 
 // ===========================================================================
@@ -355,4 +370,22 @@ model WhatsAppGonderim {
   @@index([kullaniciId])
   @@index([silindiMi])
   @@index([baslamaTarihi])
+}
+
+// ===========================================================================
+// TV AYARI — FAZ 9 (alt bilgi şeritleri ve TV genel ayarları)
+// ===========================================================================
+
+model TvAyari {
+  id            String   @id @default(cuid())
+  anahtarKey    String   @unique // "duyuru" | "sira_hatirlatma" | "hijyen" | "whatsapp_tel" | "lokasyon"
+  deger         String // metin içeriği
+  aktif         Boolean  @default(true)
+  guncelleyenId String?
+
+  // Standart timestamp
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([aktif])
 }

@@ -28,7 +28,10 @@ export type AuditEylem =
   | "whatsapp-sablon-olustur"
   | "whatsapp-sablon-guncelle"
   | "whatsapp-sablon-sil"
-  | "whatsapp-toplu-gonderim";
+  | "whatsapp-toplu-gonderim"
+  | "tv-durum-degisikligi"
+  | "tv-ilerleme-guncelle"
+  | "tv-ayar-guncelle";
 
 export interface AuditVeri {
   eylem: AuditEylem;
