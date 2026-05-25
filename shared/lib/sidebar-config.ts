@@ -40,6 +40,7 @@ import {
   Package,
   Scissors,
   Tv,
+  Printer,
   ClipboardList,
   Stethoscope,
   Scale,
@@ -1076,6 +1077,15 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         ikon: BarChart,
         rota: "/raporlar",
         izin: "raporlar.goruntule",
+      },
+      {
+        id: "kesim-listesi",
+        ad: "Kesim Listesi (Yazdır)",
+        ikon: Printer,
+        rota: "/raporlar/kesim-listesi",
+        izin: "raporlar.goruntule",
+        aciklama:
+          "Tüm kurbanların hisse + müşteri + bakiye detayını A4 dikey yazdırılabilir liste olarak göster.",
       },
       {
         id: "musteri-analiz",
