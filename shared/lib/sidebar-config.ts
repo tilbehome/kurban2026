@@ -1088,6 +1088,15 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
           "Tüm kurbanların hisse + müşteri + bakiye detayını A4 dikey yazdırılabilir liste olarak göster.",
       },
       {
+        id: "kasa-teslim-raporu",
+        ad: "Kasa Teslim Raporu",
+        ikon: Receipt,
+        rota: "/raporlar/kasa-teslim",
+        izin: "kasa.goruntule",
+        aciklama:
+          "Gün sonu kasa kapanışı için A4 rapor: tahsilat/gider/iptal detayı, kasiyer özeti, imza alanı.",
+      },
+      {
         id: "musteri-analiz",
         ad: "Müşteri Analizi",
         ikon: Users,
