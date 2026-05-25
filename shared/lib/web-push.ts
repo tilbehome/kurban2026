@@ -86,6 +86,7 @@ export async function pushGonder(
       data: {
         musteriId: abonelik.musteriId,
         abonelikId,
+        kullaniciId,
         kanal: "push",
         sablon: payload.etiket,
         baslik: payload.baslik,
@@ -109,6 +110,7 @@ export async function pushGonder(
       data: {
         musteriId: abonelik.musteriId,
         abonelikId,
+        kullaniciId,
         kanal: "push",
         sablon: payload.etiket,
         baslik: payload.baslik,
@@ -153,6 +155,14 @@ export async function pushFiltreliGonder(
   payload: PushPayload,
   kullaniciId?: string,
 ): Promise<{ basarili: number; hata: number; toplam: number }> {
+  // GUARD: en az bir filtre VEYA tumune=true zorunlu — kazara broadcast engellendi
+  if (!filtre.tumune && !filtre.musteriId && !filtre.oturumKey) {
+    console.error(
+      "[web-push] pushFiltreliGonder filtresiz çağrıldı — broadcast engellendi",
+    );
+    return { basarili: 0, hata: 0, toplam: 0 };
+  }
+
   const where: Record<string, unknown> = { aktif: true };
   if (filtre.musteriId) where.musteriId = filtre.musteriId;
   if (filtre.oturumKey) where.oturumKey = filtre.oturumKey;

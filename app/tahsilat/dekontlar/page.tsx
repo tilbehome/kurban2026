@@ -9,6 +9,7 @@ import { formatPara } from "@/shared/lib/para";
 import { formatTarihSaat } from "@/shared/lib/tarih";
 import { Receipt, FileText, ExternalLink } from "lucide-react";
 import { DekontAraInput } from "./DekontAraInput";
+import { OdemeIptalButon } from "./OdemeIptalButon";
 
 export const dynamic = "force-dynamic";
 
@@ -120,17 +121,25 @@ export default async function DekontlarPage({ searchParams }: PageProps) {
                         {formatPara(o.toplamTutar)}
                       </td>
                       <td className="px-4 py-2 text-right">
-                        <Link
-                          href={`/api/tahsilat/dekont/${o.id}`}
-                          target="_blank"
-                          className={buttonVariants({
-                            variant: "outline",
-                            size: "sm",
-                          })}
-                        >
-                          <ExternalLink size={12} className="mr-1" />
-                          Aç
-                        </Link>
+                        <div className="flex justify-end gap-1">
+                          {!o.iptal && (
+                            <OdemeIptalButon
+                              odemeId={o.id}
+                              dekontNo={o.dekontNo}
+                            />
+                          )}
+                          <Link
+                            href={`/api/tahsilat/dekont/${o.id}`}
+                            target="_blank"
+                            className={buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                            })}
+                          >
+                            <ExternalLink size={12} className="mr-1" />
+                            Aç
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))

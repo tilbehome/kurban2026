@@ -20,10 +20,12 @@ export const dynamic = "force-dynamic";
 const AbonelikSchema = z.object({
   musteriId: z.string().nullable().optional(),
   kurbanId: z.string().nullable().optional(),
-  // Client-side oluşturulmuş kimlik (sayfada localStorage'da)
-  endpoint: z.string().min(8).max(500),
-  p256dh: z.string().max(500).default(""),
-  auth: z.string().max(500).default(""),
+  // Push endpoint URL formatlı olmalı (FCM, APNs, vs.)
+  endpoint: z.string().url().min(20).max(500),
+  // P-256 public key — gerçek key 65+ karakter base64, min 40 yeterli koruma
+  p256dh: z.string().min(40).max(500),
+  // Auth secret — 16+ karakter base64, min 8 yeterli koruma
+  auth: z.string().min(8).max(500),
   userAgent: z.string().max(300).optional(),
 });
 

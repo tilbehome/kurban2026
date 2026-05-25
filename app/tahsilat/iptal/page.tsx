@@ -77,7 +77,9 @@ export default async function IptalListesiPage() {
           </Card>
         )}
         <p className="text-muted-foreground mt-3 text-xs">
-          İptal işlemi için dekontlar listesinden ilgili kaydı seçin (geliştirme).
+          İptal yapmak için Dekontlar sayfasında ilgili ödemenin{" "}
+          <strong>İptal</strong> butonuna basın. İptal edilen kayıtlar bu
+          sayfada listelenir, kasa hareketleri otomatik ters çevrilir.
         </p>
       </div>
     </AppShell>

@@ -10,6 +10,7 @@
  */
 
 import { prisma } from "@/shared/lib/prisma";
+import { telefonNormalize } from "@/shared/lib/telefon";
 
 export type AramaTipi =
   | "kurban"
@@ -43,7 +44,6 @@ export interface AramaSonucu {
 }
 
 const DANA_REGEX = /^(?:dana|kurban)?[\s-]*(\d{1,4})$/i;
-const TELEFON_REGEX = /^(?:\+90)?[\s-]*0?5\d{9}$/;
 const MUSTERI_NO_REGEX = /^0*\d{4,8}$/;
 const KOD_REGEX = /^\d{4}$/;
 
@@ -75,15 +75,9 @@ export async function akilliAra(input: string): Promise<AramaSonucu> {
     }
   }
 
-  // 2. Telefon araması — "0532...", "+90 532..."
-  if (TELEFON_REGEX.test(temiz)) {
-    const rakam = temiz.replace(/\D/g, "");
-    const normalize = rakam.startsWith("90")
-      ? rakam.slice(2)
-      : rakam.startsWith("0")
-        ? rakam.slice(1)
-        : rakam;
-
+  // 2. Telefon araması — TR mobil formatları (0532..., +90 532..., 532..., boşluk/tire dahil)
+  const normalize = telefonNormalize(temiz);
+  if (normalize) {
     const musteri = await prisma.musteri.findFirst({
       where: {
         silindiMi: false,
@@ -91,6 +85,7 @@ export async function akilliAra(input: string): Promise<AramaSonucu> {
           { telefon: { contains: normalize } },
           { telefon: { contains: "0" + normalize } },
           { telefon: { contains: "+90" + normalize } },
+          { telefon: { contains: "90" + normalize } },
         ],
       },
       select: { id: true, adSoyad: true, telefon: true },

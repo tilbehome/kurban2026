@@ -9,7 +9,19 @@ import fs from "node:fs";
 import path from "node:path";
 import { dosyaTarihi } from "./tarih";
 
-const DB_YOL = path.join(process.cwd(), "prisma", "tilbe.db");
+function dbDosyaYolu(): string {
+  const dbUrl = process.env.DATABASE_URL ?? "file:./prisma/tilbe.db";
+  if (!dbUrl.startsWith("file:")) {
+    throw new Error(
+      `Backup desteklemez: ${dbUrl} (sadece SQLite file: protokolü)`,
+    );
+  }
+  const rel = dbUrl.slice("file:".length);
+  return path.isAbsolute(rel) ? rel : path.join(process.cwd(), rel);
+}
+
+const DB_YOL = dbDosyaYolu();
+const DB_AD = path.basename(DB_YOL, ".db");
 const YEDEK_KLASOR = path.join(process.cwd(), "backups");
 const MAX_YEDEK_GUN = 30;
 
@@ -31,7 +43,7 @@ export async function yedekAl(neden = "manuel"): Promise<YedekSonuc> {
     }
 
     const tarih = dosyaTarihi();
-    const dosyaAdi = `tilbe-${tarih}-${neden}.db`;
+    const dosyaAdi = `${DB_AD}-${tarih}-${neden}.db`;
     const yedekYolu = path.join(YEDEK_KLASOR, dosyaAdi);
 
     fs.copyFileSync(DB_YOL, yedekYolu);

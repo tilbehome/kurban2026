@@ -67,7 +67,7 @@ Kurban Bayramınızı en içten dileklerimizle kutlar, sağlık, mutluluk ve ber
 
 Kurban etiniz teslime hazırdır. Bugün {bugun} itibariyle çiftliğimizden alabilirsiniz.
 
-Adres: Adabereket Hayvancılık
+Adres: {sirketAdi}
 İletişim: {sirketTel}
 
 Hayırlı bayramlar.`,

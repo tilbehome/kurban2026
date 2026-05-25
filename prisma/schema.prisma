@@ -448,6 +448,7 @@ model BildirimLog {
   musteriId    String?
   abonelikId   String?
   abonelik     PushAbonelik? @relation(fields: [abonelikId], references: [id])
+  kullaniciId  String? // Bildirimi gönderen kullanıcı (audit için)
   kanal        String // "push" | "whatsapp" | "sesli" | "sms"
   sablon       String? // "kesim_basladi" | "tartim_basladi" | "paket_hazir" | "sira_yaklasti" vs
   baslik       String
@@ -460,4 +461,5 @@ model BildirimLog {
   @@index([musteriId])
   @@index([kanal])
   @@index([createdAt])
+  @@index([kullaniciId])
 }
