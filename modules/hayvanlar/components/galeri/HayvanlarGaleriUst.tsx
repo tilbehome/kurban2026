@@ -3,10 +3,13 @@
 import { Search, LayoutGrid, List, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import type {
-  DurumKategori,
-  SiralaTip,
-  GorunumTip,
+import {
+  type DurumKategori,
+  type SiralaTip,
+  type GorunumTip,
+  type HisseGrubuFiltre,
+  HISSE_GRUBU_FILTRELERI,
+  HISSE_GRUBU_ETIKET,
 } from "@/modules/hayvanlar/lib/kurban-filtre";
 
 interface Props {
@@ -14,6 +17,8 @@ interface Props {
   setSorgu: (s: string) => void;
   kategori: DurumKategori;
   setKategori: (k: DurumKategori) => void;
+  hisseGrubuFiltre: HisseGrubuFiltre;
+  setHisseGrubuFiltre: (h: HisseGrubuFiltre) => void;
   sirala: SiralaTip;
   setSirala: (s: SiralaTip) => void;
   gorunum: GorunumTip;
@@ -42,6 +47,8 @@ export function HayvanlarGaleriUst({
   setSorgu,
   kategori,
   setKategori,
+  hisseGrubuFiltre,
+  setHisseGrubuFiltre,
   sirala,
   setSirala,
   gorunum,
@@ -98,6 +105,25 @@ export function HayvanlarGaleriUst({
               >
                 {sayilar[k]}
               </span>
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="text-muted-foreground mb-1.5 text-xs font-medium">
+          Kg Grubu
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {HISSE_GRUBU_FILTRELERI.map((g) => (
+            <Button
+              key={g}
+              variant={hisseGrubuFiltre === g ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setHisseGrubuFiltre(g)}
+              className="h-7 text-xs"
+            >
+              {HISSE_GRUBU_ETIKET[g]}
             </Button>
           ))}
         </div>

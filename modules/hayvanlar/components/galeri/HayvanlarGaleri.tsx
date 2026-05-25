@@ -10,9 +10,11 @@ import {
   type DurumKategori,
   type SiralaTip,
   type GorunumTip,
+  type HisseGrubuFiltre,
   aramaUygunMu,
   kategoriyeUygunMu,
   kategoriSayilari,
+  hisseGrubuUygunMu,
   sirala as siralaListe,
 } from "@/modules/hayvanlar/lib/kurban-filtre";
 import { HayvanlarGaleriUst } from "./HayvanlarGaleriUst";
@@ -26,6 +28,8 @@ interface Props {
 export function HayvanlarGaleri({ kurbanlar }: Props) {
   const [sorgu, setSorgu] = useState("");
   const [kategori, setKategori] = useState<DurumKategori>("hepsi");
+  const [hisseGrubuFiltre, setHisseGrubuFiltre] =
+    useState<HisseGrubuFiltre>("tum");
   const [sirala, setSirala] = useState<SiralaTip>("sira");
   const [gorunum, setGorunum] = useState<GorunumTip>("grid");
 
@@ -34,9 +38,10 @@ export function HayvanlarGaleri({ kurbanlar }: Props) {
   const filtreli = useMemo(() => {
     const filtreList = kurbanlar
       .filter((k) => kategoriyeUygunMu(k, kategori))
+      .filter((k) => hisseGrubuUygunMu(k, hisseGrubuFiltre))
       .filter((k) => aramaUygunMu(k, sorgu));
     return siralaListe(filtreList, sirala);
-  }, [kurbanlar, kategori, sorgu, sirala]);
+  }, [kurbanlar, kategori, hisseGrubuFiltre, sorgu, sirala]);
 
   if (kurbanlar.length === 0) {
     return (
@@ -60,6 +65,8 @@ export function HayvanlarGaleri({ kurbanlar }: Props) {
         setSorgu={setSorgu}
         kategori={kategori}
         setKategori={setKategori}
+        hisseGrubuFiltre={hisseGrubuFiltre}
+        setHisseGrubuFiltre={setHisseGrubuFiltre}
         sirala={sirala}
         setSirala={setSirala}
         gorunum={gorunum}

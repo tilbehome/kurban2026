@@ -5,15 +5,25 @@ import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 
-const IlerlemeSchema = z.object({
-  hisseId: z.string().min(1),
-  ilerlemeYuzde: z.number().int().min(0).max(100).optional(),
-  kalanSureDk: z.number().int().min(0).max(1440).nullable().optional(),
-  asama: z.string().nullable().optional(),
-});
+const IlerlemeSchema = z
+  .object({
+    // Geriye uyum: hisseId hala kabul edilir
+    hisseId: z.string().min(1).optional(),
+    // Yeni: kurban bazlı (SPRINT-9)
+    kurbanId: z.string().min(1).optional(),
+    ilerlemeYuzde: z.number().int().min(0).max(100).optional(),
+    kalanSureDk: z.number().int().min(0).max(1440).nullable().optional(),
+    asama: z.string().nullable().optional(),
+  })
+  .refine((v) => v.hisseId || v.kurbanId, {
+    message: "hisseId veya kurbanId zorunlu",
+  });
 
 /**
- * Hissenin ilerleme yüzdesini ve kalan süreyi güncelle (admin/kasiyer).
+ * Kurban veya hisse seviyesi ilerleme güncelle (admin/kasiyer).
+ *
+ * - kurbanId verilirse: Kurban + tüm aktif hisseleri senkron güncellenir
+ * - hisseId verilirse: tek hisse güncellenir (eski davranış)
  */
 export async function PATCH(req: Request) {
   const oturum = await aktifOturum();
@@ -52,15 +62,40 @@ export async function PATCH(req: Request) {
   }
 
   try {
+    if (veri.kurbanId) {
+      await prisma.$transaction([
+        prisma.kurban.update({
+          where: { id: veri.kurbanId },
+          data,
+        }),
+        prisma.hisse.updateMany({
+          where: { kurbanId: veri.kurbanId, silindiMi: false },
+          data,
+        }),
+      ]);
+
+      await auditLog({
+        eylem: "tv-ilerleme-guncelle",
+        model: "Kurban",
+        kayitId: veri.kurbanId,
+        kullaniciId: oturum.kullaniciId,
+        ip: ipCikar(req),
+        detaylar: data,
+      });
+
+      return NextResponse.json({ basarili: true });
+    }
+
+    // Hisse bazlı (eski davranış)
     const guncel = await prisma.hisse.update({
-      where: { id: veri.hisseId },
+      where: { id: veri.hisseId! },
       data,
     });
 
     await auditLog({
       eylem: "tv-ilerleme-guncelle",
       model: "Hisse",
-      kayitId: veri.hisseId,
+      kayitId: veri.hisseId!,
       kullaniciId: oturum.kullaniciId,
       ip: ipCikar(req),
       detaylar: data,
@@ -70,7 +105,7 @@ export async function PATCH(req: Request) {
   } catch (e) {
     console.error("ilerleme guncelle hatası:", e);
     return NextResponse.json(
-      { basarili: false, hata: "Hisse bulunamadı veya güncellenemedi" },
+      { basarili: false, hata: "Kayıt bulunamadı veya güncellenemedi" },
       { status: 404 },
     );
   }

@@ -27,6 +27,11 @@ export function KurbanKart({ kurban }: Props) {
           {kurban.kupeNo && (
             <span className="font-mono">Küpe: {kurban.kupeNo}</span>
           )}
+          {kurban.hisseGrubu && (
+            <span className="inline-flex items-center rounded bg-orange-100 px-1.5 py-0.5 text-[10px] font-semibold text-orange-700">
+              {kurban.hisseGrubu} KG
+            </span>
+          )}
           {kurban.kesimSaati && (
             <span className="flex items-center gap-1">
               <Clock size={11} />

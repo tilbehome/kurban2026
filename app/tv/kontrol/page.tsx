@@ -10,11 +10,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { TvKontrolClient } from "@/modules/tv/components/TvKontrolClient";
 import { AcilDurumKart } from "@/modules/tv/components/admin/AcilDurumKart";
 import { SiraYonetimKart } from "@/modules/tv/components/admin/SiraYonetimKart";
-import type {
-  KesimDurumu,
-  Asama,
-} from "@/modules/tv/types";
-import type { KontrolHisseSatir } from "@/modules/tv/components/TvKontrolClient";
+import type { KurbanKesimDurumu } from "@/modules/tv/lib/asama-akisi";
+import type { KontrolKurbanSatir } from "@/modules/tv/components/TvKontrolClient";
 import type { SiraSatir } from "@/modules/tv/components/admin/SiraYonetimKart";
 
 export const dynamic = "force-dynamic";
@@ -27,32 +24,37 @@ export default async function TvKontrolPage() {
     return (
       <AppShell>
         <div className="p-8 text-center">
-          <p className="text-muted-foreground">
-            TV kontrol yetkiniz yok.
-          </p>
+          <p className="text-muted-foreground">TV kontrol yetkiniz yok.</p>
         </div>
       </AppShell>
     );
   }
 
-  // Paralel sorgular
-  const [hisselerRaw, sirayaAlinanlarRaw, acilKey, acilMesajKey] =
+  // KURBAN BAZLI sorgu (SPRINT-9): 63 satır, her satır 1 dana
+  const [kurbanlarRaw, sirayaAlinanlarRaw, acilKey, acilMesajKey] =
     await Promise.all([
-      prisma.hisse.findMany({
-        where: { silindiMi: false, musteriId: { not: null } },
-        orderBy: [{ kurban: { kesimSirasi: "asc" } }, { no: "asc" }],
-        take: 500,
+      prisma.kurban.findMany({
+        where: { silindiMi: false },
+        orderBy: [{ operasyonSira: "asc" }, { kesimSirasi: "asc" }],
         select: {
           id: true,
-          no: true,
+          kesimSirasi: true,
+          kupeNo: true,
+          hisseGrubu: true,
           kesimDurumu: true,
-          siraNo: true,
+          operasyonSira: true,
           asama: true,
           ilerlemeYuzde: true,
           kalanSureDk: true,
-          teslimNoktasi: true,
-          kurban: { select: { kesimSirasi: true } },
-          musteri: { select: { adSoyad: true } },
+          kesimBaslama: true,
+          hisseler: {
+            where: { silindiMi: false },
+            select: {
+              id: true,
+              musteriId: true,
+              vekaletAlindi: true,
+            },
+          },
         },
       }),
       prisma.kurban.findMany({
@@ -73,17 +75,25 @@ export default async function TvKontrolPage() {
       prisma.tvAyari.findUnique({ where: { anahtarKey: "acil_durum_mesaj" } }),
     ]);
 
-  const hisseler: KontrolHisseSatir[] = hisselerRaw.map((h) => ({
-    id: h.id,
-    hisseEtiket: `#${h.kurban.kesimSirasi}.${h.no}`,
-    musteriAdSoyad: h.musteri?.adSoyad ?? null,
-    kesimDurumu: h.kesimDurumu as KesimDurumu,
-    siraNo: h.siraNo,
-    asama: (h.asama as Asama | null) ?? null,
-    ilerlemeYuzde: h.ilerlemeYuzde,
-    kalanSureDk: h.kalanSureDk,
-    teslimNoktasi: h.teslimNoktasi,
-  }));
+  const kurbanlar: KontrolKurbanSatir[] = kurbanlarRaw.map((k) => {
+    const doluHisse = k.hisseler.filter((h) => h.musteriId).length;
+    const vekaletAlinan = k.hisseler.filter((h) => h.vekaletAlindi).length;
+    return {
+      id: k.id,
+      kesimSirasi: k.kesimSirasi,
+      kupeNo: k.kupeNo ?? null,
+      hisseGrubu: k.hisseGrubu ?? null,
+      kesimDurumu: k.kesimDurumu as KurbanKesimDurumu,
+      operasyonSira: k.operasyonSira ?? null,
+      asama: k.asama ?? null,
+      ilerlemeYuzde: k.ilerlemeYuzde,
+      kalanSureDk: k.kalanSureDk,
+      kesimBaslama: k.kesimBaslama?.toISOString() ?? null,
+      hisseDolu: doluHisse,
+      hisseToplam: k.hisseler.length,
+      vekaletAlinan,
+    };
+  });
 
   const siraSatirlar: SiraSatir[] = sirayaAlinanlarRaw.map((k, i) => ({
     id: k.id,
@@ -100,7 +110,7 @@ export default async function TvKontrolPage() {
     <AppShell>
       <SayfaBaslik
         baslik="TV Kontrol Paneli"
-        altBaslik={`${hisseler.length} hisse · ${siraSatirlar.length} sıradaki kurban`}
+        altBaslik={`${kurbanlar.length} kurban · ${siraSatirlar.length} sıradaki`}
         aksiyonlar={
           <div className="flex gap-2">
             <Link
@@ -145,7 +155,6 @@ export default async function TvKontrolPage() {
         }
       />
       <div className="flex flex-col gap-4 p-4 sm:p-6">
-        {/* Üst sıra: Acil Durum + Sıra Yönetimi (admin only) */}
         {adminMiResult && (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <AcilDurumKart
@@ -156,10 +165,8 @@ export default async function TvKontrolPage() {
           </div>
         )}
 
-        {/* Ana hisse kontrol paneli */}
-        <TvKontrolClient hisseler={hisseler} />
+        <TvKontrolClient kurbanlar={kurbanlar} />
 
-        {/* TV canlı önizleme — sadece admin */}
         {adminMiResult && (
           <div className="mt-2 flex flex-col gap-2 rounded-xl border border-stone-200 bg-white p-3">
             <div className="flex items-center justify-between">

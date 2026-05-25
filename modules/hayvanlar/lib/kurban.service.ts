@@ -18,6 +18,7 @@ export interface KurbanOzet {
   kupeNo: string | null;
   kesimSaati: string | null;
   canliAgirlik: number | null;
+  hisseGrubu: string | null;
   hisseSayisi: number;
   bosHisseSayisi: number;
   satisBedeli: number;
@@ -75,6 +76,7 @@ export async function kurbanlariListele(): Promise<KurbanOzet[]> {
       `#${k.kesimSirasi}`,
       String(k.kesimSirasi),
       k.kupeNo ?? "",
+      k.hisseGrubu ?? "",
       ...hissedarlar.map((h) => h.adSoyad ?? ""),
       ...hissedarlar.map((h) => h.telefon ?? ""),
     ]
@@ -87,6 +89,7 @@ export async function kurbanlariListele(): Promise<KurbanOzet[]> {
       kupeNo: k.kupeNo,
       kesimSaati: k.kesimSaati,
       canliAgirlik: k.canliAgirlik ?? null,
+      hisseGrubu: k.hisseGrubu ?? null,
       hisseSayisi: k.hisseSayisi,
       bosHisseSayisi,
       satisBedeli,

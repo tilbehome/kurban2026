@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Printer as PrinterIcon } from "lucide-react";
 import { AppShell } from "@/shared/components/AppShell";
 import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
@@ -64,6 +65,28 @@ export default async function DashboardPage() {
         adSoyad={oturum?.adSoyad ?? "Misafir"}
         sonYedek={yedekZamani}
       />
+
+      <section className="px-4 pb-4 sm:px-6">
+        <Link
+          href="/raporlar/kesim-listesi"
+          className="hover:border-orange-400 hover:bg-orange-50/50 group flex items-center gap-3 rounded-xl border-2 border-orange-200 bg-linear-to-r from-orange-50 to-amber-50 p-4 transition-all"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-100">
+            <PrinterIcon className="size-6 text-orange-700" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="font-semibold text-orange-900">
+              Kesim Listesi Yazdır
+            </div>
+            <div className="text-muted-foreground mt-0.5 text-xs">
+              A4 dikey · 4 kurban / sayfa · Bayram günü saha için
+            </div>
+          </div>
+          <div className="text-orange-600 group-hover:translate-x-0.5 transition-transform">
+            →
+          </div>
+        </Link>
+      </section>
 
       <section className="px-4 pb-8 sm:px-6">
         <Card>

@@ -131,3 +131,41 @@ export function avatarRenk(ad: string): string {
   const hash = ad.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   return AVATAR_RENKLERI[hash % AVATAR_RENKLERI.length]!;
 }
+
+export type HisseGrubuFiltre =
+  | "tum"
+  | "30-35"
+  | "35-40"
+  | "40-45"
+  | "45-50"
+  | "50-55"
+  | "belirsiz";
+
+export const HISSE_GRUBU_FILTRELERI: HisseGrubuFiltre[] = [
+  "tum",
+  "30-35",
+  "35-40",
+  "40-45",
+  "45-50",
+  "50-55",
+  "belirsiz",
+];
+
+export const HISSE_GRUBU_ETIKET: Record<HisseGrubuFiltre, string> = {
+  tum: "Tüm Kg",
+  "30-35": "30-35 KG",
+  "35-40": "35-40 KG",
+  "40-45": "40-45 KG",
+  "45-50": "45-50 KG",
+  "50-55": "50-55 KG",
+  belirsiz: "Belirsiz",
+};
+
+export function hisseGrubuUygunMu(
+  k: KurbanOzet,
+  filtre: HisseGrubuFiltre,
+): boolean {
+  if (filtre === "tum") return true;
+  if (filtre === "belirsiz") return !k.hisseGrubu;
+  return k.hisseGrubu === filtre;
+}
