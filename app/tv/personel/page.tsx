@@ -3,15 +3,37 @@ import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
 import { prisma } from "@/shared/lib/prisma";
 import { PersonelAnaClient } from "@/modules/tv/components/personel/PersonelAnaClient";
-import type { PersonelKurbanData } from "@/modules/tv/components/personel/PersonelKurbanKart";
-import type { KurbanKesimDurumu } from "@/modules/tv/lib/asama-akisi";
+import {
+  gorevGecerliMi,
+  type PersonelGorev,
+} from "@/modules/tv/lib/personel-gorev";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Personel telefon arayüzü — tek tıkla kurban aşaması ilerletir.
- * Auth gerekir, tv.kontrol izni gerekir.
- */
+export interface PersonelHisseVeri {
+  id: string;
+  no: number;
+  musteriAdi: string | null;
+  musteriTel: string | null;
+  vekaletAlindi: boolean;
+  paketDurumu: string | null;
+  paketKg: number | null;
+  teslimDurumu: string | null;
+}
+
+export interface PersonelKurbanVeri {
+  id: string;
+  kesimSirasi: number;
+  operasyonSira: number | null;
+  kesimDurumu: string;
+  asama: string | null;
+  ilerlemeYuzde: number;
+  kalanSureDk: number | null;
+  toplamKg: number | null;
+  hisseSayisi: number;
+  hisseler: PersonelHisseVeri[];
+}
+
 export default async function TvPersonelPage() {
   const oturum = await aktifOturum();
   if (!oturum) redirect("/giris");
@@ -19,16 +41,20 @@ export default async function TvPersonelPage() {
   if (!izinKontrol(oturum, "tv.kontrol")) {
     return (
       <div className="bg-slate-50 flex min-h-screen items-center justify-center p-8 text-center">
-        <div>
-          <p className="text-muted-foreground text-sm">
-            Personel paneli için TV kontrol yetkiniz gerekiyor.
-          </p>
-        </div>
+        <p className="text-muted-foreground text-sm">
+          Personel paneli için TV kontrol yetkiniz gerekiyor.
+        </p>
       </div>
     );
   }
 
-  // Aktif + sıradaki tüm kurbanları çek
+  const kullanici = await prisma.kullanici.findUnique({
+    where: { id: oturum.kullaniciId },
+    select: { gorev: true },
+  });
+
+  const baslangicGorev: PersonelGorev = gorevGecerliMi(kullanici?.gorev);
+
   const kurbanlarRaw = await prisma.kurban.findMany({
     where: {
       silindiMi: false,
@@ -42,35 +68,50 @@ export default async function TvPersonelPage() {
           "parcalama",
           "tartimda",
           "paketleme",
+          "teslime_hazir",
         ],
       },
     },
     orderBy: [{ operasyonSira: "asc" }, { kesimSirasi: "asc" }],
-    take: 30,
-    select: {
-      id: true,
-      kesimSirasi: true,
-      operasyonSira: true,
-      kesimDurumu: true,
-      asama: true,
-      ilerlemeYuzde: true,
-      kalanSureDk: true,
+    take: 60,
+    include: {
+      hisseler: {
+        where: { silindiMi: false },
+        orderBy: { no: "asc" },
+        include: {
+          musteri: { select: { adSoyad: true, telefon: true } },
+        },
+      },
     },
   });
 
-  const kurbanlar: PersonelKurbanData[] = kurbanlarRaw.map((k) => ({
+  const kurbanlar: PersonelKurbanVeri[] = kurbanlarRaw.map((k) => ({
     id: k.id,
     kesimSirasi: k.kesimSirasi,
     operasyonSira: k.operasyonSira,
-    kesimDurumu: k.kesimDurumu as KurbanKesimDurumu,
+    kesimDurumu: k.kesimDurumu,
     asama: k.asama,
     ilerlemeYuzde: k.ilerlemeYuzde,
     kalanSureDk: k.kalanSureDk,
+    toplamKg: k.toplamKg ?? null,
+    hisseSayisi: k.hisseSayisi,
+    hisseler: k.hisseler.map((h) => ({
+      id: h.id,
+      no: h.no,
+      musteriAdi: h.musteri?.adSoyad ?? null,
+      musteriTel: h.musteri?.telefon ?? null,
+      vekaletAlindi: h.vekaletAlindi,
+      paketDurumu: h.paketDurumu,
+      paketKg: h.paketKg,
+      teslimDurumu: h.teslimDurumu,
+    })),
   }));
 
   return (
     <PersonelAnaClient
       kullaniciAd={oturum.adSoyad}
+      kullaniciId={oturum.kullaniciId}
+      baslangicGorev={baslangicGorev}
       kurbanlar={kurbanlar}
     />
   );

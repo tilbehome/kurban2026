@@ -26,6 +26,7 @@ model Kullanici {
   sifreHash    String
   adSoyad      String
   rol          String // "admin" | "kasiyer" | "izleyici"
+  gorev        String? // "vekalet" | "kesim" | "tartim" | "paketleme" | "teslim" | null (genel)
   aktif        Boolean   @default(true)
   sonGiris     DateTime?
 

@@ -1,63 +1,129 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Volume2,
   VolumeX,
-  Activity,
-  List,
   ArrowLeft,
+  RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { useSeslicAnons } from "@/modules/tv/hooks/useSeslicAnons";
 import {
-  PersonelKurbanKart,
-  type PersonelKurbanData,
-} from "./PersonelKurbanKart";
+  GOREV_ASAMALARI,
+  GOREV_KISA,
+  PERSONEL_GOREVLERI,
+  type PersonelGorev,
+} from "@/modules/tv/lib/personel-gorev";
+import { PersonelGorevSekme } from "./PersonelGorevSekme";
+import { PersonelAktifIs } from "./PersonelAktifIs";
+import { PersonelGorevKart } from "./PersonelGorevKart";
+import { VekaletPanel } from "./ozel-aksiyonlar/VekaletPanel";
+import { TartimKeypad } from "./ozel-aksiyonlar/TartimKeypad";
+import { PaketlemePanel } from "./ozel-aksiyonlar/PaketlemePanel";
+import { TeslimPanel } from "./ozel-aksiyonlar/TeslimPanel";
+import { SorunBildirDialog } from "./yardimcilar/SorunBildirDialog";
+import type {
+  PersonelKurbanVeri,
+} from "@/app/tv/personel/page";
 
-interface PersonelAnaClientProps {
+const STORAGE_GOREV = "tv.personel.gorev";
+const STORAGE_AKTIF_IS = "tv.personel.aktif-is";
+
+interface Props {
   kullaniciAd: string;
-  kurbanlar: PersonelKurbanData[];
+  kullaniciId: string;
+  baslangicGorev: PersonelGorev;
+  kurbanlar: PersonelKurbanVeri[];
 }
 
-/**
- * Personel telefon ana ekranı.
- * Aktif kurbanları listeler, "Sonraki Aşamaya Geç" tek tıkla.
- */
 export function PersonelAnaClient({
   kullaniciAd,
+  baslangicGorev,
   kurbanlar,
-}: PersonelAnaClientProps) {
+}: Props) {
+  const router = useRouter();
   const { aktif: sesAktif, aktifEt: sesAktifEt, destek: sesDestek } =
     useSeslicAnons();
 
-  const aktifKurbanlar = useMemo(
-    () =>
-      kurbanlar.filter(
-        (k) =>
-          k.kesimDurumu !== "beklemede" &&
-          k.kesimDurumu !== "tamamlandi" &&
-          k.kesimDurumu !== "iptal",
-      ),
-    [kurbanlar],
+  const [aktifGorev, setAktifGorev] = useState<PersonelGorev>(baslangicGorev);
+  const [aktifIsId, setAktifIsId] = useState<string | null>(null);
+  const [sorunKurban, setSorunKurban] = useState<PersonelKurbanVeri | null>(null);
+
+  useEffect(() => {
+    try {
+      const k = localStorage.getItem(STORAGE_GOREV);
+      if (k && (PERSONEL_GOREVLERI as string[]).includes(k)) {
+        setAktifGorev(k as PersonelGorev);
+      }
+      const ai = localStorage.getItem(STORAGE_AKTIF_IS);
+      if (ai) setAktifIsId(ai);
+    } catch {
+      /* localStorage yoksa devam */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_GOREV, aktifGorev);
+    } catch {
+      /* sessiz */
+    }
+  }, [aktifGorev]);
+
+  useEffect(() => {
+    try {
+      if (aktifIsId) localStorage.setItem(STORAGE_AKTIF_IS, aktifIsId);
+      else localStorage.removeItem(STORAGE_AKTIF_IS);
+    } catch {
+      /* sessiz */
+    }
+  }, [aktifIsId]);
+
+  const sayilar = useMemo(() => {
+    const sayim = Object.fromEntries(
+      PERSONEL_GOREVLERI.map((g) => [g, 0]),
+    ) as Record<PersonelGorev, number>;
+    for (const k of kurbanlar) {
+      for (const g of PERSONEL_GOREVLERI) {
+        if (GOREV_ASAMALARI[g].includes(k.kesimDurumu)) sayim[g]++;
+      }
+    }
+    return sayim;
+  }, [kurbanlar]);
+
+  const aktifIs = useMemo(
+    () => kurbanlar.find((k) => k.id === aktifIsId) ?? null,
+    [kurbanlar, aktifIsId],
   );
 
-  const sıradakiler = useMemo(
-    () =>
-      kurbanlar.filter(
-        (k) =>
-          k.kesimDurumu === "siradaki" || k.kesimDurumu === "vekalet_bekliyor",
-      ),
-    [kurbanlar],
-  );
+  const gorevListesi = useMemo(() => {
+    const asamalar = GOREV_ASAMALARI[aktifGorev];
+    return kurbanlar
+      .filter((k) => asamalar.includes(k.kesimDurumu))
+      .filter((k) => k.id !== aktifIsId);
+  }, [kurbanlar, aktifGorev, aktifIsId]);
+
+  function yenile() {
+    router.refresh();
+  }
+
+  function isiAl(id: string) {
+    setAktifIsId(id);
+  }
+
+  function isiBirak() {
+    setAktifIsId(null);
+  }
 
   return (
     <div className="min-h-screen bg-stone-50">
-      {/* Üst bar */}
-      <header className="bg-slate-900 text-white sticky top-0 z-10 flex items-center justify-between px-4 py-3 shadow-lg">
+      <header className="bg-slate-900 text-white sticky top-0 z-20 flex items-center justify-between px-4 py-3 shadow-lg">
         <Link
           href="/"
           className="text-slate-300 hover:text-white flex items-center gap-1 text-sm"
@@ -67,107 +133,98 @@ export function PersonelAnaClient({
         </Link>
         <div className="flex flex-col items-center leading-tight">
           <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-300">
-            Personel
+            {GOREV_KISA[aktifGorev]}
           </span>
           <span className="text-sm font-bold">{kullaniciAd}</span>
         </div>
-        <button
-          type="button"
-          onClick={() => sesAktifEt(!sesAktif)}
-          disabled={!sesDestek}
-          className={cn(
-            "rounded-full p-2 transition-colors",
-            sesAktif
-              ? "bg-emerald-500 text-white"
-              : "bg-slate-700 text-slate-300",
-          )}
-          aria-label="Sesli anons toggle"
-        >
-          {sesAktif ? <Volume2 size={14} /> : <VolumeX size={14} />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={yenile}
+            className="rounded-full p-2 text-slate-300 hover:bg-slate-700"
+            aria-label="Yenile"
+          >
+            <RefreshCw size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => sesAktifEt(!sesAktif)}
+            disabled={!sesDestek}
+            className={cn(
+              "rounded-full p-2 transition-colors",
+              sesAktif
+                ? "bg-emerald-500 text-white"
+                : "bg-slate-700 text-slate-300",
+            )}
+            aria-label="Sesli anons toggle"
+          >
+            {sesAktif ? <Volume2 size={14} /> : <VolumeX size={14} />}
+          </button>
+        </div>
       </header>
 
       <div className="mx-auto flex max-w-md flex-col gap-4 p-4">
-        {/* İstatistik mini */}
-        <div className="grid grid-cols-2 gap-2">
-          <Card>
-            <CardContent className="flex items-center gap-2.5 p-3">
-              <Activity size={20} className="text-orange-500" />
-              <div className="flex flex-col leading-tight">
-                <span className="text-muted-foreground text-[10px] uppercase">
-                  Aktif
-                </span>
-                <span className="font-tabular text-xl font-extrabold">
-                  {aktifKurbanlar.length}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="flex items-center gap-2.5 p-3">
-              <List size={20} className="text-purple-500" />
-              <div className="flex flex-col leading-tight">
-                <span className="text-muted-foreground text-[10px] uppercase">
-                  Sırada
-                </span>
-                <span className="font-tabular text-xl font-extrabold">
-                  {sıradakiler.length}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <PersonelGorevSekme
+          aktif={aktifGorev}
+          setAktif={setAktifGorev}
+          sayilar={sayilar}
+        />
 
-        {/* Aktif kurbanlar */}
+        {aktifIs && (
+          <PersonelAktifIs
+            kurban={aktifIs}
+            birak={isiBirak}
+            sorunBildir={() => setSorunKurban(aktifIs)}
+            yenile={yenile}
+          />
+        )}
+
+        {aktifIs && aktifGorev === "vekalet" &&
+          aktifIs.kesimDurumu === "vekalet_bekliyor" && (
+            <VekaletPanel kurban={aktifIs} yenile={yenile} />
+          )}
+
+        {aktifIs && aktifGorev === "tartim" &&
+          aktifIs.kesimDurumu === "tartimda" && (
+            <TartimKeypad kurban={aktifIs} yenile={yenile} />
+          )}
+
+        {aktifIs && aktifGorev === "paketleme" &&
+          aktifIs.kesimDurumu === "paketleme" && (
+            <PaketlemePanel kurban={aktifIs} yenile={yenile} />
+          )}
+
+        {aktifIs && aktifGorev === "teslim" &&
+          (aktifIs.kesimDurumu === "teslime_hazir" ||
+            aktifIs.kesimDurumu === "tamamlandi") && (
+            <TeslimPanel kurban={aktifIs} yenile={yenile} />
+          )}
+
         <div className="flex flex-col gap-2">
           <h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-            Aktif Kurbanlar ({aktifKurbanlar.length})
+            Görevlerim ({gorevListesi.length})
           </h2>
-          {aktifKurbanlar.length === 0 ? (
+          {gorevListesi.length === 0 ? (
             <Card>
               <CardContent className="text-muted-foreground py-8 text-center text-sm">
-                Şu an aktif kurban yok
+                {aktifGorev === "genel"
+                  ? "Aktif görev yok."
+                  : `${GOREV_KISA[aktifGorev]} kategorisinde görev yok.`}
               </CardContent>
             </Card>
           ) : (
-            aktifKurbanlar.map((k) => (
-              <PersonelKurbanKart key={k.id} kurban={k} />
+            gorevListesi.map((k) => (
+              <PersonelGorevKart
+                key={k.id}
+                kurban={k}
+                aktif={false}
+                isiAl={() => isiAl(k.id)}
+                sorunBildir={() => setSorunKurban(k)}
+                yenile={yenile}
+              />
             ))
           )}
         </div>
-
-        {/* Sıradakiler */}
-        {sıradakiler.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-              Sıradakiler ({sıradakiler.length})
-            </h2>
-            <Card>
-              <CardContent className="flex flex-col gap-1 p-3">
-                {sıradakiler.slice(0, 10).map((k) => (
-                  <div
-                    key={k.id}
-                    className="flex items-center justify-between border-b py-1.5 last:border-0"
-                  >
-                    <span className="text-sm font-semibold">
-                      DANA-{k.kesimSirasi}
-                      {k.operasyonSira !== null && (
-                        <span className="text-muted-foreground ml-2 text-xs">
-                          Sıra: {k.operasyonSira}
-                        </span>
-                      )}
-                    </span>
-                    <span className="text-purple-700 text-[10px] font-semibold">
-                      {k.kesimDurumu === "vekalet_bekliyor"
-                        ? "Vekalet Bekliyor"
-                        : "Sıradaki"}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
         <Link
           href="/tv"
@@ -180,10 +237,25 @@ export function PersonelAnaClient({
           type="button"
           variant="outline"
           className="w-full"
-          onClick={() => window.location.reload()}
+          onClick={() => router.refresh()}
         >
+          <RefreshCw size={14} className="mr-1" />
           Yenile
         </Button>
+
+        {sorunKurban && (
+          <SorunBildirDialog
+            kurban={sorunKurban}
+            kapat={() => setSorunKurban(null)}
+          />
+        )}
+
+        <div className="text-muted-foreground flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs">
+          <AlertTriangle size={14} className="text-amber-600 shrink-0 mt-0.5" />
+          <span>
+            Bayram günü: işi al, aşamayı bitir, sonraki personel listesine düşer.
+          </span>
+        </div>
       </div>
     </div>
   );
