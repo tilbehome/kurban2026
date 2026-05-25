@@ -31,6 +31,8 @@ export interface PersonelKurbanVeri {
   kalanSureDk: number | null;
   toplamKg: number | null;
   hisseSayisi: number;
+  hisseGrubu: string | null;
+  asamaBaslangic: string | null;
   hisseler: PersonelHisseVeri[];
 }
 
@@ -95,6 +97,8 @@ export default async function TvPersonelPage() {
     kalanSureDk: k.kalanSureDk,
     toplamKg: k.toplamKg ?? null,
     hisseSayisi: k.hisseSayisi,
+    hisseGrubu: k.hisseGrubu ?? null,
+    asamaBaslangic: k.asamaBaslangic?.toISOString() ?? null,
     hisseler: k.hisseler.map((h) => ({
       id: h.id,
       no: h.no,

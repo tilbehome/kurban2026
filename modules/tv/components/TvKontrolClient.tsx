@@ -32,6 +32,7 @@ import {
   oncekiGrup,
   type AsamaGrubu,
 } from "@/modules/tv/lib/asama-grup";
+import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
 
 export interface KontrolKurbanSatir {
   id: string;
@@ -44,6 +45,7 @@ export interface KontrolKurbanSatir {
   ilerlemeYuzde: number;
   kalanSureDk: number | null;
   kesimBaslama: string | null;
+  asamaBaslangic: string | null;
   hisseDolu: number;
   hisseToplam: number;
   vekaletAlinan: number;
@@ -253,6 +255,7 @@ export function TvKontrolClient({ kurbanlar }: Props) {
                   <th className="px-3 py-2 text-center">Hisse</th>
                   <th className="px-3 py-2 text-center">Sıra</th>
                   <th className="px-3 py-2 text-center">%</th>
+                  <th className="px-3 py-2 text-center">Süre</th>
                   <th className="px-3 py-2"></th>
                 </tr>
               </thead>
@@ -322,6 +325,17 @@ export function TvKontrolClient({ kurbanlar }: Props) {
                           "—"
                         )}
                       </td>
+                      <td className="px-3 py-2.5 text-center text-xs">
+                        {k.asamaBaslangic ? (
+                          <AsamaSayaci
+                            baslangic={k.asamaBaslangic}
+                            boyut="kompakt"
+                            tema="acik"
+                          />
+                        ) : (
+                          <span className="text-stone-400">—</span>
+                        )}
+                      </td>
                       <td className="px-3 py-2.5">
                         <div
                           className="flex items-center justify-end gap-1"
@@ -361,7 +375,7 @@ export function TvKontrolClient({ kurbanlar }: Props) {
                 {filtreli.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="text-muted-foreground py-12 text-center text-xs"
                     >
                       Sonuç yok

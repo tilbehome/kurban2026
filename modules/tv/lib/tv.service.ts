@@ -86,6 +86,7 @@ export async function getSutunVerileri(): Promise<TvSutunlar> {
       siraNo: true,
       kesimDurumu: true,
       musteri: { select: { adSoyad: true } },
+      kurban: { select: { asamaBaslangic: true } },
     },
   });
 
@@ -104,6 +105,7 @@ export async function getSutunVerileri(): Promise<TvSutunlar> {
       ilerlemeYuzde: true,
       kalanSureDk: true,
       musteri: { select: { adSoyad: true } },
+      kurban: { select: { asamaBaslangic: true } },
     },
   });
 
@@ -119,6 +121,7 @@ export async function getSutunVerileri(): Promise<TvSutunlar> {
       ilerlemeYuzde: true,
       kalanSureDk: true,
       musteri: { select: { adSoyad: true } },
+      kurban: { select: { asamaBaslangic: true } },
     },
   });
 
@@ -133,8 +136,12 @@ export async function getSutunVerileri(): Promise<TvSutunlar> {
       teslimNoktasi: true,
       teslimDurumu: true,
       musteri: { select: { adSoyad: true } },
+      kurban: { select: { asamaBaslangic: true } },
     },
   });
+
+  const isoOrNull = (d: Date | null | undefined) =>
+    d ? d.toISOString() : null;
 
   const siradakiler: SiradakiSatir[] = siradakiHisseler.map((h) => ({
     hisseId: h.id,
@@ -144,6 +151,7 @@ export async function getSutunVerileri(): Promise<TvSutunlar> {
         ? "Vekalet Bekliyor"
         : "Kesime Hazır",
     musteriKisaltma: kisaltMusteri(h.musteri?.adSoyad ?? null),
+    asamaBaslangic: isoOrNull(h.kurban.asamaBaslangic),
   }));
 
   const kesimde: IslemKart[] = kesimHisseler.map((h) => ({
@@ -153,6 +161,7 @@ export async function getSutunVerileri(): Promise<TvSutunlar> {
     ilerlemeYuzde: h.ilerlemeYuzde,
     kalanSureDk: h.kalanSureDk,
     musteriKisaltma: kisaltMusteri(h.musteri?.adSoyad ?? null),
+    asamaBaslangic: isoOrNull(h.kurban.asamaBaslangic),
   }));
 
   const tartimda: IslemKart[] = tartimHisseler.map((h) => ({
@@ -162,6 +171,7 @@ export async function getSutunVerileri(): Promise<TvSutunlar> {
     ilerlemeYuzde: h.ilerlemeYuzde,
     kalanSureDk: h.kalanSureDk,
     musteriKisaltma: kisaltMusteri(h.musteri?.adSoyad ?? null),
+    asamaBaslangic: isoOrNull(h.kurban.asamaBaslangic),
   }));
 
   const teslimeHazir: TeslimSatir[] = teslimHisseler.map((h, i) => ({
@@ -170,6 +180,7 @@ export async function getSutunVerileri(): Promise<TvSutunlar> {
     teslimNoktasi: h.teslimNoktasi ?? "Teslim Noktası 1",
     durum: h.teslimDurumu ?? "Hazır",
     musteriKisaltma: kisaltMusteri(h.musteri?.adSoyad ?? null),
+    asamaBaslangic: isoOrNull(h.kurban.asamaBaslangic),
   }));
 
   return { siradakiler, kesimde, tartimda, teslimeHazir };

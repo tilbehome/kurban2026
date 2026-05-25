@@ -53,6 +53,10 @@ export async function GET() {
       asama: true,
       operasyonSira: true,
       kesimBaslama: true,
+      asamaBaslangic: true,
+      kalanSureDk: true,
+      toplamKg: true,
+      hisseSayisi: true,
       hisseler: {
         where: { silindiMi: false },
         select: {
@@ -73,21 +77,47 @@ export async function GET() {
     orderBy: [{ operasyonSira: "asc" }, { kesimSirasi: "asc" }],
   });
 
-  const ks = (durum: string) => kurbanlar.filter((k) => k.kesimDurumu === durum);
+  // PersonelKurbanVeri formatına flatten — page.tsx server query'siyle uyumlu
+  const kurbanlarOut = kurbanlar.map((k) => ({
+    id: k.id,
+    kesimSirasi: k.kesimSirasi,
+    operasyonSira: k.operasyonSira,
+    kesimDurumu: k.kesimDurumu,
+    asama: k.asama,
+    ilerlemeYuzde: k.ilerlemeYuzde,
+    kalanSureDk: k.kalanSureDk,
+    toplamKg: k.toplamKg ?? null,
+    hisseSayisi: k.hisseSayisi,
+    hisseGrubu: k.hisseGrubu ?? null,
+    asamaBaslangic: k.asamaBaslangic?.toISOString() ?? null,
+    hisseler: k.hisseler.map((h) => ({
+      id: h.id,
+      no: h.no,
+      musteriAdi: h.musteri?.adSoyad ?? null,
+      musteriTel: h.musteri?.telefon ?? null,
+      vekaletAlindi: h.vekaletAlindi,
+      paketDurumu: h.paketDurumu,
+      paketKg: h.paketKg,
+      teslimDurumu: h.teslimDurumu,
+    })),
+  }));
+
+  const ks = (durum: string) =>
+    kurbanlarOut.filter((k) => k.kesimDurumu === durum);
   const sayim = {
-    hepsi: kurbanlar.length,
+    hepsi: kurbanlarOut.length,
     vekalet: ks("vekalet_bekliyor").length,
-    kesim: kurbanlar.filter((k) =>
+    kesim: kurbanlarOut.filter((k) =>
       ["siradaki", "hazirlik", "kesimde", "deri_yuzme", "parcalama"].includes(
         k.kesimDurumu,
       ),
     ).length,
     tartim: ks("tartimda").length,
     paketleme: ks("paketleme").length,
-    teslim: kurbanlar.filter((k) =>
+    teslim: kurbanlarOut.filter((k) =>
       ["teslime_hazir", "tamamlandi"].includes(k.kesimDurumu),
     ).length,
   };
 
-  return NextResponse.json({ gorev, kurbanlar, sayim });
+  return NextResponse.json({ gorev, kurbanlar: kurbanlarOut, sayim });
 }

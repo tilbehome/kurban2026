@@ -3,6 +3,7 @@
 import { CheckCircle2, MapPin } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import type { TeslimSatir, TvTema } from "@/modules/tv/types";
+import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
 
 interface TeslimeHazirSutunProps {
   satirlar: TeslimSatir[];
@@ -105,20 +106,29 @@ export function TeslimeHazirSutun({
                   {s.teslimNoktasi}
                 </span>
               </div>
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                  s.durum === "Hazır"
-                    ? koyuMu
-                      ? "bg-green-500/20 text-green-200"
-                      : "bg-green-100 text-green-700"
-                    : koyuMu
-                      ? "bg-slate-700 text-slate-300"
-                      : "bg-slate-100 text-slate-600",
+              <div className="flex shrink-0 flex-col items-end gap-0.5">
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                    s.durum === "Hazır"
+                      ? koyuMu
+                        ? "bg-green-500/20 text-green-200"
+                        : "bg-green-100 text-green-700"
+                      : koyuMu
+                        ? "bg-slate-700 text-slate-300"
+                        : "bg-slate-100 text-slate-600",
+                  )}
+                >
+                  {s.durum}
+                </span>
+                {s.durum === "Hazır" && (
+                  <AsamaSayaci
+                    baslangic={s.asamaBaslangic}
+                    boyut="kompakt"
+                    tema={koyuMu ? "koyu" : "acik"}
+                  />
                 )}
-              >
-                {s.durum}
-              </span>
+              </div>
             </div>
           ))
         )}

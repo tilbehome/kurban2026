@@ -17,6 +17,7 @@ import {
   sonrakiAsama,
   type KurbanKesimDurumu,
 } from "./asama-akisi";
+import { DURUM_VARSAYILAN_YUZDE } from "./asama-grup";
 
 export interface AsamaGuncelleParams {
   kurbanId: string;
@@ -54,12 +55,18 @@ export async function kurbanAsamaGuncelle(
 
   const eskiDurum = mevcut.kesimDurumu as KurbanKesimDurumu;
   const yeniDurum = params.yeniDurum;
+  const simdi = new Date();
+  const asamaDegisti = eskiDurum !== yeniDurum;
 
   // Otomatik aşama metni (override edilmediyse)
   const asama =
     params.asama !== undefined
       ? params.asama
       : DURUMA_GORE_ASAMA[yeniDurum] ?? mevcut.asama;
+
+  // Otomatik ilerleme yüzdesi: aşama değişiminde varsayılan atanır,
+  // params.ilerlemeYuzde verilirse o öncelikli (manuel override).
+  const otomatikYuzde = DURUM_VARSAYILAN_YUZDE[yeniDurum];
 
   // Kurban update data
   const kurbanData: Record<string, unknown> = {
@@ -68,21 +75,29 @@ export async function kurbanAsamaGuncelle(
   };
   if (params.operasyonSira !== undefined)
     kurbanData.operasyonSira = params.operasyonSira;
-  if (params.ilerlemeYuzde !== undefined)
+  if (params.ilerlemeYuzde !== undefined) {
     kurbanData.ilerlemeYuzde = params.ilerlemeYuzde;
+  } else if (asamaDegisti && otomatikYuzde !== undefined) {
+    kurbanData.ilerlemeYuzde = otomatikYuzde;
+  }
   if (params.kalanSureDk !== undefined)
     kurbanData.kalanSureDk = params.kalanSureDk;
   if (params.toplamKg !== undefined) kurbanData.toplamKg = params.toplamKg;
 
+  // Aşama değişiminde sayaç sıfırlanır (TV ekranında "bu aşamada ne kadar")
+  if (asamaDegisti) {
+    kurbanData.asamaBaslangic = simdi;
+  }
+
   // Zaman damgaları
   if (yeniDurum === "kesimde" && !mevcut.kesimBaslama) {
-    kurbanData.kesimBaslama = new Date();
+    kurbanData.kesimBaslama = simdi;
   }
   if (
     (yeniDurum === "teslime_hazir" || yeniDurum === "tamamlandi") &&
     !mevcut.kesimBitis
   ) {
-    kurbanData.kesimBitis = new Date();
+    kurbanData.kesimBitis = simdi;
   }
 
   // Kurban kaydet
@@ -96,8 +111,11 @@ export async function kurbanAsamaGuncelle(
     kesimDurumu: yeniDurum,
     asama,
   };
-  if (params.ilerlemeYuzde !== undefined)
+  if (params.ilerlemeYuzde !== undefined) {
     hisseUpdate.ilerlemeYuzde = params.ilerlemeYuzde;
+  } else if (asamaDegisti && otomatikYuzde !== undefined) {
+    hisseUpdate.ilerlemeYuzde = otomatikYuzde;
+  }
   if (params.kalanSureDk !== undefined)
     hisseUpdate.kalanSureDk = params.kalanSureDk;
 

@@ -6,6 +6,7 @@ import { Zap, X, AlertTriangle, ChevronRight, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { PersonelKurbanVeri } from "@/app/tv/personel/page";
+import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
 
 interface Props {
   kurban: PersonelKurbanVeri;
@@ -80,12 +81,20 @@ export function PersonelAktifIs({ kurban, birak, sorunBildir, yenile }: Props) {
           </Button>
         </div>
 
-        <div className="mb-3">
-          <div className="text-xl font-bold">DANA-{kurban.kesimSirasi}</div>
-          <div className="text-muted-foreground text-xs">
-            {kurban.asama ?? kurban.kesimDurumu}
-            {kurban.operasyonSira !== null && ` · Sıra ${kurban.operasyonSira}`}
+        <div className="mb-3 flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-xl font-bold">DANA-{kurban.kesimSirasi}</div>
+            <div className="text-muted-foreground text-xs">
+              {kurban.asama ?? kurban.kesimDurumu}
+              {kurban.operasyonSira !== null &&
+                ` · Sıra ${kurban.operasyonSira}`}
+            </div>
           </div>
+          <AsamaSayaci
+            baslangic={kurban.asamaBaslangic}
+            boyut="genis"
+            tema="acik"
+          />
         </div>
 
         <div className="bg-muted mb-3 h-2 overflow-hidden rounded-full">

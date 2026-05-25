@@ -54,6 +54,8 @@ export interface SiradakiSatir {
   durumEtiket: string;
   /** Müşteri başharfleri (PII korunması) — örn. "M.Y." */
   musteriKisaltma: string;
+  /** Kurbanın mevcut aşamasına geçtiği an (ISO datetime) — sayaç için */
+  asamaBaslangic: string | null;
 }
 
 /** Kesimde / Tartımda büyük kart */
@@ -64,6 +66,8 @@ export interface IslemKart {
   ilerlemeYuzde: number; // 0-100
   kalanSureDk: number | null;
   musteriKisaltma: string;
+  /** Kurbanın mevcut aşamasına geçtiği an (ISO datetime) — sayaç için */
+  asamaBaslangic: string | null;
 }
 
 /** Teslime hazır satır */
@@ -73,6 +77,8 @@ export interface TeslimSatir {
   teslimNoktasi: string;
   durum: string; // "Hazır" | "Teslim Edildi"
   musteriKisaltma: string;
+  /** Teslime hazır olunan an (ISO datetime) — bekleme süresi sayacı için */
+  asamaBaslangic: string | null;
 }
 
 export interface TvSutunlar {

@@ -3,6 +3,7 @@
 import { Scissors, Scale } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import type { IslemKart, TvTema } from "@/modules/tv/types";
+import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
 
 interface IslemSutunProps {
   baslik: string;
@@ -140,16 +141,23 @@ export function IslemSutun({ baslik, kartlar, renk, tema }: IslemSutunProps) {
                     {k.musteriKisaltma}
                   </span>
                 </div>
-                {k.kalanSureDk !== null && (
-                  <span
-                    className={cn(
-                      "font-tabular shrink-0 text-base font-extrabold",
-                      palette.sureRenk,
-                    )}
-                  >
-                    {k.kalanSureDk} dk
-                  </span>
-                )}
+                <div className="flex flex-col items-end gap-0.5">
+                  {k.kalanSureDk !== null && (
+                    <span
+                      className={cn(
+                        "font-tabular shrink-0 text-base font-extrabold",
+                        palette.sureRenk,
+                      )}
+                    >
+                      {k.kalanSureDk} dk
+                    </span>
+                  )}
+                  <AsamaSayaci
+                    baslangic={k.asamaBaslangic}
+                    boyut="kompakt"
+                    tema={koyuMu ? "koyu" : "acik"}
+                  />
+                </div>
               </div>
 
               <span

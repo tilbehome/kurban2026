@@ -14,6 +14,8 @@ const IlerlemeSchema = z
     ilerlemeYuzde: z.number().int().min(0).max(100).optional(),
     kalanSureDk: z.number().int().min(0).max(1440).nullable().optional(),
     asama: z.string().nullable().optional(),
+    // SPRINT-11: aşama sayacını manuel sıfırla
+    resetSayac: z.boolean().optional(),
   })
   .refine((v) => v.hisseId || v.kurbanId, {
     message: "hisseId veya kurbanId zorunlu",
@@ -53,8 +55,13 @@ export async function PATCH(req: Request) {
   if (veri.ilerlemeYuzde !== undefined) data.ilerlemeYuzde = veri.ilerlemeYuzde;
   if (veri.kalanSureDk !== undefined) data.kalanSureDk = veri.kalanSureDk;
   if (veri.asama !== undefined) data.asama = veri.asama;
+  // resetSayac sadece Kurban tablosunda var (Hisse'de yok)
+  const kurbanData = { ...data } as Record<string, unknown>;
+  if (veri.resetSayac && veri.kurbanId) {
+    kurbanData.asamaBaslangic = new Date();
+  }
 
-  if (Object.keys(data).length === 0) {
+  if (Object.keys(kurbanData).length === 0 && Object.keys(data).length === 0) {
     return NextResponse.json(
       { basarili: false, hata: "Güncellenecek alan yok" },
       { status: 400 },
@@ -66,7 +73,7 @@ export async function PATCH(req: Request) {
       await prisma.$transaction([
         prisma.kurban.update({
           where: { id: veri.kurbanId },
-          data,
+          data: kurbanData,
         }),
         prisma.hisse.updateMany({
           where: { kurbanId: veri.kurbanId, silindiMi: false },
@@ -80,7 +87,7 @@ export async function PATCH(req: Request) {
         kayitId: veri.kurbanId,
         kullaniciId: oturum.kullaniciId,
         ip: ipCikar(req),
-        detaylar: data,
+        detaylar: kurbanData,
       });
 
       return NextResponse.json({ basarili: true });

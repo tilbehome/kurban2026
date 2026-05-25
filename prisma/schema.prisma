@@ -143,6 +143,9 @@ model Kurban {
   kalanSureDk     Int?
   kesimBaslama    DateTime?
   kesimBitis      DateTime?
+  // Mevcut aşamaya geçildiği an — her aşama değişiminde sıfırlanır.
+  // TV ekranında "bu aşamada ne kadar süredir" sayacı için.
+  asamaBaslangic  DateTime?
   toplamKg        Float? // tartım sonucu toplam et
   karkasKg        Float? // karkas ağırlığı
 

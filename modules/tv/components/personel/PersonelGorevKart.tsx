@@ -21,6 +21,7 @@ import {
   type KurbanKesimDurumu,
 } from "@/modules/tv/lib/asama-akisi";
 import type { PersonelKurbanVeri } from "@/app/tv/personel/page";
+import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
 
 const ASAMA_RENGI: Record<string, string> = {
   vekalet_bekliyor: "bg-amber-100 text-amber-700",
@@ -137,14 +138,20 @@ export function PersonelGorevKart({
     <Card>
       <CardContent {...swipe} className="p-3 touch-pan-y">
         <div className="mb-3 flex items-start gap-3">
-          {/* Sol: BÜYÜK DANA-NO */}
-          <div className="border-primary bg-primary/10 flex h-20 min-w-20 flex-col items-center justify-center rounded-2xl border-2">
+          {/* Sol: BÜYÜK DANA-NO + sayaç */}
+          <div className="border-primary bg-primary/10 flex h-20 min-w-20 flex-col items-center justify-center rounded-2xl border-2 gap-0.5">
             <span className="text-muted-foreground text-[10px] uppercase tracking-wider">
               Dana
             </span>
             <span className="text-primary text-3xl leading-none font-bold">
               {kurban.kesimSirasi}
             </span>
+            <AsamaSayaci
+              baslangic={kurban.asamaBaslangic}
+              boyut="kompakt"
+              tema="acik"
+              ikonsuz
+            />
           </div>
 
           {/* Sağ: Detaylar */}

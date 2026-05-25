@@ -141,3 +141,37 @@ export function oncekiGrup(mevcut: AsamaGrubu): AsamaGrubu | null {
   if (idx <= 0) return null;
   return ASAMA_GRUBU_SIRASI[idx - 1] ?? null;
 }
+
+/**
+ * Her aşama grubunun varsayılan ilerleme yüzdesi (slider başlangıç).
+ */
+export const GRUP_VARSAYILAN_YUZDE: Record<AsamaGrubu, number> = {
+  beklemede: 0,
+  vekalet: 15,
+  kesim: 35,
+  parcalama: 55,
+  tartim: 75,
+  teslim: 90,
+  tamamlandi: 100,
+  iptal: 0,
+};
+
+/**
+ * 12 detay duruma karşılık gelen otomatik yüzdeler.
+ * kurbanAsamaGuncelle() her aşama geçişinde bu değeri yazar.
+ * Personel/admin sliderdan ince ayar yapabilir (override).
+ */
+export const DURUM_VARSAYILAN_YUZDE: Record<string, number> = {
+  beklemede: 0,
+  vekalet_bekliyor: 15,
+  siradaki: 20,
+  hazirlik: 30,
+  kesimde: 40,
+  deri_yuzme: 45,
+  parcalama: 55,
+  tartimda: 75,
+  paketleme: 85,
+  teslime_hazir: 90,
+  tamamlandi: 100,
+  iptal: 0,
+};

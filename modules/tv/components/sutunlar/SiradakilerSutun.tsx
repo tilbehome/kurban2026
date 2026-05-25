@@ -3,6 +3,7 @@
 import { Users } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import type { SiradakiSatir, TvTema } from "@/modules/tv/types";
+import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
 
 interface SiradakilerSutunProps {
   satirlar: SiradakiSatir[];
@@ -101,16 +102,23 @@ export function SiradakilerSutun({ satirlar, tema }: SiradakilerSutunProps) {
                   {s.musteriKisaltma}
                 </span>
               </div>
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                  koyuMu
-                    ? "bg-purple-500/20 text-purple-200"
-                    : "bg-purple-100 text-purple-700",
-                )}
-              >
-                {s.durumEtiket}
-              </span>
+              <div className="flex shrink-0 flex-col items-end gap-0.5">
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                    koyuMu
+                      ? "bg-purple-500/20 text-purple-200"
+                      : "bg-purple-100 text-purple-700",
+                  )}
+                >
+                  {s.durumEtiket}
+                </span>
+                <AsamaSayaci
+                  baslangic={s.asamaBaslangic}
+                  boyut="kompakt"
+                  tema={koyuMu ? "koyu" : "acik"}
+                />
+              </div>
             </div>
           ))
         )}

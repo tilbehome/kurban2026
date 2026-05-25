@@ -47,6 +47,7 @@ export default async function TvKontrolPage() {
           ilerlemeYuzde: true,
           kalanSureDk: true,
           kesimBaslama: true,
+          asamaBaslangic: true,
           hisseler: {
             where: { silindiMi: false },
             select: {
@@ -89,6 +90,7 @@ export default async function TvKontrolPage() {
       ilerlemeYuzde: k.ilerlemeYuzde,
       kalanSureDk: k.kalanSureDk,
       kesimBaslama: k.kesimBaslama?.toISOString() ?? null,
+      asamaBaslangic: k.asamaBaslangic?.toISOString() ?? null,
       hisseDolu: doluHisse,
       hisseToplam: k.hisseler.length,
       vekaletAlinan,
