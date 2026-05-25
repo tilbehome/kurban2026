@@ -23,9 +23,17 @@ export const sessionOptions: SessionOptions = {
   cookieName: "tilbe-kurban-session",
   cookieOptions: {
     httpOnly: true,
+    // 'lax' — same-origin POST'larda ve top-level GET'lerde cookie gönderir.
+    // LAN üzerinden http://192.168.x.x:3000 ile çalışmak için yeterli.
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 12, // 12 saat
+    // HTTP üzerinde LAN erişimi için secure FALSE olmalı.
+    // Production'da HTTPS varsa SESSION_SECURE=true env ile açılır.
+    secure: process.env.SESSION_SECURE === "true",
+    // 7 gün — bayram operasyonu için tek girişle yeterli (kasiyer her gün giriş yapmasın)
+    maxAge: 60 * 60 * 24 * 7,
+    // Tüm route'larda geçerli
+    path: "/",
+    // domain BELİRTİLMİYOR — tarayıcı otomatik (localhost / 192.168.x.x / IP fark etmez)
   },
 };
 
