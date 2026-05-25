@@ -33,7 +33,10 @@ export function middleware(req: NextRequest) {
     pathname === "/api/tv/push-abonelik" ||
     pathname.startsWith("/api/tv/push-gonder") ||
     pathname === "/api/tv/acil-durum" ||
-    pathname === "/api/audit/pwa-yukleme"
+    pathname === "/api/audit/pwa-yukleme" ||
+    // Müşteri dekont doğrulama — public erişim
+    pathname === "/dogrula" ||
+    pathname === "/api/dekont/dogrula"
   ) {
     return NextResponse.next();
   }
