@@ -329,5 +329,20 @@ function hisselereDagit(
       sonuc[sonuc.length - 1]!.tutar + fark,
     );
   }
+
+  // SPRINT-P2 İŞ 4: Eşit dağıtım hisse limit kontrolü.
+  // Önceden yalnızca manuel/sırayla'da kontrol vardı; eşit dağıtımda da bir
+  // hissenin kalan bakiyesinden fazlasını yazma riski vardı.
+  for (const t of sonuc) {
+    const k = kalanlar.find((x) => x.id === t.hisseId);
+    if (!k) continue;
+    const maxIzin = Math.max(k.kalan, 0);
+    if (t.tutar > maxIzin + 0.01) {
+      throw new Error(
+        `Eşit dağıtım Hisse ${k.no} kalanını aşıyor. Hisseye düşen: ${t.tutar.toFixed(2)} TL, Kalan: ${maxIzin.toFixed(2)} TL. "Sırayla" veya "Manuel" dağıtım deneyin.`,
+      );
+    }
+  }
+
   return sonuc;
 }

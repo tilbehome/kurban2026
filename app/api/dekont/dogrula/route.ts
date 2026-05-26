@@ -10,13 +10,35 @@ import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { formatTarihSaat } from "@/shared/lib/tarih";
 import { dogrulamaKoduGecerliMi } from "@/modules/tahsilat/dekont/dekont-dogrulama-kodu";
+import { rateLimitKontrol } from "@/shared/lib/rate-limit";
+import { ipCikar } from "@/shared/lib/audit";
 
 const Body = z.object({
   dekontNo: z.string().min(3).max(50),
   dogrulamaKodu: z.string().min(3).max(20),
 });
 
+const DOGRULAMA_MAX_ISTEK = 20;
+const DOGRULAMA_PENCERE_SN = 60;
+
 export async function POST(req: NextRequest) {
+  // Public endpoint — brute-force koruması: 20 istek / dakika / IP
+  const ip = ipCikar(req) ?? "unknown";
+  const rl = rateLimitKontrol(
+    `dekont-dogrula:${ip}`,
+    DOGRULAMA_MAX_ISTEK,
+    DOGRULAMA_PENCERE_SN,
+  );
+  if (!rl.izinli) {
+    return NextResponse.json(
+      {
+        gecerli: false,
+        hata: `Çok fazla deneme. ${rl.kalanSn ?? 60} saniye sonra tekrar deneyin.`,
+      },
+      { status: 429 },
+    );
+  }
+
   let payload: z.infer<typeof Body>;
   try {
     payload = Body.parse(await req.json());

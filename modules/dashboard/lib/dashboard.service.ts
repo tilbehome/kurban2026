@@ -9,6 +9,8 @@
 
 import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
+import { izinKontrol } from "@/shared/lib/izinler";
+import type { AuthOturum } from "@/shared/types/module.types";
 import type {
   DashboardKpiKart,
   TahsilatTrend,
@@ -24,7 +26,12 @@ import type {
 // 1) KPI KARTLARI — 6 kart
 // =============================================================================
 
-export async function kpiVerileri(): Promise<DashboardKpiKart[]> {
+export async function kpiVerileri(
+  oturum: Pick<AuthOturum, "rol"> | null = null,
+): Promise<DashboardKpiKart[]> {
+  // Kasa kartı: SADECE yetkili kullanıcıya. Yetki yoksa kasaNetBakiye() bile çağrılmaz.
+  const kasaYetkisi = izinKontrol(oturum, "kasa.goruntule");
+
   const [
     musteriToplam,
     musteriBuAy,
@@ -48,7 +55,7 @@ export async function kpiVerileri(): Promise<DashboardKpiKart[]> {
     bugunkuToplamTahsilat(),
     duneToplamTahsilat(),
     borcluMusterileri(),
-    kasaNetBakiye(),
+    kasaYetkisi ? kasaNetBakiye() : Promise.resolve(0),
   ]);
 
   const dolulukYuzde =
@@ -62,7 +69,7 @@ export async function kpiVerileri(): Promise<DashboardKpiKart[]> {
       ? Math.round((musteriBuAy / musteriToplam) * 100)
       : 0;
 
-  return [
+  const kartlar: DashboardKpiKart[] = [
     {
       id: "musteri",
       baslik: "Toplam Müşteri",
@@ -121,7 +128,10 @@ export async function kpiVerileri(): Promise<DashboardKpiKart[]> {
       renk: "kirmizi",
       href: "/musteriler/borclular",
     },
-    {
+  ];
+
+  if (kasaYetkisi) {
+    kartlar.push({
       id: "kasa",
       baslik: "Kasa Bakiyesi",
       sayi: kasaToplam,
@@ -129,8 +139,10 @@ export async function kpiVerileri(): Promise<DashboardKpiKart[]> {
       altMetin: "Net bakiye",
       renk: "yesil",
       href: "/kasa",
-    },
-  ];
+    });
+  }
+
+  return kartlar;
 }
 
 // =============================================================================
@@ -163,66 +175,38 @@ export async function tahsilatTrendVerisi(
 }
 
 // =============================================================================
-// 3) KESİM AKIŞI — demo veri (gerçek modül Faz 2)
+// 3) KESİM AKIŞI — Kurban.kesimDurumu'ndan gerçek pipeline (SPRINT-P2 İŞ 8)
 // =============================================================================
 
 export async function kesimAkisiVerisi(): Promise<KesimAkisi> {
-  // Gerçek kesim modülü henüz yok — toplam hisse sayısından demo dağılım üret
-  const toplamHisse = await prisma.hisse.count({
-    where: { silindiMi: false, musteriId: { not: null } },
+  // Gerçek Kurban.kesimDurumu dağılımı — SPRINT-12 ile DB'ye geldi
+  const kurbanlar = await prisma.kurban.findMany({
+    where: { silindiMi: false },
+    select: { kesimDurumu: true },
   });
 
-  const t = toplamHisse;
-  // Pipeline benzeri dağılım (gerçek modül kurulunca DB'den gelecek)
+  // İptal edilenler toplam dışında — dashboard "aktif pipeline"ı gösterir
+  const aktif = kurbanlar.filter((k) => k.kesimDurumu !== "iptal");
+  const toplam = aktif.length;
+
+  // Belirli durumlardaki kurbanları say
+  const say = (...durumlar: string[]) =>
+    aktif.filter((k) => durumlar.includes(k.kesimDurumu)).length;
+
+  // Mevcut 7-aşama UI'sını koruyarak gerçek durumları akıllıca grupla
   return {
     asamalar: [
-      asama(
-        "vekalet",
-        "Vekalet / Onay",
-        Math.round(t * 0.43),
-        Math.round(t * 1.0),
-        "turuncu",
-      ),
-      asama(
-        "kesim-alani",
-        "Kesim Alanı",
-        Math.round(t * 0.32),
-        Math.round(t * 0.48),
-        "sari",
-      ),
-      asama(
-        "kesimde",
-        "Kesimde",
-        Math.round(t * 0.11),
-        Math.round(t * 0.24),
-        "kirmizi",
-      ),
-      asama(
-        "parcalama",
-        "Parçalama",
-        Math.round(t * 0.16),
-        Math.round(t * 0.28),
-        "mor",
-      ),
-      asama(
-        "tartim",
-        "Tartım",
-        Math.round(t * 0.16),
-        Math.round(t * 0.28),
-        "mavi",
-      ),
-      asama(
-        "paketleniyor",
-        "Paketleniyor",
-        Math.round(t * 0.16),
-        Math.round(t * 0.28),
-        "yesil-koyu",
-      ),
+      asama("vekalet", "Vekalet / Sıra", say("beklemede", "vekalet_bekliyor"), toplam, "turuncu"),
+      asama("kesim-alani", "Kesim Alanı", say("siradaki", "hazirlik"), toplam, "sari"),
+      asama("kesimde", "Kesimde", say("kesimde", "deri_yuzme"), toplam, "kirmizi"),
+      asama("parcalama", "Parçalama", say("parcalama"), toplam, "mor"),
+      asama("tartim", "Tartım", say("tartimda"), toplam, "mavi"),
+      asama("paketleniyor", "Paketleniyor", say("paketleme"), toplam, "yesil-koyu"),
       asama(
         "teslim-hazir",
-        "Teslim Hazır",
-        Math.round(t * 0.25),
-        Math.round(t * 0.3),
+        "Teslim / Tamam",
+        say("teslime_hazir", "tamamlandi"),
+        toplam,
         "yesil",
       ),
     ],

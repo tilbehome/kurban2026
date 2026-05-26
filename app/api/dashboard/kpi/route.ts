@@ -13,7 +13,7 @@ export async function GET() {
     );
   }
   try {
-    const veri = await kpiVerileri();
+    const veri = await kpiVerileri(oturum);
     return NextResponse.json({ basarili: true, veri });
   } catch (e) {
     console.error("dashboard kpi hatası:", e);

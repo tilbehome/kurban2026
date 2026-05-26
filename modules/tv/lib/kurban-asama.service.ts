@@ -100,13 +100,7 @@ export async function kurbanAsamaGuncelle(
     kurbanData.kesimBitis = simdi;
   }
 
-  // Kurban kaydet
-  await prisma.kurban.update({
-    where: { id: params.kurbanId },
-    data: kurbanData,
-  });
-
-  // Hisselere senkronize et (tartıma kadar tüm hisseler aynı durum)
+  // Hisseye senkronize edilecek alanlar
   const hisseUpdate: Record<string, unknown> = {
     kesimDurumu: yeniDurum,
     asama,
@@ -122,11 +116,13 @@ export async function kurbanAsamaGuncelle(
   if (kurbanData.kesimBaslama) hisseUpdate.kesimBaslama = kurbanData.kesimBaslama;
   if (kurbanData.kesimBitis) hisseUpdate.kesimBitis = kurbanData.kesimBitis;
 
-  // Paket alanlarını otomatik tetikle
+  // SPRINT-P2 İŞ 7: Paket etiketi mantıksal düzeltme.
+  // "paketleme" aşamasında hisseler hâlâ paketlenmekte → "Paketleniyor"
+  // "teslime_hazir" aşamasında paketleme bitmiş → "Paketlendi"
   if (yeniDurum === "paketleme") {
-    hisseUpdate.paketDurumu = "Paketlendi";
+    hisseUpdate.paketDurumu = "Paketleniyor";
   } else if (yeniDurum === "teslime_hazir") {
-    hisseUpdate.paketDurumu = "Teslim Hazır";
+    hisseUpdate.paketDurumu = "Paketlendi";
     hisseUpdate.teslimDurumu = "Hazır";
     if (!hisseUpdate.teslimNoktasi)
       hisseUpdate.teslimNoktasi = "Teslim Noktası 1";
@@ -136,13 +132,23 @@ export async function kurbanAsamaGuncelle(
     hisseUpdate.teslimTarihi = new Date();
   }
 
-  const result = await prisma.hisse.updateMany({
-    where: {
-      kurbanId: params.kurbanId,
-      silindiMi: false,
-      musteriId: { not: null },
-    },
-    data: hisseUpdate,
+  // SPRINT-P2 İŞ 5: Kurban + hisseler atomik tek transaction'da güncellenir.
+  // Önceden iki ayrı write idi; ilkinden sonra hata olursa kurban yeni
+  // durumda ama hisseler eski durumda kalabiliyordu (tutarsız state).
+  const result = await prisma.$transaction(async (tx) => {
+    await tx.kurban.update({
+      where: { id: params.kurbanId },
+      data: kurbanData,
+    });
+
+    return tx.hisse.updateMany({
+      where: {
+        kurbanId: params.kurbanId,
+        silindiMi: false,
+        musteriId: { not: null },
+      },
+      data: hisseUpdate,
+    });
   });
 
   return {
@@ -177,19 +183,36 @@ export async function kurbanSonrakiAsama(
 /**
  * Sıraya alınan kurbanların operasyon sırasını günceller.
  * Drag-drop ile kullanılır.
+ *
+ * SPRINT-P2 İŞ 6: Tüm sıra güncellemeleri atomik tek transaction'da.
+ * Önceden for-loop içinde tek tek update'lerdi; ortadaki bir update
+ * başarısız olursa yarı-uygulanmış sıra kalıyordu. Duplicate sıra
+ * numarası da kontrol edilir.
  */
 export async function siralamaGuncelle(
   sira: Array<{ kurbanId: string; operasyonSira: number }>,
 ): Promise<number> {
-  let etkilenenSayi = 0;
-  for (const item of sira) {
-    await prisma.kurban.update({
-      where: { id: item.kurbanId },
-      data: { operasyonSira: item.operasyonSira },
-    });
-    etkilenenSayi++;
+  if (sira.length === 0) return 0;
+
+  const uniqSira = new Set(sira.map((x) => x.operasyonSira));
+  if (uniqSira.size !== sira.length) {
+    throw new Error("Operasyon sıra numaraları tekrar edemez");
   }
-  return etkilenenSayi;
+  const uniqKurban = new Set(sira.map((x) => x.kurbanId));
+  if (uniqKurban.size !== sira.length) {
+    throw new Error("Aynı kurban birden fazla kez listelenemez");
+  }
+
+  await prisma.$transaction(
+    sira.map((item) =>
+      prisma.kurban.update({
+        where: { id: item.kurbanId },
+        data: { operasyonSira: item.operasyonSira },
+      }),
+    ),
+  );
+
+  return sira.length;
 }
 
 /**

@@ -37,7 +37,8 @@ interface KesimOperasyonAkisiProps {
  * Bayram günü "kalp atışı" — 7 aşamalı pipeline.
  * Her aşamada o anki sayım + progress bar.
  *
- * NOT: Şu an demo veri (Faz 2'de gerçek kesim modülü ile bağlanacak).
+ * Veri kaynağı: Kurban.kesimDurumu (SPRINT-12 sonrası gerçek DB durumları,
+ * SPRINT-P2 İŞ 8 ile dashboard.service'te 7 aşamaya grupkanır).
  */
 export function KesimOperasyonAkisi({ akis }: KesimOperasyonAkisiProps) {
   const sonGuncellemeStr = new Date(akis.sonGuncelleme).toLocaleTimeString(
@@ -65,8 +66,8 @@ export function KesimOperasyonAkisi({ akis }: KesimOperasyonAkisiProps) {
             </p>
           </div>
         </div>
-        <span className="bg-amber-100 text-amber-800 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ring-amber-200">
-          DEMO · Gerçek modül Faz 2
+        <span className="bg-emerald-100 text-emerald-800 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ring-emerald-200">
+          CANLI
         </span>
       </CardHeader>
       <CardContent>
@@ -102,7 +103,7 @@ function AsamaKart({ asama }: { asama: KesimAsamasi }) {
           {asama.sayi}
         </p>
         <p className="text-muted-foreground text-[11px]">
-          {asama.sayi}/{asama.toplam} alanında
+          {asama.sayi}/{asama.toplam} kurban
         </p>
       </div>
       <div className="mt-1">

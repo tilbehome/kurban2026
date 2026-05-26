@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Printer as PrinterIcon } from "lucide-react";
 import { AppShell } from "@/shared/components/AppShell";
 import { aktifOturum } from "@/shared/lib/session";
@@ -25,10 +26,16 @@ import type {
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  // KRİTİK: redirect EN BAŞTA — yetkisiz kullanıcı sorgulara hiç ulaşmasın.
+  // (AppShell de redirect yapar ama o önce Promise.all'ın çalışmasına izin verir
+  //  ve yetkisiz kullanıcıya DB verisi sızabilir.)
   const oturum = await aktifOturum();
-  const rolStub = { rol: oturum?.rol ?? "misafir" };
-  const kasaGoster = izinKontrol(rolStub, "kasa.goruntule");
-  const yedekManuelIzin = izinKontrol(rolStub, "yedek.manuel");
+  if (!oturum) {
+    redirect("/giris?next=/");
+  }
+
+  const kasaGoster = izinKontrol(oturum, "kasa.goruntule");
+  const yedekManuelIzin = izinKontrol(oturum, "yedek.manuel");
 
   // Tüm veri paralel çekilir — sayfa yüklenmesi tek round-trip
   const [
@@ -42,7 +49,7 @@ export default async function DashboardPage() {
     yedekZamani,
     yedekBilgi,
   ] = await Promise.all([
-    kpiVerileri(),
+    kpiVerileri(oturum),
     tahsilatTrendVerisi("bugun"),
     kesimAkisiVerisi(),
     sonIslemler(10),
@@ -68,7 +75,7 @@ export default async function DashboardPage() {
     .filter(
       (m) => m.id !== "ana-sayfa" && m.altMenuler && m.altMenuler.length > 0,
     )
-    .filter((m) => !m.izin || izinKontrol(rolStub, m.izin))
+    .filter((m) => !m.izin || izinKontrol(oturum, m.izin))
     .slice(0, 6);
 
   return (
@@ -76,7 +83,7 @@ export default async function DashboardPage() {
       <DashboardClient
         ilkVeri={ilkVeri}
         kasaGoster={kasaGoster}
-        adSoyad={oturum?.adSoyad ?? "Misafir"}
+        adSoyad={oturum.adSoyad}
         sonYedek={yedekZamani}
         yedekBilgi={yedekBilgi}
         yedekManuelIzin={yedekManuelIzin}
