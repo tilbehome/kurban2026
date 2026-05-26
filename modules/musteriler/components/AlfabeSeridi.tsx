@@ -60,35 +60,40 @@ export function AlfabeSeridi({
       if (v) params.set(k, v);
     }
     if (harf) params.set("harf", harf);
+    // Harf değişimi sayfa numarasını sıfırlasın
+    params.delete("sayfa");
     const q = params.toString();
     return `${hedef}${q ? `?${q}` : ""}`;
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5">
+    <div className="flex flex-wrap items-center gap-2">
+      {/* "Hepsi" — geniş pill buton */}
       <Link
         href={harfHref(null)}
         className={cn(
-          "rounded px-1.5 py-0.5 text-[11px] font-medium transition-colors",
+          "inline-flex h-10 items-center justify-center rounded-full border-2 px-4 text-sm font-semibold transition-all",
           !aktif
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:bg-muted",
+            ? "border-orange-500 bg-orange-500 text-white shadow-sm"
+            : "border-border bg-white text-foreground hover:border-orange-300 hover:bg-orange-50",
         )}
       >
         Hepsi
       </Link>
+
       {ALFABE.map((h) => {
         const dolu = doluHarfler.has(h);
-        const seçili = aktif === h;
+        const seciliMi = aktif === h;
         return dolu ? (
           <Link
             key={h}
             href={harfHref(h)}
+            aria-current={seciliMi ? "page" : undefined}
             className={cn(
-              "w-6 rounded py-0.5 text-center text-[11px] font-mono font-medium transition-colors",
-              seçili
-                ? "bg-primary text-primary-foreground"
-                : "text-foreground hover:bg-muted",
+              "inline-flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all",
+              seciliMi
+                ? "scale-110 border-orange-500 bg-orange-500 text-white shadow-md"
+                : "border-border bg-white text-foreground hover:scale-110 hover:border-orange-300 hover:bg-orange-50",
             )}
           >
             {h}
@@ -96,8 +101,9 @@ export function AlfabeSeridi({
         ) : (
           <span
             key={h}
-            className="text-muted-foreground/30 w-6 cursor-not-allowed py-0.5 text-center text-[11px] font-mono"
-            title="Boş"
+            aria-disabled="true"
+            title="Bu harfle başlayan müşteri yok"
+            className="inline-flex h-10 w-10 cursor-not-allowed items-center justify-center rounded-full border-2 border-transparent bg-muted/30 text-sm font-bold text-muted-foreground/40"
           >
             {h}
           </span>

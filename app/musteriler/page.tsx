@@ -53,8 +53,11 @@ export default async function MusterilerPage({ searchParams }: PageProps) {
         baslik="Müşteriler"
         altBaslik={`${toplam.toLocaleString("tr-TR")} müşteri · Sayfa ${sayfa}/${toplamSayfa}`}
         aksiyonlar={
-          <Link href="/musteriler/yeni" className={buttonVariants()}>
-            <UserPlus size={16} className="mr-1" />
+          <Link
+            href="/musteriler/yeni"
+            className={buttonVariants({ size: "lg" })}
+          >
+            <UserPlus size={18} className="mr-1.5" />
             Yeni Müşteri
           </Link>
         }
@@ -63,23 +66,29 @@ export default async function MusterilerPage({ searchParams }: PageProps) {
       <div className="p-6 sm:p-8">
         {/* KPI Stat Bar */}
         <div className="mb-6">
-          <MusteriStatBar veri={ist} />
+          <MusteriStatBar veri={ist} aktifDurum={sp.durum ?? "hepsi"} />
         </div>
 
         {/* Arama + durum filtreleri */}
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <MusteriAramaInput baslangic={sp.arama ?? ""} />
-          <DurumFiltresi mevcut={sp.durum ?? "hepsi"} arama={sp.arama} harf={sp.harf} />
-        </div>
-
-        {/* Alfabe şeridi */}
-        <div className="mb-4">
-          <AlfabeSeridi
-            doluHarfler={doluHarfler}
-            aktif={sp.harf ?? null}
-            digerQuery={{ arama: sp.arama, durum: sp.durum }}
+          <DurumFiltresi
+            mevcut={sp.durum ?? "hepsi"}
+            arama={sp.arama}
+            harf={sp.harf}
           />
         </div>
+
+        {/* Alfabe şeridi — kart içinde */}
+        <Card className="mb-4">
+          <div className="p-4">
+            <AlfabeSeridi
+              doluHarfler={doluHarfler}
+              aktif={sp.harf ?? null}
+              digerQuery={{ arama: sp.arama, durum: sp.durum }}
+            />
+          </div>
+        </Card>
 
         <Card>
           <table className="w-full">
