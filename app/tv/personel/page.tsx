@@ -7,6 +7,7 @@ import {
   gorevGecerliMi,
   type PersonelGorev,
 } from "@/modules/tv/lib/personel-gorev";
+import { hisseBorcDurumu, type BorcDurumu } from "@/shared/lib/hisse-bakiye";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,8 @@ export interface PersonelHisseVeri {
   paketDurumu: string | null;
   paketKg: number | null;
   teslimDurumu: string | null;
+  hisseFiyati: number;
+  borcDurumu: BorcDurumu;
 }
 
 export interface PersonelKurbanVeri {
@@ -85,6 +88,10 @@ export default async function TvPersonelPage() {
         orderBy: { no: "asc" },
         include: {
           musteri: { select: { adSoyad: true, telefon: true } },
+          odemeler: {
+            where: { iptal: false },
+            select: { toplamTutar: true },
+          },
         },
       },
     },
@@ -111,6 +118,8 @@ export default async function TvPersonelPage() {
       paketDurumu: h.paketDurumu,
       paketKg: h.paketKg,
       teslimDurumu: h.teslimDurumu,
+      hisseFiyati: h.hisseFiyati,
+      borcDurumu: hisseBorcDurumu(h.hisseFiyati, h.odemeler),
     })),
   }));
 

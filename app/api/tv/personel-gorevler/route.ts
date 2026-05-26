@@ -15,6 +15,7 @@ import {
   GOREV_ASAMALARI,
   gorevGecerliMi,
 } from "@/modules/tv/lib/personel-gorev";
+import { hisseBorcDurumu } from "@/shared/lib/hisse-bakiye";
 
 export const dynamic = "force-dynamic";
 
@@ -67,8 +68,13 @@ export async function GET() {
           paketDurumu: true,
           paketKg: true,
           teslimDurumu: true,
+          hisseFiyati: true,
           musteri: {
             select: { id: true, adSoyad: true, telefon: true },
+          },
+          odemeler: {
+            where: { iptal: false },
+            select: { toplamTutar: true },
           },
         },
         orderBy: { no: "asc" },
@@ -99,6 +105,8 @@ export async function GET() {
       paketDurumu: h.paketDurumu,
       paketKg: h.paketKg,
       teslimDurumu: h.teslimDurumu,
+      hisseFiyati: h.hisseFiyati,
+      borcDurumu: hisseBorcDurumu(h.hisseFiyati, h.odemeler),
     })),
   }));
 

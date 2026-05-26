@@ -42,6 +42,28 @@ import {
 } from "@/modules/tv/lib/asama-akisi";
 import type { PersonelKurbanVeri } from "@/app/tv/personel/page";
 import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
+import type { BorcDurumu } from "@/shared/lib/hisse-bakiye";
+
+// SPRINT-PERSONEL-ISIM-BADGE: hissedar ismi tam yazılır (kısaltma yok),
+// TR-locale BÜYÜK HARF. Borç durumuna göre 3 renk:
+//   borc-yok    → yeşil  (tamamı ödenmiş)
+//   kismi-borc  → sarı   (kısmi ödeme)
+//   tam-borc    → kırmızı (hiç ödeme yok)
+const BORC_BADGE_RENGI: Record<BorcDurumu, string> = {
+  "borc-yok": "bg-emerald-100 text-emerald-900 border-emerald-300",
+  "kismi-borc": "bg-amber-100 text-amber-900 border-amber-300",
+  "tam-borc": "bg-red-100 text-red-900 border-red-300",
+};
+
+const BORC_ARIA: Record<BorcDurumu, string> = {
+  "borc-yok": "Tamamı ödenmiş",
+  "kismi-borc": "Kısmi borç",
+  "tam-borc": "Ödeme yapılmamış",
+};
+
+function adTamGoster(adSoyad: string): string {
+  return adSoyad.trim().toLocaleUpperCase("tr-TR").replace(/\s+/g, " ");
+}
 
 interface AsamaRengi {
   bg: string;
@@ -257,8 +279,9 @@ export function PersonelGorevKart({
               )}
             </div>
 
-            {/* SPRINT-PERSONEL-PANEL-EK: Tüm hissedarlar görünür (wrap edilir,
-                "+N daha" kısaltması yok). Hover'da tam ad title attribute'da. */}
+            {/* SPRINT-PERSONEL-ISIM-BADGE: Hissedar isimleri TAM, BÜYÜK HARF
+                (TR-locale). Badge rengi hisse bazlı borç durumunu gösterir:
+                yeşil (ödenmiş) / sarı (kısmi) / kırmızı (ödenmemiş). */}
             <div className="mb-1 flex flex-wrap items-center gap-1">
               {doluHisseler.length === 0 ? (
                 <span className="text-muted-foreground text-[10px] italic">
@@ -266,16 +289,17 @@ export function PersonelGorevKart({
                 </span>
               ) : (
                 doluHisseler.map((h) => {
-                  const ad = h.musteriAdi ?? "";
-                  const baslangic = ad.charAt(0);
-                  const soyad = ad.split(" ").pop() ?? "";
+                  const ad = adTamGoster(h.musteriAdi ?? "");
+                  const renk = BORC_BADGE_RENGI[h.borcDurumu];
+                  const aria = `${ad} — ${BORC_ARIA[h.borcDurumu]}`;
                   return (
                     <span
                       key={h.id}
-                      title={ad}
-                      className="bg-muted inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium"
+                      title={aria}
+                      aria-label={aria}
+                      className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-semibold ${renk}`}
                     >
-                      {baslangic}. {soyad}
+                      {ad}
                     </span>
                   );
                 })
