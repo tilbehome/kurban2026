@@ -124,16 +124,21 @@ export const DEKONT_OZET_KART_CSS = `
 .dk-ozet-satir {
   display: flex;
   justify-content: space-between;
-  padding: 4px 0;
+  align-items: center;
+  padding: 8px 0;
   font-size: 12px;
-  color: ${DEKONT_RENKLERI.primary};
+  color: ${DEKONT_RENKLERI.secondary};
+  border-bottom: 1px dashed ${DEKONT_RENKLERI.accent};
+}
+.dk-ozet-satir:last-of-type {
+  border-bottom: none;
 }
 .dk-ozet-soluk {
-  color: ${DEKONT_RENKLERI.secondary};
+  color: ${DEKONT_RENKLERI.tertiary};
 }
 .dk-ozet-alt {
-  padding-left: 10px;
-  font-size: 11.5px;
+  padding-left: 8px;
+  font-size: 11px;
   color: ${DEKONT_RENKLERI.secondary};
 }
 .dk-ozet-alt-baslik {
@@ -141,27 +146,55 @@ export const DEKONT_OZET_KART_CSS = `
   font-weight: 700;
   letter-spacing: 0.08em;
   color: ${DEKONT_RENKLERI.tertiary};
-  margin: 8px 0 4px;
+  margin: 12px 0 4px;
 }
 .dk-ozet-toplam {
   display: flex;
   justify-content: space-between;
-  padding: 10px 0;
-  margin-top: 6px;
+  padding: 12px 0;
+  margin: 8px 0;
   border-top: 1.5px solid ${DEKONT_RENKLERI.primary};
-  border-bottom: 1px solid ${DEKONT_RENKLERI.accent};
-  font-size: 13px;
+  border-bottom: 1.5px solid ${DEKONT_RENKLERI.primary};
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.02em;
   color: ${DEKONT_RENKLERI.primary};
+}
+.dk-ozet-yontem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: ${DEKONT_RENKLERI.primary};
+  border-bottom: 1px dashed ${DEKONT_RENKLERI.accent};
+}
+.dk-ozet-yaziyla {
+  padding: 8px 0;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: ${DEKONT_RENKLERI.secondary};
+  border-bottom: 1px dashed ${DEKONT_RENKLERI.accent};
+}
+.dk-ozet-yaziyla-baslik {
+  display: inline;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: ${DEKONT_RENKLERI.tertiary};
+  margin-right: 6px;
+}
+.dk-ozet-yaziyla-deger {
+  font-style: italic;
 }
 .dk-ozet-kalan {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0 4px;
-  font-size: 13px;
-  font-weight: 700;
+  padding: 12px 0 4px;
+  font-size: 14px;
+  font-weight: 800;
 }
 .dk-ozet-kalan.dk-odendi {
   color: ${DEKONT_RENKLERI.yesil};
@@ -181,33 +214,5 @@ export const DEKONT_OZET_KART_CSS = `
 }
 .dk-ozet-not strong {
   color: ${DEKONT_RENKLERI.primary};
-}
-.dk-ozet-yontem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 7px 0;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: ${DEKONT_RENKLERI.tertiary};
-  border-bottom: 1px solid ${DEKONT_RENKLERI.accent};
-}
-.dk-ozet-yaziyla {
-  padding: 8px 0;
-  font-size: 9.5px;
-  line-height: 1.4;
-  color: ${DEKONT_RENKLERI.secondary};
-  border-bottom: 1px solid ${DEKONT_RENKLERI.accent};
-}
-.dk-ozet-yaziyla-baslik {
-  display: inline;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: ${DEKONT_RENKLERI.tertiary};
-  margin-right: 6px;
-}
-.dk-ozet-yaziyla-deger {
-  font-style: italic;
 }
 `;

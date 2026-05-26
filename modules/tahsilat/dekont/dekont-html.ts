@@ -180,13 +180,13 @@ body {
   font-family: ${DEKONT_FONT};
   margin: 0;
   padding: 24px 16px;
-  background: #eeeeee;
+  background: #f0f0f0;
   color: ${DEKONT_RENKLERI.primary};
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 .dk-toolbar {
-  max-width: 760px;
+  max-width: 800px;
   margin: 0 auto 14px;
   display: flex;
   gap: 8px;
@@ -213,7 +213,7 @@ body {
   border-color: ${DEKONT_RENKLERI.primary};
 }
 .dk-dekont {
-  max-width: 760px;
+  max-width: 800px;
   margin: 0 auto;
   background: ${DEKONT_RENKLERI.background};
   padding: 32px;
@@ -225,7 +225,12 @@ body {
 .dk-ana-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 16px;
+  align-items: stretch;
+}
+.dk-ana-grid > .dk-kart {
+  display: flex;
+  flex-direction: column;
 }
 `;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/shared/lib/utils";
-import { formatBildirimSayisi } from "@/shared/lib/sidebar-bildirim.service";
+import { formatBildirimSayisi } from "@/shared/lib/sidebar-bildirim-format";
 import type { BildirimAnahtari } from "@/shared/lib/sidebar-config";
 
 interface SidebarBildirimRozetProps {

@@ -123,11 +123,7 @@ async function kritikBorcHesapla(): Promise<number> {
   return 0;
 }
 
-/**
- * Sayı görsel formatı: 99+'tan fazlasını "99+" göster.
- */
-export function formatBildirimSayisi(sayi: number): string {
-  if (sayi <= 0) return "";
-  if (sayi > 99) return "99+";
-  return sayi.toString();
-}
+// Görsel format helper'ı `shared/lib/sidebar-bildirim-format.ts`'e taşındı —
+// bu modülde prisma import'u olduğu için client component'lerin import etmesi
+// browser bundle'a prisma'yı çekiyordu. Eski yer için re-export tutulmuyor;
+// kullanan yerler doğrudan sidebar-bildirim-format'tan import etmeli.
