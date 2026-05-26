@@ -91,7 +91,7 @@ export default async function DashboardPage() {
 
       <section className="px-4 pb-4 sm:px-6">
         <Link
-          href="/raporlar/kesim-listesi"
+          href="/raporlar/kesim-listesi/filtre"
           className="hover:border-orange-400 hover:bg-orange-50/50 group flex items-center gap-3 rounded-xl border-2 border-orange-200 bg-linear-to-r from-orange-50 to-amber-50 p-4 transition-all"
         >
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-orange-100">

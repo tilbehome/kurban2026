@@ -10,7 +10,19 @@ export const metadata = {
   title: "Kurban Kesim Listesi · Ada Bereket Hayvancılık",
 };
 
-export default async function KesimListesiPage() {
+type OdemeFiltre = "tumu" | "borclular" | "odenmis";
+type TeslimFiltre = "tumu" | "teslim_edilmedi" | "teslim_edildi";
+
+interface PageProps {
+  searchParams: Promise<{ odeme?: string; teslim?: string }>;
+}
+
+/**
+ * A4 yazdırılabilir kesim listesi. Filtre sayfasından gelen ?odeme & ?teslim
+ * querystring'leri kurban (dana) bazlı filtreleme yapar — bir dana
+ * filtreyi sağlıyorsa tüm hissedarlarıyla listede yer alır.
+ */
+export default async function KesimListesiPage({ searchParams }: PageProps) {
   const oturum = await aktifOturum();
   if (!oturum) {
     redirect("/giris?next=/raporlar/kesim-listesi");
@@ -19,7 +31,11 @@ export default async function KesimListesiPage() {
     redirect("/giris?next=/raporlar/kesim-listesi");
   }
 
-  const kurbanlar = await prisma.kurban.findMany({
+  const params = await searchParams;
+  const odemeFiltre = normalizeOdeme(params.odeme);
+  const teslimFiltre = normalizeTeslim(params.teslim);
+
+  const tumKurbanlar = await prisma.kurban.findMany({
     where: { silindiMi: false },
     select: {
       id: true,
@@ -34,6 +50,8 @@ export default async function KesimListesiPage() {
           no: true,
           hisseFiyati: true,
           vekaletAlindi: true,
+          paketDurumu: true,
+          musteriId: true,
           musteri: {
             select: { adSoyad: true, telefon: true },
           },
@@ -46,6 +64,34 @@ export default async function KesimListesiPage() {
       },
     },
     orderBy: { kesimSirasi: "asc" },
+  });
+
+  // SPRINT-KESİM-FİLTRE: kurban bazlı filtreleme — herhangi bir hisse
+  // filtreyi sağlıyorsa kurban tüm hissedarlarıyla listede.
+  const kurbanlar = tumKurbanlar.filter((k) => {
+    const atanmis = k.hisseler.filter((h) => h.musteriId !== null);
+    if (atanmis.length === 0) return false;
+
+    if (odemeFiltre !== "tumu") {
+      const borcluVarMi = atanmis.some((h) => {
+        const odenen = h.odemeler.reduce((s, o) => s + o.toplamTutar, 0);
+        return h.hisseFiyati - odenen > 0.01;
+      });
+      if (odemeFiltre === "borclular" && !borcluVarMi) return false;
+      if (odemeFiltre === "odenmis" && borcluVarMi) return false;
+    }
+
+    if (teslimFiltre !== "tumu") {
+      const teslimEdilmemisVarMi = atanmis.some(
+        (h) => h.paketDurumu !== "Teslim Edildi",
+      );
+      if (teslimFiltre === "teslim_edilmedi" && !teslimEdilmemisVarMi)
+        return false;
+      if (teslimFiltre === "teslim_edildi" && teslimEdilmemisVarMi)
+        return false;
+    }
+
+    return true;
   });
 
   const firmaAyari = await prisma.ayar.findUnique({
@@ -65,4 +111,14 @@ export default async function KesimListesiPage() {
       firmaWeb={firmaWeb}
     />
   );
+}
+
+function normalizeOdeme(v: string | undefined): OdemeFiltre {
+  if (v === "borclular" || v === "odenmis") return v;
+  return "tumu";
+}
+
+function normalizeTeslim(v: string | undefined): TeslimFiltre {
+  if (v === "teslim_edilmedi" || v === "teslim_edildi") return v;
+  return "tumu";
 }

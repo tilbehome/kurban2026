@@ -1082,10 +1082,10 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         id: "kesim-listesi",
         ad: "Kesim Listesi (Yazdır)",
         ikon: Printer,
-        rota: "/raporlar/kesim-listesi",
+        rota: "/raporlar/kesim-listesi/filtre",
         izin: "raporlar.goruntule",
         aciklama:
-          "Tüm kurbanların hisse + müşteri + bakiye detayını A4 dikey yazdırılabilir liste olarak göster.",
+          "Borçlular / teslim edilecekler / tümü gibi filtreler seçip A4 yazdır.",
       },
       {
         id: "kasa-teslim-raporu",
