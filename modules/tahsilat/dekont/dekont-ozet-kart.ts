@@ -21,6 +21,13 @@ export interface OzetKartVerisi {
   notlar: string;
   /** Ödeme yöntemi: "nakit" | "havale" | "kart" | "karisik" — Odeme.yontem DB alanı */
   yontem: string;
+  /** Bu batch'te ödenen hisseler. 2+ eleman varsa kartta detay tablosu
+   * gösterilir; tek hissede gizlenir (mevcut görünüm korunur). */
+  odenenHisseler: ReadonlyArray<{
+    kurbanNo: number;
+    hisseNo: number;
+    fiyat: number;
+  }>;
 }
 
 function yontemEtiket(y: string): string {
@@ -41,10 +48,26 @@ function yontemEtiket(y: string): string {
 export function dekontOzetKartHtml(o: OzetKartVerisi): string {
   const e = escapeHtml;
   const tamamiOdendi = o.kalan <= 0;
+  const cokluHisse = o.odenenHisseler.length > 1;
 
   return `
   <div class="dk-kart dk-ozet-kart">
     <div class="dk-kart-baslik">ÖDEME ÖZETİ</div>
+    ${
+      cokluHisse
+        ? `<div class="dk-ozet-hisseler">
+            <div class="dk-ozet-hisseler-baslik">Ödenen Hisseler (${o.odenenHisseler.length})</div>
+            ${o.odenenHisseler
+              .map(
+                (h) => `<div class="dk-ozet-hisseler-satir">
+                  <span>· ${h.kurbanNo}.${h.hisseNo}</span>
+                  <span>${formatPara(h.fiyat)}</span>
+                </div>`,
+              )
+              .join("")}
+          </div>`
+        : ""
+    }
     <div class="dk-ozet-satir">
       <span>Toplam Bakiye</span>
       <span>${formatPara(o.hisseBedeli)}</span>
@@ -206,5 +229,31 @@ export const DEKONT_OZET_KART_CSS = `
 }
 .dk-ozet-not strong {
   color: ${DEKONT_RENKLERI.primary};
+}
+.dk-ozet-hisseler {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: ${DEKONT_RENKLERI.surface};
+  border-radius: 6px;
+  border: 1px dashed ${DEKONT_RENKLERI.accent};
+}
+.dk-ozet-hisseler-baslik {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: ${DEKONT_RENKLERI.tertiary};
+  margin-bottom: 4px;
+}
+.dk-ozet-hisseler-satir {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 11px;
+  color: ${DEKONT_RENKLERI.secondary};
+  font-variant-numeric: tabular-nums;
+}
+.dk-ozet-hisseler-satir + .dk-ozet-hisseler-satir {
+  border-top: 1px solid ${DEKONT_RENKLERI.accent};
 }
 `;

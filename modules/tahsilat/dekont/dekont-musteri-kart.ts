@@ -19,6 +19,15 @@ export interface MusteriKartVerisi {
   musteriHisseAdedi: number;
   dekontNo: string;
   kasiyer: string;
+  /** Batch'te ödenen hisseler — çoklu kurban senaryosunda kurban no listesi
+   * üretmek için kullanılır. Tek hissede gerekmez ama prop her zaman geçer. */
+  odenenHisseler: ReadonlyArray<{
+    kurbanNo: number;
+    hisseNo: number;
+    fiyat: number;
+  }>;
+  /** false ise hisseler birden fazla kurbandan — büyük no kutusu yerine liste */
+  tekKurban: boolean;
 }
 
 export function dekontMusteriKartHtml(m: MusteriKartVerisi): string {
@@ -50,7 +59,9 @@ export function dekontMusteriKartHtml(m: MusteriKartVerisi): string {
       </div>
     </div>
 
-    <div class="dk-kurban-sira-blok">
+    ${
+      m.tekKurban
+        ? `<div class="dk-kurban-sira-blok">
       <div class="dk-defne-sol">
         <svg viewBox="0 0 60 100" fill="none" preserveAspectRatio="xMidYMid meet">
           <path d="${defneYol}" fill="${DEKONT_RENKLERI.accent}" opacity="0.75"/>
@@ -66,7 +77,18 @@ export function dekontMusteriKartHtml(m: MusteriKartVerisi): string {
           <path d="${defneYol}" fill="${DEKONT_RENKLERI.accent}" opacity="0.75"/>
         </svg>
       </div>
-    </div>
+    </div>`
+        : `<div class="dk-kurban-coklu-blok">
+      <div class="dk-kurban-coklu-baslik">KURBAN SIRA NO</div>
+      <div class="dk-kurban-coklu-liste">
+        ${Array.from(new Set(m.odenenHisseler.map((h) => h.kurbanNo)))
+          .sort((a, b) => a - b)
+          .map((no) => `<span class="dk-kurban-coklu-rozet">${no}</span>`)
+          .join("")}
+      </div>
+      <div class="dk-kurban-sira-hisse">Hisse Adedi: ${m.musteriHisseAdedi}</div>
+    </div>`
+    }
 
     <div class="dk-musteri-alt">
       <div class="dk-musteri-satir">
@@ -191,5 +213,41 @@ export const DEKONT_MUSTERI_KART_CSS = `
 }
 .dk-musteri-alt {
   margin-top: 8px;
+}
+.dk-kurban-coklu-blok {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0;
+  padding: 12px 8px;
+  background: ${DEKONT_RENKLERI.surface};
+  border: 1px solid ${DEKONT_RENKLERI.kartCerceve};
+  border-radius: 10px;
+}
+.dk-kurban-coklu-baslik {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: ${DEKONT_RENKLERI.secondary};
+}
+.dk-kurban-coklu-liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.dk-kurban-coklu-rozet {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 4px 10px;
+  background: ${DEKONT_RENKLERI.primary};
+  color: ${DEKONT_RENKLERI.background};
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 `;

@@ -69,6 +69,17 @@ export interface DekontHtmlGirdisi {
   /** Ödeme yöntemi: nakit | havale | kart | karisik (Odeme.yontem DB alanı) */
   yontem: string;
 
+  // SPRINT-DEKONT-BATCH: tek tahsilatta ödenen tüm hisselerin listesi.
+  // 2+ eleman varsa özet kartta "Ödenen Hisseler" tablosu gösterilir,
+  // tek hissede gizli kalır (mevcut görünüm korunur).
+  odenenHisseler: ReadonlyArray<{
+    kurbanNo: number;
+    hisseNo: number;
+    fiyat: number;
+  }>;
+  /** Batch'teki tüm hisseler aynı kurbandan mı? false → çoklu kurban */
+  tekKurban: boolean;
+
   // QR
   qrDataUrl: string;
   qrHedefUrl: string;
@@ -105,6 +116,8 @@ export function dekontHtmlUret(d: DekontHtmlGirdisi): string {
     musteriHisseAdedi: d.musteriHisseAdedi,
     dekontNo: d.dekontNo,
     kasiyer: d.kasiyer,
+    odenenHisseler: d.odenenHisseler,
+    tekKurban: d.tekKurban,
   });
 
   const ozetKart = dekontOzetKartHtml({
@@ -117,6 +130,7 @@ export function dekontHtmlUret(d: DekontHtmlGirdisi): string {
     kalan: d.kalan,
     notlar: d.notlar,
     yontem: d.yontem,
+    odenenHisseler: d.odenenHisseler,
   });
 
   const footer = dekontFooterHtml({
