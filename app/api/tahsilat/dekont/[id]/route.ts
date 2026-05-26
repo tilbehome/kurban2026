@@ -137,6 +137,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
     toplam: odeme.toplamTutar,
     kalan: hisseKalan,
     notlar: odeme.notlar ?? "",
+    yontem: odeme.yontem ?? "nakit",
 
     qrDataUrl,
     qrHedefUrl,

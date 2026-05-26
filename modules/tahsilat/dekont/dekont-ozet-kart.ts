@@ -8,6 +8,7 @@
 import { DEKONT_RENKLERI } from "./dekont-tema";
 import { escapeHtml } from "./dekont-html-yardimci";
 import { formatPara } from "@/shared/lib/para";
+import { tutariYaziyaCevir } from "@/shared/lib/tutar-yaziyla";
 
 export interface OzetKartVerisi {
   hisseBedeli: number;
@@ -18,6 +19,23 @@ export interface OzetKartVerisi {
   toplam: number;
   kalan: number;
   notlar: string;
+  /** Ödeme yöntemi: "nakit" | "havale" | "kart" | "karisik" — Odeme.yontem DB alanı */
+  yontem: string;
+}
+
+function yontemEtiket(y: string): string {
+  switch (y.toLowerCase()) {
+    case "nakit":
+      return "NAKİT";
+    case "havale":
+      return "HAVALE / EFT";
+    case "kart":
+      return "KREDİ / BANKA KARTI";
+    case "karisik":
+      return "KARIŞIK ÖDEME";
+    default:
+      return y.toUpperCase();
+  }
 }
 
 export function dekontOzetKartHtml(o: OzetKartVerisi): string {
@@ -69,6 +87,16 @@ export function dekontOzetKartHtml(o: OzetKartVerisi): string {
     <div class="dk-ozet-toplam">
       <span>BU ÖDEME TOPLAM</span>
       <span>${formatPara(o.toplam)}</span>
+    </div>
+
+    <div class="dk-ozet-yontem">
+      <span>ÖDEME YÖNTEMİ</span>
+      <span>${e(yontemEtiket(o.yontem))}</span>
+    </div>
+
+    <div class="dk-ozet-yaziyla">
+      <span class="dk-ozet-yaziyla-baslik">YAZIYLA:</span>
+      <span class="dk-ozet-yaziyla-deger">${e(tutariYaziyaCevir(o.toplam))}</span>
     </div>
 
     <div class="dk-ozet-kalan ${tamamiOdendi ? "dk-odendi" : "dk-borc"}">
@@ -153,5 +181,33 @@ export const DEKONT_OZET_KART_CSS = `
 }
 .dk-ozet-not strong {
   color: ${DEKONT_RENKLERI.primary};
+}
+.dk-ozet-yontem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: ${DEKONT_RENKLERI.tertiary};
+  border-bottom: 1px solid ${DEKONT_RENKLERI.accent};
+}
+.dk-ozet-yaziyla {
+  padding: 8px 0;
+  font-size: 9.5px;
+  line-height: 1.4;
+  color: ${DEKONT_RENKLERI.secondary};
+  border-bottom: 1px solid ${DEKONT_RENKLERI.accent};
+}
+.dk-ozet-yaziyla-baslik {
+  display: inline;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: ${DEKONT_RENKLERI.tertiary};
+  margin-right: 6px;
+}
+.dk-ozet-yaziyla-deger {
+  font-style: italic;
 }
 `;

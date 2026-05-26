@@ -64,6 +64,8 @@ export interface DekontHtmlGirdisi {
   toplam: number;
   kalan: number;
   notlar: string;
+  /** Ödeme yöntemi: nakit | havale | kart | karisik (Odeme.yontem DB alanı) */
+  yontem: string;
 
   // QR
   qrDataUrl: string;
@@ -111,6 +113,7 @@ export function dekontHtmlUret(d: DekontHtmlGirdisi): string {
     toplam: d.toplam,
     kalan: d.kalan,
     notlar: d.notlar,
+    yontem: d.yontem,
   });
 
   const qrKart = dekontQrKartHtml({

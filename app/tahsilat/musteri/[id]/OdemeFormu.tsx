@@ -15,7 +15,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatPara, parsePara, topla, yuvarla } from "@/shared/lib/para";
-import { Banknote, ArrowUpRight, CreditCard, Check } from "lucide-react";
+import {
+  Banknote,
+  ArrowUpRight,
+  CreditCard,
+  Check,
+  Printer,
+  X,
+} from "lucide-react";
 
 interface Hisse {
   id: string;
@@ -43,6 +50,13 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
   const [kart, setKart] = useState("");
   const [notlar, setNotlar] = useState("");
   const [dagitim, setDagitim] = useState<Dagitim>("esit");
+
+  // Son başarılı ödeme bilgisi — opsiyonel "Dekont Yazdır" butonu için
+  const [sonOdeme, setSonOdeme] = useState<{
+    odemeId: string;
+    dekontNo: string;
+    toplam: number;
+  } | null>(null);
 
   const nakitRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
@@ -93,30 +107,36 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
         const sonuc = (await yanit.json()) as {
           basarili: boolean;
           dekontNo?: string;
-          odemeIds?: number[];
+          odemeIds?: string[];
+          toplam?: number;
           hata?: string;
         };
         if (!yanit.ok || !sonuc.basarili) {
           throw new Error(sonuc.hata ?? "Ödeme alınamadı");
         }
-        toast.success(`Ödeme alındı · ${sonuc.dekontNo}`, {
-          action: sonuc.odemeIds?.[0]
-            ? {
-                label: "Dekontu Aç",
-                onClick: () =>
-                  window.open(
-                    `/api/tahsilat/dekont/${sonuc.odemeIds?.[0]}`,
-                    "_blank",
-                  ),
-              }
-            : undefined,
-        });
-        // İlk dekontu otomatik aç
-        if (sonuc.odemeIds?.[0]) {
-          window.open(`/api/tahsilat/dekont/${sonuc.odemeIds[0]}`, "_blank");
+
+        toast.success(`Ödeme alındı · ${sonuc.dekontNo}`, { duration: 3000 });
+
+        // Son ödeme bilgisini state'e yaz — opsiyonel yazdır butonu için
+        if (sonuc.odemeIds?.[0] && sonuc.dekontNo) {
+          setSonOdeme({
+            odemeId: sonuc.odemeIds[0],
+            dekontNo: sonuc.dekontNo,
+            toplam: sonuc.toplam ?? toplam,
+          });
         }
-        router.push("/tahsilat");
+
+        // Form alanlarını temizle — aynı müşteriye yeni tahsilat alınabilsin
+        setNakit("");
+        setHavale("");
+        setKart("");
+        setNotlar("");
+
+        // Kalan bakiye güncel olsun
         router.refresh();
+
+        // Yeni tutar girişine odaklan
+        setTimeout(() => nakitRef.current?.focus(), 100);
       } catch (e) {
         const m = e instanceof Error ? e.message : "Hata";
         toast.error(m);
@@ -228,13 +248,58 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
         />
       </div>
 
+      {sonOdeme && (
+        <div className="rounded-lg border-2 border-green-300 bg-green-50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <Check className="size-5 shrink-0 text-green-600" />
+                <span className="font-semibold text-green-900">
+                  Ödeme Alındı
+                </span>
+              </div>
+              <div className="font-tabular mt-1 text-sm text-green-700">
+                {sonOdeme.dekontNo} · {formatPara(sonOdeme.toplam)}
+              </div>
+            </div>
+
+            <div className="flex shrink-0 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  window.open(
+                    `/api/tahsilat/dekont/${sonOdeme.odemeId}`,
+                    "_blank",
+                  )
+                }
+              >
+                <Printer size={14} />
+                Dekont Yazdır
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSonOdeme(null)}
+                aria-label="Kapat"
+              >
+                <X size={14} />
+                Kapat
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Button
         type="submit"
         disabled={bekleniyor || toplam <= 0}
         size="lg"
         className="w-full"
       >
-        {bekleniyor ? "Ödeme alınıyor..." : "✓ Ödemeyi Al ve Dekont Bas"}
+        {bekleniyor ? "Ödeme alınıyor..." : "✓ Ödemeyi Al"}
       </Button>
     </form>
   );
