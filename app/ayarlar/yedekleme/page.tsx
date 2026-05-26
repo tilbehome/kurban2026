@@ -1,6 +1,8 @@
 import { AppShell } from "@/shared/components/AppShell";
 import { SayfaBaslik } from "@/shared/components/SayfaBaslik";
 import { yedekleriListele } from "@/shared/lib/backup";
+import { aktifOturum } from "@/shared/lib/session";
+import { adminMi } from "@/shared/lib/izinler";
 import {
   Card,
   CardContent,
@@ -10,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { YedekActions } from "./YedekActions";
 import { YedekListesi } from "./YedekListesi";
+import { TehlikeliIslemler } from "./TehlikeliIslemler";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -17,12 +20,15 @@ import { ArrowLeft } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 /**
- * Yedekleme yönetim sayfası — SPRINT-YEDEK-V2 sonrası tam interaktif.
- *  - Normal yedek + etiketli "yedek noktası" oluşturma (YedekActions)
- *  - Yedek listesi: yükle/indir/zip/sil aksiyonları (YedekListesi)
- *  - Yedek noktaları üstte ayrı amber bantta, rotasyondan korumalı
+ * Yedekleme yönetim sayfası — SPRINT-YEDEK-V2 + SPRINT-SIFIRLA-V1.
+ *  - Normal yedek + etiketli "yedek noktası" (YedekActions)
+ *  - Yedek listesi: yükle/indir/zip/sil (YedekListesi)
+ *  - Sadece admin'e: TehlikeliIslemler (tüm veriyi sıfırla)
  */
 export default async function YedeklemePage() {
+  const oturum = await aktifOturum();
+  const adminGoster = oturum ? adminMi(oturum.rol) : false;
+
   const yedekler = yedekleriListele().map((y) => ({
     dosyaAdi: y.dosyaAdi,
     tarih: y.tarih.toISOString(),
@@ -77,6 +83,13 @@ export default async function YedeklemePage() {
             )}
           </CardContent>
         </Card>
+
+        {/* SPRINT-SIFIRLA-V1: tehlikeli işlemler — sadece admin */}
+        {adminGoster && (
+          <div className="max-w-3xl">
+            <TehlikeliIslemler />
+          </div>
+        )}
       </div>
     </AppShell>
   );
