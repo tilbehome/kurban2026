@@ -17,8 +17,8 @@ import { EtiketModal } from "./modals/EtiketModal";
 import { HisseAtamaModal } from "./modals/HisseAtamaModal";
 import { IadeModal } from "./modals/IadeModal";
 import { MusteriSilModal } from "./modals/MusteriSilModal";
-import { etiketleriParse } from "../lib/aktivite.service";
-import type { AktiviteSatir } from "../lib/aktivite.service";
+import { etiketleriParse } from "../lib/aktivite-format";
+import type { AktiviteSatir } from "../lib/aktivite-format";
 
 interface MusteriDetayClientProps {
   musteri: {

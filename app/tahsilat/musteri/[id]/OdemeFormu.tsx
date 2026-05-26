@@ -107,34 +107,56 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
 
     startTransition(async () => {
       try {
-        const yanit = await fetch("/api/tahsilat/odeme", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            musteriId,
-            hisseIds: hisseler.map((h) => h.id),
-            nakit: parsePara(nakit),
-            havale: parsePara(havale),
-            kart: parsePara(kart),
-            notlar: notlar.trim() || undefined,
-            dagitim,
-            clientRequestId,
-          }),
-        });
-        const sonuc = (await yanit.json()) as {
-          basarili: boolean;
-          dekontNo?: string;
-          odemeIds?: string[];
-          toplam?: number;
-          hata?: string;
-        };
-        if (!yanit.ok || !sonuc.basarili) {
+        async function tahsilatGonder(secilenDagitim: Dagitim, uuid: string) {
+          const yanit = await fetch("/api/tahsilat/odeme", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              musteriId,
+              hisseIds: hisseler.map((h) => h.id),
+              nakit: parsePara(nakit),
+              havale: parsePara(havale),
+              kart: parsePara(kart),
+              notlar: notlar.trim() || undefined,
+              dagitim: secilenDagitim,
+              clientRequestId: uuid,
+            }),
+          });
+          const sonuc = (await yanit.json()) as {
+            basarili: boolean;
+            dekontNo?: string;
+            odemeIds?: string[];
+            toplam?: number;
+            hata?: string;
+          };
+          return { ok: yanit.ok, ...sonuc };
+        }
+
+        let sonuc = await tahsilatGonder(dagitim, clientRequestId);
+
+        // SPRINT-FIX: "Eşit dağıtım" hisse limitini aşarsa otomatik "Sırayla"
+        // dene. Fresh UUID — eski hatalı yanıt replay edilmesin.
+        if (
+          (!sonuc.ok || !sonuc.basarili) &&
+          dagitim === "esit" &&
+          typeof sonuc.hata === "string" &&
+          sonuc.hata.includes("kalanını aşıyor")
+        ) {
+          toast.info(
+            "Eşit dağıtım uymuyor, sırayla deneniyor…",
+            { duration: 2000 },
+          );
+          const yeniUuid = crypto.randomUUID();
+          clientRequestIdRef.current = yeniUuid;
+          sonuc = await tahsilatGonder("sirayla", yeniUuid);
+        }
+
+        if (!sonuc.ok || !sonuc.basarili) {
           throw new Error(sonuc.hata ?? "Ödeme alınamadı");
         }
 
         toast.success(`Ödeme alındı · ${sonuc.dekontNo}`, { duration: 3000 });
 
-        // Son ödeme bilgisini state'e yaz — opsiyonel yazdır butonu için
         if (sonuc.odemeIds?.[0] && sonuc.dekontNo) {
           setSonOdeme({
             odemeId: sonuc.odemeIds[0],
@@ -143,22 +165,17 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
           });
         }
 
-        // Form alanlarını temizle — aynı müşteriye yeni tahsilat alınabilsin
         setNakit("");
         setHavale("");
         setKart("");
         setNotlar("");
 
-        // Kalan bakiye güncel olsun
         router.refresh();
-
-        // Yeni tutar girişine odaklan
         setTimeout(() => nakitRef.current?.focus(), 100);
       } catch (e) {
         const m = e instanceof Error ? e.message : "Hata";
         toast.error(m);
       } finally {
-        // Bir sonraki ödeme fresh UUID kullansın
         clientRequestIdRef.current = null;
       }
     });

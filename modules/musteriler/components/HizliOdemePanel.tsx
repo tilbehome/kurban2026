@@ -129,27 +129,49 @@ export function HizliOdemePanel({
 
     startTransition(async () => {
       try {
-        const yanit = await fetch("/api/tahsilat/odeme", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            musteriId,
-            hisseIds: hisseler.map((h) => h.id),
-            nakit: parsePara(nakit),
-            havale: parsePara(havale),
-            kart: parsePara(kart),
-            dagitim,
-            clientRequestId,
-          }),
-        });
-        const sonuc = (await yanit.json()) as {
-          basarili: boolean;
-          dekontNo?: string;
-          odemeIds?: string[];
-          toplam?: number;
-          hata?: string;
-        };
-        if (!yanit.ok || !sonuc.basarili) {
+        async function tahsilatGonder(secilenDagitim: Dagitim, uuid: string) {
+          const yanit = await fetch("/api/tahsilat/odeme", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              musteriId,
+              hisseIds: hisseler.map((h) => h.id),
+              nakit: parsePara(nakit),
+              havale: parsePara(havale),
+              kart: parsePara(kart),
+              dagitim: secilenDagitim,
+              clientRequestId: uuid,
+            }),
+          });
+          const sonuc = (await yanit.json()) as {
+            basarili: boolean;
+            dekontNo?: string;
+            odemeIds?: string[];
+            toplam?: number;
+            hata?: string;
+          };
+          return { ok: yanit.ok, ...sonuc };
+        }
+
+        let sonuc = await tahsilatGonder(dagitim, clientRequestId);
+
+        // SPRINT-FIX: "Eşit dağıtım" hisse limitini aşarsa otomatik "Sırayla"
+        // dene. Fresh UUID — eski hatalı yanıt replay edilmesin.
+        if (
+          (!sonuc.ok || !sonuc.basarili) &&
+          dagitim === "esit" &&
+          typeof sonuc.hata === "string" &&
+          sonuc.hata.includes("kalanını aşıyor")
+        ) {
+          toast.info("Eşit dağıtım uymuyor, sırayla deneniyor…", {
+            duration: 2000,
+          });
+          const yeniUuid = crypto.randomUUID();
+          clientRequestIdRef.current = yeniUuid;
+          sonuc = await tahsilatGonder("sirayla", yeniUuid);
+        }
+
+        if (!sonuc.ok || !sonuc.basarili) {
           throw new Error(sonuc.hata ?? "Ödeme alınamadı");
         }
         toast.success(`Ödeme alındı · ${sonuc.dekontNo}`, { duration: 3000 });
@@ -372,7 +394,7 @@ function ParaSatir({
         </div>
       </div>
       {(hizliKalan || hizliYarisi) && (
-        <div className="ml-[72px] flex gap-1">
+        <div className="ml-18 flex gap-1">
           {hizliKalan && (
             <button
               type="button"

@@ -5,8 +5,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { formatPara } from "@/shared/lib/para";
 import { formatTarihSaat, gorelTarih } from "@/shared/lib/tarih";
 import { tcMaskele } from "../../lib/tc-maskele";
-import { etiketleriParse } from "../../lib/aktivite.service";
-import type { AktiviteSatir } from "../../lib/aktivite.service";
+import { etiketleriParse } from "../../lib/aktivite-format";
+import type { AktiviteSatir } from "../../lib/aktivite-format";
 import {
   IdCard,
   MapPin,
