@@ -24,14 +24,16 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // SQLite optimize — sadece bir kez (hot-reload'da tekrar çalışmaz).
+// PRAGMA atamaları SQLite'da sonuç döndürür (örn. journal_mode = WAL → "wal"),
+// bu yüzden $executeRawUnsafe değil $queryRawUnsafe kullanılmalı; sonucu yut.
 if (!globalForPrisma.prismaPragmaUygulandi) {
   globalForPrisma.prismaPragmaUygulandi = true;
   void (async () => {
     try {
-      await prisma.$executeRawUnsafe("PRAGMA journal_mode=WAL");
-      await prisma.$executeRawUnsafe("PRAGMA busy_timeout=5000");
-      await prisma.$executeRawUnsafe("PRAGMA synchronous=NORMAL");
-      await prisma.$executeRawUnsafe("PRAGMA foreign_keys=ON");
+      await prisma.$queryRawUnsafe("PRAGMA journal_mode=WAL");
+      await prisma.$queryRawUnsafe("PRAGMA busy_timeout=5000");
+      await prisma.$queryRawUnsafe("PRAGMA synchronous=NORMAL");
+      await prisma.$queryRawUnsafe("PRAGMA foreign_keys=ON");
     } catch (e) {
       console.error("[prisma] SQLite pragma hatası:", e);
     }

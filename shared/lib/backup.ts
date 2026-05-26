@@ -21,7 +21,16 @@ function dbDosyaYolu(): string {
     );
   }
   const rel = dbUrl.slice("file:".length);
-  return path.isAbsolute(rel) ? rel : path.join(process.cwd(), rel);
+  if (path.isAbsolute(rel)) return rel;
+
+  // Prisma, schema.prisma içindeki relative file: URL'lerini schema dosyasının
+  // bulunduğu klasöre göre çözer (yani `prisma/`). Bizim için iki yaygın .env
+  // değeri var: `file:./tilbe.db` (Prisma → prisma/tilbe.db) ve
+  // `file:./prisma/tilbe.db` (cwd → prisma/tilbe.db). İkisi de aynı dosyaya
+  // varmalı — önce Prisma davranışını dene, dosya yoksa cwd'ye düş.
+  const prismaYolu = path.join(process.cwd(), "prisma", rel);
+  if (fs.existsSync(prismaYolu)) return prismaYolu;
+  return path.join(process.cwd(), rel);
 }
 
 const DB_YOL = dbDosyaYolu();
