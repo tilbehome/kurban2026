@@ -15,6 +15,8 @@ export interface MusteriKartVerisi {
   musteriTel: string;
   kurbanNo: number;
   hisseNo: number;
+  /** Müşterinin sahip olduğu toplam aktif hisse sayısı (tüm kurbanlar dahil) */
+  musteriHisseAdedi: number;
   dekontNo: string;
   kasiyer: string;
 }
@@ -57,7 +59,7 @@ export function dekontMusteriKartHtml(m: MusteriKartVerisi): string {
       <div class="dk-kurban-sira-icerik">
         <div class="dk-kurban-sira-baslik">KURBAN SIRA NO</div>
         <div class="dk-kurban-sira-numara">${m.kurbanNo}</div>
-        <div class="dk-kurban-sira-hisse">Hisse Adedi: ${m.hisseNo}</div>
+        <div class="dk-kurban-sira-hisse">Hisse Adedi: ${m.musteriHisseAdedi}</div>
       </div>
       <div class="dk-defne-sag">
         <svg viewBox="0 0 60 100" fill="none" preserveAspectRatio="xMidYMid meet">

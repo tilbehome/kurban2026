@@ -53,6 +53,8 @@ export interface DekontHtmlGirdisi {
   musteriTel: string;
   kurbanNo: number;
   hisseNo: number;
+  /** Müşterinin sahip olduğu toplam aktif hisse sayısı (tüm kurbanlar dahil) */
+  musteriHisseAdedi: number;
   kasiyer: string;
 
   // Tutarlar
@@ -100,6 +102,7 @@ export function dekontHtmlUret(d: DekontHtmlGirdisi): string {
     musteriTel: d.musteriTel,
     kurbanNo: d.kurbanNo,
     hisseNo: d.hisseNo,
+    musteriHisseAdedi: d.musteriHisseAdedi,
     dekontNo: d.dekontNo,
     kasiyer: d.kasiyer,
   });

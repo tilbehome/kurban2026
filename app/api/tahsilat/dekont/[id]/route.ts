@@ -85,6 +85,18 @@ export async function GET(_req: Request, { params }: RouteParams) {
   const hisseKalan = yuvarla(hisse.hisseFiyati - hisseToplamOdenen);
   const oncekiOdemeler = yuvarla(hisseToplamOdenen - odeme.toplamTutar);
 
+  // SPRINT-DEKONT-V3 fix: dekonttaki "Hisse Adedi" müşterinin sahip olduğu
+  // toplam aktif hisse sayısı (hisse.no kurbandaki sıraydı, müşterinin adedi
+  // değil). Aynı kurbandaki birden fazla hisse de dahil.
+  const musteriHisseAdedi = hisse.musteri
+    ? await prisma.hisse.count({
+        where: {
+          musteriId: hisse.musteri.id,
+          silindiMi: false,
+        },
+      })
+    : 1;
+
   const qrHedefUrl = dekontQrUrlOlustur({
     publicUrl,
     kesimSirasi: hisse.kurban.kesimSirasi,
@@ -127,6 +139,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
     musteriTel: hisse.musteri?.telefon ?? "",
     kurbanNo: hisse.kurban.kesimSirasi,
     hisseNo: hisse.no,
+    musteriHisseAdedi,
     kasiyer: odeme.kullanici.adSoyad,
 
     hisseBedeli: hisse.hisseFiyati,
