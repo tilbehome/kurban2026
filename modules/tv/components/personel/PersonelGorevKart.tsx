@@ -1,15 +1,26 @@
 "use client";
 
+/**
+ * Personel görev kartı — telefondan sahada hızlı aşama geçişi.
+ *
+ * SPRINT-PERSONEL-PANEL: yanlışlık önlemek için sade arayüz.
+ *  - Üstte: DANA-X + sayaç + hissedar isimleri + KG + sıra rozetı
+ *  - Ortada: BÜYÜK mevcut aşama rozeti (görsel netlik)
+ *  - Altta: 2 EŞİT buton (GERİ AL | İLERLET) — her birinde hedef aşama yazılı
+ *  - En altta: Sorun Bildir tam genişlik
+ *  - Onay diyalogu: "Tamamlandı" geçişi + her "Geri Al"
+ *  - Swipe ve "+%10" butonu KALDIRILDI (yanlışlık önleme)
+ */
+
 import { useState } from "react";
-import { useSwipeable } from "react-swipeable";
 import { toast } from "sonner";
 import {
-  Zap,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
   CircleDot,
   Loader2,
+  Zap,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,17 +34,63 @@ import {
 import type { PersonelKurbanVeri } from "@/app/tv/personel/page";
 import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
 
-const ASAMA_RENGI: Record<string, string> = {
-  vekalet_bekliyor: "bg-amber-100 text-amber-700",
-  siradaki: "bg-purple-100 text-purple-700",
-  hazirlik: "bg-blue-100 text-blue-700",
-  kesimde: "bg-red-100 text-red-700",
-  deri_yuzme: "bg-orange-100 text-orange-700",
-  parcalama: "bg-amber-100 text-amber-700",
-  tartimda: "bg-indigo-100 text-indigo-700",
-  paketleme: "bg-cyan-100 text-cyan-700",
-  teslime_hazir: "bg-emerald-100 text-emerald-700",
-  tamamlandi: "bg-green-100 text-green-700",
+interface AsamaRengi {
+  bg: string;
+  text: string;
+  border: string;
+}
+
+const ASAMA_RENGI: Record<string, AsamaRengi> = {
+  vekalet_bekliyor: {
+    bg: "bg-amber-100",
+    text: "text-amber-900",
+    border: "border-amber-300",
+  },
+  siradaki: {
+    bg: "bg-purple-100",
+    text: "text-purple-900",
+    border: "border-purple-300",
+  },
+  hazirlik: {
+    bg: "bg-blue-100",
+    text: "text-blue-900",
+    border: "border-blue-300",
+  },
+  kesimde: {
+    bg: "bg-red-100",
+    text: "text-red-900",
+    border: "border-red-300",
+  },
+  deri_yuzme: {
+    bg: "bg-orange-100",
+    text: "text-orange-900",
+    border: "border-orange-300",
+  },
+  parcalama: {
+    bg: "bg-amber-100",
+    text: "text-amber-900",
+    border: "border-amber-300",
+  },
+  tartimda: {
+    bg: "bg-indigo-100",
+    text: "text-indigo-900",
+    border: "border-indigo-300",
+  },
+  paketleme: {
+    bg: "bg-cyan-100",
+    text: "text-cyan-900",
+    border: "border-cyan-300",
+  },
+  teslime_hazir: {
+    bg: "bg-emerald-100",
+    text: "text-emerald-900",
+    border: "border-emerald-300",
+  },
+  tamamlandi: {
+    bg: "bg-green-100",
+    text: "text-green-900",
+    border: "border-green-300",
+  },
 };
 
 interface Props {
@@ -55,6 +112,15 @@ export function PersonelGorevKart({
   const sonraki = sonrakiAsama(kurban.kesimDurumu as KurbanKesimDurumu);
   const onceki = oncekiAsama(kurban.kesimDurumu as KurbanKesimDurumu);
 
+  const mevcutRenk = ASAMA_RENGI[kurban.kesimDurumu] ?? {
+    bg: "bg-slate-100",
+    text: "text-slate-900",
+    border: "border-slate-300",
+  };
+  const mevcutEtiket =
+    ASAMA_ETIKETLERI[kurban.kesimDurumu as KurbanKesimDurumu] ??
+    kurban.kesimDurumu;
+
   async function asamaDegistir(
     yeniDurum: KurbanKesimDurumu,
     yon: "ileri" | "geri",
@@ -70,14 +136,16 @@ export function PersonelGorevKart({
         }),
       });
       if (!yanit.ok) {
-        const veri = await yanit.json().catch(() => ({}));
+        const veri = (await yanit.json().catch(() => ({}))) as {
+          hata?: string;
+        };
         toast.error(veri.hata ?? "Aşama değiştirilemedi");
         return;
       }
       toast.success(
         yon === "ileri"
-          ? `${ASAMA_ETIKETLERI[yeniDurum]} — DANA-${kurban.kesimSirasi}`
-          : `Geri alındı: ${ASAMA_ETIKETLERI[yeniDurum]}`,
+          ? `✓ ${ASAMA_ETIKETLERI[yeniDurum]} — DANA-${kurban.kesimSirasi}`
+          : `↶ Geri alındı: ${ASAMA_ETIKETLERI[yeniDurum]}`,
       );
       if (navigator.vibrate) navigator.vibrate(yon === "ileri" ? 40 : 25);
       yenile();
@@ -88,59 +156,37 @@ export function PersonelGorevKart({
     }
   }
 
-  async function ilerlemeArtir() {
-    setYukleniyor(true);
-    try {
-      const yeni = Math.min(100, kurban.ilerlemeYuzde + 10);
-      const yanit = await fetch("/api/tv/kurban-asama", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kurbanId: kurban.id,
-          yeniDurum: kurban.kesimDurumu,
-          ilerlemeYuzde: yeni,
-        }),
-      });
-      if (!yanit.ok) {
-        toast.error("İlerleme güncellenemedi");
-        return;
-      }
-      if (navigator.vibrate) navigator.vibrate(15);
-      yenile();
-    } catch {
-      toast.error("Bağlantı hatası");
-    } finally {
-      setYukleniyor(false);
+  function ilerletKlik() {
+    if (!sonraki || yukleniyor) return;
+    // Yalnız kritik geçişte onay — diğerleri tek tıkla geçer.
+    if (sonraki === "tamamlandi") {
+      const onay = window.confirm(
+        `DANA-${kurban.kesimSirasi} tamamlandı olarak işaretlensin mi?`,
+      );
+      if (!onay) return;
     }
+    asamaDegistir(sonraki, "ileri");
   }
 
-  const swipe = useSwipeable({
-    onSwipedLeft: () => {
-      if (sonraki && !yukleniyor) asamaDegistir(sonraki, "ileri");
-    },
-    onSwipedRight: () => {
-      if (onceki && !yukleniyor) asamaDegistir(onceki, "geri");
-    },
-    preventScrollOnSwipe: true,
-    trackMouse: false,
-    delta: 50,
-  });
+  function geriAlKlik() {
+    if (!onceki || yukleniyor) return;
+    const onay = window.confirm(
+      `DANA-${kurban.kesimSirasi} bir önceki aşamaya (${ASAMA_ETIKETLERI[onceki]}) geri alınsın mı?`,
+    );
+    if (!onay) return;
+    asamaDegistir(onceki, "geri");
+  }
 
-  const renk =
-    ASAMA_RENGI[kurban.kesimDurumu] ?? "bg-slate-100 text-slate-700";
-  const etiket =
-    ASAMA_ETIKETLERI[kurban.kesimDurumu as KurbanKesimDurumu] ??
-    kurban.kesimDurumu;
   const bosHisseSayisi = kurban.hisseler.filter((h) => !h.musteriAdi).length;
   const doluHisseler = kurban.hisseler.filter((h) => h.musteriAdi);
 
   return (
     <Card>
-      <CardContent {...swipe} className="p-3 touch-pan-y">
+      <CardContent className="p-3">
+        {/* ÜST: DANA-NO + Sayaç + Hissedarlar */}
         <div className="mb-3 flex items-start gap-3">
-          {/* Sol: BÜYÜK DANA-NO + sayaç */}
-          <div className="border-primary bg-primary/10 flex h-20 min-w-20 flex-col items-center justify-center rounded-2xl border-2 gap-0.5">
-            <span className="text-muted-foreground text-[10px] uppercase tracking-wider">
+          <div className="border-primary bg-primary/10 flex h-20 min-w-20 flex-col items-center justify-center gap-0.5 rounded-2xl border-2">
+            <span className="text-muted-foreground text-[10px] tracking-wider uppercase">
               Dana
             </span>
             <span className="text-primary text-3xl leading-none font-bold">
@@ -154,7 +200,6 @@ export function PersonelGorevKart({
             />
           </div>
 
-          {/* Sağ: Detaylar */}
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex flex-wrap items-center gap-1.5">
               {kurban.hisseGrubu && (
@@ -162,14 +207,13 @@ export function PersonelGorevKart({
                   ⚖️ {kurban.hisseGrubu} KG
                 </Badge>
               )}
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${renk}`}
-              >
-                {etiket}
-              </span>
+              {kurban.operasyonSira !== null && (
+                <Badge variant="outline" className="text-[10px]">
+                  Sıra: {kurban.operasyonSira}
+                </Badge>
+              )}
             </div>
 
-            {/* Hissedar isimleri (max 3) */}
             <div className="mb-1 flex flex-wrap items-center gap-1">
               {doluHisseler.slice(0, 3).map((h) => {
                 const ad = h.musteriAdi ?? "";
@@ -196,24 +240,30 @@ export function PersonelGorevKart({
               )}
             </div>
 
-            {/* Boş hisse uyarısı */}
             {bosHisseSayisi > 0 && (
               <div className="text-amber-600 inline-flex items-center gap-1 text-[10px]">
                 <CircleDot className="h-2.5 w-2.5" />
                 {bosHisseSayisi} boş hisse
               </div>
             )}
-
-            {/* Operasyon sıra */}
-            {kurban.operasyonSira !== null && (
-              <div className="text-muted-foreground mt-0.5 text-[10px]">
-                Sıra: {kurban.operasyonSira}
-              </div>
-            )}
           </div>
         </div>
 
-        {/* İlerleme bar */}
+        {/* ORTA: BÜYÜK MEVCUT AŞAMA ROZETİ */}
+        <div className="mb-3 flex flex-col items-center gap-1.5">
+          <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+            Şu Anki Aşama
+          </span>
+          <div
+            className={`flex w-full items-center justify-center rounded-xl border-2 px-3 py-3 ${mevcutRenk.bg} ${mevcutRenk.border}`}
+          >
+            <span className={`text-lg font-bold ${mevcutRenk.text}`}>
+              {mevcutEtiket}
+            </span>
+          </div>
+        </div>
+
+        {/* İlerleme barı */}
         <div className="bg-muted mb-3 h-1.5 overflow-hidden rounded-full">
           <div
             className="bg-primary h-full transition-all"
@@ -221,73 +271,75 @@ export function PersonelGorevKart({
           />
         </div>
 
-        {/* Aksiyon butonları — yatay scroll */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {onceki && (
+        {/* ALT: 2 EŞİT BUTON — GERİ AL + İLERLET */}
+        <div className="mb-2 grid grid-cols-2 gap-2">
+          {/* GERİ AL */}
+          {onceki ? (
             <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => asamaDegistir(onceki, "geri")}
+              variant="outline"
+              onClick={geriAlKlik}
               disabled={yukleniyor}
-              className="h-12 min-w-11 shrink-0 touch-manipulation"
-              title={`Geri: ${ASAMA_ETIKETLERI[onceki]}`}
-              aria-label={`Geri: ${ASAMA_ETIKETLERI[onceki]}`}
+              className="flex h-auto min-h-16 flex-col items-center justify-center gap-0.5 touch-manipulation py-2"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <span className="flex items-center gap-1 text-sm font-bold">
+                <ChevronLeft className="h-4 w-4" />
+                GERİ AL
+              </span>
+              <span className="text-muted-foreground text-[10px] leading-tight">
+                {ASAMA_ETIKETLERI[onceki]}
+              </span>
             </Button>
+          ) : (
+            <div className="bg-muted/40 text-muted-foreground flex min-h-16 items-center justify-center rounded-lg text-xs italic">
+              İlk Aşama
+            </div>
           )}
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={ilerlemeArtir}
-            disabled={yukleniyor || kurban.ilerlemeYuzde >= 100}
-            className="h-12 shrink-0 touch-manipulation px-3 text-xs font-semibold"
-            aria-label="İlerleme +%10"
-          >
-            +%10
-          </Button>
-
+          {/* İLERLET */}
           {sonraki ? (
             <Button
-              onClick={() => asamaDegistir(sonraki, "ileri")}
+              onClick={ilerletKlik}
               disabled={yukleniyor}
-              className="h-12 min-h-12 flex-1 touch-manipulation font-semibold"
+              className="flex h-auto min-h-16 flex-col items-center justify-center gap-0.5 touch-manipulation py-2 font-semibold"
             >
               {yukleniyor ? (
-                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <ChevronRight className="mr-1 h-5 w-5" />
+                <>
+                  <span className="flex items-center gap-1 text-sm font-bold">
+                    İLERLET
+                    <ChevronRight className="h-4 w-4" />
+                  </span>
+                  <span className="text-[10px] leading-tight opacity-90">
+                    {ASAMA_ETIKETLERI[sonraki]}
+                  </span>
+                </>
               )}
-              {ASAMA_ETIKETLERI[sonraki]}
             </Button>
           ) : (
             <Button
               onClick={isiAl}
               disabled={yukleniyor}
               variant="outline"
-              className="h-12 min-h-12 flex-1 touch-manipulation font-semibold"
+              className="flex h-auto min-h-16 flex-col items-center justify-center gap-0.5 touch-manipulation py-2 font-semibold"
             >
-              <Zap className="mr-1 h-4 w-4" />
-              Bu İşi Al
+              <Zap className="h-4 w-4" />
+              <span className="text-xs">Bu İşi Al</span>
             </Button>
           )}
-
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={sorunBildir}
-            className="text-destructive hover:bg-destructive/10 hover:text-destructive h-12 min-w-11 shrink-0 touch-manipulation"
-            aria-label="Sorun bildir"
-          >
-            <AlertTriangle className="h-5 w-5" />
-          </Button>
         </div>
 
-        <div className="text-muted-foreground mt-1 text-center text-[9px]">
-          ← Sağa kaydır geri al · Sola kaydır ileri →
-        </div>
+        {/* Sorun bildir — tam genişlik */}
+        <Button
+          variant="ghost"
+          onClick={sorunBildir}
+          className="text-destructive hover:bg-destructive/10 hover:text-destructive w-full touch-manipulation"
+        >
+          <AlertTriangle className="mr-1 h-4 w-4" />
+          Sorun Bildir
+        </Button>
       </CardContent>
     </Card>
   );
 }
+

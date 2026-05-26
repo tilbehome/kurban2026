@@ -9,9 +9,12 @@ import {
   ArrowLeft,
   RefreshCw,
   AlertTriangle,
+  Search,
+  X,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/shared/lib/utils";
 import { useSeslicAnons } from "@/modules/tv/hooks/useSeslicAnons";
 import {
@@ -55,11 +58,18 @@ export function PersonelAnaClient({
   const [aktifIsId, setAktifIsId] = useState<string | null>(null);
   const [sorunKurban, setSorunKurban] = useState<PersonelKurbanVeri | null>(null);
   const [kurbanlar, setKurbanlar] = useState<PersonelKurbanVeri[]>(ilkKurbanlar);
+  // SPRINT-PERSONEL-PANEL: arama kutusu (kurban no veya hissedar ismi)
+  const [arama, setArama] = useState("");
 
   useEffect(() => {
+    // localStorage hidrasyonu — mount'ta bir kez state'i restore eder.
+    // setState içeride çağrılıyor (react-hooks/set-state-in-effect bunu
+    // genel olarak uyarır) ama burada bilinçli desen: SSR sırasında
+    // localStorage yok, client'a inince restore lazım.
     try {
       const k = localStorage.getItem(STORAGE_GOREV);
       if (k && (PERSONEL_GOREVLERI as string[]).includes(k)) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAktifGorev(k as PersonelGorev);
       }
       const ai = localStorage.getItem(STORAGE_AKTIF_IS);
@@ -131,10 +141,19 @@ export function PersonelAnaClient({
 
   const gorevListesi = useMemo(() => {
     const asamalar = GOREV_ASAMALARI[aktifGorev];
+    const q = arama.trim().toLowerCase();
     return kurbanlar
       .filter((k) => asamalar.includes(k.kesimDurumu))
-      .filter((k) => k.id !== aktifIsId);
-  }, [kurbanlar, aktifGorev, aktifIsId]);
+      .filter((k) => k.id !== aktifIsId)
+      .filter((k) => {
+        if (q.length === 0) return true;
+        const kurbanNoEslesir = k.kesimSirasi.toString().includes(q);
+        const isimEslesir = k.hisseler.some((h) =>
+          h.musteriAdi?.toLowerCase().includes(q),
+        );
+        return kurbanNoEslesir || isimEslesir;
+      });
+  }, [kurbanlar, aktifGorev, aktifIsId, arama]);
 
   async function yenile() {
     // Hem polling endpoint'inden hem RSC'den yenile — anlık ve tutarlı
@@ -210,6 +229,31 @@ export function PersonelAnaClient({
           setAktif={setAktifGorev}
           sayilar={sayilar}
         />
+
+        {/* ARAMA KUTUSU — kurban no veya hissedar ismi */}
+        <div className="relative">
+          <Search
+            size={16}
+            className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
+          />
+          <Input
+            value={arama}
+            onChange={(e) => setArama(e.target.value)}
+            placeholder="Dana no veya hissedar ismi ile ara..."
+            className="pl-9"
+            inputMode="search"
+          />
+          {arama && (
+            <button
+              type="button"
+              onClick={() => setArama("")}
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1"
+              aria-label="Aramayı temizle"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
 
         {aktifIs && (
           <PersonelAktifIs
