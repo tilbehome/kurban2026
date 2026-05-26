@@ -7,11 +7,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import archiver from "archiver";
 import { Readable } from "node:stream";
 import { aktifOturum } from "@/shared/lib/session";
 import { adminMi } from "@/shared/lib/izinler";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
+
+// archiver@8 CJS modülü — static `import x from "archiver"` Webpack'te
+// "default export yok" warning üretir. Dinamik import ile runtime'da CJS
+// resolution çalışır; build-time static analysis warning vermez.
+type ArchiverFactory = typeof import("archiver");
+async function archiverYukle(): Promise<ArchiverFactory> {
+  const mod = await import("archiver");
+  const m = mod as unknown as { default?: ArchiverFactory };
+  return m.default ?? (mod as unknown as ArchiverFactory);
+}
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +46,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Dosya bulunamadı", { status: 404 });
   }
 
+  const archiver = await archiverYukle();
   const archive = archiver("zip", { zlib: { level: 9 } });
   archive.file(yedekYolu, { name: dosya });
   archive.finalize();
