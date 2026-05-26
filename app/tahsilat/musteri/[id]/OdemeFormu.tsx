@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatPara, parsePara, topla, yuvarla } from "@/shared/lib/para";
+import { paraInputFormatla } from "@/shared/lib/para-input-format";
 import {
   Banknote,
   ArrowUpRight,
@@ -335,7 +336,7 @@ function ParaAlani({
           inputMode="decimal"
           placeholder="0"
           value={deger}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange(paraInputFormatla(e.target.value))}
           disabled={disabled}
           className="font-tabular pr-9 text-right"
         />
