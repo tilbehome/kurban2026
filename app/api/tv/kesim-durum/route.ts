@@ -9,13 +9,16 @@ import type { KesimDurumu } from "@/modules/tv/types";
 
 const KesimDurumuSchema = z.enum([
   "beklemede",
-  "vekalet_onay",
+  "vekalet_bekliyor",
   "siradaki",
+  "hazirlik",
   "kesimde",
+  "deri_yuzme",
   "parcalama",
   "tartimda",
+  "paketleme",
   "teslime_hazir",
-  "teslim_edildi",
+  "tamamlandi",
   "iptal",
 ]);
 
@@ -104,7 +107,7 @@ export async function POST(req: Request) {
     data.kesimBitis = new Date();
     data.teslimDurumu = "Hazır";
   }
-  if (yeniDurum === "teslim_edildi") {
+  if (yeniDurum === "tamamlandi") {
     data.teslimDurumu = "Teslim Edildi";
   }
 

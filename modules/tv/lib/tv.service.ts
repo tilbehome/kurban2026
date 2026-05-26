@@ -1,16 +1,24 @@
 /**
- * TV servisleri — DB sorguları.
+ * TV servisleri — SPRINT-12 rewrite (kurban bazlı, KVKK uyumlu).
  *
- * Tüm veriler salt-okunur (sorgu), SSE her 3sn'de bir çağırır.
- * KUTSAL: mevcut Hisse alanlarını bozmaz; sadece yeni kesim takip alanlarını okur.
+ * Tüm veriler salt-okunur. SSE her 3sn'de bir çağırır.
+ * KUTSAL: Hisse/Odeme tablolarına yazma yok, sadece okuma.
+ *
+ * SPRINT-12 değişiklikleri:
+ *   - Hisse bazlı sayım → Kurban bazlı (toplam dana sayısı)
+ *   - 6 KPI → 5 KPI (görsel referans)
+ *   - 4 sütun yeni grup mapping (asama-grup.ts tvSutunaGrupla)
+ *   - Müşteri adı/kısaltma KALDIRILDI (KVKK)
+ *   - Sıra numaraları KURBAN no (kesimSirasi), hisse no değil
  */
 
 import { prisma } from "@/shared/lib/prisma";
+import { tvSutunaGrupla } from "./asama-grup";
 import type {
   IslemKart,
   OperasyonIstatistik,
   SiradakiSatir,
-  TeslimSatir,
+  TeslimKart,
   TvAyariKisa,
   TvKpi,
   TvSutunlar,
@@ -18,181 +26,130 @@ import type {
 } from "../types";
 
 // =============================================================================
-// 1) 6 KPI hesapla
+// 1) 5 KPI hesapla — kurban bazlı (1 dana = 1 sayım)
 // =============================================================================
 
 export async function getKpiVerileri(): Promise<TvKpi> {
-  const hisseler = await prisma.hisse.findMany({
-    where: { silindiMi: false, musteriId: { not: null } },
+  const kurbanlar = await prisma.kurban.findMany({
+    where: { silindiMi: false },
     select: { kesimDurumu: true },
   });
 
-  let kesimde = 0;
-  let siradaki = 0;
+  let siradakiler = 0;
+  let kesimdekiler = 0;
+  let parcalamada = 0;
   let teslimHazir = 0;
   let tamamlanan = 0;
-  let bekleyen = 0;
 
-  for (const h of hisseler) {
-    switch (h.kesimDurumu) {
-      case "kesimde":
-      case "parcalama":
-      case "tartimda":
-        kesimde++;
+  for (const k of kurbanlar) {
+    const grup = tvSutunaGrupla(k.kesimDurumu);
+    switch (grup) {
+      case "siradakiler":
+        siradakiler++;
         break;
-      case "siradaki":
-      case "vekalet_onay":
-        siradaki++;
+      case "kesimdekiler":
+        kesimdekiler++;
         break;
-      case "teslime_hazir":
+      case "parcalamada":
+        parcalamada++;
+        break;
+      case "teslimeHazir":
         teslimHazir++;
         break;
-      case "teslim_edildi":
-        tamamlanan++;
-        break;
-      case "beklemede":
-        bekleyen++;
-        break;
-      // iptal sayılmaz
+      default:
+        if (k.kesimDurumu === "tamamlandi") tamamlanan++;
+        // iptal sayılmaz
     }
   }
 
   return {
-    toplamKurban: await prisma.kurban.count({ where: { silindiMi: false } }),
-    kesimde,
-    siradaki,
+    toplamKurban: kurbanlar.length,
+    siradakiler,
+    kesimdekiler,
+    parcalamada,
     teslimHazir,
     tamamlanan,
-    bekleyen,
   };
 }
 
 // =============================================================================
-// 2) 4 sütun verileri
+// 2) 4 sütun verileri — KURBAN bazlı (1 satır = 1 dana), KVKK uyumlu
 // =============================================================================
 
 export async function getSutunVerileri(): Promise<TvSutunlar> {
-  // Sıradakiler — siradaki + vekalet_onay (kompakt liste, max 8)
-  const siradakiHisseler = await prisma.hisse.findMany({
+  const kurbanlar = await prisma.kurban.findMany({
     where: {
       silindiMi: false,
-      kesimDurumu: { in: ["siradaki", "vekalet_onay"] },
-      siraNo: { not: null },
+      kesimDurumu: { notIn: ["tamamlandi", "iptal"] },
     },
-    orderBy: { siraNo: "asc" },
-    take: 8,
+    orderBy: [{ operasyonSira: "asc" }, { kesimSirasi: "asc" }],
     select: {
       id: true,
-      siraNo: true,
+      kesimSirasi: true,
       kesimDurumu: true,
-      musteri: { select: { adSoyad: true } },
-      kurban: { select: { asamaBaslangic: true } },
-    },
-  });
-
-  // Kesimde — büyük kartlar (max 3)
-  const kesimHisseler = await prisma.hisse.findMany({
-    where: {
-      silindiMi: false,
-      kesimDurumu: { in: ["kesimde", "parcalama"] },
-    },
-    orderBy: { kesimBaslama: "asc" },
-    take: 3,
-    select: {
-      id: true,
-      siraNo: true,
       asama: true,
       ilerlemeYuzde: true,
       kalanSureDk: true,
-      musteri: { select: { adSoyad: true } },
-      kurban: { select: { asamaBaslangic: true } },
+      asamaBaslangic: true,
     },
   });
 
-  // Tartımda — büyük kartlar (max 3)
-  const tartimHisseler = await prisma.hisse.findMany({
-    where: { silindiMi: false, kesimDurumu: "tartimda" },
-    orderBy: { kesimBaslama: "asc" },
-    take: 3,
-    select: {
-      id: true,
-      siraNo: true,
-      asama: true,
-      ilerlemeYuzde: true,
-      kalanSureDk: true,
-      musteri: { select: { adSoyad: true } },
-      kurban: { select: { asamaBaslangic: true } },
-    },
-  });
+  const siradakiler: SiradakiSatir[] = [];
+  const kesimdekiler: IslemKart[] = [];
+  const parcalamada: IslemKart[] = [];
+  const teslimeHazir: TeslimKart[] = [];
 
-  // Teslime Hazır — liste (max 8)
-  const teslimHisseler = await prisma.hisse.findMany({
-    where: { silindiMi: false, kesimDurumu: "teslime_hazir" },
-    orderBy: { kesimBitis: "desc" },
-    take: 8,
-    select: {
-      id: true,
-      siraNo: true,
-      teslimNoktasi: true,
-      teslimDurumu: true,
-      musteri: { select: { adSoyad: true } },
-      kurban: { select: { asamaBaslangic: true } },
-    },
-  });
+  for (const k of kurbanlar) {
+    const grup = tvSutunaGrupla(k.kesimDurumu);
+    if (!grup) continue;
 
-  const isoOrNull = (d: Date | null | undefined) =>
-    d ? d.toISOString() : null;
+    if (grup === "siradakiler") {
+      siradakiler.push({
+        kurbanId: k.id,
+        kurbanNo: k.kesimSirasi,
+        durumEtiket: siradakiEtiket(k.kesimDurumu),
+        durumRengi: siradakiRengi(k.kesimDurumu),
+      });
+    } else if (grup === "kesimdekiler") {
+      kesimdekiler.push({
+        kurbanId: k.id,
+        kurbanNo: k.kesimSirasi,
+        asama: k.asama ?? "Kesim",
+        ilerlemeYuzde: k.ilerlemeYuzde,
+        asamaBaslangic: k.asamaBaslangic?.toISOString() ?? null,
+        baslangicSaati: saatFormat(k.asamaBaslangic),
+        kalanSureDk: k.kalanSureDk,
+      });
+    } else if (grup === "parcalamada") {
+      parcalamada.push({
+        kurbanId: k.id,
+        kurbanNo: k.kesimSirasi,
+        asama: k.asama ?? "Parçalama",
+        ilerlemeYuzde: k.ilerlemeYuzde,
+        asamaBaslangic: k.asamaBaslangic?.toISOString() ?? null,
+        baslangicSaati: saatFormat(k.asamaBaslangic),
+        kalanSureDk: k.kalanSureDk,
+      });
+    } else if (grup === "teslimeHazir") {
+      teslimeHazir.push({
+        kurbanId: k.id,
+        kurbanNo: k.kesimSirasi,
+        teslimNoktasi: "Teslim Noktası 1",
+        hazirBeklemeDk: dakikaFarki(k.asamaBaslangic),
+      });
+    }
+  }
 
-  const siradakiler: SiradakiSatir[] = siradakiHisseler.map((h) => ({
-    hisseId: h.id,
-    siraNo: h.siraNo ?? 0,
-    durumEtiket:
-      h.kesimDurumu === "vekalet_onay"
-        ? "Vekalet Bekliyor"
-        : "Kesime Hazır",
-    musteriKisaltma: kisaltMusteri(h.musteri?.adSoyad ?? null),
-    asamaBaslangic: isoOrNull(h.kurban.asamaBaslangic),
-  }));
-
-  const kesimde: IslemKart[] = kesimHisseler.map((h) => ({
-    hisseId: h.id,
-    siraNo: h.siraNo ?? 0,
-    asama: h.asama ?? "Kesim",
-    ilerlemeYuzde: h.ilerlemeYuzde,
-    kalanSureDk: h.kalanSureDk,
-    musteriKisaltma: kisaltMusteri(h.musteri?.adSoyad ?? null),
-    asamaBaslangic: isoOrNull(h.kurban.asamaBaslangic),
-  }));
-
-  const tartimda: IslemKart[] = tartimHisseler.map((h) => ({
-    hisseId: h.id,
-    siraNo: h.siraNo ?? 0,
-    asama: h.asama ?? "Tartım",
-    ilerlemeYuzde: h.ilerlemeYuzde,
-    kalanSureDk: h.kalanSureDk,
-    musteriKisaltma: kisaltMusteri(h.musteri?.adSoyad ?? null),
-    asamaBaslangic: isoOrNull(h.kurban.asamaBaslangic),
-  }));
-
-  const teslimeHazir: TeslimSatir[] = teslimHisseler.map((h, i) => ({
-    hisseId: h.id,
-    teslimNo: h.siraNo ?? i + 1,
-    teslimNoktasi: h.teslimNoktasi ?? "Teslim Noktası 1",
-    durum: h.teslimDurumu ?? "Hazır",
-    musteriKisaltma: kisaltMusteri(h.musteri?.adSoyad ?? null),
-    asamaBaslangic: isoOrNull(h.kurban.asamaBaslangic),
-  }));
-
-  return { siradakiler, kesimde, tartimda, teslimeHazir };
+  return { siradakiler, kesimdekiler, parcalamada, teslimeHazir };
 }
 
 // =============================================================================
-// 3) Operasyon istatistikleri (5 aşama)
+// 3) Operasyon istatistikleri (alt bant için, 5 aşama)
 // =============================================================================
 
 export async function getOperasyonIstatistik(): Promise<OperasyonIstatistik> {
-  const hisseler = await prisma.hisse.findMany({
-    where: { silindiMi: false, musteriId: { not: null } },
+  const kurbanlar = await prisma.kurban.findMany({
+    where: { silindiMi: false },
     select: { kesimDurumu: true },
   });
 
@@ -202,13 +159,14 @@ export async function getOperasyonIstatistik(): Promise<OperasyonIstatistik> {
   let tartim = 0;
   let teslim = 0;
 
-  for (const h of hisseler) {
-    switch (h.kesimDurumu) {
-      case "vekalet_onay":
-      case "siradaki":
+  for (const k of kurbanlar) {
+    switch (k.kesimDurumu) {
+      case "vekalet_bekliyor":
         vekalet++;
         break;
+      case "hazirlik":
       case "kesimde":
+      case "deri_yuzme":
         kesim++;
         break;
       case "parcalama":
@@ -217,8 +175,9 @@ export async function getOperasyonIstatistik(): Promise<OperasyonIstatistik> {
       case "tartimda":
         tartim++;
         break;
+      case "paketleme":
       case "teslime_hazir":
-      case "teslim_edildi":
+      case "tamamlandi":
         teslim++;
         break;
     }
@@ -232,30 +191,44 @@ export async function getOperasyonIstatistik(): Promise<OperasyonIstatistik> {
 // =============================================================================
 
 export async function getTvAyarlari(): Promise<TvAyariKisa> {
-  const ayarlar = await prisma.tvAyari.findMany({
-    where: { aktif: true },
-    select: { anahtarKey: true, deger: true },
-  });
-  const map = new Map(ayarlar.map((a) => [a.anahtarKey, a.deger]));
+  const [tvAyarlar, firmaWa, firmaTel, firmaAdiRow] = await Promise.all([
+    prisma.tvAyari.findMany({
+      where: { aktif: true },
+      select: { anahtarKey: true, deger: true },
+    }),
+    prisma.ayar.findUnique({ where: { anahtar: "firma_whatsapp" } }),
+    prisma.ayar.findUnique({ where: { anahtar: "firma_telefon" } }),
+    prisma.ayar.findUnique({ where: { anahtar: "firma_adi" } }),
+  ]);
+
+  const map = new Map(tvAyarlar.map((a) => [a.anahtarKey, a.deger]));
+
+  // WhatsApp telefonu: TvAyari > Ayar.firma_whatsapp > Ayar.firma_telefon
+  const whatsappTel =
+    map.get("whatsapp_tel") ||
+    firmaWa?.deger ||
+    firmaTel?.deger ||
+    "";
+
   return {
     duyuru:
-      map.get("duyuru") ?? "Kesim alanında anonsları takip ediniz.",
+      map.get("duyuru") ?? "Sıra numaranızı ekrandan takip ediniz.",
     siraHatirlatma:
       map.get("sira_hatirlatma") ??
-      "Sıranız geldiğinde ekranda bilgilendirileceksiniz.",
+      "Yoğunluk durumunda listeler yavaşça yukarı kayar.",
     hijyen:
       map.get("hijyen") ??
-      "Hijyen kurallarına uyalım, sağlığımızı koruyalım.",
-    whatsappTel: map.get("whatsapp_tel") ?? "",
+      "Teslime hazır olan numaralar sağ sütunda gösterilir.",
+    whatsappTel,
     lokasyon: map.get("lokasyon") ?? "Merkez Kesim Alanı",
+    firmaAdi: firmaAdiRow?.deger ?? "Ada Bereket Hayvancılık",
   };
 }
 
 // =============================================================================
-// 5) Tek seferde tüm veriler (SSE payload)
+// 5) Acil durum + tüm veriler (SSE payload)
 // =============================================================================
 
-/** Acil durum mesajı + durumu (TV ekranında MOLA gösterimi) */
 export async function getAcilDurum(): Promise<{
   aktif: boolean;
   mesaj: string | null;
@@ -294,20 +267,41 @@ export async function getTumVeriler(): Promise<TvTumVeri> {
 // İç yardımcılar
 // =============================================================================
 
-/**
- * Public display güvenliği — müşteri tam adı yerine kısaltma.
- * Örn. "Mehmet Yılmaz" → "M. Yılmaz"
- *      "Ali" → "Ali"
- *      null → "—"
- */
-function kisaltMusteri(adSoyad: string | null): string {
-  if (!adSoyad) return "—";
-  const parts = adSoyad
-    .trim()
-    .split(/\s+/)
-    .filter((p) => p.length > 0);
-  if (parts.length === 0) return "—";
-  if (parts.length === 1) return parts[0];
-  // İlk ad: ilk harf, soyad: tam
-  return `${parts[0][0]}. ${parts[parts.length - 1]}`;
+function siradakiEtiket(durum: string): string {
+  switch (durum) {
+    case "beklemede":
+      return "Beklemede";
+    case "hazirlik":
+      return "Hazırlık";
+    case "siradaki":
+      return "Hazır";
+    default:
+      return "Beklemede";
+  }
+}
+
+function siradakiRengi(durum: string): "mavi" | "sari" | "yesil" {
+  switch (durum) {
+    case "siradaki":
+      return "yesil";
+    case "hazirlik":
+      return "sari";
+    case "beklemede":
+    default:
+      return "mavi";
+  }
+}
+
+function saatFormat(d: Date | null | undefined): string | null {
+  if (!d) return null;
+  return d.toLocaleTimeString("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+function dakikaFarki(d: Date | null | undefined): number {
+  if (!d) return 0;
+  return Math.max(0, Math.floor((Date.now() - d.getTime()) / 60000));
 }

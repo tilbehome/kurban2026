@@ -175,3 +175,41 @@ export const DURUM_VARSAYILAN_YUZDE: Record<string, number> = {
   tamamlandi: 100,
   iptal: 0,
 };
+
+/**
+ * SPRINT-12: TV ana ekranı 4 sütun gruplaması.
+ * (Kontrol panelinin 6 grup yapısından farklı — TV görsel referansına göre)
+ *
+ *   Sıradakiler:    beklemede + hazirlik + siradaki
+ *   Kesimdekiler:   vekalet_bekliyor + kesimde + deri_yuzme
+ *   Parçalamada:    parcalama + tartimda
+ *   Teslime Hazır:  paketleme + teslime_hazir
+ *
+ * `tamamlandi` ve `iptal` ekrana gelmez (sadece KPI sayımı).
+ */
+export type TvSutunGrubu =
+  | "siradakiler"
+  | "kesimdekiler"
+  | "parcalamada"
+  | "teslimeHazir";
+
+export function tvSutunaGrupla(durum: string): TvSutunGrubu | null {
+  switch (durum) {
+    case "beklemede":
+    case "hazirlik":
+    case "siradaki":
+      return "siradakiler";
+    case "vekalet_bekliyor":
+    case "kesimde":
+    case "deri_yuzme":
+      return "kesimdekiler";
+    case "parcalama":
+    case "tartimda":
+      return "parcalamada";
+    case "paketleme":
+    case "teslime_hazir":
+      return "teslimeHazir";
+    default:
+      return null;
+  }
+}

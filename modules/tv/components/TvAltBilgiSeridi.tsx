@@ -1,140 +1,124 @@
 "use client";
 
-import { Megaphone, ListOrdered, ShieldCheck, MessageCircle } from "lucide-react";
+import { Megaphone, Monitor, Info, MessageCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 import type { TvAyariKisa, TvTema } from "@/modules/tv/types";
 
-interface TvAltBilgiSeridiProps {
+interface Props {
   ayarlar: TvAyariKisa;
   tema: TvTema;
 }
 
-interface BilgiBlok {
-  id: keyof TvAyariKisa;
-  baslik: string;
+interface SeritKart {
   ikon: LucideIcon;
-  renk: { iconBgLight: string; iconBgDark: string };
-  href?: (deger: string) => string;
-  vurgu?: boolean; // büyük telefon vb.
+  ikonBg: string;
+  baslik: string;
+  icerik: string;
+  /** Telefon stili (mono + büyük) için */
+  telefonGibi?: boolean;
 }
 
-const BLOKLAR: BilgiBlok[] = [
-  {
-    id: "duyuru",
-    baslik: "DUYURULAR",
-    ikon: Megaphone,
-    renk: {
-      iconBgLight: "bg-orange-500 text-white",
-      iconBgDark: "bg-orange-500/30 text-orange-300",
-    },
-  },
-  {
-    id: "siraHatirlatma",
-    baslik: "SIRA HATIRLATMASI",
-    ikon: ListOrdered,
-    renk: {
-      iconBgLight: "bg-purple-500 text-white",
-      iconBgDark: "bg-purple-500/30 text-purple-300",
-    },
-  },
-  {
-    id: "hijyen",
-    baslik: "HİJYEN ÖNCELİĞİMİZ",
-    ikon: ShieldCheck,
-    renk: {
-      iconBgLight: "bg-teal-500 text-white",
-      iconBgDark: "bg-teal-500/30 text-teal-300",
-    },
-  },
-  {
-    id: "whatsappTel",
-    baslik: "WHATSAPP İLETİŞİM",
-    ikon: MessageCircle,
-    renk: {
-      iconBgLight: "bg-green-500 text-white",
-      iconBgDark: "bg-green-500/30 text-green-300",
-    },
-    href: (deger: string) => {
-      const rakam = deger.replace(/\D/g, "");
-      if (rakam.length === 0) return "#";
-      const normalize = rakam.startsWith("90")
-        ? rakam
-        : rakam.startsWith("0")
-          ? "90" + rakam.slice(1)
-          : "90" + rakam;
-      return `https://wa.me/${normalize}`;
-    },
-    vurgu: true,
-  },
-];
+function telefonFormatla(tel: string): string {
+  const sadeRakam = tel.replace(/\D/g, "");
+  if (sadeRakam.length === 10) {
+    return `0${sadeRakam.slice(0, 3)} ${sadeRakam.slice(3, 6)} ${sadeRakam.slice(6, 8)} ${sadeRakam.slice(8)}`;
+  }
+  if (sadeRakam.length === 11 && sadeRakam.startsWith("0")) {
+    return `${sadeRakam.slice(0, 4)} ${sadeRakam.slice(4, 7)} ${sadeRakam.slice(7, 9)} ${sadeRakam.slice(9)}`;
+  }
+  if (sadeRakam.length === 12 && sadeRakam.startsWith("90")) {
+    return `0${sadeRakam.slice(2, 5)} ${sadeRakam.slice(5, 8)} ${sadeRakam.slice(8, 10)} ${sadeRakam.slice(10)}`;
+  }
+  return tel;
+}
 
-export function TvAltBilgiSeridi({ ayarlar, tema }: TvAltBilgiSeridiProps) {
+export function TvAltBilgiSeridi({ ayarlar, tema }: Props) {
   const koyuMu = tema === "dark";
 
+  const kartlar: SeritKart[] = [
+    {
+      ikon: Megaphone,
+      ikonBg: "bg-orange-500",
+      baslik: "DUYURULAR",
+      icerik: ayarlar.duyuru || "Sıra numaranızı ekrandan takip ediniz.",
+    },
+    {
+      ikon: Monitor,
+      ikonBg: "bg-blue-500",
+      baslik: "EKRAN TAKİBİ",
+      icerik:
+        ayarlar.siraHatirlatma ||
+        "Yoğunluk durumunda listeler yavaşça yukarı kayar.",
+    },
+    {
+      ikon: Info,
+      ikonBg: "bg-sky-400",
+      baslik: "BİLGİ",
+      icerik:
+        ayarlar.hijyen ||
+        "Teslime hazır olan numaralar sağ sütunda gösterilir.",
+    },
+    {
+      ikon: MessageCircle,
+      ikonBg: "bg-green-500",
+      baslik: "WHATSAPP İLETİŞİM",
+      icerik: ayarlar.whatsappTel
+        ? telefonFormatla(ayarlar.whatsappTel)
+        : "0536 390 44 18",
+      telefonGibi: true,
+    },
+  ];
+
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 gap-3 px-6 py-3 sm:grid-cols-2 lg:grid-cols-4",
-      )}
-    >
-      {BLOKLAR.map((b) => {
-        const Ikon = b.ikon;
-        const deger = (ayarlar as unknown as Record<string, string>)[b.id];
-        const renk = koyuMu ? b.renk.iconBgDark : b.renk.iconBgLight;
-        const govde = (
+    <div className="grid grid-cols-1 gap-3 px-4 py-3 sm:grid-cols-2 xl:grid-cols-4">
+      {kartlar.map((kart) => {
+        const Icon = kart.ikon;
+        return (
           <div
+            key={kart.baslik}
             className={cn(
-              "flex h-full items-start gap-3 rounded-xl border p-4 transition-colors",
+              "flex items-center gap-3 rounded-2xl border p-3 shadow-sm",
               koyuMu
-                ? "border-slate-700 bg-slate-800/40"
-                : "border-slate-200 bg-white",
+                ? "border-slate-700 bg-slate-800"
+                : "border-stone-200 bg-white",
             )}
           >
-            <span
+            <div
               className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-                renk,
+                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+                kart.ikonBg,
               )}
             >
-              <Ikon size={18} />
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col leading-tight">
-              <span
+              <Icon className="h-5 w-5 text-white" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div
                 className={cn(
-                  "text-[10px] font-extrabold tracking-wider uppercase",
-                  koyuMu ? "text-slate-400" : "text-slate-500",
+                  "text-[11px] font-bold tracking-wider uppercase",
+                  koyuMu ? "text-slate-300" : "text-stone-600",
                 )}
               >
-                {b.baslik}
-              </span>
-              <span
+                {kart.baslik}
+              </div>
+              <div
                 className={cn(
-                  b.vurgu
-                    ? "font-tabular mt-1 text-xl font-extrabold sm:text-2xl"
-                    : "mt-1 text-sm font-medium leading-snug",
-                  koyuMu ? "text-white" : "text-slate-900",
+                  kart.telefonGibi
+                    ? cn(
+                        "font-mono text-lg leading-tight font-extrabold",
+                        koyuMu ? "text-white" : "text-stone-900",
+                      )
+                    : cn(
+                        "text-xs leading-snug",
+                        koyuMu ? "text-slate-300" : "text-stone-600",
+                      ),
                 )}
               >
-                {deger || "—"}
-              </span>
+                {kart.icerik}
+              </div>
             </div>
           </div>
         );
-        if (b.href && deger) {
-          return (
-            <a
-              key={b.id}
-              href={b.href(deger)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block transition-transform hover:scale-[1.01]"
-            >
-              {govde}
-            </a>
-          );
-        }
-        return <div key={b.id}>{govde}</div>;
       })}
     </div>
   );

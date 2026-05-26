@@ -7,6 +7,7 @@ import { TvTemaToggle } from "./TvTemaToggle";
 import type { TvTema } from "@/modules/tv/types";
 
 interface TvUstBarProps {
+  firmaAdi: string;
   lokasyon: string;
   canli: boolean;
   tema: TvTema;
@@ -39,6 +40,7 @@ const AYLAR = [
 ];
 
 export function TvUstBar({
+  firmaAdi,
   lokasyon,
   canli,
   tema,
@@ -76,7 +78,7 @@ export function TvUstBar({
         </div>
         <div className="flex flex-col leading-tight">
           <span className="text-xl font-extrabold tracking-tight">
-            TilbeCore
+            {firmaAdi}
           </span>
           <span className="text-xs text-slate-300">
             Kurban Yönetim Sistemi

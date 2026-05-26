@@ -65,17 +65,14 @@ export function KurbanTakipClient({
   const kendiKurban = useMemo(() => {
     if (!veri) return null;
 
-    const ortak = (id: string) => {
-      // SutunVerileri'nde kurbanId tutulmuyor — siraNo ile eşleştir
-      return (
-        veri.sutunlar.siradakiler.find((s) => s.siraNo === kesimSirasi) ||
-        veri.sutunlar.kesimde.find((k) => k.siraNo === kesimSirasi) ||
-        veri.sutunlar.tartimda.find((k) => k.siraNo === kesimSirasi) ||
-        veri.sutunlar.teslimeHazir.find((t) => t.teslimNo === kesimSirasi)
-      );
-    };
-    void ortak;
-    return null;
+    // Kurban no ile 4 sütunda eşleştir (placeholder — ayrı UI bloklarında kullanılacak)
+    return (
+      veri.sutunlar.siradakiler.find((s) => s.kurbanNo === kesimSirasi) ||
+      veri.sutunlar.kesimdekiler.find((k) => k.kurbanNo === kesimSirasi) ||
+      veri.sutunlar.parcalamada.find((k) => k.kurbanNo === kesimSirasi) ||
+      veri.sutunlar.teslimeHazir.find((t) => t.kurbanNo === kesimSirasi) ||
+      null
+    );
   }, [veri, kesimSirasi]);
   void kendiKurban;
 
@@ -88,15 +85,19 @@ export function KurbanTakipClient({
     if (!veri) return;
     // Kendi kurbanın durumunu kpi/sutunlardan tahmin et
     let mevcut: KurbanKesimDurumu | null = null;
-    if (veri.sutunlar.kesimde.some((k) => k.siraNo === kesimSirasi)) {
+    if (veri.sutunlar.kesimdekiler.some((k) => k.kurbanNo === kesimSirasi)) {
       mevcut = "kesimde";
-    } else if (veri.sutunlar.tartimda.some((k) => k.siraNo === kesimSirasi)) {
-      mevcut = "tartimda";
     } else if (
-      veri.sutunlar.teslimeHazir.some((t) => t.teslimNo === kesimSirasi)
+      veri.sutunlar.parcalamada.some((k) => k.kurbanNo === kesimSirasi)
+    ) {
+      mevcut = "parcalama";
+    } else if (
+      veri.sutunlar.teslimeHazir.some((t) => t.kurbanNo === kesimSirasi)
     ) {
       mevcut = "teslime_hazir";
-    } else if (veri.sutunlar.siradakiler.some((s) => s.siraNo === kesimSirasi)) {
+    } else if (
+      veri.sutunlar.siradakiler.some((s) => s.kurbanNo === kesimSirasi)
+    ) {
       mevcut = "siradaki";
     }
     if (mevcut && mevcut !== oncekiDurum) {
@@ -115,13 +116,15 @@ export function KurbanTakipClient({
   // Aktif aşama (üst vurgulu kart için)
   const aktifAsama: KurbanKesimDurumu = oncekiDurum ?? "beklemede";
   const aktifIlerleme =
-    veri?.sutunlar.kesimde.find((k) => k.siraNo === kesimSirasi)?.ilerlemeYuzde ||
-    veri?.sutunlar.tartimda.find((k) => k.siraNo === kesimSirasi)
+    veri?.sutunlar.kesimdekiler.find((k) => k.kurbanNo === kesimSirasi)
+      ?.ilerlemeYuzde ||
+    veri?.sutunlar.parcalamada.find((k) => k.kurbanNo === kesimSirasi)
       ?.ilerlemeYuzde ||
     0;
   const aktifKalan =
-    veri?.sutunlar.kesimde.find((k) => k.siraNo === kesimSirasi)?.kalanSureDk ||
-    veri?.sutunlar.tartimda.find((k) => k.siraNo === kesimSirasi)
+    veri?.sutunlar.kesimdekiler.find((k) => k.kurbanNo === kesimSirasi)
+      ?.kalanSureDk ||
+    veri?.sutunlar.parcalamada.find((k) => k.kurbanNo === kesimSirasi)
       ?.kalanSureDk ||
     null;
 
@@ -294,21 +297,19 @@ export function KurbanTakipClient({
               </h3>
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
                 <Mini
-                  etiket="Sırada"
-                  sayi={veri.kpi.siradaki}
-                  renk="text-purple-300"
+                  etiket="Sıradakiler"
+                  sayi={veri.kpi.siradakiler}
+                  renk="text-blue-300"
                 />
                 <Mini
-                  etiket="Kesimde"
-                  sayi={veri.kpi.kesimde}
+                  etiket="Kesimdekiler"
+                  sayi={veri.kpi.kesimdekiler}
                   renk="text-orange-300"
                 />
                 <Mini
-                  etiket="Tartım"
-                  sayi={
-                    veri.sutunlar.tartimda.length
-                  }
-                  renk="text-blue-300"
+                  etiket="Parçalama"
+                  sayi={veri.kpi.parcalamada}
+                  renk="text-purple-300"
                 />
                 <Mini
                   etiket="Hazır"
@@ -321,9 +322,9 @@ export function KurbanTakipClient({
                   renk="text-cyan-300"
                 />
                 <Mini
-                  etiket="Bekleyen"
-                  sayi={veri.kpi.bekleyen}
-                  renk="text-yellow-300"
+                  etiket="Toplam"
+                  sayi={veri.kpi.toplamKurban}
+                  renk="text-slate-300"
                 />
               </div>
             </CardContent>

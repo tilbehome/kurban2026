@@ -2,137 +2,103 @@
 
 import { CheckCircle2, MapPin } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-import type { TeslimSatir, TvTema } from "@/modules/tv/types";
-import { AsamaSayaci } from "@/modules/tv/components/shared/AsamaSayaci";
+import type { TeslimKart, TvTema } from "@/modules/tv/types";
+import { useAutoScroll } from "@/modules/tv/hooks/useAutoScroll";
 
-interface TeslimeHazirSutunProps {
-  satirlar: TeslimSatir[];
+interface Props {
+  kartlar: TeslimKart[];
   tema: TvTema;
 }
 
-export function TeslimeHazirSutun({
-  satirlar,
-  tema,
-}: TeslimeHazirSutunProps) {
+export function TeslimeHazirSutun({ kartlar, tema }: Props) {
   const koyuMu = tema === "dark";
+  const listeRef = useAutoScroll(5500, 72);
 
   return (
     <div
       className={cn(
-        "flex h-full flex-col rounded-xl border p-3",
+        "flex h-full flex-col rounded-2xl border-2 p-4 shadow-sm",
         koyuMu
-          ? "border-green-700/40 bg-slate-800/40"
-          : "border-green-200 bg-green-50/50",
+          ? "border-green-500/40 bg-slate-800"
+          : "border-green-200 bg-white",
       )}
     >
-      <div className="mb-3 flex items-center gap-2.5">
-        <span
+      <div className="mb-3 flex items-center gap-2">
+        <CheckCircle2 className="h-5 w-5 text-green-500" />
+        <h3
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-lg",
-            koyuMu
-              ? "bg-green-500/30 text-green-300"
-              : "bg-green-500 text-white",
+            "text-base font-bold tracking-wide",
+            koyuMu ? "text-white" : "text-stone-900",
           )}
         >
-          <CheckCircle2 size={18} />
+          TESLİME HAZIR
+        </h3>
+        <span className="ml-auto rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+          {kartlar.length}
         </span>
-        <div className="flex flex-col leading-tight">
-          <h3
-            className={cn(
-              "text-base font-extrabold tracking-tight",
-              koyuMu ? "text-green-300" : "text-green-700",
-            )}
-          >
-            TESLİME HAZIR
-          </h3>
-          <span
-            className={cn(
-              "text-[11px] font-semibold",
-              koyuMu ? "text-slate-400" : "text-slate-500",
-            )}
-          >
-            {satirlar.length} hisse
-          </span>
-        </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
-        {satirlar.length === 0 ? (
-          <p
-            className={cn(
-              "py-8 text-center text-xs",
-              koyuMu ? "text-slate-500" : "text-slate-400",
-            )}
-          >
-            Henüz teslime hazır hisse yok
-          </p>
-        ) : (
-          satirlar.map((s, i) => (
+      {kartlar.length === 0 ? (
+        <p
+          className={cn(
+            "py-8 text-center text-sm",
+            koyuMu ? "text-slate-400" : "text-stone-400",
+          )}
+        >
+          Teslime hazır kurban yok
+        </p>
+      ) : (
+        <div
+          ref={listeRef}
+          className="kesim-scroll min-h-0 flex-1 space-y-2 overflow-y-auto pr-1"
+          style={{ maxHeight: "640px" }}
+        >
+          {kartlar.map((k) => (
             <div
-              key={s.hisseId}
+              key={k.kurbanId}
               className={cn(
-                "flex items-center gap-3 rounded-lg border p-2.5",
-                koyuMu
-                  ? "border-slate-700 bg-slate-800/60"
-                  : "border-green-200 bg-white",
+                "flex items-center gap-3 rounded-xl p-2.5",
+                koyuMu ? "bg-green-500/15" : "bg-green-50",
               )}
             >
-              <span
-                className={cn(
-                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-extrabold",
-                  koyuMu
-                    ? "bg-green-500/30 text-green-200"
-                    : "bg-green-500 text-white",
-                )}
-              >
-                {i + 1}
-              </span>
-              <div className="flex min-w-0 flex-1 flex-col leading-tight">
-                <span
-                  className={cn(
-                    "font-tabular text-sm font-extrabold",
-                    koyuMu ? "text-white" : "text-slate-900",
-                  )}
-                >
-                  Teslim No: {s.teslimNo}
-                </span>
-                <span
-                  className={cn(
-                    "flex items-center gap-1 text-[11px]",
-                    koyuMu ? "text-slate-400" : "text-slate-500",
-                  )}
-                >
-                  <MapPin size={10} />
-                  {s.teslimNoktasi}
+              {/* Sol: yeşil kurban no */}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-green-500 shadow">
+                <span className="font-tabular text-lg font-extrabold text-white">
+                  {k.kurbanNo}
                 </span>
               </div>
-              <div className="flex shrink-0 flex-col items-end gap-0.5">
-                <span
+
+              {/* Orta: durum + teslim noktası */}
+              <div className="min-w-0 flex-1">
+                <div
                   className={cn(
-                    "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                    s.durum === "Hazır"
-                      ? koyuMu
-                        ? "bg-green-500/20 text-green-200"
-                        : "bg-green-100 text-green-700"
-                      : koyuMu
-                        ? "bg-slate-700 text-slate-300"
-                        : "bg-slate-100 text-slate-600",
+                    "text-sm font-bold",
+                    koyuMu ? "text-white" : "text-stone-900",
                   )}
                 >
-                  {s.durum}
-                </span>
-                {s.durum === "Hazır" && (
-                  <AsamaSayaci
-                    baslangic={s.asamaBaslangic}
-                    boyut="kompakt"
-                    tema={koyuMu ? "koyu" : "acik"}
-                  />
-                )}
+                  Hazır
+                </div>
+                <div
+                  className={cn(
+                    "flex items-center gap-1 text-xs",
+                    koyuMu ? "text-slate-400" : "text-stone-500",
+                  )}
+                >
+                  <MapPin className="h-3 w-3" />
+                  {k.teslimNoktasi}
+                </div>
+              </div>
+
+              {/* Sağ: bekleme süresi */}
+              <div className="shrink-0 text-right">
+                <div className="font-tabular text-lg font-extrabold text-green-600">
+                  {k.hazirBeklemeDk} dk
+                </div>
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

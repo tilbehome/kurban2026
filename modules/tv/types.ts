@@ -1,25 +1,28 @@
 /**
- * TV Kesim Takip Ekranı — FAZ 9
+ * TV Kesim Takip Ekranı — FAZ 9 + SPRINT-12 (görsel referanslı rewrite).
  *
  * Server'dan client'a serialize edilebilir saf veri tipleri (LucideIcon yok).
  */
 
 // =============================================================================
-// Kesim durumu — Hisse.kesimDurumu string union
+// Kesim durumu — Kurban.kesimDurumu string union (schema ile aligned)
 // =============================================================================
 
 export type KesimDurumu =
   | "beklemede"
-  | "vekalet_onay"
+  | "vekalet_bekliyor"
   | "siradaki"
+  | "hazirlik"
   | "kesimde"
+  | "deri_yuzme"
   | "parcalama"
   | "tartimda"
+  | "paketleme"
   | "teslime_hazir"
-  | "teslim_edildi"
+  | "tamamlandi"
   | "iptal";
 
-/** Geçerli aşama metinleri (Hisse.asama) */
+/** Geçerli aşama metinleri (Kurban.asama / Hisse.asama) */
 export type Asama =
   | "Kesim"
   | "Deri Yüzme"
@@ -29,67 +32,80 @@ export type Asama =
   | "Paketleme"
   | "Teslim";
 
+/** 4 ana TV sütunu */
+export type TvSutunGrup =
+  | "siradakiler"
+  | "kesimdekiler"
+  | "parcalamada"
+  | "teslimeHazir";
+
 // =============================================================================
-// KPI şeridi (6 kart)
+// KPI şeridi (5 kart)
 // =============================================================================
 
 export interface TvKpi {
+  /** Tüm kurban sayısı (silindiMi=false) — başlıkta veya rezerv olarak */
   toplamKurban: number;
-  kesimde: number;
-  siradaki: number;
+  /** beklemede + hazirlik + siradaki */
+  siradakiler: number;
+  /** vekalet_bekliyor + kesimde + deri_yuzme */
+  kesimdekiler: number;
+  /** parcalama + tartimda */
+  parcalamada: number;
+  /** paketleme + teslime_hazir */
   teslimHazir: number;
+  /** tamamlandi */
   tamamlanan: number;
-  bekleyen: number;
 }
 
 // =============================================================================
-// 4 ana sütun
+// 4 ana sütun — KVKK uyumlu (müşteri adı YOK)
 // =============================================================================
 
-/** Sıradaki müşteri/hisse kompakt görünüm */
+/** Sıradakiler sütununda tek satır (kompakt liste) */
 export interface SiradakiSatir {
-  hisseId: string;
-  siraNo: number;
-  /** "Kesime Hazır" | "Parçalama Bekliyor" gibi durum */
+  kurbanId: string;
+  /** Kurban kesim sırası (DANA-NN) — hisse no değil */
+  kurbanNo: number;
+  /** "Beklemede" | "Hazırlık" | "Hazır" */
   durumEtiket: string;
-  /** Müşteri başharfleri (PII korunması) — örn. "M.Y." */
-  musteriKisaltma: string;
-  /** Kurbanın mevcut aşamasına geçtiği an (ISO datetime) — sayaç için */
-  asamaBaslangic: string | null;
+  /** Renkli nokta indikatörü */
+  durumRengi: "mavi" | "sari" | "yesil";
 }
 
-/** Kesimde / Tartımda büyük kart */
+/** Kesimdekiler / Parçalamada — büyük renkli kart */
 export interface IslemKart {
-  hisseId: string;
-  siraNo: number;
-  asama: string; // "Kesim" | "Deri Yüzme" vs.
-  ilerlemeYuzde: number; // 0-100
-  kalanSureDk: number | null;
-  musteriKisaltma: string;
-  /** Kurbanın mevcut aşamasına geçtiği an (ISO datetime) — sayaç için */
+  kurbanId: string;
+  kurbanNo: number;
+  asama: string;
+  /** 0-100 */
+  ilerlemeYuzde: number;
+  /** ISO datetime — aşamaya geçilen an (canlı sayaç için) */
   asamaBaslangic: string | null;
+  /** "09:30" formatında — UI'da hızlı göstermek için */
+  baslangicSaati: string | null;
+  /** Tahmini kalan süre dakika */
+  kalanSureDk: number | null;
 }
 
-/** Teslime hazır satır */
-export interface TeslimSatir {
-  hisseId: string;
-  teslimNo: number; // = siraNo
+/** Teslime hazır — yeşil kart */
+export interface TeslimKart {
+  kurbanId: string;
+  kurbanNo: number;
   teslimNoktasi: string;
-  durum: string; // "Hazır" | "Teslim Edildi"
-  musteriKisaltma: string;
-  /** Teslime hazır olunan an (ISO datetime) — bekleme süresi sayacı için */
-  asamaBaslangic: string | null;
+  /** Teslime hazır olalı kaç dakika geçti */
+  hazirBeklemeDk: number;
 }
 
 export interface TvSutunlar {
   siradakiler: SiradakiSatir[];
-  kesimde: IslemKart[];
-  tartimda: IslemKart[];
-  teslimeHazir: TeslimSatir[];
+  kesimdekiler: IslemKart[];
+  parcalamada: IslemKart[];
+  teslimeHazir: TeslimKart[];
 }
 
 // =============================================================================
-// Operasyon akışı (5 aşama)
+// Operasyon akışı (5 aşama — alt bant için)
 // =============================================================================
 
 export interface OperasyonIstatistik {
@@ -110,6 +126,8 @@ export interface TvAyariKisa {
   hijyen: string;
   whatsappTel: string;
   lokasyon: string;
+  /** Üst barda gösterilen firma adı (Ayar.firma_adi) */
+  firmaAdi: string;
 }
 
 // =============================================================================
@@ -136,35 +154,46 @@ export interface TvTumVeri {
 // =============================================================================
 
 export const KPI_RENKLERI = {
-  toplamKurban: { bg: "bg-blue-100", text: "text-blue-700", icon: "bg-blue-500" },
-  kesimde: { bg: "bg-orange-100", text: "text-orange-700", icon: "bg-orange-500" },
-  siradaki: { bg: "bg-purple-100", text: "text-purple-700", icon: "bg-purple-500" },
-  teslimHazir: { bg: "bg-green-100", text: "text-green-700", icon: "bg-green-500" },
-  tamamlanan: { bg: "bg-cyan-100", text: "text-cyan-700", icon: "bg-cyan-500" },
-  bekleyen: { bg: "bg-yellow-100", text: "text-yellow-700", icon: "bg-yellow-500" },
+  siradakiler: {
+    bg: "bg-blue-500",
+    text: "text-blue-700",
+    light: "bg-blue-50",
+  },
+  kesimdekiler: {
+    bg: "bg-orange-500",
+    text: "text-orange-700",
+    light: "bg-orange-50",
+  },
+  parcalamada: {
+    bg: "bg-purple-500",
+    text: "text-purple-700",
+    light: "bg-purple-50",
+  },
+  teslimHazir: {
+    bg: "bg-green-500",
+    text: "text-green-700",
+    light: "bg-green-50",
+  },
+  tamamlanan: {
+    bg: "bg-cyan-500",
+    text: "text-cyan-700",
+    light: "bg-cyan-50",
+  },
 } as const;
-
-/** Aşama label'ları — DB'de kısa string olabilir, UI'de güzelleştir */
-export const ASAMA_LABEL: Record<string, string> = {
-  Kesim: "Kesim",
-  "Deri Yüzme": "Deri Yüzme",
-  "Parçalama Hazırlık": "Parçalama Hazırlık",
-  Parçalama: "Parçalama",
-  Tartım: "Tartım",
-  Paketleme: "Paketleme",
-  Teslim: "Teslim",
-};
 
 /** Geçerli durum→aşama eşlemesi (default aşama) */
 export const DURUM_VARSAYILAN_ASAMA: Record<KesimDurumu, string | null> = {
   beklemede: null,
-  vekalet_onay: null,
+  vekalet_bekliyor: null,
   siradaki: null,
+  hazirlik: "Hazırlık",
   kesimde: "Kesim",
+  deri_yuzme: "Deri Yüzme",
   parcalama: "Parçalama",
   tartimda: "Tartım",
+  paketleme: "Paketleme",
   teslime_hazir: "Teslim",
-  teslim_edildi: null,
+  tamamlandi: null,
   iptal: null,
 };
 

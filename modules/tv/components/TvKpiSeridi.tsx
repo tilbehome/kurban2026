@@ -3,10 +3,9 @@
 import {
   Beef,
   Scissors,
-  Users,
+  Drumstick,
   CheckCircle2,
-  Trophy,
-  Clock,
+  TrendingUp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
@@ -18,155 +17,95 @@ interface TvKpiSeridiProps {
 }
 
 interface KartTanim {
-  id: keyof TvKpi;
+  id: keyof Pick<
+    TvKpi,
+    "siradakiler" | "kesimdekiler" | "parcalamada" | "teslimHazir" | "tamamlanan"
+  >;
   baslik: string;
   ikon: LucideIcon;
-  renkLight: { bg: string; iconBg: string; iconText: string; numara: string };
-  renkDark: { bg: string; iconBg: string; iconText: string; numara: string };
+  /** Sol ikon kutusu rengi (görsele uygun) */
+  ikonBg: string;
+  /** Numara rengi */
+  numara: string;
 }
 
 const KARTLAR: KartTanim[] = [
   {
-    id: "toplamKurban",
-    baslik: "Toplam Kurban",
-    ikon: Beef,
-    renkLight: {
-      bg: "bg-white border-slate-200",
-      iconBg: "bg-blue-100",
-      iconText: "text-blue-600",
-      numara: "text-blue-700",
-    },
-    renkDark: {
-      bg: "bg-slate-800 border-slate-700",
-      iconBg: "bg-blue-500/20",
-      iconText: "text-blue-300",
-      numara: "text-blue-300",
-    },
-  },
-  {
-    id: "kesimde",
-    baslik: "Şu An Kesimde",
-    ikon: Scissors,
-    renkLight: {
-      bg: "bg-white border-slate-200",
-      iconBg: "bg-orange-100",
-      iconText: "text-orange-600",
-      numara: "text-orange-700",
-    },
-    renkDark: {
-      bg: "bg-slate-800 border-slate-700",
-      iconBg: "bg-orange-500/20",
-      iconText: "text-orange-300",
-      numara: "text-orange-300",
-    },
-  },
-  {
-    id: "siradaki",
+    id: "siradakiler",
     baslik: "Sıradakiler",
-    ikon: Users,
-    renkLight: {
-      bg: "bg-white border-slate-200",
-      iconBg: "bg-purple-100",
-      iconText: "text-purple-600",
-      numara: "text-purple-700",
-    },
-    renkDark: {
-      bg: "bg-slate-800 border-slate-700",
-      iconBg: "bg-purple-500/20",
-      iconText: "text-purple-300",
-      numara: "text-purple-300",
-    },
+    ikon: Beef,
+    ikonBg: "bg-blue-500",
+    numara: "text-blue-600",
+  },
+  {
+    id: "kesimdekiler",
+    baslik: "Kesimdekiler",
+    ikon: Scissors,
+    ikonBg: "bg-orange-500",
+    numara: "text-orange-600",
+  },
+  {
+    id: "parcalamada",
+    baslik: "Parçalamada",
+    ikon: Drumstick,
+    ikonBg: "bg-purple-500",
+    numara: "text-purple-600",
   },
   {
     id: "teslimHazir",
     baslik: "Teslime Hazır",
     ikon: CheckCircle2,
-    renkLight: {
-      bg: "bg-white border-slate-200",
-      iconBg: "bg-green-100",
-      iconText: "text-green-600",
-      numara: "text-green-700",
-    },
-    renkDark: {
-      bg: "bg-slate-800 border-slate-700",
-      iconBg: "bg-green-500/20",
-      iconText: "text-green-300",
-      numara: "text-green-300",
-    },
+    ikonBg: "bg-green-500",
+    numara: "text-green-600",
   },
   {
     id: "tamamlanan",
     baslik: "Tamamlanan",
-    ikon: Trophy,
-    renkLight: {
-      bg: "bg-white border-slate-200",
-      iconBg: "bg-cyan-100",
-      iconText: "text-cyan-600",
-      numara: "text-cyan-700",
-    },
-    renkDark: {
-      bg: "bg-slate-800 border-slate-700",
-      iconBg: "bg-cyan-500/20",
-      iconText: "text-cyan-300",
-      numara: "text-cyan-300",
-    },
-  },
-  {
-    id: "bekleyen",
-    baslik: "Bekleyen",
-    ikon: Clock,
-    renkLight: {
-      bg: "bg-white border-slate-200",
-      iconBg: "bg-yellow-100",
-      iconText: "text-yellow-600",
-      numara: "text-yellow-700",
-    },
-    renkDark: {
-      bg: "bg-slate-800 border-slate-700",
-      iconBg: "bg-yellow-500/20",
-      iconText: "text-yellow-300",
-      numara: "text-yellow-300",
-    },
+    ikon: TrendingUp,
+    ikonBg: "bg-cyan-500",
+    numara: "text-cyan-600",
   },
 ];
 
 export function TvKpiSeridi({ kpi, tema }: TvKpiSeridiProps) {
+  const koyuMu = tema === "dark";
+
   return (
-    <div className="grid grid-cols-2 gap-3 px-6 py-4 md:grid-cols-3 xl:grid-cols-6">
-      {KARTLAR.map((k) => {
-        const Ikon = k.ikon;
-        const renk = tema === "dark" ? k.renkDark : k.renkLight;
-        const deger = kpi[k.id];
+    <div className="grid grid-cols-2 gap-3 px-4 py-3 sm:grid-cols-3 xl:grid-cols-5">
+      {KARTLAR.map((kart) => {
+        const Icon = kart.ikon;
+        const deger = kpi[kart.id];
         return (
           <div
-            key={k.id}
+            key={kart.id}
             className={cn(
-              "flex items-center gap-3 rounded-xl border p-3 transition-all sm:p-4",
-              renk.bg,
+              "flex items-center gap-3 rounded-2xl border p-4 shadow-sm",
+              koyuMu
+                ? "border-slate-700 bg-slate-800"
+                : "border-stone-200 bg-white",
             )}
           >
-            <span
+            <div
               className={cn(
-                "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-                renk.iconBg,
-                renk.iconText,
+                "flex h-14 w-14 shrink-0 items-center justify-center rounded-xl",
+                kart.ikonBg,
               )}
             >
-              <Ikon size={22} strokeWidth={2} />
-            </span>
+              <Icon className="h-7 w-7 text-white" />
+            </div>
             <div className="flex min-w-0 flex-col leading-tight">
               <span
                 className={cn(
-                  "text-[11px] font-semibold tracking-wider uppercase",
-                  tema === "dark" ? "text-slate-400" : "text-slate-500",
+                  "text-xs font-medium tracking-wider uppercase",
+                  koyuMu ? "text-slate-300" : "text-stone-500",
                 )}
               >
-                {k.baslik}
+                {kart.baslik}
               </span>
               <span
                 className={cn(
-                  "font-tabular text-2xl font-extrabold sm:text-3xl",
-                  renk.numara,
+                  "font-tabular mt-1 text-4xl leading-none font-extrabold",
+                  koyuMu ? "text-white" : kart.numara,
                 )}
               >
                 {deger}

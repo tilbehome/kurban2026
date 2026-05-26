@@ -53,6 +53,7 @@ export function TvClient({ ilkVeri }: TvClientProps) {
       )}
     >
       <TvUstBar
+        firmaAdi={aktifVeri.ayarlar.firmaAdi}
         lokasyon={aktifVeri.ayarlar.lokasyon}
         canli={canli && hydrated}
         tema={tema}
