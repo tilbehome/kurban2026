@@ -6,7 +6,10 @@ import { ipCikar } from "@/shared/lib/audit";
 
 export const dynamic = "force-dynamic";
 
-const MIN_SORGU = 3;
+// SPRINT-MUSTERI-GIRIS-V2: saf rakam (kurban sıra no) için 1 hane yeterli;
+// telefon/metin için min 3 (alfabe tarama saldırısı koruması + KVKK).
+const MIN_SORGU_GENEL = 3;
+const MIN_SORGU_KURBAN_NO = 1;
 const MAX_ISTEK = 30;
 const PENCERE_SN = 60;
 
@@ -33,10 +36,22 @@ export async function GET(req: NextRequest) {
   }
 
   const sorgu = (req.nextUrl.searchParams.get("q") ?? "").trim();
-  if (sorgu.length < MIN_SORGU) {
+
+  // Saf rakam (1-4 hane) → kurban sıra no araması, 1 karakter yeter.
+  // Diğer (telefon/metin) → min 3 karakter (KVKK + bot tarama).
+  const sadeceRakam = /^\d+$/.test(sorgu);
+  const kurbanNoAramasi = sadeceRakam && sorgu.length <= 4;
+
+  if (sorgu.length < MIN_SORGU_KURBAN_NO) {
+    return NextResponse.json({ basarili: true, sonuc: { tip: null } });
+  }
+  if (!kurbanNoAramasi && sorgu.length < MIN_SORGU_GENEL) {
     return NextResponse.json({
       basarili: true,
-      sonuc: { tip: null, mesaj: `En az ${MIN_SORGU} karakter girin` },
+      sonuc: {
+        tip: null,
+        mesaj: `En az ${MIN_SORGU_GENEL} karakter girin (kurban no için 1+ rakam yeterli)`,
+      },
     });
   }
 
