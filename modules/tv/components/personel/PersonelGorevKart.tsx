@@ -214,29 +214,28 @@ export function PersonelGorevKart({
               )}
             </div>
 
+            {/* SPRINT-PERSONEL-PANEL-EK: Tüm hissedarlar görünür (wrap edilir,
+                "+N daha" kısaltması yok). Hover'da tam ad title attribute'da. */}
             <div className="mb-1 flex flex-wrap items-center gap-1">
-              {doluHisseler.slice(0, 3).map((h) => {
-                const ad = h.musteriAdi ?? "";
-                const baslangic = ad.charAt(0);
-                const soyad = ad.split(" ").pop() ?? "";
-                return (
-                  <span
-                    key={h.id}
-                    className="bg-muted inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium"
-                  >
-                    {baslangic}. {soyad}
-                  </span>
-                );
-              })}
-              {doluHisseler.length > 3 && (
-                <span className="text-muted-foreground text-[10px]">
-                  +{doluHisseler.length - 3} daha
-                </span>
-              )}
-              {doluHisseler.length === 0 && (
+              {doluHisseler.length === 0 ? (
                 <span className="text-muted-foreground text-[10px] italic">
                   Hissedar yok
                 </span>
+              ) : (
+                doluHisseler.map((h) => {
+                  const ad = h.musteriAdi ?? "";
+                  const baslangic = ad.charAt(0);
+                  const soyad = ad.split(" ").pop() ?? "";
+                  return (
+                    <span
+                      key={h.id}
+                      title={ad}
+                      className="bg-muted inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium"
+                    >
+                      {baslangic}. {soyad}
+                    </span>
+                  );
+                })
               )}
             </div>
 

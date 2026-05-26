@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -60,6 +60,28 @@ export function PersonelAnaClient({
   const [kurbanlar, setKurbanlar] = useState<PersonelKurbanVeri[]>(ilkKurbanlar);
   // SPRINT-PERSONEL-PANEL: arama kutusu (kurban no veya hissedar ismi)
   const [arama, setArama] = useState("");
+
+  // SPRINT-PERSONEL-PANEL-EK: akıllı sticky — aşağı kaydırınca sekme+arama
+  // gizlenir, yukarı kaydırınca geri gelir. Üst header her zaman görünür.
+  const [sekmelerGorunur, setSekmelerGorunur] = useState(true);
+  const sonScrollRef = useRef(0);
+
+  useEffect(() => {
+    function scrollDinle() {
+      const simdi = window.scrollY;
+      const fark = simdi - sonScrollRef.current;
+      if (simdi < 100) {
+        setSekmelerGorunur(true);
+      } else if (fark > 5) {
+        setSekmelerGorunur(false);
+      } else if (fark < -5) {
+        setSekmelerGorunur(true);
+      }
+      sonScrollRef.current = simdi;
+    }
+    window.addEventListener("scroll", scrollDinle, { passive: true });
+    return () => window.removeEventListener("scroll", scrollDinle);
+  }, []);
 
   useEffect(() => {
     // localStorage hidrasyonu — mount'ta bir kez state'i restore eder.
@@ -183,7 +205,7 @@ export function PersonelAnaClient({
 
   return (
     <div className="min-h-screen bg-stone-50">
-      <header className="bg-slate-900 text-white sticky top-0 z-20 flex items-center justify-between px-4 py-3 shadow-lg">
+      <header className="bg-slate-900 text-white sticky top-0 z-30 flex items-center justify-between px-4 py-3 shadow-lg">
         <Link
           href="/"
           className="text-slate-300 hover:text-white flex items-center gap-1 text-sm"
@@ -223,38 +245,48 @@ export function PersonelAnaClient({
         </div>
       </header>
 
-      <div className="mx-auto flex max-w-md flex-col gap-4 p-4">
-        <PersonelGorevSekme
-          aktif={aktifGorev}
-          setAktif={setAktifGorev}
-          sayilar={sayilar}
-        />
+      {/* AKILLI STICKY: sekme + arama. Aşağı kaydırınca gizlenir,
+          yukarı kaydırınca geri gelir (üstte ilk 100px her zaman görünür). */}
+      <div
+        className={cn(
+          "bg-stone-50/95 sticky top-[52px] z-20 border-b backdrop-blur-sm transition-transform duration-200",
+          sekmelerGorunur ? "translate-y-0" : "-translate-y-full",
+        )}
+      >
+        <div className="mx-auto flex max-w-md flex-col gap-3 px-4 py-3">
+          <PersonelGorevSekme
+            aktif={aktifGorev}
+            setAktif={setAktifGorev}
+            sayilar={sayilar}
+          />
 
-        {/* ARAMA KUTUSU — kurban no veya hissedar ismi */}
-        <div className="relative">
-          <Search
-            size={16}
-            className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
-          />
-          <Input
-            value={arama}
-            onChange={(e) => setArama(e.target.value)}
-            placeholder="Dana no veya hissedar ismi ile ara..."
-            className="pl-9"
-            inputMode="search"
-          />
-          {arama && (
-            <button
-              type="button"
-              onClick={() => setArama("")}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1"
-              aria-label="Aramayı temizle"
-            >
-              <X size={14} />
-            </button>
-          )}
+          <div className="relative">
+            <Search
+              size={18}
+              className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
+            />
+            <Input
+              value={arama}
+              onChange={(e) => setArama(e.target.value)}
+              placeholder="Dana no veya hissedar ismi ile ara..."
+              className="h-11 pl-10 text-sm"
+              inputMode="search"
+            />
+            {arama && (
+              <button
+                type="button"
+                onClick={() => setArama("")}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 -translate-y-1/2 rounded-full p-1"
+                aria-label="Aramayı temizle"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
         </div>
+      </div>
 
+      <div className="mx-auto flex max-w-md flex-col gap-4 p-4">
         {aktifIs && (
           <PersonelAktifIs
             kurban={aktifIs}

@@ -28,7 +28,7 @@ export const PERSONEL_GOREVLERI: PersonelGorev[] = [
 export const GOREV_ETIKETLERI: Record<PersonelGorev, string> = {
   genel: "Hepsi",
   vekalet: "Vekalet",
-  kesim: "Kasap",
+  kesim: "Kesim",
   tartim: "Tartım",
   paketleme: "Paketleme",
   teslim: "Teslim",
@@ -37,7 +37,7 @@ export const GOREV_ETIKETLERI: Record<PersonelGorev, string> = {
 export const GOREV_KISA: Record<PersonelGorev, string> = {
   genel: "Genel",
   vekalet: "Vekalet Alan",
-  kesim: "Kasap",
+  kesim: "Kesim Personeli",
   tartim: "Tartım Personeli",
   paketleme: "Paketleyici",
   teslim: "Teslim Personeli",
