@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * Sticky hızlı ödeme paneli (müşteri detay sayfası sağ tarafı).
+ *
+ * SPRINT-MUSTERILER-PANEL:
+ *  - Nakit + Havale satırlarına ayrı "Kalan / Yarısı" hızlı doldur butonları.
+ *  - paraInputFormatla + onBlur (",00" otomatik tamamlama).
+ *  - Ödeme sonrası YEŞIL panel (window.open KALDIRILDI, kasiyer kontrolü).
+ *  - "Dekont" butonu manuel yeni sekmede açar.
+ *  - SPRINT-P3 idempotency: clientRequestIdRef korunur.
+ */
+
 import { useEffect, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -14,7 +25,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatPara, parsePara, topla, yuvarla } from "@/shared/lib/para";
-import { Banknote, ArrowUpRight, CreditCard, Check } from "lucide-react";
+import {
+  paraInputFormatla,
+  paraInputBlurTamamla,
+} from "@/shared/lib/para-input-format";
+import {
+  Banknote,
+  ArrowUpRight,
+  CreditCard,
+  Check,
+  Printer,
+  X,
+} from "lucide-react";
 
 interface Hisse {
   id: string;
@@ -32,10 +54,12 @@ interface HizliOdemePanelProps {
 
 type Dagitim = "esit" | "sirayla";
 
-/**
- * Sticky hızlı ödeme paneli (müşteri detay sayfasında sağ tarafta).
- * Mevcut /api/tahsilat/odeme API'sini kullanır.
- */
+interface SonOdemeBilgi {
+  odemeId: string;
+  dekontNo: string;
+  toplam: number;
+}
+
 export function HizliOdemePanel({
   musteriId,
   hisseler,
@@ -49,27 +73,39 @@ export function HizliOdemePanel({
   const [kart, setKart] = useState("");
   const [dagitim, setDagitim] = useState<Dagitim>("esit");
 
-  // SPRINT-P3 İŞ 1: aynı submit cycle içinde aynı UUID — çift tıklama tek ödeme.
+  const [sonOdeme, setSonOdeme] = useState<SonOdemeBilgi | null>(null);
   const clientRequestIdRef = useRef<string | null>(null);
-
   const nakitRef = useRef<HTMLInputElement | null>(null);
+
   useEffect(() => {
     nakitRef.current?.focus();
   }, []);
 
-  const toplam = yuvarla(topla(parsePara(nakit), parsePara(havale), parsePara(kart)));
+  const toplam = yuvarla(
+    topla(parsePara(nakit), parsePara(havale), parsePara(kart)),
+  );
   const fazla = toplam > kalanBakiye;
   const eksik = toplam < kalanBakiye;
 
-  function bakiyeyiDoldur() {
+  // Hızlı doldur — sadece tek yöntem dolar, diğerleri sıfırlanır.
+  function nakitKalan() {
     setNakit(formatSayi(kalanBakiye));
     setHavale("");
     setKart("");
   }
-
-  function yarisiniDoldur() {
+  function nakitYarisi() {
     setNakit(formatSayi(Math.round(kalanBakiye / 2)));
     setHavale("");
+    setKart("");
+  }
+  function havaleKalan() {
+    setHavale(formatSayi(kalanBakiye));
+    setNakit("");
+    setKart("");
+  }
+  function havaleYarisi() {
+    setHavale(formatSayi(Math.round(kalanBakiye / 2)));
+    setNakit("");
     setKart("");
   }
 
@@ -86,7 +122,6 @@ export function HizliOdemePanel({
       if (!onay) return;
     }
 
-    // Idempotency: submit cycle başında UUID üret, ref'te paylaş.
     if (!clientRequestIdRef.current) {
       clientRequestIdRef.current = crypto.randomUUID();
     }
@@ -111,19 +146,27 @@ export function HizliOdemePanel({
           basarili: boolean;
           dekontNo?: string;
           odemeIds?: string[];
+          toplam?: number;
           hata?: string;
         };
         if (!yanit.ok || !sonuc.basarili) {
           throw new Error(sonuc.hata ?? "Ödeme alınamadı");
         }
-        toast.success(`Ödeme alındı · ${sonuc.dekontNo}`);
-        if (sonuc.odemeIds?.[0]) {
-          window.open(`/api/tahsilat/dekont/${sonuc.odemeIds[0]}`, "_blank");
+        toast.success(`Ödeme alındı · ${sonuc.dekontNo}`, { duration: 3000 });
+
+        if (sonuc.odemeIds?.[0] && sonuc.dekontNo) {
+          setSonOdeme({
+            odemeId: sonuc.odemeIds[0],
+            dekontNo: sonuc.dekontNo,
+            toplam: sonuc.toplam ?? toplam,
+          });
         }
+
         setNakit("");
         setHavale("");
         setKart("");
         router.refresh();
+        setTimeout(() => nakitRef.current?.focus(), 100);
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Hata");
       } finally {
@@ -134,13 +177,13 @@ export function HizliOdemePanel({
 
   function handleKey(e: React.KeyboardEvent<HTMLFormElement>) {
     if (e.key === "Enter" && (e.target as HTMLElement).tagName === "INPUT") {
-      // Tek input'dan Enter ile submit
       e.preventDefault();
       handleSubmit(e);
     }
   }
 
   const cokluHisse = hisseler.length > 1;
+  const bakiyeVarMi = kalanBakiye > 0;
 
   return (
     <form
@@ -148,29 +191,33 @@ export function HizliOdemePanel({
       onKeyDown={handleKey}
       className="flex flex-col gap-3"
     >
-      <ParaAlani
+      <ParaSatir
         id="hop-nakit"
         ad="Nakit"
         ikon={<Banknote size={14} className="text-green-600" />}
         deger={nakit}
-        onChange={setNakit}
+        setDeger={setNakit}
         inputRef={nakitRef}
         disabled={bekleniyor}
+        hizliKalan={bakiyeVarMi ? nakitKalan : undefined}
+        hizliYarisi={bakiyeVarMi ? nakitYarisi : undefined}
       />
-      <ParaAlani
+      <ParaSatir
         id="hop-havale"
         ad="Havale"
         ikon={<ArrowUpRight size={14} className="text-blue-600" />}
         deger={havale}
-        onChange={setHavale}
+        setDeger={setHavale}
         disabled={bekleniyor}
+        hizliKalan={bakiyeVarMi ? havaleKalan : undefined}
+        hizliYarisi={bakiyeVarMi ? havaleYarisi : undefined}
       />
-      <ParaAlani
+      <ParaSatir
         id="hop-kart"
         ad="Kart"
         ikon={<CreditCard size={14} className="text-purple-600" />}
         deger={kart}
-        onChange={setKart}
+        setDeger={setKart}
         disabled={bekleniyor}
       />
 
@@ -199,29 +246,6 @@ export function HizliOdemePanel({
         </div>
       </div>
 
-      <div className="flex gap-1.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={bakiyeyiDoldur}
-          disabled={bekleniyor || kalanBakiye <= 0}
-          className="flex-1 text-xs"
-        >
-          Kalan ({formatPara(kalanBakiye)})
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={yarisiniDoldur}
-          disabled={bekleniyor || kalanBakiye <= 0}
-          className="flex-1 text-xs"
-        >
-          Yarısı
-        </Button>
-      </div>
-
       {cokluHisse && (
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="hop-dagitim" className="text-xs">
@@ -242,6 +266,51 @@ export function HizliOdemePanel({
         </div>
       )}
 
+      {sonOdeme && (
+        <div className="rounded-lg border-2 border-green-300 bg-green-50 p-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <Check className="size-4 shrink-0 text-green-600" />
+                <span className="text-sm font-semibold text-green-900">
+                  Ödeme Alındı
+                </span>
+              </div>
+              <div className="font-tabular mt-0.5 text-[11px] text-green-700">
+                {sonOdeme.dekontNo} · {formatPara(sonOdeme.toplam)}
+              </div>
+            </div>
+            <div className="flex shrink-0 gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  window.open(
+                    `/api/tahsilat/dekont/${sonOdeme.odemeId}`,
+                    "_blank",
+                  )
+                }
+                className="h-7 px-2 text-[11px]"
+              >
+                <Printer className="size-3" />
+                Dekont
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSonOdeme(null)}
+                className="h-7 px-1.5"
+                aria-label="Kapat"
+              >
+                <X className="size-3" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Button
         type="submit"
         disabled={bekleniyor || toplam <= 0}
@@ -250,51 +319,82 @@ export function HizliOdemePanel({
       >
         {bekleniyor ? "Alınıyor..." : "✓ Ödemeyi Al"}
       </Button>
-      <p className="text-muted-foreground text-center text-[10px]">
-        Enter ile onay · Dekont otomatik açılır
-      </p>
     </form>
   );
 }
 
-function ParaAlani({
+function ParaSatir({
   id,
   ad,
   ikon,
   deger,
-  onChange,
+  setDeger,
   inputRef,
   disabled,
+  hizliKalan,
+  hizliYarisi,
 }: {
   id: string;
   ad: string;
   ikon: React.ReactNode;
   deger: string;
-  onChange: (v: string) => void;
+  setDeger: (v: string) => void;
   inputRef?: React.Ref<HTMLInputElement>;
   disabled?: boolean;
+  hizliKalan?: () => void;
+  hizliYarisi?: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <Label htmlFor={id} className="flex w-16 shrink-0 items-center gap-1 text-xs">
-        {ikon}
-        {ad}
-      </Label>
-      <div className="relative flex-1">
-        <Input
-          ref={inputRef}
-          id={id}
-          inputMode="decimal"
-          placeholder="0"
-          value={deger}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={disabled}
-          className="font-tabular h-8 pr-6 text-right text-sm"
-        />
-        <span className="text-muted-foreground absolute top-1/2 right-2 -translate-y-1/2 text-xs">
-          ₺
-        </span>
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <Label
+          htmlFor={id}
+          className="flex w-16 shrink-0 items-center gap-1 text-xs"
+        >
+          {ikon}
+          {ad}
+        </Label>
+        <div className="relative flex-1">
+          <Input
+            ref={inputRef}
+            id={id}
+            inputMode="decimal"
+            placeholder="0"
+            value={deger}
+            onChange={(e) => setDeger(paraInputFormatla(e.target.value))}
+            onBlur={(e) => setDeger(paraInputBlurTamamla(e.target.value))}
+            disabled={disabled}
+            className="font-tabular h-8 pr-6 text-right text-sm"
+          />
+          <span className="text-muted-foreground absolute top-1/2 right-2 -translate-y-1/2 text-xs">
+            ₺
+          </span>
+        </div>
       </div>
+      {(hizliKalan || hizliYarisi) && (
+        <div className="ml-[72px] flex gap-1">
+          {hizliKalan && (
+            <button
+              type="button"
+              onClick={hizliKalan}
+              disabled={disabled}
+              className="text-muted-foreground hover:text-foreground hover:border-foreground/40 rounded border border-dashed px-2 py-0.5 text-[10px] transition-colors disabled:opacity-50"
+            >
+              Kalan
+            </button>
+          )}
+          {hizliYarisi && (
+            <button
+              type="button"
+              onClick={hizliYarisi}
+              disabled={disabled}
+              className="text-muted-foreground hover:text-foreground hover:border-foreground/40 rounded border border-dashed px-2 py-0.5 text-[10px] transition-colors disabled:opacity-50"
+            >
+              Yarısı
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

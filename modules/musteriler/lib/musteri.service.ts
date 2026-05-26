@@ -43,13 +43,49 @@ export async function musterileriListele(
   // Soft delete: silinenler hariç (MIMARI §5.3)
   const where: Record<string, unknown> = { silindiMi: false };
 
-  if (filtreler.arama && filtreler.arama.trim().length >= 2) {
+  // SPRINT-MUSTERILER-PANEL İŞ 1+2: akıllı arama.
+  //   - 1-3 hane saf rakam → kurban sıra no araması (o danadaki hissedarlar)
+  //   - Diğer durumda → ad/telefon/tc içinde geçme. SQLite LIKE ASCII'de
+  //     büyük/küçük harf duyarsızdır ama Türkçe İ/ı için değildir. O yüzden
+  //     orijinal + Türkçe upper + Türkçe lower kombinasyonu (ALİ KÜÇÜK
+  //     müşterisi "ali" yazan kullanıcıya da çıksın).
+  if (filtreler.arama && filtreler.arama.trim().length >= 1) {
     const q = filtreler.arama.trim();
-    where.OR = [
-      { adSoyad: { contains: q } },
-      { telefon: { contains: q } },
-      { tcKimlik: { contains: q } },
-    ];
+    const sadeceRakam = /^\d+$/.test(q);
+
+    if (sadeceRakam && q.length <= 3) {
+      const kurbanNo = parseInt(q, 10);
+      const hisseler = await prisma.hisse.findMany({
+        where: {
+          silindiMi: false,
+          kurban: { kesimSirasi: kurbanNo, silindiMi: false },
+          musteriId: { not: null },
+        },
+        select: { musteriId: true },
+      });
+      const musteriIds = Array.from(
+        new Set(
+          hisseler
+            .map((h) => h.musteriId)
+            .filter((x): x is string => x !== null),
+        ),
+      );
+      if (musteriIds.length > 0) {
+        where.id = { in: musteriIds };
+      } else {
+        // Kurban no var ama o danada hissedar yok → boş sonuç döndür
+        where.id = "__bulunamadi__";
+      }
+    } else {
+      const qLower = q.toLocaleLowerCase("tr");
+      const qUpper = q.toLocaleUpperCase("tr");
+      const varyantlar = Array.from(new Set([q, qLower, qUpper]));
+      where.OR = [
+        ...varyantlar.map((v) => ({ adSoyad: { contains: v } })),
+        { telefon: { contains: q } },
+        { tcKimlik: { contains: q } },
+      ];
+    }
   }
 
   if (filtreler.harf) {
