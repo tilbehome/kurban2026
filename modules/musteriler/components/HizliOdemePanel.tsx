@@ -49,6 +49,9 @@ export function HizliOdemePanel({
   const [kart, setKart] = useState("");
   const [dagitim, setDagitim] = useState<Dagitim>("esit");
 
+  // SPRINT-P3 İŞ 1: aynı submit cycle içinde aynı UUID — çift tıklama tek ödeme.
+  const clientRequestIdRef = useRef<string | null>(null);
+
   const nakitRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
     nakitRef.current?.focus();
@@ -83,6 +86,12 @@ export function HizliOdemePanel({
       if (!onay) return;
     }
 
+    // Idempotency: submit cycle başında UUID üret, ref'te paylaş.
+    if (!clientRequestIdRef.current) {
+      clientRequestIdRef.current = crypto.randomUUID();
+    }
+    const clientRequestId = clientRequestIdRef.current;
+
     startTransition(async () => {
       try {
         const yanit = await fetch("/api/tahsilat/odeme", {
@@ -95,12 +104,13 @@ export function HizliOdemePanel({
             havale: parsePara(havale),
             kart: parsePara(kart),
             dagitim,
+            clientRequestId,
           }),
         });
         const sonuc = (await yanit.json()) as {
           basarili: boolean;
           dekontNo?: string;
-          odemeIds?: number[];
+          odemeIds?: string[];
           hata?: string;
         };
         if (!yanit.ok || !sonuc.basarili) {
@@ -116,6 +126,8 @@ export function HizliOdemePanel({
         router.refresh();
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Hata");
+      } finally {
+        clientRequestIdRef.current = null;
       }
     });
   }
