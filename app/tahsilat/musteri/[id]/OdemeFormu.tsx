@@ -19,6 +19,7 @@ import {
   paraInputFormatla,
   paraInputBlurTamamla,
 } from "@/shared/lib/para-input-format";
+import { uuidv4 } from "@/shared/lib/uuid";
 import {
   Banknote,
   ArrowUpRight,
@@ -101,7 +102,7 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
     // Idempotency: cycle başında UUID üret, ref'te paylaş.
     // Rapid çift tıklama aynı UUID'yi kullanır → server replay yapar.
     if (!clientRequestIdRef.current) {
-      clientRequestIdRef.current = crypto.randomUUID();
+      clientRequestIdRef.current = uuidv4();
     }
     const clientRequestId = clientRequestIdRef.current;
 
@@ -146,7 +147,7 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
             "Eşit dağıtım uymuyor, sırayla deneniyor…",
             { duration: 2000 },
           );
-          const yeniUuid = crypto.randomUUID();
+          const yeniUuid = uuidv4();
           clientRequestIdRef.current = yeniUuid;
           sonuc = await tahsilatGonder("sirayla", yeniUuid);
         }
