@@ -46,17 +46,9 @@ export function dekontOzetKartHtml(o: OzetKartVerisi): string {
   <div class="dk-kart dk-ozet-kart">
     <div class="dk-kart-baslik">ÖDEME ÖZETİ</div>
     <div class="dk-ozet-satir">
-      <span>Hisse Bedeli</span>
+      <span>Toplam Bakiye</span>
       <span>${formatPara(o.hisseBedeli)}</span>
     </div>
-    ${
-      o.oncekiOdemeler > 0
-        ? `<div class="dk-ozet-satir dk-ozet-soluk">
-            <span>Önceki Ödemeler</span>
-            <span>−${formatPara(o.oncekiOdemeler)}</span>
-          </div>`
-        : ""
-    }
 
     <div class="dk-ozet-alt-baslik">Bu Ödeme</div>
     ${
@@ -100,7 +92,7 @@ export function dekontOzetKartHtml(o: OzetKartVerisi): string {
     </div>
 
     <div class="dk-ozet-kalan ${tamamiOdendi ? "dk-odendi" : "dk-borc"}">
-      <span>${tamamiOdendi ? "Hisse Durumu" : "Kalan Bakiye"}</span>
+      <span>${tamamiOdendi ? "Bakiye Durumu" : "Kalan Bakiye"}</span>
       <span>${
         tamamiOdendi
           ? `

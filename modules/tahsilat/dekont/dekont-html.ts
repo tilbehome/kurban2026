@@ -17,10 +17,10 @@ import {
   DEKONT_MUSTERI_KART_CSS,
 } from "./dekont-musteri-kart";
 import { dekontOzetKartHtml, DEKONT_OZET_KART_CSS } from "./dekont-ozet-kart";
-import { dekontQrKartHtml, DEKONT_QR_KART_CSS } from "./dekont-qr-kart";
-import { dekontImzaHtml, DEKONT_IMZA_CSS } from "./dekont-imza";
-import { dekontRozetHtml, DEKONT_ROZET_CSS } from "./dekont-rozet";
 import { dekontFooterHtml, DEKONT_FOOTER_CSS } from "./dekont-footer";
+// SPRINT-DEKONT-V3: QR / İmza / Rozet kaldırıldı (privacy + sade tasarım).
+// Dosyalar duruyor — backend HMAC üretmeye devam ediyor, sadece HTML'de
+// gösterilmiyor.
 
 export interface DekontHtmlGirdisi {
   // Firma
@@ -116,19 +116,6 @@ export function dekontHtmlUret(d: DekontHtmlGirdisi): string {
     yontem: d.yontem,
   });
 
-  const qrKart = dekontQrKartHtml({
-    qrDataUrl: d.qrDataUrl,
-    dogrulamaKodu: d.dogrulamaKodu,
-    hedefUrl: d.qrHedefUrl,
-  });
-
-  const imza = dekontImzaHtml({
-    kasiyerAdi: d.kasiyer,
-    firmaKisaAd: d.firmaKisaAd,
-  });
-
-  const rozetler = dekontRozetHtml();
-
   const footer = dekontFooterHtml({
     altYazi: d.altYazi,
     firmaWhatsapp: d.firmaWhatsapp,
@@ -142,7 +129,7 @@ export function dekontHtmlUret(d: DekontHtmlGirdisi): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Dekont ${e(d.dekontNo)} — ${e(d.musteriAdi)}</title>
-  <style>${ANA_CSS}${DEKONT_HEADER_CSS}${DEKONT_META_SERIT_CSS}${DEKONT_MUSTERI_KART_CSS}${DEKONT_OZET_KART_CSS}${DEKONT_QR_KART_CSS}${DEKONT_IMZA_CSS}${DEKONT_ROZET_CSS}${DEKONT_FOOTER_CSS}${YAZDIRMA_CSS}</style>
+  <style>${ANA_CSS}${DEKONT_HEADER_CSS}${DEKONT_META_SERIT_CSS}${DEKONT_MUSTERI_KART_CSS}${DEKONT_OZET_KART_CSS}${DEKONT_FOOTER_CSS}${KOPYA_CSS}${YAZDIRMA_CSS}</style>
 </head>
 <body>
   <div class="dk-toolbar">
@@ -153,21 +140,33 @@ export function dekontHtmlUret(d: DekontHtmlGirdisi): string {
     <a class="dk-btn" href="javascript:window.close()">Kapat</a>
   </div>
 
-  <div class="dk-dekont">
+  <!-- 1. KOPYA: MÜŞTERİ -->
+  <div class="dk-dekont dk-kopya-1">
+    <div class="dk-kopya-etiket">MÜŞTERİ KOPYASI</div>
     ${header}
     ${metaSerit}
-
     <div class="dk-ana-grid">
       ${musteriKart}
       ${ozetKart}
     </div>
+    ${footer}
+  </div>
 
-    <div style="margin-top: 16px;">
-      ${qrKart}
+  <!-- KESİK ÇİZGİ -->
+  <div class="dk-kesik-cizgi">
+    <span class="dk-kesik-ikon">✂</span>
+    <span class="dk-kesik-yazi">Kesip ayırın</span>
+  </div>
+
+  <!-- 2. KOPYA: ŞİRKET -->
+  <div class="dk-dekont dk-kopya-2">
+    <div class="dk-kopya-etiket">ŞİRKET KOPYASI</div>
+    ${header}
+    ${metaSerit}
+    <div class="dk-ana-grid">
+      ${musteriKart}
+      ${ozetKart}
     </div>
-
-    ${imza}
-    ${rozetler}
     ${footer}
   </div>
 </body>
@@ -234,41 +233,147 @@ body {
 }
 `;
 
+const KOPYA_CSS = `
+.dk-kopya-etiket {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: ${DEKONT_RENKLERI.primary};
+  color: ${DEKONT_RENKLERI.background};
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 4px 10px;
+  border-radius: 0 4px 0 8px;
+}
+.dk-dekont {
+  position: relative;
+}
+.dk-kesik-cizgi {
+  max-width: 800px;
+  margin: 8mm auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 2px dashed ${DEKONT_RENKLERI.tertiary};
+  padding-top: 6px;
+  justify-content: center;
+  color: ${DEKONT_RENKLERI.tertiary};
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.dk-kesik-ikon {
+  font-size: 14px;
+}
+.dk-kesik-yazi {
+  font-weight: 600;
+}
+`;
+
 const YAZDIRMA_CSS = `
+/* Ekran: iki A5 form üst-alt görünür */
+.dk-dekont {
+  max-width: 800px;
+  width: 100%;
+  margin: 0 auto 8mm;
+  box-sizing: border-box;
+}
+
+/* YAZDIRMA: A4 dikey içinde 2 A5 form (üst+alt) */
 @media print {
   body {
     background: white;
     padding: 0;
+    margin: 0;
   }
   .dk-toolbar { display: none; }
   .dk-dekont {
     box-shadow: none;
     border: 0;
-    padding: 16mm;
+    padding: 8mm 10mm;
     max-width: none;
     margin: 0;
     border-radius: 0;
+    height: 144mm; /* A5 ~148mm, kesik çizgi için 4mm pay */
+    box-sizing: border-box;
+    overflow: hidden;
   }
+  .dk-kopya-etiket {
+    font-size: 8px;
+    padding: 3px 8px;
+  }
+  .dk-kesik-cizgi {
+    margin: 1mm 0;
+    max-width: none;
+    padding: 2px 0;
+  }
+  /* Kart boyutları A5'e sığacak şekilde */
+  .dk-meta-serit {
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+  .dk-meta-kart { padding: 2px 4px; }
+  .dk-meta-baslik { font-size: 8px; }
+  .dk-meta-deger { font-size: 10px; }
+  .dk-meta-ikon { width: 14px; height: 14px; }
+  .dk-kart {
+    padding: 10px;
+  }
+  .dk-kart-baslik {
+    font-size: 9px;
+    margin-bottom: 8px;
+  }
+  .dk-musteri-satir {
+    padding: 4px 0;
+    font-size: 9px;
+    grid-template-columns: 14px 75px 1fr;
+    gap: 6px;
+  }
+  .dk-musteri-etiket { font-size: 8px; }
+  .dk-musteri-deger { font-size: 10px; }
+  .dk-kurban-sira-blok {
+    margin: 6px 0;
+    padding: 6px 4px;
+    grid-template-columns: 28px 1fr 28px;
+  }
+  .dk-defne-sol, .dk-defne-sag { height: 40px; }
+  .dk-kurban-sira-baslik { font-size: 8px; }
+  .dk-kurban-sira-numara { font-size: 36px; }
+  .dk-kurban-sira-hisse { font-size: 8px; }
+  .dk-ozet-satir {
+    padding: 4px 0;
+    font-size: 10px;
+  }
+  .dk-ozet-toplam {
+    padding: 6px 0;
+    margin: 4px 0;
+    font-size: 11px;
+  }
+  .dk-ozet-yontem {
+    padding: 5px 0;
+    font-size: 10px;
+  }
+  .dk-ozet-yaziyla {
+    padding: 4px 0;
+    font-size: 9px;
+  }
+  .dk-ozet-kalan {
+    padding: 6px 0 2px;
+    font-size: 12px;
+  }
+  .dk-ana-grid { gap: 8px; }
   @page {
-    size: A4;
-    margin: 0;
+    size: A4 portrait;
+    margin: 8mm 0;
   }
 }
+
 @media (max-width: 640px) {
-  .dk-ana-grid {
-    grid-template-columns: 1fr;
-  }
-  .dk-meta-serit {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .dk-header-icerik {
-    flex-direction: column;
-  }
-  .dk-header-sag {
-    text-align: left;
-  }
-  .dk-dekont {
-    padding: 20px;
-  }
+  .dk-ana-grid { grid-template-columns: 1fr; }
+  .dk-meta-serit { grid-template-columns: repeat(2, 1fr); }
+  .dk-header-icerik { flex-direction: column; }
+  .dk-header-sag { text-align: left; }
+  .dk-dekont { padding: 20px; }
 }
 `;

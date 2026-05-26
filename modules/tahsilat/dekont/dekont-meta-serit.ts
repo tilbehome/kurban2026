@@ -18,7 +18,8 @@ export interface MetaSeritVerisi {
 
 export function dekontMetaSeritHtml(m: MetaSeritVerisi): string {
   const e = escapeHtml;
-  const tarihSaat = m.saat ? `${m.tarih} · ${m.saat}` : m.tarih;
+  // SPRINT-DEKONT-V3 privacy: saat kaldırıldı, sadece tarih (m.saat
+  // interface'te kalmaya devam — geri uyumluluk; backend dolduruyor).
 
   return `
   <div class="dk-meta-serit">
@@ -31,7 +32,7 @@ export function dekontMetaSeritHtml(m: MetaSeritVerisi): string {
       </svg>
       <div class="dk-meta-icerik">
         <div class="dk-meta-baslik">KESİM TARİHİ</div>
-        <div class="dk-meta-deger">${e(tarihSaat)}</div>
+        <div class="dk-meta-deger">${e(m.tarih)}</div>
       </div>
     </div>
     <div class="dk-meta-kart">
