@@ -93,10 +93,6 @@ export function GirisForm({ next, hata }: GirisFormProps) {
           <Button type="submit" disabled={bekleniyor} className="w-full">
             {bekleniyor ? "Giriş yapılıyor..." : "Giriş Yap"}
           </Button>
-
-          <p className="text-muted-foreground text-center text-xs">
-            İlk kurulum kullanıcısı: <code>admin / tilbe2026</code>
-          </p>
         </form>
       </CardContent>
     </Card>
