@@ -1,5 +1,5 @@
 {
-  "version": "a7b69e58b20ac294",
-  "buildTime": "2026-05-26T19:49:52.311Z",
+  "version": "6656d5442882a41c",
+  "buildTime": "2026-05-26T21:33:52.158Z",
   "note": "Service worker sürümü. Client bu dosyayı periyodik kontrol eder; version alanı değişirse kullanıcıya güncelleme bildirimi gösterilir."
 }

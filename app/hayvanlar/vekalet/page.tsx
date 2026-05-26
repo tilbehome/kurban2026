@@ -1,97 +1,84 @@
-import { AppShell } from "@/shared/components/AppShell";
-import { SayfaBaslik } from "@/shared/components/SayfaBaslik";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+/**
+ * Vekalet Yönetimi — bayram günü saha kullanımına yönelik modern UI.
+ *
+ * Server component: query + yetki + tip aktarımı. UI tarafı tamamen
+ * client (`VekaletYonetimiClient`). Mevcut backend endpoint'leri
+ * (`PATCH /api/hisseler/[id]/vekalet`, `POST /api/vekaletler`)
+ * kullanılır — schema veya API'lere dokunulmadı.
+ */
+
+import { redirect } from "next/navigation";
+import { aktifOturum } from "@/shared/lib/session";
+import { izinKontrol } from "@/shared/lib/izinler";
 import { prisma } from "@/shared/lib/prisma";
-import { formatTarih } from "@/shared/lib/tarih";
-import { FileCheck } from "lucide-react";
+import { VekaletYonetimiClient } from "@/modules/vekalet/components/VekaletYonetimiClient";
 
 export const dynamic = "force-dynamic";
 
-export default async function VekaletListesiPage() {
+export interface VekaletHisseVeri {
+  id: string;
+  no: number;
+  vekaletAlindi: boolean;
+  /** ISO datetime — client'a serialize edilebilir tip */
+  vekaletTarihi: string | null;
+  vekaletDosyaUrl: string | null;
+  musteri: {
+    id: string;
+    adSoyad: string;
+    telefon: string | null;
+  };
+  kurban: {
+    id: string;
+    kesimSirasi: number;
+  };
+}
+
+export default async function VekaletYonetimiPage() {
+  const oturum = await aktifOturum();
+  if (!oturum) redirect("/giris?next=/hayvanlar/vekalet");
+
+  // Backend PATCH /api/hisseler/[id]/vekalet sadece tv.kontrol kabul ediyor.
+  // Sayfa izniyle tutarlı tut — yetki uyuşmazlığı UX kırılganlığı yaratır.
+  if (!izinKontrol(oturum, "tv.kontrol")) {
+    return (
+      <div className="bg-slate-50 flex min-h-screen items-center justify-center p-8 text-center">
+        <p className="text-muted-foreground text-sm">
+          Vekalet yönetimi için TV kontrol yetkiniz gerekiyor.
+        </p>
+      </div>
+    );
+  }
+
   const hisseler = await prisma.hisse.findMany({
-    where: { musteriId: { not: null } },
+    where: { musteriId: { not: null }, silindiMi: false },
     include: {
-      musteri: { select: { adSoyad: true, telefon: true } },
-      kurban: { select: { kesimSirasi: true } },
+      musteri: { select: { id: true, adSoyad: true, telefon: true } },
+      kurban: { select: { id: true, kesimSirasi: true } },
+      vekalet: { select: { dosyaUrl: true, silindiMi: true } },
     },
     orderBy: [
-      { vekaletAlindi: "asc" },
       { kurban: { kesimSirasi: "asc" } },
       { no: "asc" },
     ],
   });
 
-  const vekaleti = hisseler.filter((h) => h.vekaletAlindi).length;
-  const bekleyen = hisseler.length - vekaleti;
+  const veri: VekaletHisseVeri[] = hisseler.map((h) => ({
+    id: h.id,
+    no: h.no,
+    vekaletAlindi: h.vekaletAlindi,
+    vekaletTarihi: h.vekaletTarihi?.toISOString() ?? null,
+    vekaletDosyaUrl:
+      h.vekalet && !h.vekalet.silindiMi ? h.vekalet.dosyaUrl : null,
+    musteri: {
+      id: h.musteri!.id,
+      adSoyad: h.musteri!.adSoyad,
+      telefon: h.musteri!.telefon,
+    },
+    kurban: {
+      id: h.kurban.id,
+      kesimSirasi: h.kurban.kesimSirasi,
+    },
+  }));
 
-  return (
-    <AppShell>
-      <SayfaBaslik
-        baslik="Vekalet Listesi"
-        altBaslik={`${vekaleti} alındı · ${bekleyen} bekliyor`}
-      />
-
-      <div className="p-6 sm:p-8">
-        <Card>
-          <CardContent className="p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-2 font-medium">Müşteri</th>
-                  <th className="px-4 py-2 font-medium">Telefon</th>
-                  <th className="px-4 py-2 font-medium">Kurban</th>
-                  <th className="px-4 py-2 font-medium">Vekalet</th>
-                  <th className="px-4 py-2 font-medium">Tarih</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {hisseler.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="text-muted-foreground px-4 py-10 text-center"
-                    >
-                      Atanmış hisse yok.
-                    </td>
-                  </tr>
-                ) : (
-                  hisseler.map((h) => (
-                    <tr key={h.id}>
-                      <td className="px-4 py-2 font-medium">
-                        {h.musteri?.adSoyad ?? "—"}
-                      </td>
-                      <td className="px-4 py-2 text-xs text-muted-foreground">
-                        {h.musteri?.telefon ?? "—"}
-                      </td>
-                      <td className="px-4 py-2 font-mono text-xs">
-                        #{h.kurban.kesimSirasi}.{h.no}
-                      </td>
-                      <td className="px-4 py-2">
-                        {h.vekaletAlindi ? (
-                          <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
-                            <FileCheck size={12} className="mr-1" />
-                            Alındı
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">Bekliyor</Badge>
-                        )}
-                      </td>
-                      <td className="px-4 py-2 text-xs">
-                        {h.vekaletTarihi ? formatTarih(h.vekaletTarihi) : "—"}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
-        <p className="text-muted-foreground mt-3 text-xs">
-          Vekalet onayı için müşteri detay sayfasında "Vekalet Aldım" butonu eklenecek
-          (geliştirme).
-        </p>
-      </div>
-    </AppShell>
-  );
+  return <VekaletYonetimiClient hisseler={veri} />;
 }
