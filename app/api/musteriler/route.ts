@@ -32,6 +32,15 @@ const MusteriSchema = z.object({
     .max(500)
     .optional()
     .transform((v) => (v ? v : null)),
+  // SPRINT-10: Yeni müşteri formundan gelen etiketler JSON string olarak
+  // saklanır (mevcut Musteri.etiketler alanı String?). Eski tüketiciler
+  // (BorclularClient, EtiketModal) aynı JSON formatını okuyor.
+  etiketler: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .transform((v) => (v ? v : null)),
 });
 
 export async function GET(req: Request) {
@@ -67,11 +76,12 @@ export async function POST(req: Request) {
 
   const yeni = await prisma.musteri.create({
     data: {
-      adSoyad: veri.adSoyad.toUpperCase(),
+      adSoyad: veri.adSoyad.toLocaleUpperCase("tr-TR"),
       telefon: veri.telefon,
       tcKimlik: veri.tcKimlik,
       adres: veri.adres,
       notlar: veri.notlar,
+      etiketler: veri.etiketler,
       olusturanId: oturum.kullaniciId,
     },
   });
