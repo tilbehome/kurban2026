@@ -17,6 +17,12 @@ const OdemeSchema = z.object({
   notlar: z.string().max(500).optional(),
   dagitim: z.enum(["esit", "sirayla", "manuel"]).default("esit"),
   manuelDagitim: z.record(z.string(), z.number()).optional(),
+  /**
+   * SPRINT-P3 İŞ 1: Idempotency — client UUID. Aynı UUID ile gelen ikinci
+   * istek yeni ödeme oluşturmaz, ilk yanıtı replay eder. Çift tıklamayı
+   * ve network retry'larını çift kayda dönüşmekten korur.
+   */
+  clientRequestId: z.string().min(8).max(100),
 });
 
 export async function POST(req: Request) {
@@ -35,6 +41,56 @@ export async function POST(req: Request) {
   } catch (e) {
     const m = e instanceof z.ZodError ? e.issues[0]?.message : "Geçersiz veri";
     return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
+  }
+
+  // SPRINT-P3 İŞ 1: Idempotency — pre-reserve pattern.
+  // 1) Anahtarı önceden rezerve et (unique constraint çakışırsa zaten var).
+  // 2) Zaten varsa: tamamlanmışsa replay et, hâlâ işleniyorsa 409 dön.
+  // Bu, gerçek concurrent (millisaniye farkla iki istek) durumunu da yakalar:
+  // sadece BİR istek create'i kazanır, diğeri replay/409'a düşer.
+  try {
+    await prisma.islemAnahtari.create({
+      data: {
+        anahtar: veri.clientRequestId,
+        islemTipi: "odeme",
+        kullaniciId: oturum.kullaniciId,
+        ip: ipCikar(req),
+      },
+    });
+  } catch {
+    // Anahtar zaten var — ya tamamlanmış (replay) ya da hâlâ işleniyor.
+    const mevcut = await prisma.islemAnahtari.findUnique({
+      where: { anahtar: veri.clientRequestId },
+    });
+    if (mevcut?.sonucJson) {
+      try {
+        const eskiYanit = JSON.parse(mevcut.sonucJson) as Record<
+          string,
+          unknown
+        >;
+        await auditLog({
+          eylem: "odeme",
+          model: "Odeme",
+          kayitId: mevcut.sonucId ?? undefined,
+          kullaniciId: oturum.kullaniciId,
+          ip: ipCikar(req),
+          detaylar: {
+            idempotent: true,
+            clientRequestId: veri.clientRequestId,
+          },
+        });
+        return NextResponse.json(eskiYanit);
+      } catch {
+        /* JSON bozuksa 409'a düş */
+      }
+    }
+    return NextResponse.json(
+      {
+        basarili: false,
+        hata: "Bu istek işleniyor veya daha önce işlendi. Lütfen tahsilat listesini kontrol edin.",
+      },
+      { status: 409 },
+    );
   }
 
   const nakit = yuvarla(veri.nakit);
@@ -255,13 +311,29 @@ export async function POST(req: Request) {
     yontem,
   });
 
-  return NextResponse.json({
+  const yanit = {
     basarili: true,
     odemeIds,
     dekontNo: ilk?.dekontNo,
     toplam,
     yontem,
-  });
+  };
+
+  // SPRINT-P3 İŞ 1: Önceden rezerve ettiğimiz anahtar satırına sonucu yaz.
+  // Bundan sonra aynı clientRequestId ile gelen istek replay olacak.
+  try {
+    await prisma.islemAnahtari.update({
+      where: { anahtar: veri.clientRequestId },
+      data: {
+        sonucId: odemeIds[0] ?? null,
+        sonucJson: JSON.stringify(yanit),
+      },
+    });
+  } catch (e) {
+    console.error("[odeme] IslemAnahtari sonuç güncellenemedi:", e);
+  }
+
+  return NextResponse.json(yanit);
 }
 
 function belirleYontem(n: number, h: number, k: number): string {

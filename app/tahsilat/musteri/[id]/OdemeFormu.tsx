@@ -62,6 +62,11 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
     toplam: number;
   } | null>(null);
 
+  // SPRINT-P3 İŞ 1: Aynı submit cycle içinde aynı UUID kullanılır — rapid
+  // double-click veya network retry tek bir ödeme oluşturur (server tarafı
+  // pre-reserve pattern ile idempotent). Cycle bitince null'a çekilir.
+  const clientRequestIdRef = useRef<string | null>(null);
+
   const nakitRef = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
     nakitRef.current?.focus();
@@ -93,6 +98,13 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
       if (!onay) return;
     }
 
+    // Idempotency: cycle başında UUID üret, ref'te paylaş.
+    // Rapid çift tıklama aynı UUID'yi kullanır → server replay yapar.
+    if (!clientRequestIdRef.current) {
+      clientRequestIdRef.current = crypto.randomUUID();
+    }
+    const clientRequestId = clientRequestIdRef.current;
+
     startTransition(async () => {
       try {
         const yanit = await fetch("/api/tahsilat/odeme", {
@@ -106,6 +118,7 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
             kart: parsePara(kart),
             notlar: notlar.trim() || undefined,
             dagitim,
+            clientRequestId,
           }),
         });
         const sonuc = (await yanit.json()) as {
@@ -144,6 +157,9 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
       } catch (e) {
         const m = e instanceof Error ? e.message : "Hata";
         toast.error(m);
+      } finally {
+        // Bir sonraki ödeme fresh UUID kullansın
+        clientRequestIdRef.current = null;
       }
     });
   }

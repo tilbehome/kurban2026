@@ -6,6 +6,8 @@ import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { siralamaGuncelle } from "@/modules/tv/lib/kurban-asama.service";
 
 const SiraSchema = z.object({
+  // Boş array no-op olarak kabul edilir (kullanıcı tüm sırayı boşaltıp kaydedebilir).
+  // siralamaGuncelle() boş array için 0 döner.
   sira: z
     .array(
       z.object({
@@ -13,7 +15,6 @@ const SiraSchema = z.object({
         operasyonSira: z.number().int().min(0).max(1000),
       }),
     )
-    .min(1)
     .max(100),
 });
 

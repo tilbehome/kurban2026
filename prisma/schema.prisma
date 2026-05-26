@@ -481,3 +481,21 @@ model Sayac {
   deger       Int      @default(0)
   guncelTarih DateTime @updatedAt
 }
+
+/// İdempotency anahtarları — aynı isteğin 2 kez işlenmesini engeller.
+/// Tahsilat, iptal gibi kritik işlemlerde clientRequestId üzerinden takip.
+/// Aynı UUID ile gelen ikinci istek otomatik olarak önceki yanıtla cevaplanır.
+model IslemAnahtari {
+  id        String  @id @default(cuid())
+  anahtar   String  @unique // clientRequestId (UUID)
+  islemTipi String // "odeme" | "iptal" | ...
+  sonucId   String? // İşlem başarılıysa oluşan kayıt ID'si (Odeme.id vb)
+  sonucJson String? // JSON: tam yanıt body (replay için)
+
+  kullaniciId String?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([anahtar])
+  @@index([createdAt])
+}

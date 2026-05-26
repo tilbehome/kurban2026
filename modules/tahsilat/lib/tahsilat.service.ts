@@ -234,22 +234,30 @@ export async function sonrakiDekontNo(
 
 /**
  * Sayac ilk kez oluşturulurken DB'deki son dekont no'dan devam et.
- * (Mevcut TKR-2026 / ABH-2026 kayıtlarıyla geriye uyumlu.)
+ *
+ * SPRINT-P3 İŞ 3: CUID id'nin lexikografik sırası dekont no'nun gerçek
+ * sayısal sırasını GARANTİ ETMEZ — eski kayıt yeni CUID ile karşımıza
+ * çıkabilir (DB restore, manuel insert, vs.). Bu yüzden tüm prefix'li
+ * dekontları tarayıp sayısal maksimumu buluyoruz. Bu fonksiyon yalnız
+ * upsert.create branch'inde — Sayac tablosu boşken — çağrılır, sonraki
+ * çağrılarda increment yapılır. Performans kritik değil.
  */
 async function ilkSayacDegeri(
   tx: Prisma.TransactionClient,
   prefix: string,
 ): Promise<number> {
-  const son = await tx.odeme.findFirst({
+  const odemeler = await tx.odeme.findMany({
     where: { dekontNo: { startsWith: prefix } },
-    orderBy: { id: "desc" },
     select: { dekontNo: true },
   });
 
-  if (!son?.dekontNo) return 1;
+  if (odemeler.length === 0) return 1;
 
-  const m = son.dekontNo.slice(prefix.length).match(/^(\d+)$/);
-  if (!m) return 1;
+  const max = odemeler.reduce((enYuksek, o) => {
+    const sayisalKisim = o.dekontNo.slice(prefix.length);
+    const sayi = parseInt(sayisalKisim, 10);
+    return Number.isFinite(sayi) && sayi > enYuksek ? sayi : enYuksek;
+  }, 0);
 
-  return parseInt(m[1]!, 10) + 1;
+  return max + 1;
 }
