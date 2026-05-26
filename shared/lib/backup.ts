@@ -96,13 +96,22 @@ export async function yedekAl(neden = "manuel"): Promise<YedekSonuc> {
   }
 }
 
+/**
+ * SPRINT-YEDEK-V2 İŞ 2: yedek noktası (kullanıcı etiketli) dosyaları
+ * rotasyondan korunur — adında "-yedek-noktasi-" geçen .db dosyaları
+ * ne 30 gün ne 50 sınırına dahil edilir, sadece manuel silinir.
+ */
+function rotasyonaDahil(ad: string): boolean {
+  return ad.endsWith(".db") && !ad.includes("-yedek-noktasi-");
+}
+
 function eskiYedekleriTemizle(): void {
   try {
     if (!fs.existsSync(YEDEK_KLASOR)) return;
 
     const dosyalar = fs
       .readdirSync(YEDEK_KLASOR)
-      .filter((ad) => ad.endsWith(".db"))
+      .filter(rotasyonaDahil)
       .map((ad) => {
         const yol = path.join(YEDEK_KLASOR, ad);
         const stat = fs.statSync(yol);
@@ -126,7 +135,7 @@ function eskiYedekleriTemizle(): void {
     // 2) Sayı sınırı — son 50 tanesini koru
     const kalanlar = fs
       .readdirSync(YEDEK_KLASOR)
-      .filter((ad) => ad.endsWith(".db"))
+      .filter(rotasyonaDahil)
       .map((ad) => {
         const yol = path.join(YEDEK_KLASOR, ad);
         return { yol, mtimeMs: fs.statSync(yol).mtimeMs };
