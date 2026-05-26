@@ -7,6 +7,8 @@
     "dev:local": "next dev",
     "dev:https": "next dev --experimental-https --hostname 0.0.0.0",
     "build": "next build --webpack",
+    "postbuild": "node scripts/sw-version-gen.mjs",
+    "sw:version": "node scripts/sw-version-gen.mjs",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",

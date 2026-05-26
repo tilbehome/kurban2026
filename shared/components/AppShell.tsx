@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Beef } from "lucide-react";
 import { Sidebar } from "./sidebar/Sidebar";
 import { MobileSidebar } from "./sidebar/MobileSidebar";
+import { SwGuncellemeUyarisi } from "./SwGuncellemeUyarisi";
 import { aktifOturum } from "@/shared/lib/session";
 
 interface AppShellProps {
@@ -52,6 +53,8 @@ export async function AppShell({ children }: AppShellProps) {
 
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+
+      <SwGuncellemeUyarisi />
     </div>
   );
 }

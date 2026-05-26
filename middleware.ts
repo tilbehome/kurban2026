@@ -1,6 +1,44 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
+ * SPRINT-P1 İŞ 5: Cache-Control standardı.
+ *
+ * Finansal / operasyonel / oturum-bağlı yollar için `no-store` zorlanır.
+ * CDN, browser cache veya proxy başkasının verisini önbelleğe almasın.
+ * Statik PWA varlıkları (manifest, sw.js) bu listede DEĞİL — onlar cache'lenebilir.
+ */
+const NO_STORE_PATTERN = [
+  /^\/api\/tahsilat(\/|$)/,
+  /^\/api\/odeme(\/|$)/,
+  /^\/api\/kasa(\/|$)/,
+  /^\/api\/yedek(\/|$)/,
+  /^\/api\/musteri(\/|$)/,
+  /^\/api\/hayvan(\/|$)/,
+  /^\/api\/dashboard(\/|$)/,
+  /^\/api\/raporlar(\/|$)/,
+  /^\/api\/whatsapp(\/|$)/,
+  /^\/api\/sidebar(\/|$)/,
+  /^\/api\/ayarlar(\/|$)/,
+  /^\/api\/kullanici(\/|$)/,
+  /^\/tahsilat(\/|$)/,
+  /^\/kasa(\/|$)/,
+  /^\/raporlar(\/|$)/,
+  /^\/musteriler(\/|$)/,
+  /^\/hayvanlar(\/|$)/,
+  /^\/ayarlar(\/|$)/,
+];
+
+function noStoreGerekli(pathname: string): boolean {
+  return NO_STORE_PATTERN.some((p) => p.test(pathname));
+}
+
+function noStoreUygula(res: NextResponse): NextResponse {
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.headers.set("Pragma", "no-cache");
+  return res;
+}
+
+/**
  * Hafif middleware: cookie var mı kontrol et.
  * Gerçek oturum doğrulama sunucu bileşenlerinde (AppShell) yapılır.
  *
@@ -61,7 +99,11 @@ export function middleware(req: NextRequest) {
   // Burada sadece pwa=1 parametresini temizleyip akış devam eder.
   // (Gerçek rol-yönlendirme app/page.tsx içinde olabilir)
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  if (noStoreGerekli(pathname)) {
+    return noStoreUygula(res);
+  }
+  return res;
 }
 
 export const config = {

@@ -49,7 +49,8 @@ pnpm dev:local        # sadece localhost
 pnpm dev              # LAN'a da açık (0.0.0.0)
 ```
 
-İlk kullanıcı: **`admin / tilbe2026`** (ilk girişten sonra Ayarlar > Kullanıcılar'dan değiştirin)
+İlk kullanıcı: **`admin`** (şifre `.env` içindeki `ADMIN_INITIAL_PASSWORD` ile belirlenir, min 12 karakter).
+İlk girişten sonra **Ayarlar > Kullanıcılar**'dan mutlaka değiştirin.
 
 ## LAN Erişimi (Telefon / Tablet)
 

@@ -67,7 +67,15 @@ async function adminKullaniciOlustur() {
     return mevcut;
   }
 
-  const sifreHash = await bcrypt.hash("tilbe2026", 10);
+  const adminSifre = process.env.ADMIN_INITIAL_PASSWORD;
+  if (!adminSifre || adminSifre.length < 12) {
+    throw new Error(
+      "ADMIN_INITIAL_PASSWORD .env'de tanımlı değil veya 12 karakterden az.\n" +
+        "Örnek: ADMIN_INITIAL_PASSWORD=Bayram2026!Tilbe (en az 12 karakter)",
+    );
+  }
+
+  const sifreHash = await bcrypt.hash(adminSifre, 10);
   const k = await prisma.kullanici.create({
     data: {
       kullaniciAdi: "admin",
@@ -76,7 +84,8 @@ async function adminKullaniciOlustur() {
       rol: "admin",
     },
   });
-  console.log("✓ admin kullanıcısı oluşturuldu (admin / tilbe2026)");
+  console.log("✓ admin kullanıcısı oluşturuldu (ADMIN_INITIAL_PASSWORD'dan)");
+  console.log("  → İlk girişten sonra Ayarlar > Kullanıcılar'dan değiştirin");
   return k;
 }
 

@@ -20,6 +20,7 @@ export type AuditEylem =
   | "odeme"
   | "odeme-iptal"
   | "yedek"
+  | "yedek-manuel"
   | "yedek-geri-yukle"
   | "hisse-atama"
   | "hisse-toplu-atama"

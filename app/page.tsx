@@ -15,9 +15,12 @@ import {
   kasaDurumu,
   whatsappMetrik,
 } from "@/modules/dashboard/lib/dashboard.service";
-import { yedekleriListele } from "@/shared/lib/backup";
+import { sonYedekBilgisi, yedekleriListele } from "@/shared/lib/backup";
 import { DashboardClient } from "@/modules/dashboard/components/DashboardClient";
-import type { DashboardIlkVeri } from "@/modules/dashboard/components/DashboardClient";
+import type {
+  DashboardIlkVeri,
+  SonYedekIlkBilgi,
+} from "@/modules/dashboard/components/DashboardClient";
 
 export const dynamic = "force-dynamic";
 
@@ -25,19 +28,30 @@ export default async function DashboardPage() {
   const oturum = await aktifOturum();
   const rolStub = { rol: oturum?.rol ?? "misafir" };
   const kasaGoster = izinKontrol(rolStub, "kasa.goruntule");
+  const yedekManuelIzin = izinKontrol(rolStub, "yedek.manuel");
 
   // Tüm veri paralel çekilir — sayfa yüklenmesi tek round-trip
-  const [kpi, trend, kesim, islemler, kasa, whatsapp, bildirim, yedekZamani] =
-    await Promise.all([
-      kpiVerileri(),
-      tahsilatTrendVerisi("bugun"),
-      kesimAkisiVerisi(),
-      sonIslemler(10),
-      kasaGoster ? kasaDurumu() : Promise.resolve(null),
-      whatsappMetrik(),
-      sidebarBildirimleri(),
-      sonYedekZamaniGetir(),
-    ]);
+  const [
+    kpi,
+    trend,
+    kesim,
+    islemler,
+    kasa,
+    whatsapp,
+    bildirim,
+    yedekZamani,
+    yedekBilgi,
+  ] = await Promise.all([
+    kpiVerileri(),
+    tahsilatTrendVerisi("bugun"),
+    kesimAkisiVerisi(),
+    sonIslemler(10),
+    kasaGoster ? kasaDurumu() : Promise.resolve(null),
+    whatsappMetrik(),
+    sidebarBildirimleri(),
+    sonYedekZamaniGetir(),
+    sonYedekIlkBilgiGetir(),
+  ]);
 
   const ilkVeri: DashboardIlkVeri = {
     kpi,
@@ -64,6 +78,8 @@ export default async function DashboardPage() {
         kasaGoster={kasaGoster}
         adSoyad={oturum?.adSoyad ?? "Misafir"}
         sonYedek={yedekZamani}
+        yedekBilgi={yedekBilgi}
+        yedekManuelIzin={yedekManuelIzin}
       />
 
       <section className="px-4 pb-4 sm:px-6">
@@ -134,5 +150,30 @@ async function sonYedekZamaniGetir(): Promise<string> {
     });
   } catch {
     return "—";
+  }
+}
+
+/**
+ * YedekKart için ilk bilgi — Date'i ISO string'e çevirip client'a güvenli
+ * serileştirilebilir halde döndürür.
+ */
+async function sonYedekIlkBilgiGetir(): Promise<SonYedekIlkBilgi> {
+  try {
+    const b = sonYedekBilgisi();
+    return {
+      varMi: b.varMi,
+      dosyaAdi: b.dosyaAdi,
+      zaman: b.zaman ? b.zaman.toISOString() : null,
+      boyutKB: b.boyutKB,
+      yasGecmisDk: b.yasGecmisDk,
+    };
+  } catch {
+    return {
+      varMi: false,
+      dosyaAdi: null,
+      zaman: null,
+      boyutKB: null,
+      yasGecmisDk: null,
+    };
   }
 }

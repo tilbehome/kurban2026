@@ -9,6 +9,7 @@ import { KesimOperasyonAkisi } from "./KesimOperasyonAkisi";
 import { SonIslemlerFeed } from "./SonIslemlerFeed";
 import { KasaDurumuKart } from "./KasaDurumuKart";
 import { WhatsAppBildirimKart } from "./WhatsAppBildirimKart";
+import { YedekKart } from "./YedekKart";
 import type {
   DashboardKpiKart,
   TahsilatTrend,
@@ -29,6 +30,14 @@ export interface DashboardIlkVeri {
   bildirim: SidebarBildirimleri | null;
 }
 
+export interface SonYedekIlkBilgi {
+  varMi: boolean;
+  dosyaAdi: string | null;
+  zaman: string | null;
+  boyutKB: number | null;
+  yasGecmisDk: number | null;
+}
+
 interface DashboardClientProps {
   ilkVeri: DashboardIlkVeri;
   /** Kasa görme izni — yoksa kart gizli */
@@ -37,6 +46,10 @@ interface DashboardClientProps {
   adSoyad: string;
   /** Son yedek string'i (HH:MM gibi) */
   sonYedek: string;
+  /** Yedek kartı için ilk veri (server-side) */
+  yedekBilgi: SonYedekIlkBilgi;
+  /** Manuel yedek butonu izni */
+  yedekManuelIzin: boolean;
 }
 
 const REFRESH_MS = 30_000;
@@ -50,6 +63,8 @@ export function DashboardClient({
   kasaGoster,
   adSoyad,
   sonYedek,
+  yedekBilgi,
+  yedekManuelIzin,
 }: DashboardClientProps) {
   const [veri, setVeri] = useState<DashboardIlkVeri>(ilkVeri);
   const yenilenIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -167,6 +182,7 @@ export function DashboardClient({
             ) : (
               <KasaDurumuKart durum={null} yetkili={false} />
             )}
+            <YedekKart ilkBilgi={yedekBilgi} butonGoster={yedekManuelIzin} />
             <WhatsAppBildirimKart metrik={veri.whatsapp} />
           </div>
         </div>
