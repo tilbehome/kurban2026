@@ -107,7 +107,7 @@ export function MusteriGirisClient() {
                 <Input
                   value={aranan}
                   onChange={(e) => setAranan(e.target.value)}
-                  placeholder="DANA-18, 18, 0532..., adınız"
+                  placeholder="Kurban no (18) veya telefon (0532...)"
                   className="bg-slate-900 border-slate-600 h-11 pl-9 text-white placeholder:text-slate-500"
                   autoFocus
                 />

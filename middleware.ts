@@ -69,8 +69,8 @@ export function middleware(req: NextRequest) {
     pathname === "/api/tv/operasyon-istatistik" ||
     pathname === "/api/tv/musteri-bul" ||
     pathname === "/api/tv/push-abonelik" ||
-    pathname.startsWith("/api/tv/push-gonder") ||
-    pathname === "/api/tv/acil-durum" ||
+    // SPRINT-P4 İŞ 4: push-gonder ve acil-durum public listeden çıkarıldı.
+    // Bunlar artık endpoint içinde aktifOturum + izinKontrol istiyor.
     pathname === "/api/audit/pwa-yukleme" ||
     // Müşteri dekont doğrulama — public erişim
     pathname === "/dogrula" ||

@@ -87,8 +87,22 @@ export async function POST(req: Request) {
   return NextResponse.json({ basarili: true, aktif: veri.aktif });
 }
 
-/** GET: acil durum durumunu döndür */
+/**
+ * GET: acil durum durumunu döndür.
+ *
+ * SPRINT-P4 İŞ 4: Public TV ekranı acil durumu zaten `/api/tv/yayin` (SSE)
+ * üzerinden alıyor. Bu GET sadece admin paneli AcilDurumKart için. Auth
+ * zorunlu (middleware whitelist'inden çıkarıldı).
+ */
 export async function GET() {
+  const oturum = await aktifOturum();
+  if (!oturum) {
+    return NextResponse.json(
+      { basarili: false, hata: "Yetki yok" },
+      { status: 401 },
+    );
+  }
+
   const k = await prisma.tvAyari.findUnique({
     where: { anahtarKey: ACIL_KEY },
   });

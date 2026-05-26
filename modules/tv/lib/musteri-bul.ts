@@ -1,12 +1,15 @@
 /**
- * Akıllı arama — müşteri ve kurban için 5 farklı format.
+ * Akıllı arama — public TV müşteri ekranı için.
+ *
+ * SPRINT-P4 İŞ 4: KVKK uyumu için ad-soyad LIKE araması KAPALI.
+ * Public sorgular sadece kişisel olmayan / sahibinin bildiği veriyle
+ * eşleşebilir.
  *
  * Test girişleri:
  *  "18" / "dana 18" / "kurban 18" / "DANA-18" → Kurban (kesimSirasi=18)
- *  "000286" / "286" → Müşteri (adSoyad veya id)
+ *  "000286" / "286" → Müşteri ID veya tcKimlik (en az 6 hane)
  *  "05321234567" / "+90 532..." → Telefon
- *  "4729" (4 hane sayı) → Geçici kod (henüz yok, future)
- *  Diğer → adSoyad LIKE
+ *  "Ali" gibi metin → SONUÇ YOK (eskiden adSoyad LIKE yapılıyordu)
  */
 
 import { prisma } from "@/shared/lib/prisma";
@@ -115,21 +118,9 @@ export async function akilliAra(input: string): Promise<AramaSonucu> {
     if (musteri) return { tip: "musteri-id", musteri };
   }
 
-  // 5. Metin araması — adSoyad LIKE (en az 2 karakter)
-  if (temiz.length >= 2) {
-    const musteriler = await prisma.musteri.findMany({
-      where: { silindiMi: false, adSoyad: { contains: temiz } },
-      orderBy: { adSoyad: "asc" },
-      take: 5,
-      select: { id: true, adSoyad: true, telefon: true },
-    });
-    if (musteriler.length === 1) {
-      return { tip: "metin", musteri: musteriler[0] };
-    }
-    if (musteriler.length > 1) {
-      return { tip: "metin", musteriler };
-    }
-  }
+  // 5. SPRINT-P4 İŞ 4: KVKK koruması — ad-soyad LIKE araması kapalı.
+  // "Ali" gibi tek-iki harfli metinle PII listesi sızdırmak yok.
+  // Public arama sadece: kurban no, telefon, müşteri ID/tcKimlik.
 
   return { tip: null };
 }

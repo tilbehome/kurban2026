@@ -136,8 +136,20 @@ export async function POST(req: Request) {
  * GET: müşteri/kurban için yeni bildirimleri çek (client polling).
  * Query: ?musteriId=... veya ?kurbanId=... veya ?endpoint=...
  * Query: ?sonrasi=ISO (bu zamandan sonra olanlar)
+ *
+ * SPRINT-P4 İŞ 4: BildirimLog PII içerir (başlık + müşteri eşleşmesi).
+ * Auth zorunlu (önceki sürümde middleware whitelist'inde olduğundan
+ * herkese açıktı).
  */
 export async function GET(req: NextRequest) {
+  const oturum = await aktifOturum();
+  if (!oturum) {
+    return NextResponse.json(
+      { basarili: false, hata: "Yetki yok" },
+      { status: 401 },
+    );
+  }
+
   const sp = req.nextUrl.searchParams;
   const musteriId = sp.get("musteriId");
   const kurbanId = sp.get("kurbanId");

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
+import { izinKontrol } from "@/shared/lib/izinler";
 import { yedekAl } from "@/shared/lib/backup";
 import { yayinla } from "@/shared/lib/events";
 import { yuvarla, topla } from "@/shared/lib/para";
@@ -19,13 +20,46 @@ const OdemeSchema = z.object({
   manuelDagitim: z.record(z.string(), z.number()).optional(),
   /**
    * SPRINT-P3 İŞ 1: Idempotency — client UUID. Aynı UUID ile gelen ikinci
-   * istek yeni ödeme oluşturmaz, ilk yanıtı replay eder. Çift tıklamayı
-   * ve network retry'larını çift kayda dönüşmekten korur.
+   * istek yeni ödeme oluşturmaz, ilk yanıtı replay eder.
    */
   clientRequestId: z.string().min(8).max(100),
 });
 
+/**
+ * Validasyon veya iş kuralı hatalarında — pre-reserve edilmiş anahtarın
+ * sonucJson'ına hata yazılır. Aynı UUID ile gelen tekrar istek 409 değil,
+ * SAME error replay alır (UX takılma yaşamaz).
+ * SPRINT-P4 İŞ 2.
+ */
+async function idempotencyHataKaydet(
+  anahtar: string,
+  yanit: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await prisma.islemAnahtari.update({
+      where: { anahtar },
+      data: { sonucJson: JSON.stringify(yanit) },
+    });
+  } catch {
+    // Anahtar bulunamadı veya başka tx ile çakıştı — sessizce yut.
+  }
+}
+
+/**
+ * Transaction içinde fırlatılacak iş kuralı hatası — `detay` alanı
+ * client'a JSON gövdesine dahil edilir (kalanBakiye, girilenTutar vs.).
+ */
+class TahsilatHatasi extends Error {
+  readonly detay: Record<string, unknown>;
+  constructor(mesaj: string, detay: Record<string, unknown> = {}) {
+    super(mesaj);
+    this.name = "TahsilatHatasi";
+    this.detay = detay;
+  }
+}
+
 export async function POST(req: Request) {
+  // 1) Auth
   const oturum = await aktifOturum();
   if (!oturum) {
     return NextResponse.json(
@@ -34,6 +68,16 @@ export async function POST(req: Request) {
     );
   }
 
+  // 2) SPRINT-P4 İŞ 3: Granular izin — tahsilat.olustur olmayan kullanıcı
+  // (örn. izleyici rolü) direkt endpoint çağırırsa engelle.
+  if (!izinKontrol(oturum, "tahsilat.olustur")) {
+    return NextResponse.json(
+      { basarili: false, hata: "Bu işlem için yetkiniz yok" },
+      { status: 403 },
+    );
+  }
+
+  // 3) Zod
   let veri: z.infer<typeof OdemeSchema>;
   try {
     const govde = (await req.json()) as unknown;
@@ -43,11 +87,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
   }
 
-  // SPRINT-P3 İŞ 1: Idempotency — pre-reserve pattern.
-  // 1) Anahtarı önceden rezerve et (unique constraint çakışırsa zaten var).
-  // 2) Zaten varsa: tamamlanmışsa replay et, hâlâ işleniyorsa 409 dön.
-  // Bu, gerçek concurrent (millisaniye farkla iki istek) durumunu da yakalar:
-  // sadece BİR istek create'i kazanır, diğeri replay/409'a düşer.
+  // 4) SPRINT-P3 İŞ 1: Idempotency pre-reserve.
   try {
     await prisma.islemAnahtari.create({
       data: {
@@ -58,7 +98,6 @@ export async function POST(req: Request) {
       },
     });
   } catch {
-    // Anahtar zaten var — ya tamamlanmış (replay) ya da hâlâ işleniyor.
     const mevcut = await prisma.islemAnahtari.findUnique({
       where: { anahtar: veri.clientRequestId },
     });
@@ -79,6 +118,8 @@ export async function POST(req: Request) {
             clientRequestId: veri.clientRequestId,
           },
         });
+        // sonucJson'da başarısız bir yanıt varsa orijinal status kodu
+        // ile değil 200 ile döner — client `basarili: false` görür.
         return NextResponse.json(eskiYanit);
       } catch {
         /* JSON bozuksa 409'a düş */
@@ -93,185 +134,204 @@ export async function POST(req: Request) {
     );
   }
 
+  // 5) Basit toplam kontrolü (idempotency anahtarı zaten oluştu, hata replay
+  // için sonucJson'a yaz).
   const nakit = yuvarla(veri.nakit);
   const havale = yuvarla(veri.havale);
   const kart = yuvarla(veri.kart);
   const toplam = yuvarla(nakit + havale + kart);
 
   if (toplam <= 0) {
-    return NextResponse.json(
-      { basarili: false, hata: "Toplam tutar 0'dan büyük olmalı" },
-      { status: 400 },
-    );
+    const yanit = {
+      basarili: false,
+      hata: "Toplam tutar 0'dan büyük olmalı",
+    };
+    await idempotencyHataKaydet(veri.clientRequestId, yanit);
+    return NextResponse.json(yanit, { status: 400 });
   }
 
-  const hisseler = await prisma.hisse.findMany({
-    where: {
-      id: { in: veri.hisseIds },
-      musteriId: veri.musteriId,
-    },
-    include: {
-      odemeler: { where: { iptal: false }, select: { toplamTutar: true } },
-      kurban: { select: { kesimSirasi: true } },
-    },
-    orderBy: { no: "asc" },
-  });
-
-  if (hisseler.length !== veri.hisseIds.length) {
-    return NextResponse.json(
-      { basarili: false, hata: "Hisseler bulunamadı veya bu müşteriye ait değil" },
-      { status: 400 },
-    );
-  }
-
-  const kalanlar = hisseler.map((h) => {
-    const odenmis = yuvarla(topla(...h.odemeler.map((o) => o.toplamTutar)));
-    return { id: h.id, no: h.no, kurban: h.kurban.kesimSirasi, kalan: yuvarla(h.hisseFiyati - odenmis) };
-  });
-
-  // FAZLA TAHSİLAT KONTROLÜ — bayram günü yanlış girilen tutar muhasebede
-  // karmaşaya yol açmasın. 1 kuruş tolerans yuvarlama farkları için.
-  const toplamKalan = yuvarla(
-    topla(...kalanlar.map((k) => Math.max(k.kalan, 0))),
-  );
-
-  if (toplamKalan <= 0) {
-    return NextResponse.json(
-      {
-        basarili: false,
-        hata: "Bu hisselerde ödenmemiş bakiye yok. Tüm ödemeler tamamlanmış.",
-      },
-      { status: 400 },
-    );
-  }
-
-  if (toplam > toplamKalan + 0.01) {
-    return NextResponse.json(
-      {
-        basarili: false,
-        hata: `Tahsilat tutarı kalan bakiyeyi aşıyor. Kalan: ${toplamKalan.toFixed(2)} TL, Girilen: ${toplam.toFixed(2)} TL`,
-        kalanBakiye: toplamKalan,
-        girilenTutar: toplam,
-        fazla: yuvarla(toplam - toplamKalan),
-      },
-      { status: 400 },
-    );
-  }
-
-  let tahsisler: Tahsis[];
+  // 6) SPRINT-P4 İŞ 1: Tüm bakiye okuma + validasyon + dağıtım + yazma
+  // tek transaction'da. İki kasiyer aynı anda yazamasın → fazla tahsilat
+  // riski kapanır.
+  let txSonuc: { odemeIds: string[]; yontem: string };
   try {
-    tahsisler = hisselereDagit(
-      toplam,
-      kalanlar,
-      veri.dagitim,
-      veri.manuelDagitim,
-    );
-  } catch (e) {
-    const mesaj = e instanceof Error ? e.message : "Dağıtım hatası";
-    return NextResponse.json(
-      { basarili: false, hata: mesaj },
-      { status: 400 },
-    );
-  }
-
-  if (yuvarla(topla(...tahsisler.map((t) => t.tutar))) !== toplam) {
-    return NextResponse.json(
-      { basarili: false, hata: "Dağıtım hatası: toplam eşleşmedi" },
-      { status: 400 },
-    );
-  }
-
-  const yontem = belirleYontem(nakit, havale, kart);
-
-  const odemeIds: string[] = [];
-
-  try {
-    await prisma.$transaction(async (tx) => {
-      for (const t of tahsisler) {
-        if (t.tutar <= 0) continue;
-
-        // Yöntemleri orana göre böl (eğer karışık ödeme ise)
-        const oran = t.tutar / toplam;
-        const tNakit = yuvarla(nakit * oran);
-        const tHavale = yuvarla(havale * oran);
-        const tKart = yuvarla(kart * oran);
-        const tToplam = yuvarla(tNakit + tHavale + tKart);
-        // Yuvarlama hatasını tutarda dengele
-        const fark = yuvarla(t.tutar - tToplam);
-        const nakitDengeli = yuvarla(tNakit + fark);
-
-        const dekontNo = await sonrakiDekontNo(tx);
-
-        const odeme = await tx.odeme.create({
-          data: {
-            hisseId: t.hisseId,
-            tarih: new Date(),
-            nakit: nakitDengeli,
-            havale: tHavale,
-            kart: tKart,
-            toplamTutar: yuvarla(nakitDengeli + tHavale + tKart),
-            yontem,
-            notlar: veri.notlar,
-            dekontNo,
-            kullaniciId: oturum.kullaniciId,
+    txSonuc = await prisma.$transaction(
+      async (tx) => {
+        const hisseler = await tx.hisse.findMany({
+          where: {
+            id: { in: veri.hisseIds },
+            musteriId: veri.musteriId,
           },
+          include: {
+            odemeler: {
+              where: { iptal: false },
+              select: { toplamTutar: true },
+            },
+            kurban: { select: { kesimSirasi: true } },
+          },
+          orderBy: { no: "asc" },
         });
-        odemeIds.push(odeme.id);
 
-        const hisseEt = `Hisse ${kalanlar.find((k) => k.id === t.hisseId)?.kurban}.${
-          kalanlar.find((k) => k.id === t.hisseId)?.no
-        }`;
+        if (hisseler.length !== veri.hisseIds.length) {
+          throw new TahsilatHatasi(
+            "Hisseler bulunamadı veya bu müşteriye ait değil",
+          );
+        }
 
-        if (nakitDengeli > 0) {
-          await tx.kasaHareketi.create({
+        const kalanlar = hisseler.map((h) => {
+          const odenmis = yuvarla(
+            topla(...h.odemeler.map((o) => o.toplamTutar)),
+          );
+          return {
+            id: h.id,
+            no: h.no,
+            kurban: h.kurban.kesimSirasi,
+            kalan: yuvarla(h.hisseFiyati - odenmis),
+          };
+        });
+
+        const toplamKalan = yuvarla(
+          topla(...kalanlar.map((k) => Math.max(k.kalan, 0))),
+        );
+
+        if (toplamKalan <= 0) {
+          throw new TahsilatHatasi(
+            "Bu hisselerde ödenmemiş bakiye yok. Tüm ödemeler tamamlanmış.",
+          );
+        }
+
+        if (toplam > toplamKalan + 0.01) {
+          throw new TahsilatHatasi(
+            `Tahsilat tutarı kalan bakiyeyi aşıyor. Kalan: ${toplamKalan.toFixed(2)} TL, Girilen: ${toplam.toFixed(2)} TL`,
+            {
+              kalanBakiye: toplamKalan,
+              girilenTutar: toplam,
+              fazla: yuvarla(toplam - toplamKalan),
+            },
+          );
+        }
+
+        const tahsisler = hisselereDagit(
+          toplam,
+          kalanlar,
+          veri.dagitim,
+          veri.manuelDagitim,
+        );
+
+        if (yuvarla(topla(...tahsisler.map((t) => t.tutar))) !== toplam) {
+          throw new TahsilatHatasi("Dağıtım hatası: toplam eşleşmedi");
+        }
+
+        const yontem = belirleYontem(nakit, havale, kart);
+        const odemeIds: string[] = [];
+
+        for (const t of tahsisler) {
+          if (t.tutar <= 0) continue;
+
+          const oran = t.tutar / toplam;
+          const tNakit = yuvarla(nakit * oran);
+          const tHavale = yuvarla(havale * oran);
+          const tKart = yuvarla(kart * oran);
+          const tToplam = yuvarla(tNakit + tHavale + tKart);
+          const fark = yuvarla(t.tutar - tToplam);
+          const nakitDengeli = yuvarla(tNakit + fark);
+
+          const dekontNo = await sonrakiDekontNo(tx);
+
+          const odeme = await tx.odeme.create({
             data: {
-              tip: "tahsilat",
-              tutar: nakitDengeli,
-              yontem: "nakit",
-              aciklama: `${hisseEt} - ${dekontNo}`,
-              odemeId: odeme.id,
-              kullaniciId: oturum.kullaniciId,
+              hisseId: t.hisseId,
               tarih: new Date(),
+              nakit: nakitDengeli,
+              havale: tHavale,
+              kart: tKart,
+              toplamTutar: yuvarla(nakitDengeli + tHavale + tKart),
+              yontem,
+              notlar: veri.notlar,
+              dekontNo,
+              kullaniciId: oturum.kullaniciId,
             },
           });
+          odemeIds.push(odeme.id);
+
+          const k = kalanlar.find((x) => x.id === t.hisseId);
+          const hisseEt = k ? `Hisse ${k.kurban}.${k.no}` : "Hisse";
+
+          if (nakitDengeli > 0) {
+            await tx.kasaHareketi.create({
+              data: {
+                tip: "tahsilat",
+                tutar: nakitDengeli,
+                yontem: "nakit",
+                aciklama: `${hisseEt} - ${dekontNo}`,
+                odemeId: odeme.id,
+                kullaniciId: oturum.kullaniciId,
+                tarih: new Date(),
+              },
+            });
+          }
+          if (tHavale > 0) {
+            await tx.kasaHareketi.create({
+              data: {
+                tip: "tahsilat",
+                tutar: tHavale,
+                yontem: "havale",
+                aciklama: `${hisseEt} - ${dekontNo}`,
+                odemeId: odeme.id,
+                kullaniciId: oturum.kullaniciId,
+                tarih: new Date(),
+              },
+            });
+          }
+          if (tKart > 0) {
+            await tx.kasaHareketi.create({
+              data: {
+                tip: "tahsilat",
+                tutar: tKart,
+                yontem: "kart",
+                aciklama: `${hisseEt} - ${dekontNo}`,
+                odemeId: odeme.id,
+                kullaniciId: oturum.kullaniciId,
+                tarih: new Date(),
+              },
+            });
+          }
         }
-        if (tHavale > 0) {
-          await tx.kasaHareketi.create({
-            data: {
-              tip: "tahsilat",
-              tutar: tHavale,
-              yontem: "havale",
-              aciklama: `${hisseEt} - ${dekontNo}`,
-              odemeId: odeme.id,
-              kullaniciId: oturum.kullaniciId,
-              tarih: new Date(),
-            },
-          });
-        }
-        if (tKart > 0) {
-          await tx.kasaHareketi.create({
-            data: {
-              tip: "tahsilat",
-              tutar: tKart,
-              yontem: "kart",
-              aciklama: `${hisseEt} - ${dekontNo}`,
-              odemeId: odeme.id,
-              kullaniciId: oturum.kullaniciId,
-              tarih: new Date(),
-            },
-          });
-        }
-      }
-    });
-  } catch (e) {
-    console.error("[odeme] Transaction hatası:", e);
-    return NextResponse.json(
-      { basarili: false, hata: "Ödeme kaydedilemedi" },
-      { status: 500 },
+
+        return { odemeIds, yontem };
+      },
+      {
+        // SQLite WAL ile bir writer aynı anda; uzun süren tahsilat
+        // olursa diğer istek kuyrukta bekler. 10 saniye yeterli.
+        timeout: 10_000,
+      },
     );
+  } catch (e) {
+    if (e instanceof TahsilatHatasi) {
+      const yanit: Record<string, unknown> = {
+        basarili: false,
+        hata: e.message,
+        ...e.detay,
+      };
+      await idempotencyHataKaydet(veri.clientRequestId, yanit);
+      return NextResponse.json(yanit, { status: 400 });
+    }
+    // dagitim helper'ından gelen normal Error
+    if (e instanceof Error) {
+      const yanit = { basarili: false, hata: e.message };
+      await idempotencyHataKaydet(veri.clientRequestId, yanit);
+      // Dağıtım hatası kullanıcı kaynaklı (limit aşımı vs.) — 400
+      return NextResponse.json(yanit, { status: 400 });
+    }
+    console.error("[odeme] Transaction hatası:", e);
+    const yanit = { basarili: false, hata: "Ödeme kaydedilemedi" };
+    await idempotencyHataKaydet(veri.clientRequestId, yanit);
+    return NextResponse.json(yanit, { status: 500 });
   }
 
-  // Otomatik yedek (kritik: her ödemede)
+  const { odemeIds, yontem } = txSonuc;
+
+  // 7) Otomatik yedek (async, blocking değil)
   yedekAl(`odeme-${odemeIds[0] ?? "x"}`).catch((e) =>
     console.error("[odeme] Yedek hatası:", e),
   );
@@ -284,7 +344,7 @@ export async function POST(req: Request) {
       })
     : null;
 
-  // Audit log — kritik işlem
+  // 8) Audit log — kritik işlem
   await auditLog({
     eylem: "odeme",
     model: "Odeme",
@@ -319,8 +379,7 @@ export async function POST(req: Request) {
     yontem,
   };
 
-  // SPRINT-P3 İŞ 1: Önceden rezerve ettiğimiz anahtar satırına sonucu yaz.
-  // Bundan sonra aynı clientRequestId ile gelen istek replay olacak.
+  // 9) İdempotency sonuç güncelle.
   try {
     await prisma.islemAnahtari.update({
       where: { anahtar: veri.clientRequestId },
@@ -357,7 +416,6 @@ function hisselereDagit(
   manuel?: Record<string, number>,
 ): Tahsis[] {
   if (yontem === "manuel" && manuel) {
-    // Her hisseye girilen tutar o hissenin kalan bakiyesini aşmasın
     const sonuc = kalanlar.map((k) => {
       const istenen = yuvarla(manuel[k.id] ?? 0);
       const maxIzin = Math.max(k.kalan, 0);
@@ -383,7 +441,6 @@ function hisselereDagit(
       sonuc.push({ hisseId: k.id, tutar: al });
       kalan = yuvarla(kalan - al);
     }
-    // Önden toplam kalan kontrolü yapıldı; buraya gelirse hata.
     if (kalan > 0.01) {
       throw new Error(
         `Dağıtım hatası: ${kalan.toFixed(2)} TL fazla, hisselere yerleşmedi`,
@@ -402,9 +459,7 @@ function hisselereDagit(
     );
   }
 
-  // SPRINT-P2 İŞ 4: Eşit dağıtım hisse limit kontrolü.
-  // Önceden yalnızca manuel/sırayla'da kontrol vardı; eşit dağıtımda da bir
-  // hissenin kalan bakiyesinden fazlasını yazma riski vardı.
+  // SPRINT-P2 İŞ 4: Eşit dağıtımda da hisse limit kontrolü.
   for (const t of sonuc) {
     const k = kalanlar.find((x) => x.id === t.hisseId);
     if (!k) continue;
