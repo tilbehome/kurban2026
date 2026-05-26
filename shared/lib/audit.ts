@@ -16,6 +16,7 @@ export type AuditEylem =
   | "giris"
   | "cikis"
   | "giris-basarisiz"
+  | "giris-rate-limit"
   | "odeme"
   | "odeme-iptal"
   | "yedek"

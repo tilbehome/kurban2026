@@ -472,3 +472,12 @@ model BildirimLog {
   @@index([createdAt])
   @@index([kullaniciId])
 }
+
+/// Atomik sayaçlar — dekont numarası ve benzeri concurrent-safe sayımlar.
+/// İki kasiyer aynı anda ödeme aldığında P2002 (unique constraint) çakışmasını
+/// önlemek için transaction içinden upsert+increment yapılır.
+model Sayac {
+  anahtar     String   @id // "dekont_ABH-2026-" gibi
+  deger       Int      @default(0)
+  guncelTarih DateTime @updatedAt
+}

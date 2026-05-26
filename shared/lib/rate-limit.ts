@@ -32,6 +32,16 @@ export function rateLimitKontrol(
   return { izinli: true };
 }
 
+/**
+ * Bir anahtarın deneme sayacını sıfırlar.
+ *
+ * Login akışında: yanlış denemeler `rateLimitKontrol` ile sayaca eklenir,
+ * başarılı girişte bu fonksiyon çağrılıp brute-force koruması yenilenir.
+ */
+export function rateLimitSifirla(anahtar: string): void {
+  istek.delete(anahtar);
+}
+
 // Periyodik temizleme — memory leak engelleme.
 const TEMIZ_ARALIK_MS = 60 * 1000;
 const ESKI_ANAHTAR_MS = 5 * 60 * 1000;

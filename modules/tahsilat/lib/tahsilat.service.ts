@@ -2,6 +2,7 @@
  * Tahsilat servisi — ödeme, kasa, dekont numarası vb.
  */
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
 import { ayarOku } from "@/modules/_core/ayarlar/ayar.service";
@@ -205,22 +206,50 @@ function gunSonu(): Date {
 }
 
 /**
- * Sıradaki dekont no'yu üretir (atomik).
- * Format: TKR-2026-NNNNNN
+ * Sıradaki dekont no'yu ATOMIK olarak üretir.
+ *
+ * İki kasiyer aynı anda ödeme aldığında P2002 (unique constraint) hatası
+ * yaşanmaması için Sayac tablosunda upsert + increment yapılır.
+ *
+ * @param tx Prisma transaction client (POST /api/tahsilat/odeme içinden çağrılır)
+ * @returns "ABH-2026-000007" formatında dekont no
  */
-export async function sonrakiDekontNo(): Promise<string> {
+export async function sonrakiDekontNo(
+  tx: Prisma.TransactionClient,
+): Promise<string> {
   const prefix = await ayarOku("dekont_prefix", "TKR-2026-");
-  const son = await prisma.odeme.findFirst({
+  const anahtar = `dekont_${prefix}`;
+
+  // İlk değer (yalnız upsert.create branch'inde kullanılır)
+  const baslangic = await ilkSayacDegeri(tx, prefix);
+
+  const sayac = await tx.sayac.upsert({
+    where: { anahtar },
+    create: { anahtar, deger: baslangic },
+    update: { deger: { increment: 1 } },
+  });
+
+  return prefix + String(sayac.deger).padStart(6, "0");
+}
+
+/**
+ * Sayac ilk kez oluşturulurken DB'deki son dekont no'dan devam et.
+ * (Mevcut TKR-2026 / ABH-2026 kayıtlarıyla geriye uyumlu.)
+ */
+async function ilkSayacDegeri(
+  tx: Prisma.TransactionClient,
+  prefix: string,
+): Promise<number> {
+  const son = await tx.odeme.findFirst({
     where: { dekontNo: { startsWith: prefix } },
     orderBy: { id: "desc" },
     select: { dekontNo: true },
   });
 
-  let sira = 1;
-  if (son?.dekontNo) {
-    const m = son.dekontNo.slice(prefix.length).match(/^(\d+)$/);
-    if (m) sira = parseInt(m[1]!, 10) + 1;
-  }
+  if (!son?.dekontNo) return 1;
 
-  return prefix + String(sira).padStart(6, "0");
+  const m = son.dekontNo.slice(prefix.length).match(/^(\d+)$/);
+  if (!m) return 1;
+
+  return parseInt(m[1]!, 10) + 1;
 }

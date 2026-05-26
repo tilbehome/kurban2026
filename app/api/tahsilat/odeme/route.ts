@@ -73,7 +73,50 @@ export async function POST(req: Request) {
     return { id: h.id, no: h.no, kurban: h.kurban.kesimSirasi, kalan: yuvarla(h.hisseFiyati - odenmis) };
   });
 
-  const tahsisler = hisselereDagit(toplam, kalanlar, veri.dagitim, veri.manuelDagitim);
+  // FAZLA TAHSİLAT KONTROLÜ — bayram günü yanlış girilen tutar muhasebede
+  // karmaşaya yol açmasın. 1 kuruş tolerans yuvarlama farkları için.
+  const toplamKalan = yuvarla(
+    topla(...kalanlar.map((k) => Math.max(k.kalan, 0))),
+  );
+
+  if (toplamKalan <= 0) {
+    return NextResponse.json(
+      {
+        basarili: false,
+        hata: "Bu hisselerde ödenmemiş bakiye yok. Tüm ödemeler tamamlanmış.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (toplam > toplamKalan + 0.01) {
+    return NextResponse.json(
+      {
+        basarili: false,
+        hata: `Tahsilat tutarı kalan bakiyeyi aşıyor. Kalan: ${toplamKalan.toFixed(2)} TL, Girilen: ${toplam.toFixed(2)} TL`,
+        kalanBakiye: toplamKalan,
+        girilenTutar: toplam,
+        fazla: yuvarla(toplam - toplamKalan),
+      },
+      { status: 400 },
+    );
+  }
+
+  let tahsisler: Tahsis[];
+  try {
+    tahsisler = hisselereDagit(
+      toplam,
+      kalanlar,
+      veri.dagitim,
+      veri.manuelDagitim,
+    );
+  } catch (e) {
+    const mesaj = e instanceof Error ? e.message : "Dağıtım hatası";
+    return NextResponse.json(
+      { basarili: false, hata: mesaj },
+      { status: 400 },
+    );
+  }
 
   if (yuvarla(topla(...tahsisler.map((t) => t.tutar))) !== toplam) {
     return NextResponse.json(
@@ -101,7 +144,7 @@ export async function POST(req: Request) {
         const fark = yuvarla(t.tutar - tToplam);
         const nakitDengeli = yuvarla(tNakit + fark);
 
-        const dekontNo = await sonrakiDekontNo();
+        const dekontNo = await sonrakiDekontNo(tx);
 
         const odeme = await tx.odeme.create({
           data: {
@@ -237,15 +280,22 @@ interface Tahsis {
 
 function hisselereDagit(
   toplam: number,
-  kalanlar: { id: string; kalan: number }[],
+  kalanlar: { id: string; no: number; kalan: number }[],
   yontem: "esit" | "sirayla" | "manuel",
   manuel?: Record<string, number>,
 ): Tahsis[] {
   if (yontem === "manuel" && manuel) {
-    const sonuc = kalanlar.map((k) => ({
-      hisseId: k.id,
-      tutar: yuvarla(manuel[k.id] ?? 0),
-    }));
+    // Her hisseye girilen tutar o hissenin kalan bakiyesini aşmasın
+    const sonuc = kalanlar.map((k) => {
+      const istenen = yuvarla(manuel[k.id] ?? 0);
+      const maxIzin = Math.max(k.kalan, 0);
+      if (istenen > maxIzin + 0.01) {
+        throw new Error(
+          `Hisse ${k.no} için ${istenen.toFixed(2)} TL girildi ama kalan sadece ${maxIzin.toFixed(2)} TL`,
+        );
+      }
+      return { hisseId: k.id, tutar: istenen };
+    });
     return sonuc;
   }
 
@@ -261,10 +311,11 @@ function hisselereDagit(
       sonuc.push({ hisseId: k.id, tutar: al });
       kalan = yuvarla(kalan - al);
     }
-    // Hâlâ kalan varsa son hisseye ekle (fazla ödeme)
-    if (kalan > 0 && sonuc.length > 0) {
-      const sonHisse = sonuc[sonuc.length - 1]!;
-      sonHisse.tutar = yuvarla(sonHisse.tutar + kalan);
+    // Önden toplam kalan kontrolü yapıldı; buraya gelirse hata.
+    if (kalan > 0.01) {
+      throw new Error(
+        `Dağıtım hatası: ${kalan.toFixed(2)} TL fazla, hisselere yerleşmedi`,
+      );
     }
     return sonuc;
   }

@@ -4,7 +4,12 @@ import bcrypt from "bcrypt";
 import { prisma } from "@/shared/lib/prisma";
 import { getOturum } from "@/shared/lib/session";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
+import { rateLimitKontrol, rateLimitSifirla } from "@/shared/lib/rate-limit";
 import type { Rol } from "@/shared/types/module.types";
+
+// Brute-force koruması: aynı IP'den 5 dakikada en çok 5 deneme.
+const LOGIN_MAX_DENEME = 5;
+const LOGIN_PENCERE_SN = 5 * 60;
 
 const GirisSchema = z.object({
   kullaniciAdi: z.string().min(1, "Kullanıcı adı zorunlu"),
@@ -13,6 +18,27 @@ const GirisSchema = z.object({
 
 export async function POST(req: Request) {
   const ip = ipCikar(req);
+  const rateAnahtar = `login:${ip ?? "bilinmiyor"}`;
+
+  // Rate limit — sliding window: pencere aşıldıysa istek 401 değil, 429 döner.
+  // rateLimitKontrol başarısız olarak sayıldığı için "test" amaçlı bir deneme
+  // ekler. Bu yüzden başarılı login'de sayaç sıfırlanır.
+  const rl = rateLimitKontrol(rateAnahtar, LOGIN_MAX_DENEME, LOGIN_PENCERE_SN);
+  if (!rl.izinli) {
+    await auditLog({
+      eylem: "giris-rate-limit",
+      ip,
+      detaylar: { kalanSn: rl.kalanSn ?? null },
+    });
+    return NextResponse.json(
+      {
+        basarili: false,
+        hata: `Çok fazla deneme. ${Math.ceil((rl.kalanSn ?? 60) / 60)} dakika sonra tekrar deneyin.`,
+        kilitliKalan: rl.kalanSn ?? null,
+      },
+      { status: 429 },
+    );
+  }
 
   let veri: z.infer<typeof GirisSchema>;
   try {
@@ -54,6 +80,9 @@ export async function POST(req: Request) {
       { status: 401 },
     );
   }
+
+  // Başarılı kimlik doğrulama — rate limit sayacını sıfırla
+  rateLimitSifirla(rateAnahtar);
 
   await prisma.kullanici.update({
     where: { id: kullanici.id },
