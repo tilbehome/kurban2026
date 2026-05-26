@@ -16,15 +16,24 @@ import { useState } from "react";
 import { toast } from "sonner";
 import {
   AlertTriangle,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   CircleDot,
   Loader2,
+  RotateCcw,
+  X,
   Zap,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   ASAMA_ETIKETLERI,
   oncekiAsama,
@@ -101,6 +110,22 @@ interface Props {
   yenile: () => void;
 }
 
+interface OnayModalDurum {
+  acik: boolean;
+  baslik: string;
+  aciklama: string;
+  hedefAsama: KurbanKesimDurumu | null;
+  yon: "ileri" | "geri";
+}
+
+const ONAY_KAPALI: OnayModalDurum = {
+  acik: false,
+  baslik: "",
+  aciklama: "",
+  hedefAsama: null,
+  yon: "ileri",
+};
+
 export function PersonelGorevKart({
   kurban,
   isiAl,
@@ -108,6 +133,7 @@ export function PersonelGorevKart({
   yenile,
 }: Props) {
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [onayModal, setOnayModal] = useState<OnayModalDurum>(ONAY_KAPALI);
 
   const sonraki = sonrakiAsama(kurban.kesimDurumu as KurbanKesimDurumu);
   const onceki = oncekiAsama(kurban.kesimDurumu as KurbanKesimDurumu);
@@ -158,29 +184,46 @@ export function PersonelGorevKart({
 
   function ilerletKlik() {
     if (!sonraki || yukleniyor) return;
-    // Yalnız kritik geçişte onay — diğerleri tek tıkla geçer.
+    // Kritik geçişte onay modali — diğerleri tek tıkla geçer.
     if (sonraki === "tamamlandi") {
-      const onay = window.confirm(
-        `DANA-${kurban.kesimSirasi} tamamlandı olarak işaretlensin mi?`,
-      );
-      if (!onay) return;
+      setOnayModal({
+        acik: true,
+        baslik: `DANA-${kurban.kesimSirasi} Tamamlandı?`,
+        aciklama:
+          "Bu kurbanı tamamlandı olarak işaretliyorsun. Yanlışlık olursa Geri Al ile düzeltilebilir.",
+        hedefAsama: sonraki,
+        yon: "ileri",
+      });
+      return;
     }
     asamaDegistir(sonraki, "ileri");
   }
 
   function geriAlKlik() {
     if (!onceki || yukleniyor) return;
-    const onay = window.confirm(
-      `DANA-${kurban.kesimSirasi} bir önceki aşamaya (${ASAMA_ETIKETLERI[onceki]}) geri alınsın mı?`,
-    );
-    if (!onay) return;
-    asamaDegistir(onceki, "geri");
+    setOnayModal({
+      acik: true,
+      baslik: `DANA-${kurban.kesimSirasi} Geri Al?`,
+      aciklama: `Önceki aşamaya (${ASAMA_ETIKETLERI[onceki]}) geri alınsın mı?`,
+      hedefAsama: onceki,
+      yon: "geri",
+    });
+  }
+
+  function onayla() {
+    const hedef = onayModal.hedefAsama;
+    const yon = onayModal.yon;
+    setOnayModal(ONAY_KAPALI);
+    if (hedef) {
+      asamaDegistir(hedef, yon);
+    }
   }
 
   const bosHisseSayisi = kurban.hisseler.filter((h) => !h.musteriAdi).length;
   const doluHisseler = kurban.hisseler.filter((h) => h.musteriAdi);
 
   return (
+    <>
     <Card>
       <CardContent className="p-3">
         {/* ÜST: DANA-NO + Sayaç + Hissedarlar */}
@@ -339,6 +382,64 @@ export function PersonelGorevKart({
         </Button>
       </CardContent>
     </Card>
+
+    {/* SPRINT-ONAY-MODAL: telefon-dostu büyük butonlu onay diyaloğu.
+        window.confirm() yerine — eldivenle dokunulur boy (h-14), İptal
+        varsayılan, semantik renkler (yeşil=ilerlet, amber=geri). */}
+    <Dialog
+      open={onayModal.acik}
+      onOpenChange={(acik) => {
+        if (!acik) setOnayModal(ONAY_KAPALI);
+      }}
+    >
+      <DialogContent showCloseButton={false} className="max-w-sm">
+        <div className="flex flex-col items-center gap-3 pt-2">
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-full ${
+              onayModal.yon === "ileri"
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-amber-100 text-amber-700"
+            }`}
+          >
+            {onayModal.yon === "ileri" ? (
+              <CheckCircle2 className="size-7" />
+            ) : (
+              <RotateCcw className="size-7" />
+            )}
+          </div>
+          <DialogTitle className="text-center text-lg font-semibold">
+            {onayModal.baslik}
+          </DialogTitle>
+          <DialogDescription className="text-center text-sm leading-relaxed">
+            {onayModal.aciklama}
+          </DialogDescription>
+        </div>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOnayModal(ONAY_KAPALI)}
+            className="h-14 touch-manipulation text-base font-semibold"
+          >
+            <X className="mr-1 size-5" />
+            İptal
+          </Button>
+          <Button
+            type="button"
+            onClick={onayla}
+            className={`h-14 touch-manipulation text-base font-semibold ${
+              onayModal.yon === "ileri"
+                ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                : "bg-amber-600 text-white hover:bg-amber-700"
+            }`}
+          >
+            <CheckCircle2 className="mr-1 size-5" />
+            Evet, Onayla
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 
