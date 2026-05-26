@@ -65,3 +65,32 @@ export function paraInputFormatla(girdi: string): string {
   }
   return formatTam;
 }
+
+/**
+ * Input'tan çıkıldığında (onBlur) eksik ondalık kısmı tamamlar — POS mantığı.
+ *
+ * Yazma deneyimini bozmamak için yazarken `paraInputFormatla` kullanılır,
+ * input'tan ayrılınca bu fonksiyon ",00" / ",X0" şeklinde tamamlar.
+ *
+ * Boş input'a dokunmaz (kullanıcı boş bıraktıysa zorla 0 yazmıyoruz).
+ *
+ * Örnekler:
+ *   ""           → ""
+ *   "37.500"     → "37.500,00"
+ *   "1.000,5"    → "1.000,50"
+ *   "1.000,50"   → "1.000,50"
+ *   "1.000,"     → "1.000,00"
+ *   "1.000,505"  → "1.000,50"  (3. ondalık atılır)
+ */
+export function paraInputBlurTamamla(deger: string): string {
+  if (!deger || deger.trim() === "") return "";
+
+  if (deger.includes(",")) {
+    const [tam, ondalik = ""] = deger.split(",");
+    if (ondalik.length === 0) return tam + ",00";
+    if (ondalik.length === 1) return tam + "," + ondalik + "0";
+    return tam + "," + ondalik.slice(0, 2);
+  }
+
+  return deger + ",00";
+}
