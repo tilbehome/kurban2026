@@ -62,6 +62,9 @@ export default async function TvPersonelPage() {
       silindiMi: false,
       kesimDurumu: {
         in: [
+          // SPRINT-FIX-3: "beklemede" eklendi — "Hepsi" sekmesinde henüz iş
+          // başlamamış kurbanlar da görünsün.
+          "beklemede",
           "vekalet_bekliyor",
           "siradaki",
           "hazirlik",

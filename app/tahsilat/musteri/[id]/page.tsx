@@ -166,10 +166,23 @@ export default async function TahsilatMusteriPage({ params }: PageProps) {
         </div>
 
         <div className="lg:col-span-1">
-          {kalanBakiye > 0 && hisseler.length > 0 ? (
+          {hisseler.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center">
+                <p className="text-muted-foreground">
+                  Müşteriye hisse atanmadığı için ödeme alınamaz.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            // SPRINT-FIX-DEKONT-YESIL-PANEL: hisse varsa kalan 0 olsa bile
+            // OdemeFormu render edilir; içindeki sonOdeme state (yeşil panel
+            // + "Dekont Yazdır" butonu) router.refresh() sonrası kaybolmasın.
             <Card>
               <CardHeader>
-                <CardTitle>Yeni Ödeme Al</CardTitle>
+                <CardTitle>
+                  {kalanBakiye > 0 ? "Yeni Ödeme Al" : "Son Ödeme Bilgisi"}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <OdemeFormu
@@ -177,16 +190,6 @@ export default async function TahsilatMusteriPage({ params }: PageProps) {
                   hisseler={hisseler.filter((h) => h.kalan > 0)}
                   kalanBakiye={kalanBakiye}
                 />
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <p className="text-muted-foreground">
-                  {hisseler.length === 0
-                    ? "Müşteriye hisse atanmadığı için ödeme alınamaz."
-                    : "Tüm ödemeler tamamlanmış."}
-                </p>
               </CardContent>
             </Card>
           )}

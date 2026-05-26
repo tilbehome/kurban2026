@@ -195,12 +195,25 @@ export function MusteriDetayClient(props: MusteriDetayClientProps) {
 
         {/* Sticky hızlı ödeme panel */}
         <aside className="space-y-3" id="hizli-odeme">
-          {hisselerForOdeme.length > 0 && izinler.tahsilat ? (
+          {istatistik.hisseSayisi === 0 ? (
+            <Card className="lg:sticky lg:top-16">
+              <CardContent className="pt-6 text-center">
+                <p className="text-muted-foreground text-sm">
+                  Müşteriye atanmış hisse yok.
+                </p>
+              </CardContent>
+            </Card>
+          ) : izinler.tahsilat ? (
+            // SPRINT-FIX-DEKONT-YESIL-PANEL: hisse varsa kalan 0 olsa bile
+            // HizliOdemePanel render edilir; içindeki sonOdeme state ve
+            // "Dekont Yazdır" butonu router.refresh() sonrası kalsın.
             <Card className="lg:sticky lg:top-16">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Wallet size={16} className="text-primary" />
-                  Hızlı Ödeme Al
+                  {hisselerForOdeme.length > 0
+                    ? "Hızlı Ödeme Al"
+                    : "Son Ödeme Bilgisi"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -211,17 +224,7 @@ export function MusteriDetayClient(props: MusteriDetayClientProps) {
                 />
               </CardContent>
             </Card>
-          ) : (
-            <Card className="lg:sticky lg:top-16">
-              <CardContent className="pt-6 text-center">
-                <p className="text-muted-foreground text-sm">
-                  {istatistik.hisseSayisi === 0
-                    ? "Müşteriye atanmış hisse yok."
-                    : "Tüm ödemeler tamamlanmış 🎉"}
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          ) : null}
         </aside>
       </div>
 

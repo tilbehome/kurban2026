@@ -183,108 +183,137 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
 
   const cokluHisse = hisseler.length > 1;
 
+  const odemeAlinabilir = kalanBakiye > 0;
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <ParaAlani
-        id="nakit"
-        ad="Nakit"
-        ikon={<Banknote size={16} className="text-green-600" />}
-        deger={nakit}
-        onChange={setNakit}
-        inputRef={nakitRef}
-        disabled={bekleniyor}
-      />
-      <ParaAlani
-        id="havale"
-        ad="Havale / EFT"
-        ikon={<ArrowUpRight size={16} className="text-blue-600" />}
-        deger={havale}
-        onChange={setHavale}
-        disabled={bekleniyor}
-      />
-      <ParaAlani
-        id="kart"
-        ad="Kart"
-        ikon={<CreditCard size={16} className="text-purple-600" />}
-        deger={kart}
-        onChange={setKart}
-        disabled={bekleniyor}
-      />
-
-      <div
-        className={`rounded-md border p-3 ${
-          fazla
-            ? "border-red-300 bg-red-50"
-            : eksik
-              ? "border-amber-200 bg-amber-50"
-              : "border-green-300 bg-green-50"
-        }`}
-      >
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Toplam:</span>
-          <span className="font-tabular font-bold">{formatPara(toplam)}</span>
-        </div>
-        <div className="text-muted-foreground mt-1 text-xs">
-          Kalan bakiye: {formatPara(kalanBakiye)}
-          {fazla && (
-            <span className="ml-2 text-red-600">
-              · {formatPara(toplam - kalanBakiye)} fazla
-            </span>
-          )}
-          {!fazla && eksik && toplam > 0 && (
-            <span className="ml-2 text-amber-600">
-              · {formatPara(kalanBakiye - toplam)} eksik kapora
-            </span>
-          )}
-          {!fazla && !eksik && toplam > 0 && (
-            <span className="ml-2 text-green-700">
-              <Check size={12} className="inline" /> Tam karşılıyor
-            </span>
-          )}
-        </div>
-      </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        onClick={bakiyeyiOtomatikDoldur}
-        disabled={bekleniyor || kalanBakiye <= 0}
-      >
-        Bakiyeyi Nakit Olarak Doldur
-      </Button>
-
-      {cokluHisse && (
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="dagitim">Hisselere Dağıtım</Label>
-          <Select
-            value={dagitim}
-            onValueChange={(v) => setDagitim(v as Dagitim)}
-          >
-            <SelectTrigger id="dagitim">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="esit">Tüm hisselere eşit dağıt</SelectItem>
-              <SelectItem value="sirayla">İlk hisseden başlayarak doldur</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-muted-foreground text-xs">
-            {hisseler.length} hisseye ödeme dağıtılacak.
+      {/* SPRINT-FIX-DEKONT-YESIL-PANEL: kalan 0 ve henüz yeşil panel yoksa
+          bilgi mesajı; yeşil panel açıkken (sonOdeme varsa) bu mesaj
+          gösterilmez çünkü kullanıcı dekont basacak. */}
+      {!odemeAlinabilir && !sonOdeme && (
+        <div className="rounded-lg border-2 border-green-200 bg-green-50 p-4 text-center">
+          <p className="text-green-900 font-semibold">
+            ✓ Tüm ödemeler tamamlanmış
+          </p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Bu müşterinin tüm hisseleri ödendi. Dekontlar &ldquo;Tüm
+            Tahsilatlar&rdquo; sayfasından görüntülenebilir.
           </p>
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="notlar">Not (opsiyonel)</Label>
-        <Textarea
-          id="notlar"
-          rows={2}
-          value={notlar}
-          onChange={(e) => setNotlar(e.target.value)}
-          disabled={bekleniyor}
-        />
-      </div>
+      {/* Para input alanları + toplam + dağıtım + not — sadece kalan > 0 */}
+      {odemeAlinabilir && (
+        <>
+          <ParaAlani
+            id="nakit"
+            ad="Nakit"
+            ikon={<Banknote size={16} className="text-green-600" />}
+            deger={nakit}
+            onChange={setNakit}
+            inputRef={nakitRef}
+            disabled={bekleniyor}
+          />
+          <ParaAlani
+            id="havale"
+            ad="Havale / EFT"
+            ikon={<ArrowUpRight size={16} className="text-blue-600" />}
+            deger={havale}
+            onChange={setHavale}
+            disabled={bekleniyor}
+          />
+          <ParaAlani
+            id="kart"
+            ad="Kart"
+            ikon={<CreditCard size={16} className="text-purple-600" />}
+            deger={kart}
+            onChange={setKart}
+            disabled={bekleniyor}
+          />
 
+          <div
+            className={`rounded-md border p-3 ${
+              fazla
+                ? "border-red-300 bg-red-50"
+                : eksik
+                  ? "border-amber-200 bg-amber-50"
+                  : "border-green-300 bg-green-50"
+            }`}
+          >
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Toplam:</span>
+              <span className="font-tabular font-bold">
+                {formatPara(toplam)}
+              </span>
+            </div>
+            <div className="text-muted-foreground mt-1 text-xs">
+              Kalan bakiye: {formatPara(kalanBakiye)}
+              {fazla && (
+                <span className="ml-2 text-red-600">
+                  · {formatPara(toplam - kalanBakiye)} fazla
+                </span>
+              )}
+              {!fazla && eksik && toplam > 0 && (
+                <span className="ml-2 text-amber-600">
+                  · {formatPara(kalanBakiye - toplam)} eksik kapora
+                </span>
+              )}
+              {!fazla && !eksik && toplam > 0 && (
+                <span className="ml-2 text-green-700">
+                  <Check size={12} className="inline" /> Tam karşılıyor
+                </span>
+              )}
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            onClick={bakiyeyiOtomatikDoldur}
+            disabled={bekleniyor || kalanBakiye <= 0}
+          >
+            Bakiyeyi Nakit Olarak Doldur
+          </Button>
+
+          {cokluHisse && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="dagitim">Hisselere Dağıtım</Label>
+              <Select
+                value={dagitim}
+                onValueChange={(v) => setDagitim(v as Dagitim)}
+              >
+                <SelectTrigger id="dagitim">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="esit">Tüm hisselere eşit dağıt</SelectItem>
+                  <SelectItem value="sirayla">
+                    İlk hisseden başlayarak doldur
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-muted-foreground text-xs">
+                {hisseler.length} hisseye ödeme dağıtılacak.
+              </p>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="notlar">Not (opsiyonel)</Label>
+            <Textarea
+              id="notlar"
+              rows={2}
+              value={notlar}
+              onChange={(e) => setNotlar(e.target.value)}
+              disabled={bekleniyor}
+            />
+          </div>
+        </>
+      )}
+
+      {/* YEŞIL PANEL — state-driven, kalan 0 olsa bile sonOdeme varsa kalıcı.
+          (SPRINT-FIX-DEKONT-YESIL-PANEL: router.refresh() sonrası form
+          unmount olmadığı için bu state korunur, kasiyer dekont basabilir.) */}
       {sonOdeme && (
         <div className="rounded-lg border-2 border-green-300 bg-green-50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -330,14 +359,16 @@ export function OdemeFormu({ musteriId, hisseler, kalanBakiye }: OdemeFormuProps
         </div>
       )}
 
-      <Button
-        type="submit"
-        disabled={bekleniyor || toplam <= 0}
-        size="lg"
-        className="w-full"
-      >
-        {bekleniyor ? "Ödeme alınıyor..." : "✓ Ödemeyi Al"}
-      </Button>
+      {odemeAlinabilir && (
+        <Button
+          type="submit"
+          disabled={bekleniyor || toplam <= 0}
+          size="lg"
+          className="w-full"
+        >
+          {bekleniyor ? "Ödeme alınıyor..." : "✓ Ödemeyi Al"}
+        </Button>
+      )}
     </form>
   );
 }

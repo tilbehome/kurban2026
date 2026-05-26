@@ -51,6 +51,9 @@ export const GOREV_ASAMALARI: Record<PersonelGorev, string[]> = {
   paketleme: ["paketleme"],
   teslim: ["teslime_hazir", "tamamlandi"],
   genel: [
+    // SPRINT-FIX-3: "beklemede" eklendi — "Hepsi" sekmesinde henüz iş
+    // başlamamış kurbanlar da görünsün ("tamamlandı" ve "iptal" hariç).
+    "beklemede",
     "vekalet_bekliyor",
     "siradaki",
     "hazirlik",

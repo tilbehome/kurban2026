@@ -213,81 +213,102 @@ export function HizliOdemePanel({
       onKeyDown={handleKey}
       className="flex flex-col gap-3"
     >
-      <ParaSatir
-        id="hop-nakit"
-        ad="Nakit"
-        ikon={<Banknote size={14} className="text-green-600" />}
-        deger={nakit}
-        setDeger={setNakit}
-        inputRef={nakitRef}
-        disabled={bekleniyor}
-        hizliKalan={bakiyeVarMi ? nakitKalan : undefined}
-        hizliYarisi={bakiyeVarMi ? nakitYarisi : undefined}
-      />
-      <ParaSatir
-        id="hop-havale"
-        ad="Havale"
-        ikon={<ArrowUpRight size={14} className="text-blue-600" />}
-        deger={havale}
-        setDeger={setHavale}
-        disabled={bekleniyor}
-        hizliKalan={bakiyeVarMi ? havaleKalan : undefined}
-        hizliYarisi={bakiyeVarMi ? havaleYarisi : undefined}
-      />
-      <ParaSatir
-        id="hop-kart"
-        ad="Kart"
-        ikon={<CreditCard size={14} className="text-purple-600" />}
-        deger={kart}
-        setDeger={setKart}
-        disabled={bekleniyor}
-      />
-
-      <div
-        className={`rounded-md border p-2.5 ${
-          fazla
-            ? "border-red-300 bg-red-50"
-            : eksik
-              ? "border-amber-200 bg-amber-50"
-              : toplam > 0
-                ? "border-green-300 bg-green-50"
-                : "border-muted"
-        }`}
-      >
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Toplam:</span>
-          <span className="font-tabular font-bold">{formatPara(toplam)}</span>
-        </div>
-        <div className="text-muted-foreground mt-0.5 text-[11px]">
-          Kalan: {formatPara(kalanBakiye)}
-          {!fazla && !eksik && toplam > 0 && (
-            <span className="ml-2 text-green-700">
-              <Check size={10} className="inline" /> Tam
-            </span>
-          )}
-        </div>
-      </div>
-
-      {cokluHisse && (
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="hop-dagitim" className="text-xs">
-            Dağıtım ({hisseler.length} hisseye)
-          </Label>
-          <Select
-            value={dagitim}
-            onValueChange={(v) => v && setDagitim(v as Dagitim)}
-          >
-            <SelectTrigger id="hop-dagitim">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="esit">Eşit</SelectItem>
-              <SelectItem value="sirayla">Sırayla doldur</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* SPRINT-FIX-DEKONT-YESIL-PANEL: kalan 0 ve yeşil panel yoksa
+          bilgilendirme satırı. sonOdeme varsa gizli — kasiyer dekonta odaklansın. */}
+      {!bakiyeVarMi && !sonOdeme && (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center">
+          <p className="text-sm font-semibold text-green-900">
+            ✓ Tüm ödemeler tamamlanmış
+          </p>
+          <p className="text-muted-foreground mt-0.5 text-[11px]">
+            Bu müşterinin tüm hisseleri ödendi.
+          </p>
         </div>
       )}
 
+      {/* Para input alanları + toplam + dağıtım — sadece kalan > 0 */}
+      {bakiyeVarMi && (
+        <>
+          <ParaSatir
+            id="hop-nakit"
+            ad="Nakit"
+            ikon={<Banknote size={14} className="text-green-600" />}
+            deger={nakit}
+            setDeger={setNakit}
+            inputRef={nakitRef}
+            disabled={bekleniyor}
+            hizliKalan={nakitKalan}
+            hizliYarisi={nakitYarisi}
+          />
+          <ParaSatir
+            id="hop-havale"
+            ad="Havale"
+            ikon={<ArrowUpRight size={14} className="text-blue-600" />}
+            deger={havale}
+            setDeger={setHavale}
+            disabled={bekleniyor}
+            hizliKalan={havaleKalan}
+            hizliYarisi={havaleYarisi}
+          />
+          <ParaSatir
+            id="hop-kart"
+            ad="Kart"
+            ikon={<CreditCard size={14} className="text-purple-600" />}
+            deger={kart}
+            setDeger={setKart}
+            disabled={bekleniyor}
+          />
+
+          <div
+            className={`rounded-md border p-2.5 ${
+              fazla
+                ? "border-red-300 bg-red-50"
+                : eksik
+                  ? "border-amber-200 bg-amber-50"
+                  : toplam > 0
+                    ? "border-green-300 bg-green-50"
+                    : "border-muted"
+            }`}
+          >
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Toplam:</span>
+              <span className="font-tabular font-bold">
+                {formatPara(toplam)}
+              </span>
+            </div>
+            <div className="text-muted-foreground mt-0.5 text-[11px]">
+              Kalan: {formatPara(kalanBakiye)}
+              {!fazla && !eksik && toplam > 0 && (
+                <span className="ml-2 text-green-700">
+                  <Check size={10} className="inline" /> Tam
+                </span>
+              )}
+            </div>
+          </div>
+
+          {cokluHisse && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="hop-dagitim" className="text-xs">
+                Dağıtım ({hisseler.length} hisseye)
+              </Label>
+              <Select
+                value={dagitim}
+                onValueChange={(v) => v && setDagitim(v as Dagitim)}
+              >
+                <SelectTrigger id="hop-dagitim">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="esit">Eşit</SelectItem>
+                  <SelectItem value="sirayla">Sırayla doldur</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* YEŞIL PANEL — state-driven, kalan 0 olsa bile sonOdeme varsa kalıcı. */}
       {sonOdeme && (
         <div className="rounded-lg border-2 border-green-300 bg-green-50 p-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -333,14 +354,16 @@ export function HizliOdemePanel({
         </div>
       )}
 
-      <Button
-        type="submit"
-        disabled={bekleniyor || toplam <= 0}
-        size="lg"
-        className="w-full"
-      >
-        {bekleniyor ? "Alınıyor..." : "✓ Ödemeyi Al"}
-      </Button>
+      {bakiyeVarMi && (
+        <Button
+          type="submit"
+          disabled={bekleniyor || toplam <= 0}
+          size="lg"
+          className="w-full"
+        >
+          {bekleniyor ? "Alınıyor..." : "✓ Ödemeyi Al"}
+        </Button>
+      )}
     </form>
   );
 }
