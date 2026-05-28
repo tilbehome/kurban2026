@@ -776,6 +776,24 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         izin: "raporlar.goruntule",
       },
       {
+        id: "kesim-muhasebe",
+        ad: "Kesim Muhasebe Raporu",
+        ikon: FileText,
+        rota: "/raporlar/kesim-muhasebe",
+        izin: "raporlar.goruntule",
+        aciklama:
+          "Kesim sırasına göre her hayvan/hissedar için ödeme dökümü (nakit/havale/kart ayrı).",
+      },
+      {
+        id: "muhasebe-defteri",
+        ad: "Master Muhasebe Defteri",
+        ikon: AlertTriangle,
+        rota: "/raporlar/muhasebe-defteri/yazdir",
+        izin: "raporlar.goruntule",
+        aciklama:
+          "Denetim raporu: 12 otomatik tutarsızlık kontrolü, kritik/bilgi uyarı işaretleri, A4 yazdırılabilir.",
+      },
+      {
         id: "kesim-listesi",
         ad: "Kesim Listesi (Yazdır)",
         ikon: Printer,
