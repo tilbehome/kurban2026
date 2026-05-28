@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   FileSpreadsheet,
   FileText,
+  Folder,
   MessageCircle,
   Phone,
   Printer,
@@ -40,8 +41,8 @@ export default async function RaporlarPage() {
       />
 
       <div className="p-6 sm:p-8">
-        {/* Hızlı raporlar — Sprint 13 + 14 */}
-        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+        {/* Hızlı raporlar — Sprint 13 + 14 + 15 */}
+        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
           <Link
             href="/raporlar/kesim-muhasebe"
             className="group rounded-lg border-2 border-orange-200 bg-linear-to-br from-orange-50 to-white p-4 transition-all hover:border-orange-400 hover:shadow-md"
@@ -85,6 +86,35 @@ export default async function RaporlarPage() {
                 </div>
                 <div className="text-muted-foreground mt-0.5 text-xs">
                   14 otomatik kontrol · tutarsızlık tespiti · A4 yazdırılır
+                </div>
+              </div>
+              <Printer className="text-muted-foreground h-4 w-4 self-center" />
+            </div>
+          </Link>
+
+          <Link
+            href="/raporlar/kurban-dosyasi/yazdir"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group rounded-lg border-2 border-blue-200 bg-linear-to-br from-blue-50 to-white p-4 transition-all hover:border-blue-400 hover:shadow-md"
+          >
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-blue-100 p-2 text-blue-700 group-hover:bg-blue-200">
+                <Folder className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Kurban Dosyası</span>
+                  <Badge
+                    variant="outline"
+                    className="border-blue-300 bg-blue-100 text-xs text-blue-700"
+                  >
+                    TOPLU
+                  </Badge>
+                </div>
+                <div className="text-muted-foreground mt-0.5 text-xs">
+                  Her dana için 1 sayfa: künye + finansal + cari hareket
+                  dökümü
                 </div>
               </div>
               <Printer className="text-muted-foreground h-4 w-4 self-center" />

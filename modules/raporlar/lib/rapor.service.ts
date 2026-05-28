@@ -725,3 +725,213 @@ export async function muhasebeDefteri(): Promise<MuhasebeDefteri> {
     },
   };
 }
+
+// ===========================================================================
+// SPRINT-15 — Kurban Dosyası (her dana için tam dökme rapor)
+//
+// Her kurban için TEK SAYFA detaylı dosya: künye + finansal özet +
+// hissedarlar + tüm cari hareket dökümü (kronolojik). Tek dana ve toplu
+// baskı modları.
+// ===========================================================================
+
+export interface KurbanDosyaOdeme {
+  /** Kronolojik sıra (1, 2, 3...) — bu kurbandaki ödeme sırası */
+  sira: number;
+  dekontNo: string;
+  tarih: string; // ISO
+  hisseNo: number;
+  hissedarAdi: string | null;
+  nakit: number;
+  havale: number;
+  kart: number;
+  toplamTutar: number;
+  yontem: string;
+  notlar: string | null;
+  /** Tahsilatı kaydeden personel */
+  personelAdi: string | null;
+  iptal: boolean;
+  iptalSebep: string | null;
+  iptalTarihi: string | null;
+}
+
+export interface KurbanDosyaHisse {
+  hisseNo: number;
+  hissedarAdi: string | null;
+  telefon: string | null;
+  tcKimlik: string | null;
+  adres: string | null;
+  hisseFiyati: number;
+  toplamOdenen: number;
+  kalan: number;
+  vekaletAlindi: boolean;
+  vekaletTarihi: string | null;
+  notlar: string | null;
+}
+
+export interface KurbanDosya {
+  // Künye
+  kesimSirasi: number;
+  kupeNo: string | null;
+  kesimSaati: string | null;
+  hisseSayisi: number;
+  satisBedeli: number;
+  canliAgirlik: number | null;
+  karkasAgirlik: number | null;
+  durum: string;
+  kesimDurumu: string;
+  hisseGrubu: string | null;
+  notlar: string | null;
+  // Finansal (iptal edilmemiş ödemelerden)
+  toplamOdenen: number;
+  kalan: number;
+  toplamNakit: number;
+  toplamHavale: number;
+  toplamKart: number;
+  /** Geçerli (iptal edilmemiş) ödeme adedi */
+  odemeAdedi: number;
+  /** İlk ödeme = ön kapora */
+  ilkOdemeTarihi: string | null;
+  sonOdemeTarihi: string | null;
+  // Detay
+  hisseler: KurbanDosyaHisse[];
+  /** Tüm ödemeler (iptal dahil), kronolojik */
+  cariHareketler: KurbanDosyaOdeme[];
+}
+
+/** Tek dananın tam dosyası. Bulunamazsa null. */
+export async function kurbanDosyasi(
+  kesimSirasi: number,
+): Promise<KurbanDosya | null> {
+  const k = await prisma.kurban.findFirst({
+    where: { kesimSirasi, silindiMi: false },
+    include: {
+      hisseler: {
+        where: { silindiMi: false },
+        orderBy: { no: "asc" },
+        include: {
+          musteri: {
+            select: {
+              adSoyad: true,
+              telefon: true,
+              tcKimlik: true,
+              adres: true,
+            },
+          },
+          odemeler: {
+            orderBy: { tarih: "asc" },
+            include: {
+              kullanici: { select: { adSoyad: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!k) return null;
+
+  // Hisseler
+  const hisseler: KurbanDosyaHisse[] = k.hisseler.map((h) => {
+    const gecerli = h.odemeler.filter((o) => !o.iptal);
+    const toplamOdenen = yuvarla(topla(...gecerli.map((o) => o.toplamTutar)));
+    return {
+      hisseNo: h.no,
+      hissedarAdi: h.musteri?.adSoyad ?? null,
+      telefon: h.musteri?.telefon ?? null,
+      tcKimlik: h.musteri?.tcKimlik ?? null,
+      adres: h.musteri?.adres ?? null,
+      hisseFiyati: yuvarla(h.hisseFiyati),
+      toplamOdenen,
+      kalan: yuvarla(h.hisseFiyati - toplamOdenen),
+      vekaletAlindi: h.vekaletAlindi,
+      vekaletTarihi: h.vekaletTarihi?.toISOString() ?? null,
+      notlar: h.notlar,
+    };
+  });
+
+  // Cari hareketler — tüm hisselerin tüm ödemeleri kronolojik
+  const tumOdemelerDuz = k.hisseler.flatMap((h) =>
+    h.odemeler.map((o) => ({
+      o,
+      hisseNo: h.no,
+      hissedarAdi: h.musteri?.adSoyad ?? null,
+    })),
+  );
+  tumOdemelerDuz.sort(
+    (a, b) => a.o.tarih.getTime() - b.o.tarih.getTime(),
+  );
+
+  const cariHareketler: KurbanDosyaOdeme[] = tumOdemelerDuz.map((x, i) => ({
+    sira: i + 1,
+    dekontNo: x.o.dekontNo,
+    tarih: x.o.tarih.toISOString(),
+    hisseNo: x.hisseNo,
+    hissedarAdi: x.hissedarAdi,
+    nakit: x.o.nakit,
+    havale: x.o.havale,
+    kart: x.o.kart,
+    toplamTutar: x.o.toplamTutar,
+    yontem: x.o.yontem,
+    notlar: x.o.notlar,
+    personelAdi: x.o.kullanici?.adSoyad ?? null,
+    iptal: x.o.iptal,
+    iptalSebep: x.o.iptalSebep,
+    iptalTarihi: x.o.iptalTarihi?.toISOString() ?? null,
+  }));
+
+  // Finansal — sadece iptal edilmemiş ödemelerden
+  const gecerliTum = tumOdemelerDuz.filter((x) => !x.o.iptal);
+  const toplamNakit = yuvarla(topla(...gecerliTum.map((x) => x.o.nakit)));
+  const toplamHavale = yuvarla(topla(...gecerliTum.map((x) => x.o.havale)));
+  const toplamKart = yuvarla(topla(...gecerliTum.map((x) => x.o.kart)));
+  const toplamOdenen = yuvarla(toplamNakit + toplamHavale + toplamKart);
+
+  const gecerliTarihler = gecerliTum.map((x) => x.o.tarih.getTime());
+  const ilkOdemeTarihi = gecerliTarihler.length
+    ? new Date(Math.min(...gecerliTarihler)).toISOString()
+    : null;
+  const sonOdemeTarihi = gecerliTarihler.length
+    ? new Date(Math.max(...gecerliTarihler)).toISOString()
+    : null;
+
+  return {
+    kesimSirasi: k.kesimSirasi,
+    kupeNo: k.kupeNo,
+    kesimSaati: k.kesimSaati,
+    hisseSayisi: k.hisseSayisi,
+    satisBedeli: yuvarla(k.satisBedeli),
+    canliAgirlik: k.canliAgirlik ?? null,
+    karkasAgirlik: k.karkasAgirlik ?? null,
+    durum: k.durum,
+    kesimDurumu: k.kesimDurumu,
+    hisseGrubu: k.hisseGrubu ?? null,
+    notlar: k.notlar ?? null,
+    toplamOdenen,
+    kalan: yuvarla(k.satisBedeli - toplamOdenen),
+    toplamNakit,
+    toplamHavale,
+    toplamKart,
+    odemeAdedi: gecerliTum.length,
+    ilkOdemeTarihi,
+    sonOdemeTarihi,
+    hisseler,
+    cariHareketler,
+  };
+}
+
+/**
+ * Tüm kurban dosyaları (toplu baskı).
+ * Tek tek findFirst yerine paralel Promise.all — büyük seed'de süre fark eder.
+ */
+export async function tumKurbanDosyalari(): Promise<KurbanDosya[]> {
+  const kurbanlar = await prisma.kurban.findMany({
+    where: { silindiMi: false },
+    orderBy: { kesimSirasi: "asc" },
+    select: { kesimSirasi: true },
+  });
+  const sonuclar = await Promise.all(
+    kurbanlar.map((k) => kurbanDosyasi(k.kesimSirasi)),
+  );
+  return sonuclar.filter((d): d is KurbanDosya => d !== null);
+}
+

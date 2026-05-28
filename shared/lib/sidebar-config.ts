@@ -24,6 +24,7 @@ import {
   Star,
   Sparkles,
   FileText,
+  Folder,
   Tags,
   Upload,
   Download,
@@ -792,6 +793,15 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         izin: "raporlar.goruntule",
         aciklama:
           "Denetim raporu: 12 otomatik tutarsızlık kontrolü, kritik/bilgi uyarı işaretleri, A4 yazdırılabilir.",
+      },
+      {
+        id: "kurban-dosyasi",
+        ad: "Kurban Dosyası (Toplu)",
+        ikon: Folder,
+        rota: "/raporlar/kurban-dosyasi/yazdir",
+        izin: "raporlar.goruntule",
+        aciklama:
+          "Her dana için 1 sayfa: künye + finansal özet + hissedarlar + tüm cari hareket dökümü.",
       },
       {
         id: "kesim-listesi",
