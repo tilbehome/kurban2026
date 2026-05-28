@@ -16,7 +16,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Plus, Search, UserPlus, Wallet, X } from "lucide-react";
+import { Plus, Search, ShoppingCart, UserPlus, Wallet, X } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 
 interface FabAksiyon {
@@ -28,6 +28,12 @@ interface FabAksiyon {
 }
 
 const AKSIYONLAR: ReadonlyArray<FabAksiyon> = [
+  {
+    ad: "Saha Satış",
+    yol: "/saha-satis",
+    ikon: ShoppingCart,
+    arkaRenk: "bg-orange-600 hover:bg-orange-700",
+  },
   {
     ad: "Hızlı Tahsilat",
     yol: "/tahsilat",
