@@ -7,7 +7,14 @@ import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { borclular, kurbanRaporu } from "@/modules/raporlar/lib/rapor.service";
 import { formatPara } from "@/shared/lib/para";
-import { Phone, FileSpreadsheet, MessageCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  FileSpreadsheet,
+  FileText,
+  MessageCircle,
+  Phone,
+  Printer,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +40,58 @@ export default async function RaporlarPage() {
       />
 
       <div className="p-6 sm:p-8">
+        {/* Hızlı raporlar — Sprint 13 + 14 */}
+        <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+          <Link
+            href="/raporlar/kesim-muhasebe"
+            className="group rounded-lg border-2 border-orange-200 bg-linear-to-br from-orange-50 to-white p-4 transition-all hover:border-orange-400 hover:shadow-md"
+          >
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-orange-100 p-2 text-orange-700 group-hover:bg-orange-200">
+                <FileText className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold">
+                  Kesim Sırası Muhasebe Raporu
+                </div>
+                <div className="text-muted-foreground mt-0.5 text-xs">
+                  Her kurban için hissedar + ödeme dökümü (nakit/havale/kart)
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/raporlar/muhasebe-defteri/yazdir"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group rounded-lg border-2 border-red-200 bg-linear-to-br from-red-50 to-white p-4 transition-all hover:border-red-400 hover:shadow-md"
+          >
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-red-100 p-2 text-red-700 group-hover:bg-red-200">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">
+                    Master Muhasebe Defteri
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="border-red-300 bg-red-100 text-xs text-red-700"
+                  >
+                    DENETİM
+                  </Badge>
+                </div>
+                <div className="text-muted-foreground mt-0.5 text-xs">
+                  14 otomatik kontrol · tutarsızlık tespiti · A4 yazdırılır
+                </div>
+              </div>
+              <Printer className="text-muted-foreground h-4 w-4 self-center" />
+            </div>
+          </Link>
+        </div>
+
         <Tabs defaultValue="borclular">
           <TabsList>
             <TabsTrigger value="borclular">
