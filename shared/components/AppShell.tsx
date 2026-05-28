@@ -3,6 +3,8 @@ import { Beef } from "lucide-react";
 import { Sidebar } from "./sidebar/Sidebar";
 import { MobileSidebar } from "./sidebar/MobileSidebar";
 import { SwGuncellemeUyarisi } from "./SwGuncellemeUyarisi";
+import { AltNavigasyon } from "./AltNavigasyon";
+import { HizliFAB } from "./HizliFAB";
 import { aktifOturum } from "@/shared/lib/session";
 
 interface AppShellProps {
@@ -51,8 +53,17 @@ export async function AppShell({ children }: AppShellProps) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        {/* Mobile'da alt navigasyon 4rem (h-16) + safe-area kadar yer kaplar.
+            Main'e 5rem padding-bottom verip son içeriğin altta gizlenmesini
+            önlüyoruz. Desktop'ta padding sıfırlanır. */}
+        <main className="flex-1 overflow-y-auto pb-20 lg:pb-0">
+          {children}
+        </main>
       </div>
+
+      {/* Mobil saha UI — alt navigasyon + hızlı işlem FAB */}
+      <AltNavigasyon />
+      <HizliFAB />
 
       <SwGuncellemeUyarisi />
     </div>

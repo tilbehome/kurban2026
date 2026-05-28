@@ -33,6 +33,7 @@ export function MobileSidebar({
           render={
             <button
               type="button"
+              id="mobile-sidebar-trigger"
               className="hover:bg-accent text-foreground flex h-9 w-9 items-center justify-center rounded-md transition-colors"
               aria-label="Menüyü aç"
             >
