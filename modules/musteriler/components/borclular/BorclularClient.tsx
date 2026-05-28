@@ -18,7 +18,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
-  Beef,
   CheckSquare,
   FileSpreadsheet,
   Filter,
@@ -939,7 +938,7 @@ function BorcluKart({
             )}
             {borclu.kurbanlar.length > 0 && (
               <span className="flex items-center gap-1">
-                <Beef className="h-3 w-3" />
+                <Tag className="h-3 w-3" />
                 {borclu.kurbanlar.join(", ")}
               </span>
             )}
