@@ -51,12 +51,22 @@ export default function HataSayfasi({ error, reset }: HataSayfasiProps) {
           </p>
         </div>
 
-        {error.digest && (
-          <div className="bg-stone-100 mb-4 rounded-lg p-2">
-            <p className="text-stone-500 font-mono text-xs break-all">
-              Hata Kodu: {error.digest}
-            </p>
-          </div>
+        {(error.digest || error.message) && (
+          <details className="bg-stone-100 mb-4 rounded-lg p-2">
+            <summary className="text-stone-600 cursor-pointer text-xs font-medium">
+              Teknik Detay {error.digest ? `(${error.digest})` : ""}
+            </summary>
+            {error.message && (
+              <p className="text-stone-700 mt-2 font-mono text-xs break-all whitespace-pre-wrap">
+                {error.message}
+              </p>
+            )}
+            {error.stack && (
+              <pre className="text-stone-500 mt-2 max-h-40 overflow-auto font-mono text-[10px] break-all whitespace-pre-wrap">
+                {error.stack.split("\n").slice(0, 8).join("\n")}
+              </pre>
+            )}
+          </details>
         )}
 
         <div className="flex flex-col gap-2">
