@@ -199,3 +199,139 @@ export async function kurbanRaporu(): Promise<KurbanRaporSatir[]> {
     };
   });
 }
+
+// ===========================================================================
+// SPRINT-13 — Kesim sırası detaylı muhasebe raporu
+// ===========================================================================
+
+export interface KesimMuhasebeOdeme {
+  dekontNo: string;
+  /** ISO 8601 datetime — client'ta `new Date()` ile parse */
+  tarih: string;
+  nakit: number;
+  havale: number;
+  kart: number;
+  toplamTutar: number;
+  yontem: string;
+  iptal: boolean;
+}
+
+export interface KesimMuhasebeHisse {
+  hisseNo: number;
+  musteriAdi: string | null;
+  telefon: string | null;
+  hisseFiyati: number;
+  toplamOdenen: number;
+  kalan: number;
+  vekaletAlindi: boolean;
+  odemeler: KesimMuhasebeOdeme[];
+}
+
+export interface KesimMuhasebeKurban {
+  kesimSirasi: number;
+  kupeNo: string | null;
+  hisseSayisi: number;
+  satisBedeli: number;
+  toplamOdenen: number;
+  kalan: number;
+  /** Hayvan bazında yöntem toplamları (iptal edilmemiş ödemelerden) */
+  toplamNakit: number;
+  toplamHavale: number;
+  toplamKart: number;
+  hisseler: KesimMuhasebeHisse[];
+}
+
+/**
+ * Kesim sırası bazında detaylı muhasebe raporu.
+ *
+ * Her kurban için: hisseler + hissedarlar + her ödemenin tarih/dekont/yöntem
+ * dökümü. İptal edilen ödemeler de döner (UI'da çizik gösterilir) ama hisse
+ * bazlı toplamlara dahil edilmez.
+ */
+export async function kesimMuhasebeRaporu(): Promise<KesimMuhasebeKurban[]> {
+  const kurbanlar = await prisma.kurban.findMany({
+    where: { silindiMi: false },
+    orderBy: { kesimSirasi: "asc" },
+    include: {
+      hisseler: {
+        where: { silindiMi: false },
+        orderBy: { no: "asc" },
+        include: {
+          musteri: { select: { adSoyad: true, telefon: true } },
+          odemeler: {
+            orderBy: { tarih: "asc" },
+            select: {
+              dekontNo: true,
+              tarih: true,
+              nakit: true,
+              havale: true,
+              kart: true,
+              toplamTutar: true,
+              yontem: true,
+              iptal: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return kurbanlar.map((k) => {
+    const hisseler: KesimMuhasebeHisse[] = k.hisseler.map((h) => {
+      const gecerliOdemeler = h.odemeler.filter((o) => !o.iptal);
+      const toplamOdenen = yuvarla(
+        topla(...gecerliOdemeler.map((o) => o.toplamTutar)),
+      );
+      const kalan = yuvarla(h.hisseFiyati - toplamOdenen);
+
+      return {
+        hisseNo: h.no,
+        musteriAdi: h.musteri?.adSoyad ?? null,
+        telefon: h.musteri?.telefon ?? null,
+        hisseFiyati: yuvarla(h.hisseFiyati),
+        toplamOdenen,
+        kalan,
+        vekaletAlindi: h.vekaletAlindi,
+        odemeler: h.odemeler.map((o) => ({
+          dekontNo: o.dekontNo,
+          tarih: o.tarih.toISOString(),
+          nakit: o.nakit,
+          havale: o.havale,
+          kart: o.kart,
+          toplamTutar: o.toplamTutar,
+          yontem: o.yontem,
+          iptal: o.iptal,
+        })),
+      };
+    });
+
+    // Hayvan seviyesi toplamlar — sadece iptal edilmemiş ödemelerden
+    const tumGecerliOdemeler = k.hisseler.flatMap((h) =>
+      h.odemeler.filter((o) => !o.iptal),
+    );
+    const toplamNakit = yuvarla(
+      topla(...tumGecerliOdemeler.map((o) => o.nakit)),
+    );
+    const toplamHavale = yuvarla(
+      topla(...tumGecerliOdemeler.map((o) => o.havale)),
+    );
+    const toplamKart = yuvarla(
+      topla(...tumGecerliOdemeler.map((o) => o.kart)),
+    );
+    const toplamOdenen = yuvarla(toplamNakit + toplamHavale + toplamKart);
+    const kalan = yuvarla(k.satisBedeli - toplamOdenen);
+
+    return {
+      kesimSirasi: k.kesimSirasi,
+      kupeNo: k.kupeNo,
+      hisseSayisi: k.hisseSayisi,
+      satisBedeli: yuvarla(k.satisBedeli),
+      toplamOdenen,
+      kalan,
+      toplamNakit,
+      toplamHavale,
+      toplamKart,
+      hisseler,
+    };
+  });
+}
