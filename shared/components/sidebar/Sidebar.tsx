@@ -15,7 +15,7 @@ import { useKlavyeKisayollari } from "@/shared/hooks/useKlavyeKisayollari";
 import { SidebarHeader } from "./SidebarHeader";
 import { SidebarMenuGroup } from "./SidebarMenuGroup";
 import { SidebarCollapseButton } from "./SidebarCollapseButton";
-import { SidebarBayramSayaci } from "./SidebarBayramSayaci";
+// SidebarBayramSayaci: bayram geçti, sidebar'dan kaldırıldı (dosya korundu)
 import { SidebarKullaniciKarti } from "./SidebarKullaniciKarti";
 
 const STORAGE_ACIK = "tilbe.sidebar.acikMenu";
@@ -221,8 +221,13 @@ export function Sidebar({
         />
       )}
 
-      <nav className="flex-1 overflow-x-hidden overflow-y-auto p-2">
-        <div className="flex flex-col gap-0.5">
+      <nav
+        className={cn(
+          "flex-1 overflow-x-hidden overflow-y-auto",
+          mobil ? "p-3" : "p-2",
+        )}
+      >
+        <div className={cn("flex flex-col", mobil ? "gap-1" : "gap-0.5")}>
           {menuler.map((menu) => (
             <SidebarMenuGroup
               key={menu.id}
@@ -232,14 +237,13 @@ export function Sidebar({
               pathname={pathname}
               bildirimler={bildirimler}
               daraltilmis={daraltilmis && !mobil}
+              mobil={mobil}
               onToggle={() => toggleMenu(menu.id)}
               onAltMenuTiklama={onMobilKapat}
             />
           ))}
         </div>
       </nav>
-
-      <SidebarBayramSayaci daraltilmis={daraltilmis && !mobil} />
 
       <SidebarKullaniciKarti
         adSoyad={kullaniciAdSoyad}

@@ -34,14 +34,17 @@ export function MobileSidebar({
             <button
               type="button"
               id="mobile-sidebar-trigger"
-              className="hover:bg-accent text-foreground flex h-9 w-9 items-center justify-center rounded-md transition-colors"
+              className="hover:bg-accent text-foreground flex h-11 w-11 items-center justify-center rounded-md transition-colors"
               aria-label="Menüyü aç"
             >
-              <Menu size={20} />
+              <Menu size={22} />
             </button>
           }
         />
-        <SheetContent side="left" className="w-72 p-0">
+        <SheetContent
+          side="left"
+          className="w-[85vw] max-w-sm p-0 sm:w-80"
+        >
           <SheetTitle className="sr-only">Ana Menü</SheetTitle>
           <Sidebar
             kullaniciAdSoyad={kullaniciAdSoyad}

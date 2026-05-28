@@ -16,6 +16,8 @@ interface SidebarMenuGroupProps {
   pathname: string;
   bildirimler?: SidebarBildirimleri | null;
   daraltilmis: boolean;
+  /** Mobile drawer modu — büyük dokunmatik hedef + büyük font */
+  mobil?: boolean;
   onToggle: () => void;
   /** Mobile drawer kapanması için */
   onAltMenuTiklama?: () => void;
@@ -32,6 +34,7 @@ export function SidebarMenuGroup({
   pathname,
   bildirimler,
   daraltilmis,
+  mobil = false,
   onToggle,
   onAltMenuTiklama,
 }: SidebarMenuGroupProps) {
@@ -52,7 +55,8 @@ export function SidebarMenuGroup({
         {...linkProps}
         onClick={onAltMenuTiklama}
         className={cn(
-          "group relative flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors",
+          "group relative flex items-center gap-3 rounded-md font-medium transition-colors",
+          mobil ? "min-h-12 px-3 py-3 text-base" : "px-2.5 py-2 text-sm",
           daraltilmis && "justify-center px-1.5",
           aktif
             ? "bg-sidebar-primary text-sidebar-primary-foreground"
@@ -61,7 +65,7 @@ export function SidebarMenuGroup({
         title={daraltilmis ? menu.ad : undefined}
       >
         <span className="relative">
-          <Ikon size={18} />
+          <Ikon size={mobil ? 22 : 18} />
           {daraltilmis && grupSayisi > 0 && menu.bildirimAnahtari && (
             <SidebarBildirimRozet
               kompakt
@@ -95,7 +99,8 @@ export function SidebarMenuGroup({
         type="button"
         onClick={onToggle}
         className={cn(
-          "group relative flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors",
+          "group relative flex w-full items-center gap-3 rounded-md font-medium transition-colors",
+          mobil ? "min-h-12 px-3 py-3 text-base" : "px-2.5 py-2 text-sm",
           daraltilmis && "justify-center px-1.5",
           aktif
             ? "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -105,7 +110,7 @@ export function SidebarMenuGroup({
         title={daraltilmis ? menu.ad : undefined}
       >
         <span className="relative">
-          <Ikon size={18} />
+          <Ikon size={mobil ? 22 : 18} />
           {daraltilmis && grupSayisi > 0 && menu.bildirimAnahtari && (
             <SidebarBildirimRozet
               kompakt
@@ -153,6 +158,7 @@ export function SidebarMenuGroup({
                     pathname.startsWith(alt.rota + "/")
                   }
                   bildirimler={bildirimler}
+                  mobil={mobil}
                   onTiklama={onAltMenuTiklama}
                 />
               ))}

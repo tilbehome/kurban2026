@@ -11,6 +11,8 @@ interface SidebarMenuItemProps {
   alt: SidebarAltMenu;
   aktif: boolean;
   bildirimler?: SidebarBildirimleri | null;
+  /** Mobile drawer modu — büyük dokunmatik hedef + font */
+  mobil?: boolean;
   onTiklama?: () => void;
 }
 
@@ -21,6 +23,7 @@ export function SidebarMenuItem({
   alt,
   aktif,
   bildirimler,
+  mobil = false,
   onTiklama,
 }: SidebarMenuItemProps) {
   const Ikon = alt.ikon;
@@ -39,14 +42,17 @@ export function SidebarMenuItem({
       {...linkProps}
       onClick={onTiklama}
       className={cn(
-        "group flex items-center gap-2.5 rounded-md border-l-2 px-2.5 py-1.5 text-[13px] transition-colors",
+        "group flex items-center rounded-md border-l-2 transition-colors",
+        mobil
+          ? "min-h-11 gap-3 px-3 py-2.5 text-sm"
+          : "gap-2.5 px-2.5 py-1.5 text-[13px]",
         aktif
           ? "border-primary bg-primary/10 text-primary font-semibold"
           : "text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground border-transparent",
       )}
     >
       <Ikon
-        size={14}
+        size={mobil ? 18 : 14}
         className={cn(
           "shrink-0 transition-colors",
           aktif
