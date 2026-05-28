@@ -7,6 +7,7 @@ import { yedekAl } from "@/shared/lib/backup";
 import { yayinla } from "@/shared/lib/events";
 import { yuvarla, topla } from "@/shared/lib/para";
 import { sonrakiDekontNo } from "@/modules/tahsilat/lib/tahsilat.service";
+import { belirleYontem, hisselereDagit } from "@/modules/tahsilat/lib/dagitim";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 
 const OdemeSchema = z.object({
@@ -395,81 +396,3 @@ export async function POST(req: Request) {
   return NextResponse.json(yanit);
 }
 
-function belirleYontem(n: number, h: number, k: number): string {
-  const aktif = [n > 0, h > 0, k > 0].filter(Boolean).length;
-  if (aktif > 1) return "karisik";
-  if (n > 0) return "nakit";
-  if (h > 0) return "havale";
-  if (k > 0) return "kart";
-  return "nakit";
-}
-
-interface Tahsis {
-  hisseId: string;
-  tutar: number;
-}
-
-function hisselereDagit(
-  toplam: number,
-  kalanlar: { id: string; no: number; kalan: number }[],
-  yontem: "esit" | "sirayla" | "manuel",
-  manuel?: Record<string, number>,
-): Tahsis[] {
-  if (yontem === "manuel" && manuel) {
-    const sonuc = kalanlar.map((k) => {
-      const istenen = yuvarla(manuel[k.id] ?? 0);
-      const maxIzin = Math.max(k.kalan, 0);
-      if (istenen > maxIzin + 0.01) {
-        throw new Error(
-          `Hisse ${k.no} için ${istenen.toFixed(2)} TL girildi ama kalan sadece ${maxIzin.toFixed(2)} TL`,
-        );
-      }
-      return { hisseId: k.id, tutar: istenen };
-    });
-    return sonuc;
-  }
-
-  if (yontem === "sirayla") {
-    let kalan = toplam;
-    const sonuc: Tahsis[] = [];
-    for (const k of kalanlar) {
-      if (kalan <= 0) {
-        sonuc.push({ hisseId: k.id, tutar: 0 });
-        continue;
-      }
-      const al = yuvarla(Math.min(kalan, Math.max(k.kalan, 0)));
-      sonuc.push({ hisseId: k.id, tutar: al });
-      kalan = yuvarla(kalan - al);
-    }
-    if (kalan > 0.01) {
-      throw new Error(
-        `Dağıtım hatası: ${kalan.toFixed(2)} TL fazla, hisselere yerleşmedi`,
-      );
-    }
-    return sonuc;
-  }
-
-  // esit: tüm hisselere eşit dağıt, son hisseye yuvarlama farkını ekle
-  const her = yuvarla(toplam / kalanlar.length);
-  const sonuc = kalanlar.map((k) => ({ hisseId: k.id, tutar: her }));
-  const fark = yuvarla(toplam - her * kalanlar.length);
-  if (fark !== 0 && sonuc.length > 0) {
-    sonuc[sonuc.length - 1]!.tutar = yuvarla(
-      sonuc[sonuc.length - 1]!.tutar + fark,
-    );
-  }
-
-  // SPRINT-P2 İŞ 4: Eşit dağıtımda da hisse limit kontrolü.
-  for (const t of sonuc) {
-    const k = kalanlar.find((x) => x.id === t.hisseId);
-    if (!k) continue;
-    const maxIzin = Math.max(k.kalan, 0);
-    if (t.tutar > maxIzin + 0.01) {
-      throw new Error(
-        `Eşit dağıtım Hisse ${k.no} kalanını aşıyor. Hisseye düşen: ${t.tutar.toFixed(2)} TL, Kalan: ${maxIzin.toFixed(2)} TL. "Sırayla" veya "Manuel" dağıtım deneyin.`,
-      );
-    }
-  }
-
-  return sonuc;
-}
