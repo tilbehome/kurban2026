@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
+import { izinKontrol } from "@/shared/lib/izinler";
 import { yayinla } from "@/shared/lib/events";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { musterileriListele } from "@/modules/musteriler/lib/musteri.service";
@@ -46,6 +47,9 @@ const MusteriSchema = z.object({
 export async function GET(req: Request) {
   const oturum = await aktifOturum();
   if (!oturum) return NextResponse.json({ hata: "Yetki yok" }, { status: 401 });
+  if (!izinKontrol(oturum, "musteriler.goruntule")) {
+    return NextResponse.json({ hata: "Yetki yok" }, { status: 403 });
+  }
 
   const url = new URL(req.url);
   const arama = url.searchParams.get("arama") ?? undefined;
@@ -63,6 +67,12 @@ export async function POST(req: Request) {
   const oturum = await aktifOturum();
   if (!oturum) {
     return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 401 });
+  }
+  if (!izinKontrol(oturum, "musteriler.olustur")) {
+    return NextResponse.json(
+      { basarili: false, hata: "Müşteri oluşturma yetkiniz yok" },
+      { status: 403 },
+    );
   }
 
   let veri: z.infer<typeof MusteriSchema>;

@@ -6,8 +6,11 @@ import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { izinKontrol } from "@/shared/lib/izinler";
+import {
+  VEKALET_DOSYA_KLASOR,
+  vekaletDosyaDepoUrl,
+} from "@/shared/lib/vekalet-dosya";
 
-const UPLOAD_KLASOR = path.join(process.cwd(), "public", "uploads", "vekalet");
 const MAX_BYTE = 5 * 1024 * 1024; // 5 MB
 const KABUL_EDILEN = ["application/pdf", "image/jpeg", "image/png"];
 
@@ -79,12 +82,12 @@ export async function POST(req: Request) {
     );
   }
 
-  await fs.mkdir(UPLOAD_KLASOR, { recursive: true });
+  await fs.mkdir(VEKALET_DOSYA_KLASOR, { recursive: true });
 
   const uzanti = uzantiBul(dosya.type);
   const dosyaAdi = `${hisseId}-${randomBytes(8).toString("hex")}.${uzanti}`;
-  const fizikselYol = path.join(UPLOAD_KLASOR, dosyaAdi);
-  const dosyaUrl = `/uploads/vekalet/${dosyaAdi}`;
+  const fizikselYol = path.join(VEKALET_DOSYA_KLASOR, dosyaAdi);
+  const dosyaUrl = vekaletDosyaDepoUrl(dosyaAdi);
 
   const buffer = Buffer.from(await dosya.arrayBuffer());
   await fs.writeFile(fizikselYol, buffer);

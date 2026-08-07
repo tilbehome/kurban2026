@@ -10,6 +10,7 @@ import {
 import { musteriAktiviteleri } from "@/modules/musteriler/lib/aktivite.service";
 import { MusteriHero } from "@/modules/musteriler/components/MusteriHero";
 import { MusteriDetayClient } from "@/modules/musteriler/components/MusteriDetayClient";
+import { vekaletDosyaApiUrl } from "@/shared/lib/vekalet-dosya";
 import type { MusteriTabId } from "@/modules/musteriler/types";
 
 export const dynamic = "force-dynamic";
@@ -192,7 +193,7 @@ export default async function MusteriDetayPage({ params }: PageProps) {
       h.vekalet && !h.vekalet.silindiMi
         ? {
             id: h.vekalet.id,
-            dosyaUrl: h.vekalet.dosyaUrl,
+            dosyaUrl: vekaletDosyaApiUrl(h.vekalet.id),
             dosyaTipi: h.vekalet.dosyaTipi,
             dosyaBoyutu: h.vekalet.dosyaBoyutu,
             yukleyenAdSoyad: vUserMap.get(h.vekalet.olusturanId) ?? "—",

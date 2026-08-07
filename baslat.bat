@@ -38,6 +38,21 @@ echo.
 echo  Server baslatiliyor...
 echo.
 
+if not exist ".next\BUILD_ID" (
+  echo ============================================================
+  echo   URETIM DERLEMESI BULUNAMADI
+  echo ============================================================
+  echo.
+  echo   Once su komutu calistirin:
+  echo.
+  echo      pnpm build
+  echo.
+  echo   Build tamamlandiktan sonra baslat.bat'i yeniden acin.
+  echo.
+  pause
+  exit /b 1
+)
+
 :BASLA
 call pnpm start
 

@@ -14,7 +14,6 @@
  */
 
 import {
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -42,7 +41,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/shared/lib/utils";
 import { formatPara, parsePara } from "@/shared/lib/para";
 import { uuidv4 } from "@/shared/lib/uuid";
@@ -173,57 +171,30 @@ export function SahaSatisSihirbazi() {
     startTransition(async () => {
       try {
         // Adım A: Atama
-        const atamaResp = await fetch("/api/hisseler/ata", {
+        const satisResp = await fetch("/api/saha-satis", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             hisseIds: Array.from(seciliHisseIds),
             musteriId: musteri.id,
             hisseFiyati: hisseFiyati,
+            nakit: kaporaAlinacak ? kaporaNakit : 0,
+            havale: kaporaAlinacak ? kaporaHavale : 0,
+            kart: kaporaAlinacak ? kaporaKart : 0,
+            notlar: kaporaNot.trim() || `Saha satış kapora`,
+            clientRequestId: uuidv4(),
           }),
         });
-        const atamaSonuc = (await atamaResp.json()) as {
+        const satisSonuc = (await satisResp.json()) as {
           basarili: boolean;
+          odemeIds?: string[];
           hata?: string;
         };
-        if (!atamaResp.ok || !atamaSonuc.basarili) {
-          throw new Error(atamaSonuc.hata ?? "Atama başarısız");
+        if (!satisResp.ok || !satisSonuc.basarili) {
+          throw new Error(satisSonuc.hata ?? "Atama başarısız");
         }
 
-        // Adım B: Kapora (opsiyonel)
-        const odemeIds: string[] = [];
-        if (kaporaAlinacak && kaporaToplam > 0) {
-          const tahsilatResp = await fetch("/api/tahsilat/odeme", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              musteriId: musteri.id,
-              hisseIds: Array.from(seciliHisseIds),
-              nakit: kaporaNakit,
-              havale: kaporaHavale,
-              kart: kaporaKart,
-              notlar: kaporaNot.trim() || `Saha satış kapora`,
-              dagitim: "esit",
-              clientRequestId: uuidv4(),
-            }),
-          });
-          const tahsilatSonuc = (await tahsilatResp.json()) as {
-            basarili: boolean;
-            odemeIds?: string[];
-            hata?: string;
-          };
-          if (!tahsilatResp.ok || !tahsilatSonuc.basarili) {
-            // Atama başarılı ama kapora başarısız — kullanıcıyı bilgilendir, ama
-            // atamayı geri almaya çalışma (mevcut endpoint yok). Manuel düzeltme.
-            toast.error(
-              `Hisseler atandı ama kapora alınamadı: ${tahsilatSonuc.hata ?? "Hata"}. Müşteri detayından tekrar deneyin.`,
-            );
-            setSonuc({ musteriId: musteri.id, odemeIds: [] });
-            setAdim(5);
-            return;
-          }
-          if (tahsilatSonuc.odemeIds) odemeIds.push(...tahsilatSonuc.odemeIds);
-        }
+        const odemeIds = satisSonuc.odemeIds ?? [];
 
         toast.success(
           kaporaAlinacak && odemeIds.length > 0

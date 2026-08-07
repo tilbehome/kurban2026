@@ -12,6 +12,7 @@ import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
 import { prisma } from "@/shared/lib/prisma";
 import { VekaletYonetimiClient } from "@/modules/vekalet/components/VekaletYonetimiClient";
+import { vekaletDosyaApiUrl } from "@/shared/lib/vekalet-dosya";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ export default async function VekaletYonetimiPage() {
     include: {
       musteri: { select: { id: true, adSoyad: true, telefon: true } },
       kurban: { select: { id: true, kesimSirasi: true } },
-      vekalet: { select: { dosyaUrl: true, silindiMi: true } },
+      vekalet: { select: { id: true, silindiMi: true } },
     },
     orderBy: [
       { kurban: { kesimSirasi: "asc" } },
@@ -68,7 +69,9 @@ export default async function VekaletYonetimiPage() {
     vekaletAlindi: h.vekaletAlindi,
     vekaletTarihi: h.vekaletTarihi?.toISOString() ?? null,
     vekaletDosyaUrl:
-      h.vekalet && !h.vekalet.silindiMi ? h.vekalet.dosyaUrl : null,
+      h.vekalet && !h.vekalet.silindiMi
+        ? vekaletDosyaApiUrl(h.vekalet.id)
+        : null,
     musteri: {
       id: h.musteri!.id,
       adSoyad: h.musteri!.adSoyad,

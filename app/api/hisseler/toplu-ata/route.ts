@@ -22,9 +22,8 @@ const TopluAtamaSchema = z.object({
 
 /**
  * Toplu hisse atama — Hızlı Mod için.
- * Tek transaction'da çoklu atama yapar.
- * Tüm hisseler için musteriId=null kontrolü yapılır;
- * doluysa fail-safe ile o atama atlanır (raporda gösterilir).
+ * İşlem all-or-nothing transaction içinde yürür; herhangi bir hisse eksik,
+ * dolu veya eşzamanlı doldurulmuşsa hiçbir atama kalıcı olmaz.
  */
 export async function POST(req: Request) {
   const oturum = await aktifOturum();
@@ -50,61 +49,93 @@ export async function POST(req: Request) {
     return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
   }
 
-  const hisseIds = veri.atamalar.map((a) => a.hisseId);
-  const hisseler = await prisma.hisse.findMany({
-    where: { id: { in: hisseIds } },
-    select: { id: true, musteriId: true, no: true },
-  });
-  const hisseMap = new Map(hisseler.map((h) => [h.id, h]));
-
-  const basarili: string[] = [];
-  const atlananlar: { hisseId: string; sebep: string }[] = [];
-
-  for (const a of veri.atamalar) {
-    const mevcut = hisseMap.get(a.hisseId);
-    if (!mevcut) {
-      atlananlar.push({ hisseId: a.hisseId, sebep: "Hisse bulunamadı" });
-      continue;
-    }
-    if (mevcut.musteriId !== null) {
-      atlananlar.push({
-        hisseId: a.hisseId,
-        sebep: `Hisse #${mevcut.no} zaten dolu`,
+  try {
+    const basarili = await prisma.$transaction(async (tx) => {
+      const hisseIds = veri.atamalar.map((a) => a.hisseId);
+      const hisseler = await tx.hisse.findMany({
+        where: { id: { in: hisseIds }, silindiMi: false },
+        select: { id: true, musteriId: true, no: true },
       });
-      continue;
-    }
-    await prisma.hisse.update({
-      where: { id: a.hisseId },
-      data: {
-        musteriId: a.musteriId,
-        hisseFiyati: yuvarla(a.hisseFiyati),
-      },
+      const hisseMap = new Map(hisseler.map((h) => [h.id, h]));
+
+      for (const a of veri.atamalar) {
+        const mevcut = hisseMap.get(a.hisseId);
+        if (!mevcut) throw new Error("HISSE_YOK");
+        if (mevcut.musteriId !== null) {
+          throw new Error(`HISSE_DOLU:${mevcut.no}`);
+        }
+      }
+
+      const basarili: string[] = [];
+      for (const a of veri.atamalar) {
+        const guncelleme = await tx.hisse.updateMany({
+          where: { id: a.hisseId, musteriId: null, silindiMi: false },
+          data: {
+            musteriId: a.musteriId,
+            hisseFiyati: yuvarla(a.hisseFiyati),
+          },
+        });
+
+        if (guncelleme.count === 0) {
+          throw new Error("HISSE_ESZAMANLI_ATANDI");
+        }
+
+        basarili.push(a.hisseId);
+      }
+
+      await auditLog({
+        tx,
+        eylem: "hisse-toplu-atama",
+        model: "Hisse",
+        kayitId: basarili[0] ?? veri.atamalar[0].hisseId,
+        kullaniciId: oturum.kullaniciId,
+        ip: ipCikar(req),
+        detaylar: {
+          toplam: veri.atamalar.length,
+          basarili: basarili.length,
+          hisseIds: basarili,
+        },
+      });
+
+      return basarili;
     });
-    basarili.push(a.hisseId);
-  }
 
-  await auditLog({
-    eylem: "hisse-toplu-atama",
-    model: "Hisse",
-    kayitId: basarili[0] ?? veri.atamalar[0].hisseId,
-    kullaniciId: oturum.kullaniciId,
-    ip: ipCikar(req),
-    detaylar: {
-      toplam: veri.atamalar.length,
-      basarili: basarili.length,
-      atlanan: atlananlar.length,
-      atlananDetay: atlananlar,
-    },
-  });
-
-  if (basarili.length > 0) {
     yayinla("hisse:toplu-atandi", { hisseIds: basarili });
-  }
 
-  return NextResponse.json({
-    basarili: true,
-    basariliAtama: basarili.length,
-    atlanan: atlananlar.length,
-    atlananDetay: atlananlar,
-  });
+    return NextResponse.json({
+      basarili: true,
+      basariliAtama: basarili.length,
+    });
+  } catch (e) {
+    if (e instanceof Error) {
+      if (e.message === "HISSE_YOK") {
+        return NextResponse.json(
+          { basarili: false, hata: "Hisseler bulunamadı" },
+          { status: 404 },
+        );
+      }
+      if (e.message.startsWith("HISSE_DOLU:")) {
+        return NextResponse.json(
+          {
+            basarili: false,
+            hata: `Hisse #${e.message.slice("HISSE_DOLU:".length)} zaten dolu`,
+          },
+          { status: 409 },
+        );
+      }
+      if (e.message === "HISSE_ESZAMANLI_ATANDI") {
+        return NextResponse.json(
+          {
+            basarili: false,
+            hata: "Hisselerden biri eşzamanlı başka kullanıcı tarafından dolduruldu. Listeyi yenileyip tekrar deneyin.",
+          },
+          { status: 409 },
+        );
+      }
+    }
+    return NextResponse.json(
+      { basarili: false, hata: "Toplu atama tamamlanamadı" },
+      { status: 500 },
+    );
+  }
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
+import { izinKontrol } from "@/shared/lib/izinler";
 import { yuvarla } from "@/shared/lib/para";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 
@@ -28,6 +29,14 @@ export async function POST(req: Request) {
   } catch (e) {
     const m = e instanceof z.ZodError ? e.issues[0]?.message : "Geçersiz veri";
     return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
+  }
+
+  const gerekliIzin = `kasa.${veri.tip}`;
+  if (!izinKontrol(oturum, gerekliIzin)) {
+    return NextResponse.json(
+      { basarili: false, hata: "Kasa hareketi yetkiniz yok" },
+      { status: 403 },
+    );
   }
 
   const hareket = await prisma.kasaHareketi.create({

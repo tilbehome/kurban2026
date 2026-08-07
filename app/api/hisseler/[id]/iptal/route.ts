@@ -58,6 +58,17 @@ export async function POST(req: Request, { params }: RouteParams) {
   }
 
   const odenenToplam = hisse.odemeler.reduce((s, o) => s + o.toplamTutar, 0);
+  if (odenenToplam > 0) {
+    return NextResponse.json(
+      {
+        basarili: false,
+        hata:
+          "Bu hissede aktif tahsilat var. Önce tahsilatı iptal/iade edin veya mahsup sürecini tamamlayın.",
+        veri: { hisseId: id, odenenToplam },
+      },
+      { status: 409 },
+    );
+  }
 
   // Hisse boşaltılır — vekalet de varsa kaldırılır
   await prisma.hisse.update({

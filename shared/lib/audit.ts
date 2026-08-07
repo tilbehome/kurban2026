@@ -7,6 +7,7 @@
 
 import { prisma } from "./prisma";
 import { log } from "./log";
+import type { Prisma } from "@prisma/client";
 
 export type AuditEylem =
   | "olustur"
@@ -41,6 +42,8 @@ export type AuditEylem =
   | "pwa-yukleme";
 
 export interface AuditVeri {
+  /** Transaction iÃ§inde audit yazmak iÃ§in opsiyonel Prisma client */
+  tx?: Prisma.TransactionClient;
   eylem: AuditEylem;
   /** Etkilenen model adı (Musteri, Odeme vb.) — opsiyonel */
   model?: string;
@@ -60,7 +63,8 @@ export interface AuditVeri {
  */
 export async function auditLog(veri: AuditVeri): Promise<void> {
   try {
-    await prisma.auditLog.create({
+    const db = veri.tx ?? prisma;
+    await db.auditLog.create({
       data: {
         eylem: veri.eylem,
         model: veri.model ?? null,

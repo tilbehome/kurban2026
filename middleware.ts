@@ -16,6 +16,7 @@ const NO_STORE_PATTERN = [
   /^\/api\/hayvan(\/|$)/,
   /^\/api\/dashboard(\/|$)/,
   /^\/api\/raporlar(\/|$)/,
+  /^\/api\/vekaletler(\/|$)/,
   /^\/api\/whatsapp(\/|$)/,
   /^\/api\/sidebar(\/|$)/,
   /^\/api\/ayarlar(\/|$)/,
@@ -46,6 +47,16 @@ function noStoreUygula(res: NextResponse): NextResponse {
  */
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  if (pathname.startsWith("/uploads/vekalet/")) {
+    return new NextResponse("Forbidden", {
+      status: 403,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+      },
+    });
+  }
 
   if (
     pathname.startsWith("/_next") ||

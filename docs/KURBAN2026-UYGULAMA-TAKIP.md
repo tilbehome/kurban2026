@@ -1,0 +1,55 @@
+# Kurban 2026 Uygulama Takip Defteri
+
+Kaynak sözleşme: `C:\Users\PC\Downloads\2026kuban\KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
+
+Bu defter, yol haritasındaki fazları ve 68 iş akışını kod değişikliklerine bağlamak için tutulur. Bir iş “tamamlandı” sayılmadan önce kod, yetki, hata senaryosu, test ve kabul kanıtı birlikte değerlendirilir.
+
+## Faz 1 / P0 — güvenlik ve teknik stabilizasyon
+
+| İş | Bağlı akışlar | Durum | Kanıt |
+|---|---:|---|---|
+| Eksik API yetkileri | 60, 61 | Tamamlandı | `hisseler.ata`, `kasa.*`, `musteriler.*`, `hayvanlar.olustur`, `musteriler.vekalet.oku` kontrolleri eklendi. |
+| Hisse atama race condition | 20, 21, 25 | Tamamlandı | Tekli ve toplu atama transaction + `musteriId=null` koşullu update kullanıyor; kısmi toplu atama kaldırıldı. |
+| Ödemeli hisse iptal kilidi | 27, 33, 35 | Tamamlandı | Aktif tahsilat varsa hisse boşaltma 409 ile reddediliyor. |
+| Hassas veri ignore kuralları | 62, 63 | Tamamlandı | SQLite WAL/SHM, seed kopyaları, `public/uploads/`, `data/uploads/` ignore ediliyor. |
+| Korumalı vekâlet dosyası | 38, 62 | Tamamlandı | Yeni dosyalar `data/uploads/vekalet` altına yazılıyor, DB fiziksel yol göstermiyor, okuma `/api/vekaletler/[id]` üzerinden yetkili ve no-store. |
+| Eski vekâlet taşıma hazırlığı | 38, 62 | Tamamlandı | `scripts/migrate-vekalet-files.mjs` eklendi; varsayılan dry-run, `--apply` verilmeden veri değiştirmiyor. |
+| Saha satış + kapora atomikliği | 21, 22, 29, 30 | Tamamlandı | `/api/saha-satis` atama + opsiyonel kaporayı tek transaction içinde yapıyor, `clientRequestId` ile idempotent tekrarları engelliyor. |
+| Build/start güvenliği | 63, 64, 65 | Tamamlandı | `baslat.bat` build yoksa loop'a girmiyor; `pnpm build` başarılı. |
+| Lint kalite kapısı | 14, 23.2, 24.12 | Tamamlandı | `pnpm lint` 0 hata ile tamamlanıyor; kalan 41 warning sınıflandırıldı. |
+| Node/pnpm sabitleme | 63, 65 | Tamamlandı | `packageManager` ve `engines` eklendi. |
+
+## Son doğrulama komutları
+
+| Komut | Sonuç |
+|---|---|
+| `pnpm exec tsc --noEmit` | Geçti |
+| `pnpm test` | Geçti — 7 dosya, 84 test |
+| `pnpm lint` | Geçti — 0 hata, 38 warning |
+| `pnpm build` | Geçti — Next.js production build başarılı, `.next/BUILD_ID` üretildi |
+| `node scripts/migrate-vekalet-files.mjs` | Geçti — dry-run, taşınacak/başarısız kayıt yok |
+| Local HTTP smoke | Geçti — `GET /giris` 200, `GET /uploads/vekalet/test.png` 403 |
+
+## Eklenen test kapsamı
+
+- `/api/saha-satis`: yetkisiz erişim, başarılı kaporalı satış, eşzamanlı hisse dolması, satılmış hisse, eksik müşteri/hisse, tutar validasyonları, idempotent tekrar, gizli hata sızdırmama.
+- `/api/hisseler/toplu-ata`: hisselerden biri doluysa hiçbir atama yazmama.
+- `/api/hisseler/[id]/iptal`: ödemesi olan hisseyi doğrudan boşaltmayı engelleme.
+- `shared/lib/vekalet-dosya`: API URL üretimi, dosya adı/path traversal koruması, yeni ve legacy dosya çözümleme.
+
+## Lint warning sınıflandırması
+
+- Kullanılmayan import/değişkenler: müşteri, rapor, tahsilat, hayvan, TV ve sidebar bileşenlerinde kozmetik/dead-code niteliğinde.
+- Kullanılmayan `eslint-disable` satırları: bazı React hook uyarıları artık global Faz 1 ayarıyla bastırıldığı için etkisiz kalmış.
+- Güvenlik veya veri bütünlüğü açısından P0 engelleyici warning görülmedi.
+
+## Bilerek ertelenenler
+
+1. Saha satış ekranında yeni müşteri oluşturma: P0 atomiklik kuruldu; yeni müşteri yaratma ayrı davranış ve UX kararı gerektirdiği için Faz 2 paketine bırakıldı.
+2. Çoklu firma mimarisi: Kullanıcı notlarına uygun olarak P0 checkpoint tamamlanmadan başlanmadı.
+3. Ürün kimliği/platform panelleri: Kullanıcı notlarına uygun olarak bu checkpoint dışında tutuldu.
+4. Para modeli `Float` dönüşümü: Canlı veri migrasyon kararı ve yedek planı gerektirdiği için ayrı migrasyon paketi olarak ele alınacak.
+
+## Geri alma notu
+
+Bu P0 paketi tek commit olarak tutulur. Geri alma gerektiğinde commit revert edilerek kod geri alınabilir. Vekâlet migrasyon scripti dry-run varsayılanlıdır; `--apply` çalıştırılmadıkça gerçek dosya/DB taşıması yapmaz.
