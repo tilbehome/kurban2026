@@ -18,6 +18,8 @@ model Organization {
   tenants         TenantInstance[]
   licenses        PlatformLicense[]
   auditLogs       PlatformAuditLog[]
+  provisioningJobs PlatformProvisioningJob[]
+  emergencyStops  EmergencyStop[]
 }
 
 model TenantInstance {
@@ -33,6 +35,9 @@ model TenantInstance {
   updatedAt          DateTime           @updatedAt
   organization       Organization       @relation(fields: [organizationId], references: [id])
   databaseRef        TenantDatabaseRef  @relation(fields: [databaseRefId], references: [id])
+  provisioningJobs   PlatformProvisioningJob[]
+  healthSnapshots    TenantHealthSnapshot[]
+  emergencyStops     EmergencyStop[]
 
   @@index([organizationId])
 }
@@ -46,6 +51,7 @@ model TenantDatabaseRef {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   tenantInstances TenantInstance[]
+  provisioningJobs PlatformProvisioningJob[]
 }
 
 model PlatformPlan {
@@ -71,6 +77,7 @@ model PlatformModule {
   updatedAt   DateTime                       @updatedAt
   plans       PlatformPlanModule[]
   entitlements PlatformLicenseEntitlement[]
+  emergencyStops EmergencyStop[]
 }
 
 model PlatformPlanModule {
@@ -124,6 +131,12 @@ model PlatformUser {
   updatedAt   DateTime           @updatedAt
   roles       PlatformUserRole[]
   auditLogs   PlatformAuditLog[]
+  mfaEnrollments PlatformMfaEnrollment[]
+  sessions    PlatformSession[]
+  devices     PlatformDevice[]
+  provisioningJobs PlatformProvisioningJob[]
+  emergencyStops EmergencyStop[]
+  supportTicketLinks PlatformSupportTicketLink[]
 }
 
 model PlatformRole {
@@ -162,4 +175,130 @@ model PlatformAuditLog {
   @@index([organizationId])
   @@index([actorUserId])
   @@index([requestId])
+}
+
+model PlatformMfaEnrollment {
+  id          String   @id
+  userId      String
+  method      String
+  status      String
+  createdAt   DateTime @default(now())
+  activatedAt DateTime?
+  revokedAt   DateTime?
+  user        PlatformUser @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model PlatformDevice {
+  id          String   @id
+  userId      String
+  label       String
+  userAgent   String?
+  trustStatus String
+  firstSeenAt DateTime
+  lastSeenAt  DateTime
+  user        PlatformUser @relation(fields: [userId], references: [id])
+  sessions    PlatformSession[]
+
+  @@index([userId])
+}
+
+model PlatformSession {
+  id         String   @id
+  userId     String
+  deviceId   String
+  status     String
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  user       PlatformUser @relation(fields: [userId], references: [id])
+  device     PlatformDevice @relation(fields: [deviceId], references: [id])
+
+  @@index([userId])
+  @@index([deviceId])
+}
+
+model PlatformProvisioningJob {
+  id                String   @id
+  organizationId    String
+  tenantInstanceId  String
+  requestedByUserId String
+  databaseRefId     String
+  status            String
+  steps             Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  organization      Organization @relation(fields: [organizationId], references: [id])
+  tenantInstance    TenantInstance @relation(fields: [tenantInstanceId], references: [id])
+  requestedByUser   PlatformUser @relation(fields: [requestedByUserId], references: [id])
+  databaseRef       TenantDatabaseRef @relation(fields: [databaseRefId], references: [id])
+
+  @@index([organizationId])
+  @@index([tenantInstanceId])
+  @@index([requestedByUserId])
+}
+
+model TenantHealthSnapshot {
+  id                 String   @id
+  tenantInstanceId   String
+  status             String
+  version            String?
+  migrationVersion   String?
+  lastBackupAt       DateTime?
+  lastRestoreDrillAt DateTime?
+  checkedAt          DateTime
+  tenantInstance     TenantInstance @relation(fields: [tenantInstanceId], references: [id])
+
+  @@index([tenantInstanceId])
+}
+
+model EmergencyStop {
+  id               String   @id
+  organizationId   String
+  tenantInstanceId String?
+  moduleId         String?
+  status           String
+  reason           String?
+  changedByUserId  String
+  changedAt        DateTime
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  tenantInstance   TenantInstance? @relation(fields: [tenantInstanceId], references: [id])
+  module           PlatformModule? @relation(fields: [moduleId], references: [id])
+  changedByUser    PlatformUser @relation(fields: [changedByUserId], references: [id])
+
+  @@index([organizationId])
+  @@index([tenantInstanceId])
+  @@index([moduleId])
+}
+
+model PlatformIncident {
+  id                String   @id
+  severity          String
+  status            String
+  title             String
+  affectedTenantIds Json
+  openedAt          DateTime
+  resolvedAt        DateTime?
+}
+
+model MaintenanceWindow {
+  id                String   @id
+  status            String
+  title             String
+  affectedTenantIds Json
+  plannedStartAt    DateTime
+  plannedEndAt      DateTime
+}
+
+model PlatformSupportTicketLink {
+  ticketId         String @id
+  supportSessionId String
+  linkedByUserId   String
+  linkedAt         DateTime
+  linkedByUser     PlatformUser @relation(fields: [linkedByUserId], references: [id])
+
+  @@index([supportSessionId])
+  @@index([linkedByUserId])
 }

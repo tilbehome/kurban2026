@@ -31,6 +31,7 @@ const eslintConfig = defineConfig([
     "public/workbox-*.js",
     "public/workbox-*.js.map",
     "packages/database-platform/generated/**",
+    "packages/database-tenant/generated/**",
   ]),
 ]);
 

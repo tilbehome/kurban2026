@@ -54,6 +54,7 @@ next-env.d.ts
 # prisma generated
 /lib/generated/prisma
 /packages/database-platform/generated/
+/packages/database-tenant/generated/
 
 # Tilbe Kurban - Yerel veriler
 *.db

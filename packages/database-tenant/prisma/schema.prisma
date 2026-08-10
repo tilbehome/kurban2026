@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("TENANT_DATABASE_URL")
+}
+
+model Season {
+  id        String   @id
+  name      String
+  status    String
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  customers Customer[]
+  animals   Animal[]
+  shareCards ShareCard[]
+  sales     Sale[]
+  ledgerEntries LedgerEntry[]
+}
+
+model Customer {
+  id                     String   @id
+  seasonId               String
+  displayName            String
+  phone                  String?
+  normalizedPhone        String?
+  kvkkConsentAt          DateTime?
+  communicationConsentAt DateTime?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  season                 Season   @relation(fields: [seasonId], references: [id])
+  sales                  Sale[]
+  shares                 Share[]
+  ledgerEntries          LedgerEntry[]
+
+  @@index([seasonId])
+  @@index([normalizedPhone])
+}
+
+model Supplier {
+  id          String   @id
+  displayName String
+  phone       String?
+  taxNumber   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  animals     Animal[]
+}
+
+model Animal {
+  id              String   @id
+  seasonId        String
+  supplierId      String?
+  earTag          String
+  status          String
+  purchaseAmount  Decimal? @db.Decimal(18, 4)
+  liveWeightKg    Decimal? @db.Decimal(12, 3)
+  carcassWeightKg Decimal? @db.Decimal(12, 3)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  season          Season   @relation(fields: [seasonId], references: [id])
+  supplier        Supplier? @relation(fields: [supplierId], references: [id])
+  shareCards      ShareCard[]
+
+  @@unique([seasonId, earTag])
+  @@index([supplierId])
+}
+
+model ShareCard {
+  id               String   @id
+  seasonId         String
+  animalId         String
+  displayNo        String?
+  targetShareCount Int      @default(7)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  season           Season   @relation(fields: [seasonId], references: [id])
+  animal           Animal   @relation(fields: [animalId], references: [id])
+  shares           Share[]
+
+  @@index([seasonId])
+  @@index([animalId])
+}
+
+model Share {
+  id            String   @id
+  shareCardId   String
+  sequenceNo    Int
+  status        String
+  customerId    String?
+  agreedPrice   Decimal? @db.Decimal(18, 4)
+  reservedUntil DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  shareCard     ShareCard @relation(fields: [shareCardId], references: [id])
+  customer      Customer? @relation(fields: [customerId], references: [id])
+  saleShares    SaleShare[]
+
+  @@unique([shareCardId, sequenceNo])
+  @@index([customerId])
+}
+
+model Sale {
+  id             String   @id
+  seasonId       String
+  customerId     String
+  status         String
+  priceSnapshot  Decimal  @db.Decimal(18, 4)
+  discountAmount Decimal? @db.Decimal(18, 4)
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  season         Season   @relation(fields: [seasonId], references: [id])
+  customer       Customer @relation(fields: [customerId], references: [id])
+  shares         SaleShare[]
+  ledgerEntries  LedgerEntry[]
+
+  @@index([seasonId])
+  @@index([customerId])
+}
+
+model SaleShare {
+  saleId  String
+  shareId String
+  sale    Sale  @relation(fields: [saleId], references: [id])
+  share   Share @relation(fields: [shareId], references: [id])
+
+  @@id([saleId, shareId])
+}
+
+model LedgerEntry {
+  id                String   @id
+  seasonId          String
+  type              String
+  amount            Decimal  @db.Decimal(18, 4)
+  currency          String
+  saleId            String?
+  customerId        String?
+  reversalOfEntryId String?
+  occurredAt        DateTime
+  createdAt         DateTime @default(now())
+  season            Season   @relation(fields: [seasonId], references: [id])
+  sale              Sale?    @relation(fields: [saleId], references: [id])
+  customer          Customer? @relation(fields: [customerId], references: [id])
+  reversalOf        LedgerEntry? @relation("LedgerReversal", fields: [reversalOfEntryId], references: [id])
+  reversals         LedgerEntry[] @relation("LedgerReversal")
+
+  @@index([seasonId])
+  @@index([saleId])
+  @@index([customerId])
+  @@index([reversalOfEntryId])
+}
+
+model TenantAuditLog {
+  id          String   @id
+  actorUserId String?
+  action      String
+  targetType  String
+  targetId    String?
+  requestId   String
+  occurredAt  DateTime
+  metadata    Json?
+
+  @@index([requestId])
+  @@index([actorUserId])
+}
+
+model TenantOutboxMessage {
+  id             String   @id
+  topic          String
+  payload        Json
+  status         String
+  idempotencyKey String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+  @@index([idempotencyKey])
+}

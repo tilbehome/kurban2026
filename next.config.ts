@@ -70,6 +70,7 @@ const withPWA = withPWAInit({
   buildExcludes: [
     /middleware-manifest\.json$/,
     /packages[\\/]database-platform[\\/]generated[\\/]/,
+    /packages[\\/]database-tenant[\\/]generated[\\/]/,
     /packages[\\/][^\\/]+[\\/]node_modules[\\/]/,
   ],
 });

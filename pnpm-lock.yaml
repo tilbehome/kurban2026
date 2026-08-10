@@ -162,7 +162,22 @@ importers:
         specifier: workspace:*
         version: link:../platform
 
+  packages/database-tenant:
+    dependencies:
+      '@tilbecore/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@tilbecore/tenant-core':
+        specifier: workspace:*
+        version: link:../tenant-core
+
   packages/platform:
+    dependencies:
+      '@tilbecore/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
+  packages/tenant-core:
     dependencies:
       '@tilbecore/contracts':
         specifier: workspace:*
