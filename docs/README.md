@@ -20,6 +20,7 @@ Bu dizin, güncel mimari belgeleri tarihsel çalışma kayıtlarından ayırır.
 - [Fazlar, riskler ve geri dönüş](architecture/12-FAZLAR-RISKLER-VE-GERI-DONUS.md)
 - [Hedef dizin iskeleti ve modül standardı](architecture/13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md)
 - [Program tam kapsam envanteri](architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md)
+- [Faz 2A import grafiği ve taşıma matrisi](architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md)
 - [Uygulama takip defteri](architecture/KURBAN2026-UYGULAMA-TAKIP.md)
 
 ## Belge durumları

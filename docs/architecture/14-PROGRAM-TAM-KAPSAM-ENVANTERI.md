@@ -10,7 +10,7 @@ Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesi
 
 - Ürün adı TilbeCore – Kurban Takip’tir.
 - Faz 1 tamamlandı: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
-- Faz 2 henüz başlamadı; sıradaki aşama Faz 2A’dır.
+- Faz 2A workspace/sözleşme/sınır paketi başladı; tamamlandı olarak kabul edilmez. `b536078` erken saha satış modüler pilotu olarak sınıflandırılır.
 - Çok firma veri izolasyonu, Platform Süper Admin ve firma başına ayrı PostgreSQL Faz 2’nin zorunlu temelidir.
 - Çok şube, self-service üyelik, otomatik abonelik/faturalama ve gelişmiş ticari SaaS özellikleri sonraya bırakılmıştır.
 - Sistem yalnız büyükbaş kurban içindir.

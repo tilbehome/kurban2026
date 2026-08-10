@@ -5,7 +5,7 @@ Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dö
 ## 10 Ağustos 2026 uyum notu
 
 - Faz 1 tamamlandı ve `origin/main` dalına gönderildi: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
-- Faz 2 henüz başlamadı.
+- Faz 2A workspace/sözleşme/sınır paketi başladı; tamamlandı olarak kabul edilmez. `b536078` erken saha satış modüler pilotu olarak sınıflandırılır.
 - Eski belgelerde çok firma, SaaS veya PostgreSQL’in ileri faza bırakıldığı yerlerde yerine geçen karar şudur: çok firma veri izolasyonu, Platform Süper Admin ve firma başına ayrı PostgreSQL Faz 2’nin zorunlu çekirdeğidir; self-service üyelik, otomatik abonelik/faturalama ve gelişmiş ticari SaaS özellikleri sonraya bırakılır.
 - Sistem yalnız büyükbaş kurban içindir; küçükbaş/adak/akika kapsam dışıdır.
 - Placeholder/yakında sayfaları tamamlanmış özellik sayılmaz.

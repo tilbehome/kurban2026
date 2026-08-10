@@ -65,7 +65,7 @@ Zayıf taraflar:
 
 - Faz 1 kapanış commit’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
 - Eski `e47bbe5` referansı tarihsel P0 ara noktasıdır; geçerli Faz 1 kapanış kanıtı değildir.
-- Faz 2 henüz başlamadı; sıradaki aşama Faz 2A mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planıdır.
+- Faz 2A workspace/sözleşme/sınır paketi başladı; tamamlandı olarak kabul edilmez. `b536078` yalnız erken saha satış modüler pilotudur; gerçek Faz 2A kanıtları `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`, `packages/contracts` ve mimari sınır testleriyle izlenir.
 
 ## İlk önemli teknik kanıtlar
 

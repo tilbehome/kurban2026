@@ -77,12 +77,24 @@ Bu P0 paketi tek commit olarak tutulur. Geri alma gerektiğinde commit revert ed
 
 **Sıradaki aşama:** Faz 2A — mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı.
 
-Faz 2A başlamadan önce dokümantasyon uyumu, import grafiği, taşıma matrisi, platform/tenant veri sınırı ADR’si ve tenant isolation test planı hazırlanmalıdır. Faz 2A sırasında kaynak davranışı, Prisma şeması ve üretim verisi değiştirilmeden önce ayrıca uygulama kapsamı onaylanır.
+Faz 2A gerçek workspace/sözleşme/sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden başlatıldı. Faz 2A tamamlandı olarak kabul edilmez; tamamlanma ancak import grafiği, taşıma matrisi, platform/tenant sözleşmeleri, mimari bağımlılık testleri ve sonraki izolasyon/test planı kanıtlarıyla ayrıca değerlendirilecektir.
 
 ### Faz 2A pilot — saha satış route ayrıştırması
+
+**Sınıflandırma:** `b536078` commit’i erken tamamlanan saha satış modüler pilotudur; Faz 2A’nın tamamlandığı anlamına gelmez.
 
 | İş | Bağlı akışlar | Durum | Kanıt |
 |---|---:|---|---|
 | `/api/saha-satis` ince adaptör pilotu | 21, 22, 29, 30, 60, 62 | Uygulandı | Route HTTP/Zod/oturum/hata adaptörüne indirildi; satış, idempotency, transaction, audit, kapora ve event orkestrasyonu `modules/tahsilat/application/saha-satis.use-case.ts` içine alındı. Saf hesap ve kural kontrolleri `modules/tahsilat/domain/saha-satis.ts` içinde testlendi. |
 
 Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı değiştirilmedi. Geriye uyum için başarılı cevap gövdesi, merkezi hata `kod/mesajAnahtari/requestId` alanları ve mevcut HTTP statusleri korunur.
+
+### Faz 2A workspace ve mimari sınır paketi
+
+| İş | Durum | Kanıt |
+|---|---|---|
+| Workspace paket deseni | Uygulandı | `pnpm-workspace.yaml` içinde `packages/*` tanımlandı. |
+| Platform/tenant TypeScript sözleşmeleri | Uygulandı | `packages/contracts/src/platform-tenant.ts`. |
+| Mimari bağımlılık sınır testi | Uygulandı | `tests/architecture-boundaries.test.ts`. |
+| Sözleşme davranış testi | Uygulandı | `tests/platform-tenant-contracts.test.ts`. |
+| Import grafiği ve taşıma matrisi | Uygulandı | `docs/architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`. |

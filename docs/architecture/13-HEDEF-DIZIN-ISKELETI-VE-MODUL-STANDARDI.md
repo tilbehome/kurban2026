@@ -244,8 +244,8 @@ Zorunlu kurallar:
 
 | Aşama | Giriş şartı | Değişecek alanlar | Testler | Build kontrolü | Smoke testi | Commit noktası | Geri dönüş |
 |---|---|---|---|---|---|---|---|
-| 1. Faz 2A mimari sözleşme ve iskelet | Faz 1 commit’i ve ana belge uyumu | Workspace/dizin sözleşmesi, import graph, taşıma matrisi | Belge bağlantısı, mimari kural kontrolleri | `pnpm build` davranış değişmeden geçmeli | Giriş + kritik route smoke | `docs/chore: align architecture contracts` | Commit revert |
-| 2. Saha satış modüler pilotu | Faz 2A sözleşmeleri hazır | `/api/saha-satis`, tahsilat/hisse use-case | Unit, mock route, PG integration | `pnpm build` | Kaporalı/kaporasız satış | `refactor: modularize saha sales` | Route eski adaptöre döner |
+| 1. Faz 2A mimari sözleşme ve iskelet | Faz 1 commit’i ve ana belge uyumu | Workspace/dizin sözleşmesi, import graph, taşıma matrisi, platform/tenant contract | Belge bağlantısı, mimari kural kontrolleri, sözleşme testleri | `pnpm build` davranış değişmeden geçmeli | Giriş + kritik route smoke | `feat(faz-2a): workspace ve mimari sınırları oluştur` | Commit revert |
+| 2. Saha satış modüler pilotu | Erken pilot olarak tamamlandı | `/api/saha-satis`, tahsilat/hisse use-case | Unit, mock route | `pnpm build` | Kaporalı/kaporasız satış | `b536078` erken pilot commit’i | Route eski adaptöre döner |
 | 3. Müşteri/hayvan/hisse modülleri | Pilot kalıbı kanıtlandı | Domain/application ayrımı | Unit + route | `pnpm build` | Müşteri/hisse atama | Modül bazlı commit | Modül revert |
 | 4. Tahsilat ve finans modülleri | PG test harness hazır | Tahsilat, kasa, ledger hazırlığı | Ledger unit, concurrency | `pnpm build` | Tahsilat/dekont | Finans checkpoint | Backup + revert |
 | 5. Vekâlet/kesim/paket/teslimat | Dosya ve workflow portları hazır | Vekâlet, state machine | Workflow + security | `pnpm build` | Dosya/TV/teslim | Operasyon checkpoint | Feature flag kapat |
@@ -260,4 +260,4 @@ Zorunlu kurallar:
 
 - Bu belge onaylanmadan fiziksel dizin taşıması yapılmaz.
 - UTF-8/i18n temeli Faz 1’de tamamlandı.
-- Sıradaki aşama Faz 2A’dır; fiziksel taşıma veya kod davranışı değiştirme başlamadan önce mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı onaylanmalıdır.
+- Sıradaki aşama Faz 2A’dır; bu aşama workspace/sözleşme/sınır paketiyle başlamıştır fakat tamamlandı kabul edilmez. Fiziksel taşıma veya kod davranışı değiştirme başlamadan önce mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı testlerle kanıtlanmalıdır.

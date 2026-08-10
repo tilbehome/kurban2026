@@ -742,7 +742,7 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 
 #### Faz 2A — Mimari sözleşme ve monorepo iskeleti
 
-**Mevcut durum:** Henüz başlamadı. Bu aşamadan önce yalnız dokümantasyon uyumu yapılır; kaynak kod, Prisma şeması, package yapısı ve fiziksel klasör taşıması yapılmaz.
+**Mevcut durum:** Başladı; tamamlandı olarak kabul edilmez. `b536078` commit’i erken tamamlanan saha satış modüler pilotudur ve Faz 2A kapanışı değildir. `120afa16e8b635823a80b0967cbfe18e651bd2ad` sonrasında gerçek Faz 2A workspace/sözleşme/sınır paketi başlatılmıştır.
 
 - Bu belgenin repo dokümanlarına işlenmesi
 - `AGENTS.md`, gereksinim matrisi, risk/geri dönüş ve envanter uyumu
@@ -751,6 +751,8 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - mimari bağımlılık testleri
 - mevcut modüllerin taşıma matrisi
 - platform/tenant contract’ları
+
+Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği ve taşıma matrisi `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md` içinde tutulur.
 
 #### Faz 2B — Platform Control Plane ve Süper Admin MVP
 
@@ -1018,7 +1020,7 @@ docs/
 
 - Faz 1 tamamlandı ve `origin/main` dalına gönderildi,
 - Faz 1 commit’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`,
-- Faz 2 henüz başlamadı,
+- Faz 2A workspace/sözleşme/sınır paketi başladı; Faz 2A tamamlandı olarak kabul edilmez,
 - merkezi hata/i18n yalnız beş pilot route’ta,
 - finansal `Float`, yeni ledger, PostgreSQL, tenant izolasyonu ve gerçek integration/E2E testleri henüz yapılmadı,
 - 69 placeholder/yakında sayfası gerçek özellik kabul edilmiyor.
@@ -1042,6 +1044,14 @@ Faz 2 başlamadan önce verilecek zorunlu kanıtlar:
 - yeni dizin taşıma matrisi,
 - platform/tenant veri sınırı ADR’si,
 - tenant isolation test planı.
+
+### 14.1 Faz 2A uygulama sınıflandırması
+
+- `b536078` commit’i erken tamamlanan saha satış modüler pilotudur.
+- Bu pilot `/api/saha-satis` için route adaptörü, application/use-case ve domain kural ayrımını kanıtlar.
+- Bu pilot Faz 2A’nın tamamlandığı anlamına gelmez.
+- Gerçek Faz 2A workspace ve mimari sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden yürütülür.
+- Faz 2A çıkış kanıtları `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`, `packages/contracts` ve mimari bağımlılık testleriyle izlenir.
 
 ---
 

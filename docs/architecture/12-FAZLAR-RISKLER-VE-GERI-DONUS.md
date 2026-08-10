@@ -6,9 +6,10 @@ Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesi
 
 - Faz 1 tamamlandı ve `origin/main` dalına gönderildi.
 - Faz 1 commit: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
-- Faz 2 henüz başlamadı.
-- Sıradaki aşama Faz 2A’dır: mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı.
-- Faz 2A’da kaynak kod davranışı, Prisma şeması, PostgreSQL kurulumu veya Süper Admin kodlaması yapılmaz; bunlar onaylı sonraki uygulama paketlerine ayrılır.
+- Faz 2A başladı; tamamlandı olarak kabul edilmez.
+- `b536078` commit’i erken tamamlanan saha satış modüler pilotudur; Faz 2A kapanışı değildir.
+- Gerçek Faz 2A workspace/sözleşme/sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden yürütülür.
+- Faz 2A’da mevcut kaynak kod davranışı, Prisma şeması, PostgreSQL kurulumu veya Süper Admin kodlaması yapılmaz; bunlar onaylı sonraki uygulama paketlerine ayrılır.
 
 ## Yerine geçen faz kararı
 
@@ -128,7 +129,9 @@ Bu dağılım `REQ-001..REQ-068` sayımını değiştirmez ve Faz 2A’nın mevc
 
 ## İlk uygulanacak faz
 
-Faz 1 tamamlandı. İlk uygulanacak yeni aşama Faz 2A’dır: mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı. Nedeni: Platform Süper Admin, ayrı firma PostgreSQL veritabanları ve tenant izolasyonu başlamadan önce bağımlılık sınırlarının davranış değiştirmeden belgelenmesi ve testlenebilir hale getirilmesi gerekir.
+Faz 1 tamamlandı. İlk uygulanacak yeni aşama Faz 2A’dır ve bu aşama workspace/sözleşme/sınır paketiyle başlatılmıştır. Nedeni: Platform Süper Admin, ayrı firma PostgreSQL veritabanları ve tenant izolasyonu başlamadan önce bağımlılık sınırlarının davranış değiştirmeden belgelenmesi ve testlenebilir hale getirilmesi gerekir.
+
+`b536078` commit’i bu sırada Faz 2A tamamlandı anlamına gelmez; yalnız erken tamamlanan saha satış modüler pilotudur.
 
 ### Faz 1 uygulama checkpoint'i
 
@@ -176,7 +179,7 @@ Zorunlu kararlar:
 | 1 | UTF-8 ve i18n temeli | Faz 1 | P0 ve mimari belgeler tamam | Hata kodu/i18n temel commit’i | Commit revert |
 | 2 | Kök dizin tasnifi ve taşıma matrisi | Faz 2A | Faz 1 commit’i ve ana belge uyumu | Dokümantasyon/plan commit’i | Commit revert |
 | 3 | Davranış değiştirmeyen workspace/monorepo iskeleti | Faz 2A | Kök tasnif matrisi onaylı | İskelet commit’i | Commit revert |
-| 4 | Saha satış modüler pilotu | Faz 2A sonrası | Hata mesajı altyapısı ve taşıma planı hazır | Pilot use-case commit’i | Route adaptörü revert |
+| 4 | Saha satış modüler pilotu | Erken pilot olarak tamamlandı | Hata mesajı altyapısı ve route ayrıştırma hedefi | `b536078` erken pilot commit’i | Route adaptörü revert |
 | 5 | Müşteri/hayvan/hisse modülleri | Faz 3–5 | Pilot kalıbı kanıtlandı | Modül bazlı küçük commitler | Modül revert |
 | 6 | Tahsilat ve finans modülleri | Faz 6/10 | PG test ve para modeli kararı | Finans checkpoint | Backup + revert |
 | 7 | Vekâlet/kesim/paket/teslimat | Faz 7/11/12 | Dosya ve workflow portları hazır | Operasyon checkpoint | Feature flag kapatma |
