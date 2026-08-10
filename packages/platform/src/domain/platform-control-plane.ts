@@ -3,7 +3,6 @@ import type {
   SupportSessionContract,
   SupportSessionId,
   TenantInstanceId,
-  UserId,
 } from "@tilbecore/contracts";
 import type {
   PlatformModuleId,

@@ -8,7 +8,6 @@ import type {
   Sale,
   SeasonId,
   Share,
-  ShareId,
   Supplier,
   SupplierId,
   TenantAuditEvent,
