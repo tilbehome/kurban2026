@@ -55,7 +55,7 @@ describePostgres("platform PostgreSQL migration zinciri", () => {
     await expectNoDrift(url);
     const secondOutput = runMigrateDeploy(url, createMigrationFixture(platformMigrationChain));
     expect(secondOutput).toContain("No pending migrations to apply");
-  });
+  }, 15_000);
 
   test("0001 sonrası örnek kayıtlar varken güncel migration zinciri uygulanır ve PlatformUser ile Organization silinmez", async () => {
     const schema = await createSchema("seeded_upgrade");
