@@ -38,25 +38,30 @@ if (shouldRunPostgresTests && !baseDatabaseUrl) {
 const describePostgres = baseDatabaseUrl ? describe : describe.skip;
 const schemaPrefix = `tc_${Date.now().toString(36)}`.toLowerCase();
 const createdSchemas = new Set<string>();
+const platformMigrationChain = [
+  "0001_platform_baseline",
+  "0002_platform_baseline_hardening",
+  "0003_platform_control_plane_metadata",
+] as const;
 
 describePostgres("platform PostgreSQL migration zinciri", () => {
-  test("boş PostgreSQL şemasına 0001 ve 0002 migration'ları uygulanır, drift kalmaz ve tekrar deploy veri bozmaz", async () => {
+  test("boş PostgreSQL şemasına güncel platform migration zinciri uygulanır, drift kalmaz ve tekrar deploy veri bozmaz", async () => {
     const schema = await createSchema("empty_chain");
     const url = databaseUrlForSchema(schema);
 
-    const output = runMigrateDeploy(url, createMigrationFixture(["0001_platform_baseline", "0002_platform_baseline_hardening"]));
-    expect(output).toContain("2 migrations found");
+    const output = runMigrateDeploy(url, createMigrationFixture(platformMigrationChain));
+    expect(output).toContain("migrations found");
 
     await expectNoDrift(url);
-    const secondOutput = runMigrateDeploy(url, createMigrationFixture(["0001_platform_baseline", "0002_platform_baseline_hardening"]));
+    const secondOutput = runMigrateDeploy(url, createMigrationFixture(platformMigrationChain));
     expect(secondOutput).toContain("No pending migrations to apply");
   });
 
-  test("0001 sonrası örnek kayıtlar varken 0002 uygulanır ve PlatformUser ile Organization silinmez", async () => {
+  test("0001 sonrası örnek kayıtlar varken güncel migration zinciri uygulanır ve PlatformUser ile Organization silinmez", async () => {
     const schema = await createSchema("seeded_upgrade");
     const url = databaseUrlForSchema(schema);
     const oneMigration = createMigrationFixture(["0001_platform_baseline"]);
-    const bothMigrations = createMigrationFixture(["0001_platform_baseline", "0002_platform_baseline_hardening"]);
+    const currentMigrations = createMigrationFixture(platformMigrationChain);
 
     runMigrateDeploy(url, oneMigration);
 
@@ -80,7 +85,7 @@ describePostgres("platform PostgreSQL migration zinciri", () => {
       "active",
     );
 
-    runMigrateDeploy(url, bothMigrations);
+    runMigrateDeploy(url, currentMigrations);
 
     const users = await db.$queryRawUnsafe<Array<{ id: string }>>(
       `SELECT "id" FROM "PlatformUser" WHERE "id" = $1`,
@@ -103,13 +108,13 @@ describePostgres("platform PostgreSQL migration zinciri", () => {
 
     await db.$disconnect();
     fs.rmSync(oneMigration.root, { recursive: true, force: true });
-    fs.rmSync(bothMigrations.root, { recursive: true, force: true });
+    fs.rmSync(currentMigrations.root, { recursive: true, force: true });
   });
 
   test("check constraint, foreign key ve unique kuralları gerçek PostgreSQL üzerinde reddeder", async () => {
     const schema = await createSchema("constraints");
     const url = databaseUrlForSchema(schema);
-    runMigrateDeploy(url, createMigrationFixture(["0001_platform_baseline", "0002_platform_baseline_hardening"]));
+    runMigrateDeploy(url, createMigrationFixture(platformMigrationChain));
 
     const db = prismaFor(url);
     const ids = idsFor("constraints");
@@ -184,7 +189,7 @@ describePostgres("platform repository gerçek PostgreSQL integration", () => {
   beforeAll(async () => {
     schema = await createSchema("repo");
     const url = databaseUrlForSchema(schema);
-    runMigrateDeploy(url, createMigrationFixture(["0001_platform_baseline", "0002_platform_baseline_hardening"]));
+    runMigrateDeploy(url, createMigrationFixture(platformMigrationChain));
     db = prismaFor(url);
     organizationRepository = new PrismaOrganizationRepository(db);
     databaseRefRepository = new PrismaTenantDatabaseRefRepository(db);

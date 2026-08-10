@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      postgres:
+      postgres-platform:
         image: postgres:16
         env:
           POSTGRES_USER: tilbecore
@@ -27,10 +27,24 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      postgres-tenant:
+        image: postgres:16
+        env:
+          POSTGRES_USER: tilbecore
+          POSTGRES_PASSWORD: tilbecore_test_password
+          POSTGRES_DB: tilbecore_tenant_ci
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U tilbecore -d tilbecore_tenant_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
       PLATFORM_DATABASE_URL: postgresql://tilbecore:tilbecore_test_password@localhost:5432/tilbecore_platform_ci
       PLATFORM_TEST_DATABASE_URL: postgresql://tilbecore:tilbecore_test_password@localhost:5432/tilbecore_platform_ci
+      TENANT_DATABASE_URL: postgresql://tilbecore:tilbecore_test_password@localhost:5433/tilbecore_tenant_ci
       DATABASE_URL: file:./ci.sqlite
       SESSION_SECRET: ci_only_session_secret_32_chars_minimum
       DEKONT_DOGRULAMA_SECRET: ci_only_dekont_secret_32_chars_minimum
@@ -62,8 +76,17 @@ jobs:
       - name: Platform Prisma generate
         run: pnpm exec prisma generate --schema packages/database-platform/prisma/schema.prisma
 
+      - name: Tenant Prisma validate
+        run: pnpm exec prisma validate --schema packages/database-tenant/prisma/schema.prisma
+
+      - name: Tenant Prisma generate
+        run: pnpm exec prisma generate --schema packages/database-tenant/prisma/schema.prisma
+
       - name: Platform PostgreSQL migration apply
         run: pnpm exec prisma migrate deploy --schema packages/database-platform/prisma/schema.prisma
+
+      - name: Tenant PostgreSQL migration apply
+        run: pnpm exec prisma migrate deploy --schema packages/database-tenant/prisma/schema.prisma
 
       - name: Platform PostgreSQL integration tests
         run: pnpm test:platform-postgres
