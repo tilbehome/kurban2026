@@ -57,7 +57,7 @@ Toplam: 84 test.
 
 Birinci karar kaynağı: `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`.
 
-Bu plan Faz 2A kapanışında dokümante edilir; test kodu, PostgreSQL kurulumu, Prisma şeması veya tenant routing uygulaması bu pakette yapılmaz. Gerçek otomasyon Faz 2B/2C ve ilgili taşıma paketlerinde yazılır.
+Bu plan Faz 2A kapanışında dokümante edilmiştir. Faz 2C paketi gerçek PostgreSQL provisioning, tenant-aware pool ve iki firma izolasyon otomasyonunu eklemiştir; canlı tenant-web route bağlama ile backup/restore provası sonraki paketlerde tamamlanır.
 
 | Senaryo | Amaç | Test tipi | Kabul kanıtı | Planlanan faz |
 |---|---|---|---|---|
@@ -73,6 +73,14 @@ Bu plan Faz 2A kapanışında dokümante edilir; test kodu, PostgreSQL kurulumu,
 | Firma bazlı backup/restore izolasyonu | Bir firmanın restore işleminin başka firmayı etkilememesini kanıtlamak | Backup/restore prova | Restore yalnız hedef tenant DB’de çalışır; platform metadata ve diğer tenant DB’ler değişmez | Faz 2C, Faz 15 |
 
 Bu plan tamamlanmadan Platform DB, tenant routing veya firma başına PostgreSQL canlıya hazır sayılmaz.
+
+### Faz 2C otomasyon kanıtı
+
+`packages/database-tenant/tests/tenant-isolation.integration.test.ts` CI’daki PostgreSQL 16 tenant servisi üzerinde iki ayrı organization ve iki ayrı fiziksel tenant DB oluşturur. Aynı season/customer ID’lerinin firma verisini karıştırmadığını; yanlış host, session ve `TenantDatabaseRef` değerlerinin reddedildiğini; iki tenant’ın aynı Prisma client/pool’u paylaşmadığını; `SupportSession` olmadan platform erişiminin kapalı olduğunu; güvenli hata payload’ında connection string, parola veya fiziksel DB adının bulunmadığını ve üçüncü test DB’sinin rollback’inin diğer iki DB’ye dokunmadığını doğrular.
+
+`packages/tenant-runtime/tests/tenant-connection-pool.test.ts` eşzamanlı pool reuse, tenantlar arası ref sahipliği, idle kapatma ve shutdown davranışını hedefli olarak doğrular. `packages/database-tenant/tests/postgres-tenant-database.test.ts` identifier/SQL injection sınırını; `packages/provisioning/tests/tenant-provisioning.test.ts` idempotency, adım durumu, resume ve platform kaydı sonrası rollback yasağını doğrular.
+
+Henüz tamamlanmayan kabul kanıtları: firma bazlı backup/restore izolasyon provası, WAL/PITR kanıtı, tenant-web route/E2E bağlama, canlı custom-domain/DNS/TLS ve genel Kurban Günü Provası.
 
 ## Lint warning durumu
 

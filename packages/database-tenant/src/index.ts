@@ -13,3 +13,5 @@ export function assertTenantDatabaseTarget(target: TenantDatabaseMigrationTarget
     throw new Error("TENANT_DATABASE_SCHEMA_INVALID");
   }
 }
+
+export * from "./postgres-tenant-database";

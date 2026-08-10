@@ -186,6 +186,20 @@ describe("Faz 2A mimari bağımlılık sınırları", () => {
     ).toEqual([]);
   });
 
+  it("platform ve tenant veritabanı altyapısı birbirine private import veya doğrudan join bağımlılığı kurmaz", () => {
+    const platformFiles = listTrackedSourceFiles("packages/database-platform/src");
+    const tenantFiles = listTrackedSourceFiles("packages/database-tenant/src");
+
+    expect(violations(platformFiles, [
+      /from\s+["']@tilbecore\/(database-tenant|tenant-core|tenant-runtime)(\/|["'])/,
+      /from\s+["'](\.\.\/)+database-tenant(\/|["'])/,
+    ])).toEqual([]);
+    expect(violations(tenantFiles, [
+      /from\s+["']@tilbecore\/database-platform(\/|["'])/,
+      /from\s+["'](\.\.\/)+database-platform(\/|["'])/,
+    ])).toEqual([]);
+  });
+
   it("tenant uygulama kodu platform database paketine doğrudan bağlanmaz", () => {
     const files = listTrackedSourceFiles("app", "modules", "shared", "components");
 
@@ -225,7 +239,7 @@ describe("Faz 2A mimari bağımlılık sınırları", () => {
       }),
     ).toEqual([]);
 
-    const files = listTrackedSourceFiles("app", "modules", "shared", "components", "tests");
+    const files = listTrackedSourceFiles("app", "apps", "modules", "shared", "components", "tests");
 
     expect(
       violations(files, [

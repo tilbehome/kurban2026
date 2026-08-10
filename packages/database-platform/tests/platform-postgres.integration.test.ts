@@ -42,6 +42,7 @@ const platformMigrationChain = [
   "0001_platform_baseline",
   "0002_platform_baseline_hardening",
   "0003_platform_control_plane_metadata",
+  "0004_resumable_tenant_provisioning",
 ] as const;
 
 describePostgres("platform PostgreSQL migration zinciri", () => {
@@ -109,7 +110,7 @@ describePostgres("platform PostgreSQL migration zinciri", () => {
     await db.$disconnect();
     fs.rmSync(oneMigration.root, { recursive: true, force: true });
     fs.rmSync(currentMigrations.root, { recursive: true, force: true });
-  });
+  }, 15_000);
 
   test("check constraint, foreign key ve unique kuralları gerçek PostgreSQL üzerinde reddeder", async () => {
     const schema = await createSchema("constraints");
@@ -297,7 +298,7 @@ function databaseUrlForSchema(schema: string): string {
 }
 
 function runMigrateDeploy(databaseUrl: string, fixture: MigrationFixture): string {
-  return execFileSync(pnpmCommand(), ["exec", "prisma", "migrate", "deploy", "--schema", fixture.schemaPath], {
+  return runPnpmSync(["exec", "prisma", "migrate", "deploy", "--schema", fixture.schemaPath], {
     cwd: repoRoot(),
     env: { ...process.env, PLATFORM_DATABASE_URL: databaseUrl },
     encoding: "utf8",
@@ -307,8 +308,7 @@ function runMigrateDeploy(databaseUrl: string, fixture: MigrationFixture): strin
 
 async function expectNoDrift(databaseUrl: string): Promise<void> {
   expect(() =>
-    execFileSync(
-      pnpmCommand(),
+    runPnpmSync(
       [
         "exec",
         "prisma",
@@ -361,8 +361,38 @@ function platformMigrationsPath(): string {
   return path.join(repoRoot(), "packages/database-platform/prisma/migrations");
 }
 
-function pnpmCommand(): string {
-  return process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+function runPnpmSync(
+  args: readonly string[],
+  options: Parameters<typeof execFileSync>[2],
+): string {
+  const invocation = pnpmInvocation();
+  return execFileSync(invocation.command, [...invocation.prefix, ...args], options) as string;
+}
+
+function pnpmInvocation(): { command: string; prefix: string[] } {
+  if (process.platform !== "win32") return { command: "pnpm", prefix: [] };
+  const script = findWindowsPnpmScript();
+  if (!script) throw new Error("PNPM_WINDOWS_SCRIPT_NOT_FOUND");
+  return { command: process.execPath, prefix: [script] };
+}
+
+function findWindowsPnpmScript(): string | undefined {
+  const directories = (process.env.PATH ?? "")
+    .split(path.delimiter)
+    .map((entry) => entry.replace(/^\"|\"$/g, ""))
+    .filter(Boolean);
+  const relativeCandidates = [
+    "node_modules/pnpm/bin/pnpm.mjs",
+    "node_modules/pnpm/bin/pnpm.cjs",
+    "node_modules/corepack/dist/pnpm.js",
+  ];
+  for (const relativeCandidate of relativeCandidates) {
+    for (const directory of directories) {
+      const candidate = path.join(directory, relativeCandidate);
+      if (fs.existsSync(candidate)) return candidate;
+    }
+  }
+  return undefined;
 }
 
 function safeLabel(label: string): string {

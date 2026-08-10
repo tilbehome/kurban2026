@@ -20,6 +20,7 @@ export default defineConfig({
       "shared/**/*.test.ts",
       "modules/**/*.test.ts",
       "packages/**/*.test.ts",
+      "apps/**/*.test.ts",
       "tests/**/*.test.ts",
     ],
     exclude: ["node_modules", "**/node_modules/**", ".next", "dist"],

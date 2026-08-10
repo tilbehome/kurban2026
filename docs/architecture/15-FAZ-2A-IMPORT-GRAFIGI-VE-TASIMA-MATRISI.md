@@ -39,12 +39,18 @@ Bu commit Faz 2A’nın tamamlandığı anlamına gelmez. Faz 2A’nın gerçek 
 
 Faz 2A öncesinde `pnpm-workspace.yaml` dosyasında `packages` deseni yoktu; yalnız `allowBuilds` politikası vardı. Bu pakette davranış değiştirmeden `packages/*` workspace deseni eklenmiştir. Boş `apps/*` veya göstermelik klasör oluşturulmamıştır.
 
+Faz 2C ilerleme notu: `apps/*` workspace deseni, gerçek `apps/provisioning-cli` composition root’u oluştuğu anda eklenmiştir. Bu uygulama DB create/migrate/status/resume/rollback davranışı ve test içerdiği için Faz 2A’daki “boş/göstermelik apps klasörü açmama” kuralını ihlal etmez. Kök Next.js tenant uygulaması bu paket kapsamında taşınmamıştır.
+
 İlk gerçek paket:
 
 - `packages/contracts`
 - `packages/config`
 - `packages/platform`
 - `packages/database-platform`
+- `packages/database-tenant`
+- `packages/tenant-runtime`
+- `packages/provisioning`
+- `apps/provisioning-cli`
 
 `packages/contracts` platform/tenant TypeScript sözleşmelerini içerir. `packages/config` ortam, domain, URL, origin, trusted host, cookie ve public/private servis sözleşmesini içerir. Platform–tenant veri sınırı ayrıca `../adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md` içinde bağlayıcı ADR olarak kapanışa bağlanır. Faz 2B-1 ile `packages/platform` framework bağımsız platform domain temelini, `packages/database-platform` ise ayrı PostgreSQL platform şemasını ve repository adaptörlerini taşımaya başlamıştır. Bu paketler mevcut tenant uygulamasını, kök SQLite şemasını, tenant routing'i veya gerçek app taşımasını değiştirmez.
 

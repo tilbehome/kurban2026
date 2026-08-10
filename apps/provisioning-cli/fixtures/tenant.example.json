@@ -1,0 +1,39 @@
+{
+  "actorUserId": "platform_operator_example",
+  "requestId": "request_example_001",
+  "idempotencyKey": "idempotency_example_001",
+  "occurredAt": "2026-08-10T10:00:00.000Z",
+  "organization": {
+    "id": "org_example",
+    "slug": "ornek-firma",
+    "displayName": "Örnek Firma",
+    "status": "active"
+  },
+  "tenant": {
+    "id": "tenant_example",
+    "organizationId": "org_example",
+    "slug": "ornek-firma",
+    "displayName": "Örnek Firma",
+    "provisioningStatus": "active",
+    "releaseChannel": "stable",
+    "databaseRef": {
+      "id": "dbref_example",
+      "engine": "postgresql",
+      "managed": true,
+      "region": "example"
+    }
+  },
+  "databaseRef": {
+    "id": "dbref_example",
+    "engine": "postgresql",
+    "managed": true,
+    "region": "example",
+    "status": "active"
+  },
+  "adminUser": {
+    "id": "platform_admin_example",
+    "email": "admin@example.test",
+    "displayName": "Örnek Firma Admin",
+    "status": "active"
+  }
+}

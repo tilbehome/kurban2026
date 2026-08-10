@@ -145,6 +145,21 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.41)(happy-dom@20.9.0)(jiti@2.7.0)(lightningcss@1.32.0)(msw@2.14.6(@types/node@20.19.41)(typescript@5.9.3))(terser@5.48.0)(tsx@4.22.3)
 
+  apps/provisioning-cli:
+    dependencies:
+      '@tilbecore/database-platform':
+        specifier: workspace:*
+        version: link:../../packages/database-platform
+      '@tilbecore/database-tenant':
+        specifier: workspace:*
+        version: link:../../packages/database-tenant
+      '@tilbecore/platform':
+        specifier: workspace:*
+        version: link:../../packages/platform
+      '@tilbecore/provisioning':
+        specifier: workspace:*
+        version: link:../../packages/provisioning
+
   packages/config:
     dependencies:
       '@tilbecore/contracts':
@@ -161,15 +176,34 @@ importers:
       '@tilbecore/platform':
         specifier: workspace:*
         version: link:../platform
+      '@tilbecore/provisioning':
+        specifier: workspace:*
+        version: link:../provisioning
 
   packages/database-tenant:
     dependencies:
       '@tilbecore/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@tilbecore/provisioning':
+        specifier: workspace:*
+        version: link:../provisioning
       '@tilbecore/tenant-core':
         specifier: workspace:*
         version: link:../tenant-core
+      '@tilbecore/tenant-runtime':
+        specifier: workspace:*
+        version: link:../tenant-runtime
+    devDependencies:
+      '@tilbecore/config':
+        specifier: workspace:*
+        version: link:../config
+      '@tilbecore/database-platform':
+        specifier: workspace:*
+        version: link:../database-platform
+      '@tilbecore/platform':
+        specifier: workspace:*
+        version: link:../platform
 
   packages/operations:
     dependencies:

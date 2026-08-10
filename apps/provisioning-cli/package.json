@@ -1,0 +1,12 @@
+{
+  "name": "@tilbecore/provisioning-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@tilbecore/database-platform": "workspace:*",
+    "@tilbecore/database-tenant": "workspace:*",
+    "@tilbecore/platform": "workspace:*",
+    "@tilbecore/provisioning": "workspace:*"
+  }
+}

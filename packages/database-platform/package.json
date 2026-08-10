@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tilbecore/contracts": "workspace:*",
-    "@tilbecore/platform": "workspace:*"
+    "@tilbecore/platform": "workspace:*",
+    "@tilbecore/provisioning": "workspace:*"
   }
 }

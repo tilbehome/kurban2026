@@ -9,31 +9,23 @@ import type {
   TenantInstanceRepository,
 } from "@tilbecore/platform";
 import {
-  registerOrganization,
-  registerPlatformUser,
-  registerTenantInstanceWithDatabaseRef,
+  assertPlatformUserEmail,
+  assertTenantDatabaseRefSafe,
 } from "@tilbecore/platform";
-import type { UserId } from "@tilbecore/contracts";
-
-type Brand<TValue, TBrand extends string> = TValue & { readonly __brand: TBrand };
-
-export type ProvisioningIdempotencyKey = Brand<string, "ProvisioningIdempotencyKey">;
-
-export type ProvisioningStep =
-  | "tenant_database.create"
-  | "tenant_database.migrate"
-  | "tenant_database.verify_isolation"
-  | "platform.organization.register"
-  | "platform.tenant.register"
-  | "platform.admin_invite.prepare";
-
-export type ProvisioningRollbackStep =
-  | "tenant_database.rollback"
-  | "tenant_database.rollback_failed";
+import {
+  createProvisioningJob,
+  provisioningCommandFingerprint,
+  safeProvisioningErrorCode,
+  TenantProvisioningError,
+  type ProvisioningIdempotencyKey,
+  type ProvisioningJobRecord,
+  type ProvisioningJobRepository,
+  type ProvisioningStep,
+} from "./provisioning-job";
 
 export interface ProvisioningAuditEvent {
-  action: ProvisioningStep | ProvisioningRollbackStep;
-  actorUserId: UserId;
+  action: ProvisioningStep | "tenant_database.rollback" | "tenant_database.rollback_failed";
+  actorUserId: PlatformUser["id"];
   requestId: string;
   targetId: string;
   occurredAt: string;
@@ -47,21 +39,28 @@ export interface TenantAdminInviteDraft {
   roleKey: "firm_admin";
 }
 
-export interface TenantDatabaseProvisioner {
-  createDatabase(input: TenantDatabaseOperationInput): Promise<void>;
-  applyMigrations(input: TenantDatabaseOperationInput): Promise<void>;
-  verifyIsolation(input: TenantDatabaseOperationInput): Promise<void>;
-  rollbackDatabase(input: TenantDatabaseRollbackInput): Promise<void>;
-}
-
 export interface TenantDatabaseOperationInput {
-  tenant: TenantInstance;
-  databaseRef: TenantDatabaseRefRecord;
+  provisioningJobId: ProvisioningJobRecord["id"];
+  tenantInstanceId: TenantInstance["id"];
+  databaseRefId: TenantDatabaseRefRecord["id"];
   requestId: string;
 }
 
+export interface TenantDatabaseCreateResult {
+  createdNow: boolean;
+  ownedByProvisioningJob: true;
+}
+
 export interface TenantDatabaseRollbackInput extends TenantDatabaseOperationInput {
-  reason: string;
+  platformRegistrationCompleted: boolean;
+}
+
+export interface TenantDatabaseProvisioner {
+  createDatabase(input: TenantDatabaseOperationInput): Promise<TenantDatabaseCreateResult>;
+  databaseExists(input: TenantDatabaseOperationInput): Promise<boolean>;
+  applyMigrations(input: TenantDatabaseOperationInput): Promise<void>;
+  verifyIsolation(input: TenantDatabaseOperationInput): Promise<void>;
+  rollbackDatabase(input: TenantDatabaseRollbackInput): Promise<{ dropped: boolean }>;
 }
 
 export interface ProvisionTenantDependencies {
@@ -69,11 +68,13 @@ export interface ProvisionTenantDependencies {
   tenantDatabaseRefRepository: TenantDatabaseRefRepository;
   tenantInstanceRepository: TenantInstanceRepository;
   platformUserRepository: PlatformUserRepository;
+  provisioningJobRepository: ProvisioningJobRepository;
   tenantDatabaseProvisioner: TenantDatabaseProvisioner;
+  now?: () => string;
 }
 
 export interface ProvisionTenantCommand {
-  actorUserId: UserId;
+  actorUserId: PlatformUser["id"];
   requestId: string;
   idempotencyKey: ProvisioningIdempotencyKey;
   occurredAt: string;
@@ -84,6 +85,7 @@ export interface ProvisionTenantCommand {
 }
 
 export interface ProvisionTenantResult {
+  job: ProvisioningJobRecord;
   organization: Organization;
   tenant: TenantInstance;
   adminInvite: TenantAdminInviteDraft;
@@ -95,90 +97,369 @@ export async function provisionTenant(
   dependencies: ProvisionTenantDependencies,
   command: ProvisionTenantCommand,
 ): Promise<ProvisionTenantResult> {
-  assertProvisioningCommand(command);
-
-  const completedSteps: ProvisioningStep[] = [];
+  validateProvisionTenantCommand(command);
+  const now = dependencies.now ?? (() => new Date().toISOString());
   const audit: ProvisioningAuditEvent[] = [];
-  const databaseInput = {
-    tenant: command.tenant,
-    databaseRef: command.databaseRef,
-    requestId: command.requestId,
-  };
-  let databaseCreated = false;
+  let job = await loadOrCreateJob(dependencies.provisioningJobRepository, command, now());
 
-  try {
-    await dependencies.tenantDatabaseProvisioner.createDatabase(databaseInput);
-    databaseCreated = true;
-    record("tenant_database.create");
-
-    await dependencies.tenantDatabaseProvisioner.applyMigrations(databaseInput);
-    record("tenant_database.migrate");
-
-    await dependencies.tenantDatabaseProvisioner.verifyIsolation(databaseInput);
-    record("tenant_database.verify_isolation");
-
-    const organization = await registerOrganization(
-      dependencies.organizationRepository,
-      command.organization,
-    );
-    record("platform.organization.register");
-
-    const tenant = await registerTenantInstanceWithDatabaseRef(
-      dependencies.tenantInstanceRepository,
-      command.tenant,
-      command.databaseRef,
-    );
-    record("platform.tenant.register");
-
-    await registerPlatformUser(dependencies.platformUserRepository, command.adminUser);
-    const adminInvite = createAdminInvite(command, tenant);
-    record("platform.admin_invite.prepare");
-
-    return { organization, tenant, adminInvite, completedSteps, audit };
-  } catch (error) {
-    if (databaseCreated) {
-      try {
-        await dependencies.tenantDatabaseProvisioner.rollbackDatabase({
-          ...databaseInput,
-          reason: provisioningErrorCode(error),
-        });
-        audit.push(auditEvent(command, "tenant_database.rollback"));
-      } catch {
-        audit.push(auditEvent(command, "tenant_database.rollback_failed"));
-      }
-    }
-    throw error;
+  if (job.status === "rolled_back") {
+    job = await dependencies.provisioningJobRepository.update(resetRolledBackJob(job, now()));
+  }
+  if (job.status === "succeeded") {
+    return completedResult(dependencies, command, job, audit);
   }
 
-  function record(step: ProvisioningStep): void {
-    completedSteps.push(step);
-    audit.push(auditEvent(command, step));
+  const databaseInput = (): TenantDatabaseOperationInput => ({
+    provisioningJobId: job.id,
+    tenantInstanceId: command.tenant.id,
+    databaseRefId: command.databaseRef.id,
+    requestId: command.requestId,
+  });
+
+  try {
+    await runStep("tenant_database.create", async () => {
+      const result = await dependencies.tenantDatabaseProvisioner.createDatabase(databaseInput());
+      if (!result.ownedByProvisioningJob) throw new TenantProvisioningError("TENANT_DATABASE_OWNERSHIP_REQUIRED");
+      job = { ...job, databaseCreatedByJob: true };
+    });
+
+    await runStep("tenant_database.migrate", async () => {
+      await dependencies.tenantDatabaseProvisioner.applyMigrations(databaseInput());
+    });
+
+    await runStep("tenant_database.verify_isolation", async () => {
+      await dependencies.tenantDatabaseProvisioner.verifyIsolation(databaseInput());
+    });
+
+    let organization = command.organization;
+    await runStep("platform.organization.register", async () => {
+      organization = await ensureOrganization(dependencies.organizationRepository, command.organization);
+    });
+
+    let tenant = command.tenant;
+    await runStep("platform.tenant.register", async () => {
+      tenant = await ensureTenantRegistered(dependencies, command);
+      job = { ...job, platformRegistrationCompleted: true };
+    });
+
+    await runStep("platform.admin_invite.prepare", async () => {
+      await ensurePlatformUser(dependencies.platformUserRepository, command.adminUser);
+    });
+
+    job = await dependencies.provisioningJobRepository.update({
+      ...job,
+      status: "succeeded",
+      currentStep: undefined,
+      failureCode: undefined,
+      rollbackStatus: "not_required",
+      updatedAt: now(),
+    });
+
+    return {
+      job,
+      organization,
+      tenant,
+      adminInvite: createAdminInvite(command, tenant),
+      completedSteps: succeededSteps(job),
+      audit,
+    };
+  } catch (error) {
+    const failureCode = safeProvisioningErrorCode(error);
+    job = await persistBestEffort(dependencies.provisioningJobRepository, {
+      ...job,
+      status: "failed",
+      failureCode,
+      currentStep: undefined,
+      updatedAt: now(),
+    });
+
+    if (job.databaseCreatedByJob && !job.platformRegistrationCompleted) {
+      try {
+        await dependencies.tenantDatabaseProvisioner.rollbackDatabase({
+          ...databaseInput(),
+          platformRegistrationCompleted: false,
+        });
+        audit.push(auditEvent(command, "tenant_database.rollback"));
+        job = await persistBestEffort(dependencies.provisioningJobRepository, {
+          ...job,
+          status: "rolled_back",
+          databaseCreatedByJob: false,
+          rollbackStatus: "succeeded",
+          updatedAt: now(),
+        });
+      } catch {
+        audit.push(auditEvent(command, "tenant_database.rollback_failed"));
+        job = await persistBestEffort(dependencies.provisioningJobRepository, {
+          ...job,
+          rollbackStatus: "failed",
+          updatedAt: now(),
+        });
+      }
+    }
+    throw new TenantProvisioningError(failureCode);
+  }
+
+  async function runStep(step: ProvisioningStep, action: () => Promise<void>): Promise<void> {
+    const current = job.steps.find((item) => item.key === step);
+    if (!current) throw new TenantProvisioningError("PROVISIONING_STEP_UNKNOWN");
+    if (current.status === "succeeded") return;
+
+    job = await dependencies.provisioningJobRepository.update({
+      ...job,
+      status: "running",
+      currentStep: step,
+      failureCode: undefined,
+      steps: job.steps.map((item) => item.key === step
+        ? { ...item, status: "running", attempts: item.attempts + 1, startedAt: now(), failureCode: undefined }
+        : item),
+      updatedAt: now(),
+    });
+
+    try {
+      await action();
+      job = await dependencies.provisioningJobRepository.update({
+        ...job,
+        steps: job.steps.map((item) => item.key === step
+          ? { ...item, status: "succeeded", finishedAt: now(), failureCode: undefined }
+          : item),
+        updatedAt: now(),
+      });
+      audit.push(auditEvent(command, step));
+    } catch (error) {
+      const failureCode = safeProvisioningErrorCode(error);
+      job = await persistBestEffort(dependencies.provisioningJobRepository, {
+        ...job,
+        steps: job.steps.map((item) => item.key === step
+          ? { ...item, status: "failed", finishedAt: now(), failureCode }
+          : item),
+        updatedAt: now(),
+      });
+      throw new TenantProvisioningError(failureCode);
+    }
   }
 }
 
-function assertProvisioningCommand(command: ProvisionTenantCommand): void {
-  if (!command.requestId) throw new Error("PROVISIONING_REQUEST_ID_REQUIRED");
-  if (!command.idempotencyKey) throw new Error("PROVISIONING_IDEMPOTENCY_REQUIRED");
+export async function rollbackProvisioningJob(
+  dependencies: Pick<ProvisionTenantDependencies, "provisioningJobRepository" | "tenantDatabaseProvisioner" | "now">,
+  input: { tenantInstanceId: TenantInstance["id"]; requestId: string },
+): Promise<ProvisioningJobRecord> {
+  const now = dependencies.now ?? (() => new Date().toISOString());
+  const job = await dependencies.provisioningJobRepository.findByTenantInstanceId(input.tenantInstanceId);
+  if (!job) throw new TenantProvisioningError("PROVISIONING_JOB_NOT_FOUND");
+  if (job.platformRegistrationCompleted) {
+    throw new TenantProvisioningError("PROVISIONING_ROLLBACK_PLATFORM_REGISTERED");
+  }
+
+  await dependencies.tenantDatabaseProvisioner.rollbackDatabase({
+    provisioningJobId: job.id,
+    tenantInstanceId: job.tenantInstanceId,
+    databaseRefId: job.databaseRefId,
+    requestId: input.requestId,
+    platformRegistrationCompleted: false,
+  });
+
+  return dependencies.provisioningJobRepository.update({
+    ...job,
+    status: "rolled_back",
+    databaseCreatedByJob: false,
+    rollbackStatus: "succeeded",
+    currentStep: undefined,
+    updatedAt: now(),
+  });
+}
+
+export function validateProvisionTenantCommand(command: ProvisionTenantCommand): void {
+  if (!command.requestId) throw new TenantProvisioningError("PROVISIONING_REQUEST_ID_REQUIRED");
+  if (!command.idempotencyKey) throw new TenantProvisioningError("PROVISIONING_IDEMPOTENCY_REQUIRED");
   if (command.tenant.organizationId !== command.organization.id) {
-    throw new Error("PROVISIONING_ORGANIZATION_TENANT_MISMATCH");
+    throw new TenantProvisioningError("PROVISIONING_ORGANIZATION_TENANT_MISMATCH");
   }
   if (command.tenant.databaseRef.id !== command.databaseRef.id) {
-    throw new Error("PROVISIONING_DATABASE_REF_MISMATCH");
+    throw new TenantProvisioningError("PROVISIONING_DATABASE_REF_MISMATCH");
   }
   if (command.databaseRef.engine !== "postgresql") {
-    throw new Error("PROVISIONING_POSTGRESQL_REQUIRED");
+    throw new TenantProvisioningError("PROVISIONING_POSTGRESQL_REQUIRED");
   }
   if (command.databaseRef.status !== "active") {
-    throw new Error(`PROVISIONING_DATABASE_REF_NOT_ACTIVE:${command.databaseRef.status}`);
+    throw new TenantProvisioningError("PROVISIONING_DATABASE_REF_NOT_ACTIVE");
   }
-  assertNoSecretInProvisioningResult(command.databaseRef);
+  assertTenantDatabaseRefSafe(command.databaseRef);
+  assertPlatformUserEmail(command.adminUser.email);
+  assertNoSecretInProvisioningResult(command);
 }
 
 export function assertNoSecretInProvisioningResult(value: unknown): void {
   const serialized = JSON.stringify(value);
-  if (/postgresql:\/\/|password|secret|token|connectionString|databaseUrl/i.test(serialized)) {
-    throw new Error("PROVISIONING_SECRET_LEAK");
+  if (/postgres(?:ql)?:\/\/|password|secret|token|connectionString|databaseUrl/i.test(serialized)) {
+    throw new TenantProvisioningError("PROVISIONING_SECRET_LEAK");
   }
+}
+
+async function loadOrCreateJob(
+  repository: ProvisioningJobRepository,
+  command: ProvisionTenantCommand,
+  now: string,
+): Promise<ProvisioningJobRecord> {
+  const fingerprint = provisioningCommandFingerprint(command);
+  const byKey = await repository.findByIdempotencyKey(command.idempotencyKey);
+  if (byKey) return assertJobMatches(byKey, command, fingerprint);
+
+  const byTenant = await repository.findByTenantInstanceId(command.tenant.id);
+  if (byTenant) return assertJobMatches(byTenant, command, fingerprint);
+
+  const newJob = createProvisioningJob({
+    ...command,
+    requestedByUserId: command.actorUserId,
+    now,
+  });
+  try {
+    return await repository.create(newJob);
+  } catch (error) {
+    const raced = await repository.findByIdempotencyKey(command.idempotencyKey)
+      ?? await repository.findByTenantInstanceId(command.tenant.id);
+    if (raced) return assertJobMatches(raced, command, fingerprint);
+    throw new TenantProvisioningError(safeOrFallback(error, "PROVISIONING_JOB_CREATE_FAILED"));
+  }
+}
+
+function assertJobMatches(
+  job: ProvisioningJobRecord,
+  command: ProvisionTenantCommand,
+  fingerprint: string,
+): ProvisioningJobRecord {
+  if (job.tenantInstanceId !== command.tenant.id || job.commandFingerprint !== fingerprint) {
+    throw new TenantProvisioningError("PROVISIONING_IDEMPOTENCY_CONFLICT");
+  }
+  return job;
+}
+
+function resetRolledBackJob(job: ProvisioningJobRecord, now: string): ProvisioningJobRecord {
+  return {
+    ...job,
+    status: "pending",
+    currentStep: undefined,
+    failureCode: undefined,
+    rollbackStatus: undefined,
+    steps: job.steps.map((step) => ({
+      key: step.key,
+      status: "pending",
+      attempts: step.attempts,
+    })),
+    updatedAt: now,
+  };
+}
+
+async function ensureOrganization(
+  repository: OrganizationRepository,
+  expected: Organization,
+): Promise<Organization> {
+  const byId = await repository.findById(expected.id);
+  const bySlug = await repository.findBySlug(expected.slug);
+  const existing = byId ?? bySlug;
+  if (!existing) {
+    try {
+      return await repository.create(expected);
+    } catch (error) {
+      const raced = await repository.findById(expected.id) ?? await repository.findBySlug(expected.slug);
+      if (raced && raced.id === expected.id && raced.slug === expected.slug) return raced;
+      throw new TenantProvisioningError(safeOrFallback(error, "PROVISIONING_ORGANIZATION_CONFLICT"));
+    }
+  }
+  if (existing.id !== expected.id || existing.slug !== expected.slug) {
+    throw new TenantProvisioningError("PROVISIONING_ORGANIZATION_CONFLICT");
+  }
+  return existing;
+}
+
+async function ensureTenantRegistered(
+  dependencies: Pick<ProvisionTenantDependencies, "tenantDatabaseRefRepository" | "tenantInstanceRepository">,
+  command: ProvisionTenantCommand,
+): Promise<TenantInstance> {
+  const byId = await dependencies.tenantInstanceRepository.findById(command.tenant.id);
+  const bySlug = await dependencies.tenantInstanceRepository.findBySlug(command.tenant.slug);
+  const existing = byId ?? bySlug;
+  if (existing) {
+    if (
+      existing.id !== command.tenant.id ||
+      existing.organizationId !== command.organization.id ||
+      existing.databaseRef.id !== command.databaseRef.id
+    ) {
+      throw new TenantProvisioningError("PROVISIONING_TENANT_CONFLICT");
+    }
+    return existing;
+  }
+
+  const databaseRef = await dependencies.tenantDatabaseRefRepository.findById(command.databaseRef.id);
+  if (databaseRef) {
+    if (databaseRef.engine !== "postgresql" || databaseRef.id !== command.databaseRef.id) {
+      throw new TenantProvisioningError("PROVISIONING_DATABASE_REF_CONFLICT");
+    }
+    try {
+      return await dependencies.tenantInstanceRepository.create(command.tenant);
+    } catch (error) {
+      const raced = await dependencies.tenantInstanceRepository.findById(command.tenant.id);
+      if (raced && raced.databaseRef.id === command.databaseRef.id) return raced;
+      throw new TenantProvisioningError(safeOrFallback(error, "PROVISIONING_TENANT_CONFLICT"));
+    }
+  }
+  try {
+    return await dependencies.tenantInstanceRepository.createWithDatabaseRef(command.tenant, command.databaseRef);
+  } catch (error) {
+    const raced = await dependencies.tenantInstanceRepository.findById(command.tenant.id);
+    if (
+      raced &&
+      raced.organizationId === command.organization.id &&
+      raced.databaseRef.id === command.databaseRef.id
+    ) return raced;
+    throw new TenantProvisioningError(safeOrFallback(error, "PROVISIONING_TENANT_CONFLICT"));
+  }
+}
+
+async function ensurePlatformUser(
+  repository: PlatformUserRepository,
+  expected: PlatformUser,
+): Promise<PlatformUser> {
+  const byId = await repository.findUserById(expected.id);
+  const byEmail = await repository.findUserByEmail(expected.email);
+  const existing = byId ?? byEmail;
+  if (!existing) {
+    try {
+      return await repository.createUser(expected);
+    } catch (error) {
+      const raced = await repository.findUserById(expected.id) ?? await repository.findUserByEmail(expected.email);
+      if (raced && raced.id === expected.id && raced.email.toLowerCase() === expected.email.toLowerCase()) {
+        return raced;
+      }
+      throw new TenantProvisioningError(safeOrFallback(error, "PROVISIONING_ADMIN_USER_CONFLICT"));
+    }
+  }
+  if (existing.id !== expected.id || existing.email.toLowerCase() !== expected.email.toLowerCase()) {
+    throw new TenantProvisioningError("PROVISIONING_ADMIN_USER_CONFLICT");
+  }
+  return existing;
+}
+
+async function completedResult(
+  dependencies: ProvisionTenantDependencies,
+  command: ProvisionTenantCommand,
+  job: ProvisioningJobRecord,
+  audit: ProvisioningAuditEvent[],
+): Promise<ProvisionTenantResult> {
+  const organization = await dependencies.organizationRepository.findById(command.organization.id);
+  const tenant = await dependencies.tenantInstanceRepository.findById(command.tenant.id);
+  if (!organization || !tenant) throw new TenantProvisioningError("PROVISIONING_COMPLETED_STATE_MISSING");
+  return {
+    job,
+    organization,
+    tenant,
+    adminInvite: createAdminInvite(command, tenant),
+    completedSteps: succeededSteps(job),
+    audit,
+  };
+}
+
+function succeededSteps(job: ProvisioningJobRecord): ProvisioningStep[] {
+  return job.steps.filter((step) => step.status === "succeeded").map((step) => step.key);
 }
 
 function createAdminInvite(
@@ -207,6 +488,18 @@ function auditEvent(
   };
 }
 
-function provisioningErrorCode(error: unknown): string {
-  return error instanceof Error ? error.message : "UNKNOWN_PROVISIONING_ERROR";
+async function persistBestEffort(
+  repository: ProvisioningJobRepository,
+  job: ProvisioningJobRecord,
+): Promise<ProvisioningJobRecord> {
+  try {
+    return await repository.update(job);
+  } catch {
+    return job;
+  }
+}
+
+function safeOrFallback(error: unknown, fallback: string): string {
+  const code = safeProvisioningErrorCode(error);
+  return code === "PROVISIONING_STEP_FAILED" ? fallback : code;
 }

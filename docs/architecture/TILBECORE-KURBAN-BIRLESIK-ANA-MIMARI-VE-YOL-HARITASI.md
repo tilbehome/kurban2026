@@ -804,7 +804,7 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 #### Faz 2B — Platform Control Plane ve Süper Admin MVP
 
-**Mevcut durum:** Başladı — 2B-1 platform domain ve database-platform şema temeli uygulandı; 2B-1A ile public package import sınırı, workspace dependency manifestleri, generated platform Prisma tipleri, nested relation write sözleşmeleri, `TenantDatabaseRefRepository`, `validUntil` ve genel operasyonel limit ayrımı, `0002_platform_baseline_hardening` migration SQL'i ve boundary/schema/repository testleri eklendi. 2B-1B ile PostgreSQL 16 servisli CI kapısı, gerçek migration deploy ve gerçek Prisma repository integration testleri eklendi. Platform kullanıcı/rol repository temeli ve control-plane metadata temeli uygulandı — genel doğrulama bekliyor. `@tilbecore/provisioning` ile tenant DB oluşturma, migration, izolasyon doğrulama, platform kayıt ve Firma Admin davet hazırlığı fail-closed uygulama sırasına bağlandı. Süper Admin ekranı, platform login/session akışı, MFA/passkey doğrulama ekranı, provisioning UI, gerçek DB admin adapteri ve tenant routing runtime bağlantısı henüz tamamlanmadı.
+**Mevcut durum:** Başladı — 2B-1 platform domain ve database-platform şema temeli uygulandı; 2B-1A ile public package import sınırı, workspace dependency manifestleri, generated platform Prisma tipleri, nested relation write sözleşmeleri, `TenantDatabaseRefRepository`, `validUntil` ve genel operasyonel limit ayrımı, `0002_platform_baseline_hardening` migration SQL'i ve boundary/schema/repository testleri eklendi. 2B-1B ile PostgreSQL 16 servisli CI kapısı, gerçek migration deploy ve gerçek Prisma repository integration testleri eklendi. Platform kullanıcı/rol repository temeli ve control-plane metadata temeli uygulandı — genel doğrulama bekliyor. `0004_resumable_tenant_provisioning` ile provisioning iş durumu/idempotency/resume/rollback metadata’sı platform DB’de kalıcı hale getirildi. Süper Admin ekranı, platform login/session akışı, MFA/passkey doğrulama ekranı ve provisioning durum UI’ı henüz tamamlanmadı.
 
 - Platform PostgreSQL
 - Organization/instance/lisans/paket/modül modelleri
@@ -824,7 +824,7 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 #### Faz 2C — Firma başına ayrı PostgreSQL ve tenant yönlendirme
 
-**Mevcut durum:** Başladı — `@tilbecore/database-tenant` paketi ve tenant PostgreSQL çekirdek şema/migration başlangıcı eklendi; `@tilbecore/tenant-runtime` ile host/custom-domain tenant resolution, session/databaseRef fail-closed guard ve connection pool key sözleşmesi eklendi; `@tilbecore/provisioning` ile tenant DB create/migrate/verify sırası ve rollback davranışı uygulandı; genel doğrulama bekliyor. DNS/TLS/deployment, gerçek connection pool runtime, gerçek DB admin adapteri ve iki firma isolation koşusu henüz genel doğrulama dönemine bırakıldı.
+**Mevcut durum:** Uygulandı — genel doğrulama bekliyor. `@tilbecore/database-tenant` gerçek PostgreSQL DB create/exists, migration deploy/doğrulama, ownership marker ve güvenli rollback adapterini içerir. `@tilbecore/provisioning` her adımı platform DB’ye kaydeder; aynı tenant isteğini idempotent yönetir ve kesilen işi güvenli adımdan sürdürür. `@tilbecore/tenant-runtime` tenant+DB ref sahipliğini fail-closed doğrulayan ayrı Prisma pool’ları, idle kapatma ve shutdown temizliği sağlar. `apps/provisioning-cli` kontrollü `dry-run/create/status/resume/rollback` komutlarını sunar. İki fiziksel tenant DB ve aynı kayıt ID’leriyle izolasyon testi CI kapısına bağlanmıştır.
 
 - Güvenli tenant resolution
 - Firma DB connection registry
@@ -834,6 +834,10 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 - firma bazlı yedek/geri yükleme
 - yönetilen PostgreSQL kurulumlarında WAL/PITR değerlendirmesi
 - bağlantı havuzu ve kapasite sınırları
+
+Bu pakette kapanan maddeler: güvenli tenant resolution sözleşmesinin gerçek pool’a bağlanması, firma DB oluşturma/varlık kontrolü, firma bazlı migration, idempotent ve devam ettirilebilir provisioning, sahiplik kanıtlı rollback, tenant-aware pool yaşam döngüsü, kontrollü CLI ve iki firma PostgreSQL izolasyon otomasyonu.
+
+Faz 2C’de kalan maddeler: mevcut tenant-web API’lerinin yeni runtime/pool üzerinden çalıştırılması, firma bazlı backup/restore izolasyon otomasyonu, yönetilen PostgreSQL WAL/PITR değerlendirmesi, pool kapasite/metric politikası ve canlı DNS/TLS/deployment. Süper Admin provisioning ekranı Faz 2B’nin sonraki büyük paketidir.
 
 #### Faz 2D — Firma çekirdek şeması
 
@@ -1103,7 +1107,7 @@ docs/
 - Faz 1 commit’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`,
 - Faz 2A workspace/sözleşme/sınır paketi kapanış kriterleri dokümantasyon ve sözleşme düzeyinde karşılandı; Platform DB, PostgreSQL, tenant routing ve gerçek app taşıması Faz 2B/2C veya sonraki taşıma paketlerine aittir,
 - merkezi hata/i18n yalnız beş pilot route’ta,
-- finansal `Float`, yeni ledger, PostgreSQL, tenant izolasyonu ve gerçek integration/E2E testleri henüz yapılmadı,
+- finansal `Float` dönüşümü ve mevcut uygulamanın yeni ledger/tenant runtime’a taşınması yapılmadı; PostgreSQL provisioning ile iki firma izolasyon integration kapısı uygulandı, geniş E2E/prova dönemi henüz yapılmadı,
 - 69 placeholder/yakında sayfası gerçek özellik kabul edilmiyor.
 
 Doğru sıra:

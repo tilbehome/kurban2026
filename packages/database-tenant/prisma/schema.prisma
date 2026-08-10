@@ -8,6 +8,14 @@ datasource db {
   url      = env("TENANT_DATABASE_URL")
 }
 
+model TenantProvisioningMarker {
+  id               String   @id
+  provisioningJobId String
+  tenantInstanceId String
+  databaseRefId    String
+  createdAt        DateTime @default(now())
+}
+
 model Season {
   id        String   @id
   name      String

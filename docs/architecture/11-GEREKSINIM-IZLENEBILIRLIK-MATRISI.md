@@ -61,7 +61,7 @@ Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dö
 | REQ-045 | Kurban Günü Güvenli Modu | UI | tercih | Sade ekran, büyük işlem alanları, hızlı arama, kritik işlem uyarıları ve minimum menü | UI | Hızlı ekran | Mobil | Rol | Görev bitir | Geri al | Var | Yok | 20 cihaz prova ve saha rol testi | Kısmi | Faz 16 |
 | REQ-046 | Yedek/geri yükleme | Sistem | backup | Yedek test edilir | Yedek | Ayarlar | Yok | Yönetici | Yedek al | Restore | Zorunlu | Yok | Restore prova | Kısmi | Faz 15 |
 | REQ-047 | Demo/test veri yönetimi | Veri | seed profili | Demo canlıdan ayrı | Seed | Admin | Yok | Teknik | Seed reset | Canlı engeli | Var | Yok | Test reset | Kısmi | Faz 9 |
-| REQ-048 | Firma başına ayrı PostgreSQL | Tenant | tenant DB | Operasyon veri izolasyonu | Provision | Platform | Yok | Platform | DB oluştur | Hata rollback | Zorunlu | Yok | İki firma izolasyon | Yok | Faz 2C |
+| REQ-048 | Firma başına ayrı PostgreSQL | Tenant | tenant DB | Operasyon veri izolasyonu | Provision | Platform | Yok | Platform | DB oluştur | Hata rollback | Zorunlu | Var | İki firma izolasyon | Uygulandı — genel doğrulama bekliyor | Faz 2C |
 | REQ-049 | Platform operasyon verisi tutmaz | Platform | Platform DB | PII/operasyon yok | Platform | Platform | Yok | Platform | Firma meta | Destek onayı | Zorunlu | Yok | PII yok | Yok | Faz 2B |
 | REQ-050 | Platform Süper Admin ayrı | Platform IAM | PlatformUser | Firma rolü değildir | Auth | Platform | Yok | Platform | Giriş | MFA | Zorunlu | Yok | Ayrı cookie | Yok | Faz 2B |
 | REQ-051 | Lisans toleransı | Lisans | License | Bayram günü aniden durmaz | Lisans | Platform | Yerel uyarı | Platform | Check | Offline grace | Var | Yok | İnternetsiz kullanım | Yok | Faz 15 |
@@ -79,7 +79,7 @@ Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dö
 | REQ-063 | Migration dry-run | Veri | MigrationLog | Önce rapor | Script | Teknik | Yok | Teknik | Dry-run | Apply | Var | Kısmi | Rapor üretir | Kısmi | Faz 2C |
 | REQ-064 | Yedek öncesi güncelleme | Sistem | BackupLog | Migration öncesi yedek | Update | Platform | Yok | Platform | Yedek al | Durdur | Zorunlu | Yok | Yedeksiz migrate yok | Yok | Faz 15 |
 | REQ-065 | Placeholder kapsam denetimi | Ürün | FeatureFlag | Çekirdeğe karışmaz | Menü | Menü | Menü | Admin | Flag kapalı | Pilot | Yok | Yok | Çekirdek menü sade | Kısmi | Faz 2A |
-| REQ-066 | Test PostgreSQL | Test | Test DB | Mock yetmez | Test infra | Yok | Yok | Teknik | CI test | Rollback | Yok | Yok | PG integration | Yok | Faz 2C |
+| REQ-066 | Test PostgreSQL | Test | Test DB | Mock yetmez | Test infra | Yok | Yok | Teknik | CI test | Rollback | Yok | Var | PG integration | Uygulandı — genel doğrulama bekliyor | Faz 2C |
 | REQ-067 | 5–20 cihaz yük | Test | Senaryo | Bayram LAN provası | Load script | Yok | Cihazlar | Teknik | Prova | Kesinti | Var | Yok | Yük raporu | Yok | Faz 16 |
 | REQ-068 | Denetim ve olay inceleme | Audit | Audit/Event | Kim, neyi, neden | Timeline | Timeline | Özet | Yetkili | İncele | Export | Var | Kısmi | Kayıt izi | Kısmi | Faz 14 |
 

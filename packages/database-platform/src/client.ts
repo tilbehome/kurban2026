@@ -15,6 +15,12 @@ export type PlatformPrismaClientLike = Pick<
   | "platformUser"
   | "platformRole"
   | "platformUserRole"
+  | "platformProvisioningJob"
+>;
+
+export type PlatformProvisioningPrismaClientLike = Pick<
+  PrismaClient,
+  "platformProvisioningJob"
 >;
 
 export type PlatformTransactionClient = Pick<
@@ -45,3 +51,4 @@ export type PlatformRoleRow = Prisma.PlatformRoleGetPayload<object>;
 export type PlatformUserWithRolesRow = Prisma.PlatformUserGetPayload<{
   include: { roles: { include: { role: true } } };
 }>;
+export type PlatformProvisioningJobRow = Prisma.PlatformProvisioningJobGetPayload<object>;

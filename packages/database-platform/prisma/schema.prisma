@@ -18,7 +18,6 @@ model Organization {
   tenants         TenantInstance[]
   licenses        PlatformLicense[]
   auditLogs       PlatformAuditLog[]
-  provisioningJobs PlatformProvisioningJob[]
   emergencyStops  EmergencyStop[]
 }
 
@@ -35,7 +34,6 @@ model TenantInstance {
   updatedAt          DateTime           @updatedAt
   organization       Organization       @relation(fields: [organizationId], references: [id])
   databaseRef        TenantDatabaseRef  @relation(fields: [databaseRefId], references: [id])
-  provisioningJobs   PlatformProvisioningJob[]
   healthSnapshots    TenantHealthSnapshot[]
   emergencyStops     EmergencyStop[]
 
@@ -51,7 +49,6 @@ model TenantDatabaseRef {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   tenantInstances TenantInstance[]
-  provisioningJobs PlatformProvisioningJob[]
 }
 
 model PlatformPlan {
@@ -222,21 +219,25 @@ model PlatformSession {
 
 model PlatformProvisioningJob {
   id                String   @id
+  idempotencyKey    String   @unique
+  commandFingerprint String
   organizationId    String
   tenantInstanceId  String
   requestedByUserId String
   databaseRefId     String
   status            String
   steps             Json
+  currentStep       String?
+  failureCode       String?
+  databaseCreatedByJob Boolean @default(false)
+  platformRegistrationCompleted Boolean @default(false)
+  rollbackStatus    String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  organization      Organization @relation(fields: [organizationId], references: [id])
-  tenantInstance    TenantInstance @relation(fields: [tenantInstanceId], references: [id])
   requestedByUser   PlatformUser @relation(fields: [requestedByUserId], references: [id])
-  databaseRef       TenantDatabaseRef @relation(fields: [databaseRefId], references: [id])
 
+  @@unique([tenantInstanceId])
   @@index([organizationId])
-  @@index([tenantInstanceId])
   @@index([requestedByUserId])
 }
 

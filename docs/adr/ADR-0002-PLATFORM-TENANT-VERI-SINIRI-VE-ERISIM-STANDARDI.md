@@ -8,7 +8,7 @@ Durum: Kabul edildi
 
 TilbeCore – Kurban Takip tek kod tabanlı, çok firmalı ve modüler monolit bir üründür. Platform yönetimi ile firma operasyonu aynı ürün ailesinde yer alsa da veri sahipliği, oturum, yetki, audit ve veritabanı sınırları karıştırılamaz.
 
-Bu ADR, Faz 2A kapanış paketi kapsamında davranış değiştirmeyen bağlayıcı mimari karar olarak yazılmıştır. Bu karar Prisma şeması, PostgreSQL kurulumu, tenant routing uygulaması veya fiziksel klasör taşıması yapmaz.
+Bu ADR, Faz 2A kapanış paketinde bağlayıcı mimari karar olarak yazılmıştır. Faz 2C uygulama paketi bu kararı gerçek PostgreSQL provisioning adapteri, devam ettirilebilir iş kaydı, tenant-aware connection pool, kontrollü CLI ve iki firma izolasyon entegrasyon testiyle uygulamaya bağlamıştır. DNS, TLS, canlı deployment ve Süper Admin ekranı bu ADR güncellemesinin kapsamı değildir.
 
 ## Karar
 
@@ -57,6 +57,8 @@ Platform ekranları firma operasyon verisini doğrudan listelemez. Platformda ge
 `TenantDatabaseRef` opaque bir referanstır; bağlantı parolası, token, secret veya açık connection string taşımaz. Platform DB’de saklanan referans, tenant DB’ye bağlanmak için doğrudan yeterli olmamalıdır.
 
 Gerçek bağlantı bilgileri yalnız güvenli secret store veya eşdeğer kontrollü runtime mekanizmasından çözümlenir. Secret değerleri API yanıtına, loglara, hata mesajlarına, audit dışa aktarımına veya istemci bundle’ına çıkamaz.
+
+Faz 2C adapteri `TenantDatabaseRef` değerinden doğrulanmış ve uzunluğu sınırlı bir PostgreSQL identifier üretir; kullanıcıdan ham SQL veya connection string almaz. Admin bağlantısı yalnız process ortamından composition root’a verilir. Migration alt süreci sabit executable ve sabit argümanlarla, shell açmadan çalışır; hata ve iş durumu kayıtlarına yalnız güvenli hata kodu yazılır.
 
 `TenantDatabaseRef` şu durumlarda reddedilir:
 
@@ -116,17 +118,29 @@ Aşağıdaki durumlarda sistem güvenli biçimde reddeder:
 
 Reddedilen istekler güvenli hata kodu ve requestId döndürür; DB secret, connection string, stack trace veya PII sızdırmaz.
 
+## Faz 2C uygulama kanıtı
+
+- `packages/database-tenant`: gerçek DB create/exists/migrate/verify/rollback adapteri ve tenant Prisma connection factory. Migration öncesi sahiplik kanıtı PostgreSQL DB metadata'sında, migration sonrası ikinci kanıt tenant içindeki `TenantProvisioningMarker` tablosunda tutulur; böylece Prisma boş şema şartı bozulmaz.
+- `packages/provisioning`: adım durumları, idempotency fingerprint’i, güvenli resume ve yalnız aynı işin oluşturduğu kayıt edilmemiş DB için rollback kuralı.
+- `packages/database-platform`: `0004_resumable_tenant_provisioning` migration’ı ve provisioning job repository adapteri.
+- `packages/tenant-runtime`: tenant+opaque DB ref anahtarlı pool, referans sahipliği kontrolü, idle kapatma ve shutdown temizliği.
+- `apps/provisioning-cli`: `dry-run`, `create`, `status`, `resume` ve `rollback` komutları.
+- `packages/database-tenant/tests/tenant-isolation.integration.test.ts`: iki fiziksel tenant DB, aynı kayıt ID’leri, host/session/ref reddi, SupportSession sınırı, secret redaction ve tenant-bağımsız rollback kanıtı.
+- `tests/architecture-boundaries.test.ts`: platform DB ile tenant DB altyapısının private import veya doğrudan join bağımlılığı kurmaması.
+
+Bu kanıtlar tenant provisioning çekirdeğini uygular. Mevcut tenant-web route’larının bu runtime üzerinden çalıştırılması, firma bazlı backup/restore provası, WAL/PITR değerlendirmesi, canlı DNS/TLS/deployment ve Süper Admin UI hâlâ ayrı paketlerdir.
+
 ## PlatformUser firma sınırı
 
 Platform kullanıcısı doğrudan `organizationId` alanıyla tenant operasyon yetkisi kazanmaz. Firma kapsamı gerektiren platform işlemleri ayrı metadata, audit ve gerekiyorsa süreli `SupportSession` kapsamı üzerinden izlenir. Bu nedenle platform temel şemasında `PlatformUser.organizationId` alanı tenant yetki kaynağı olarak kullanılmaz.
 
 ## Sonuçlar
 
-- Platform ve tenant veri sınırı Faz 2A’da yazılı sözleşme haline gelir.
+- Platform ve tenant veri sınırı Faz 2A’da yazılı sözleşme haline gelmiştir.
 - Faz 2B Platform DB ve Süper Admin uygulaması bu ADR’ye göre tasarlanır.
-- Faz 2C tenant DB routing, PostgreSQL ve isolation testleri bu ADR’ye göre uygulanır.
-- Bu ADR tek başına PostgreSQL kurulumu, gerçek tenant routing veya uygulama taşıması yapmaz.
+- Faz 2C tenant DB provisioning, tenant-aware pool ve iki firma PostgreSQL izolasyon otomasyonunu bu ADR’ye göre uygular.
+- Canlı tenant-web route bağlama ve fiziksel uygulama taşıması bu paketle yapılmaz.
 
 ## Geri dönüş
 
-Bu ADR dokümantasyon kararıdır. Geri dönüş gerektiğinde ilgili commit revert edilir. Kod, veritabanı, DNS, deployment veya secret state değişmediği için runtime geri alma gerektirmez.
+Kod geri dönüşü ilgili Faz 2C commit’inin revert edilmesiyle yapılır. Platform `0004` ve tenant `0003` migration’ları uygulanmış ortamlarda şema geri alma doğrudan destructive SQL ile yapılmaz; test ortamı yeniden kurulur, kalıcı ortamda snapshot/restore veya ileri düzeltme migration’ı kullanılır. Provisioning rollback yalnız PostgreSQL DB metadata sahiplik kanıtı aynı provisioning işini doğrulayan ve platform tenant kaydı tamamlanmamış DB’yi düşürebilir. DNS, deployment ve secret state bu paket tarafından değiştirilmez.

@@ -26,6 +26,7 @@ export type MfaEnrollmentStatus = "pending" | "active" | "revoked";
 export type PlatformSessionStatus = "active" | "revoked" | "expired";
 export type PlatformDeviceTrustStatus = "unknown" | "trusted" | "blocked";
 export type ProvisioningStepStatus = "pending" | "running" | "succeeded" | "failed" | "skipped";
+export type ProvisioningJobStatus = "pending" | "running" | "succeeded" | "failed" | "rolled_back";
 export type IncidentSeverity = "info" | "warning" | "critical";
 export type IncidentStatus = "open" | "investigating" | "resolved" | "cancelled";
 export type MaintenanceStatus = "planned" | "active" | "completed" | "cancelled";
@@ -90,8 +91,15 @@ export interface PlatformProvisioningJob {
   tenantInstanceId: TenantInstanceId;
   requestedByUserId: PlatformUserId;
   databaseRef: TenantDatabaseRefRecord;
-  status: ProvisioningStepStatus;
+  idempotencyKey: string;
+  commandFingerprint: string;
+  status: ProvisioningJobStatus;
   steps: readonly ProvisioningStep[];
+  currentStep?: string;
+  failureCode?: string;
+  databaseCreatedByJob: boolean;
+  platformRegistrationCompleted: boolean;
+  rollbackStatus?: "not_required" | "succeeded" | "failed";
   createdAt: string;
   updatedAt: string;
 }
