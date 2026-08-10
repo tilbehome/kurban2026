@@ -143,6 +143,10 @@ importers:
 
   packages/contracts: {}
 
+  packages/database-platform: {}
+
+  packages/platform: {}
+
 packages:
 
   '@alloc/quick-lru@5.2.0':

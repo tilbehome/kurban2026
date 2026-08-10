@@ -43,8 +43,10 @@ Faz 2A öncesinde `pnpm-workspace.yaml` dosyasında `packages` deseni yoktu; yal
 
 - `packages/contracts`
 - `packages/config`
+- `packages/platform`
+- `packages/database-platform`
 
-`packages/contracts` platform/tenant TypeScript sözleşmelerini içerir. `packages/config` ortam, domain, URL, origin, trusted host, cookie ve public/private servis sözleşmesini içerir. Platform–tenant veri sınırı ayrıca `../adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md` içinde bağlayıcı ADR olarak kapanışa bağlanır. Bu paketlerde Next.js, React, Prisma, uygulama route’u veya veritabanı bağımlılığı yoktur.
+`packages/contracts` platform/tenant TypeScript sözleşmelerini içerir. `packages/config` ortam, domain, URL, origin, trusted host, cookie ve public/private servis sözleşmesini içerir. Platform–tenant veri sınırı ayrıca `../adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md` içinde bağlayıcı ADR olarak kapanışa bağlanır. Faz 2B-1 ile `packages/platform` framework bağımsız platform domain temelini, `packages/database-platform` ise ayrı PostgreSQL platform şemasını ve repository adaptörlerini taşımaya başlamıştır. Bu paketler mevcut tenant uygulamasını, kök SQLite şemasını, tenant routing'i veya gerçek app taşımasını değiştirmez.
 
 ## Kök bazlı import grafiği
 

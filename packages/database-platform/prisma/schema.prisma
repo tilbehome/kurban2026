@@ -1,0 +1,166 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("PLATFORM_DATABASE_URL")
+}
+
+model Organization {
+  id              String           @id
+  slug            String           @unique
+  displayName     String
+  status          String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  tenants         TenantInstance[]
+  licenses        PlatformLicense[]
+  users           PlatformUser[]
+  auditLogs       PlatformAuditLog[]
+}
+
+model TenantInstance {
+  id                 String             @id
+  organizationId     String
+  slug               String             @unique
+  displayName        String
+  provisioningStatus String
+  runtimeStatus      String             @default("unknown")
+  releaseChannel     String
+  databaseRefId      String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  organization       Organization       @relation(fields: [organizationId], references: [id])
+  databaseRef        TenantDatabaseRef  @relation(fields: [databaseRefId], references: [id])
+
+  @@index([organizationId])
+}
+
+model TenantDatabaseRef {
+  id             String           @id
+  engine         String
+  managed        Boolean
+  region         String?
+  status         String
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  tenantInstances TenantInstance[]
+}
+
+model PlatformPlan {
+  id           String                 @id
+  code         String                 @unique
+  displayName  String
+  status       String
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  modules      PlatformPlanModule[]
+  licenses     PlatformLicense[]
+}
+
+model PlatformModule {
+  id          String                         @id
+  key         String                         @unique
+  displayName String
+  status      String
+  createdAt   DateTime                       @default(now())
+  updatedAt   DateTime                       @updatedAt
+  plans       PlatformPlanModule[]
+  entitlements PlatformLicenseEntitlement[]
+}
+
+model PlatformPlanModule {
+  planId       String
+  moduleId     String
+  enabled      Boolean
+  maxUsers     Int?
+  maxDevices   Int?
+  maxStorageMb Int?
+  plan         PlatformPlan   @relation(fields: [planId], references: [id])
+  module       PlatformModule @relation(fields: [moduleId], references: [id])
+
+  @@id([planId, moduleId])
+}
+
+model PlatformLicense {
+  id             String                       @id
+  organizationId String
+  planId         String
+  status         String
+  startsAt       DateTime
+  expiresAt      DateTime?
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
+  organization   Organization                 @relation(fields: [organizationId], references: [id])
+  plan           PlatformPlan                 @relation(fields: [planId], references: [id])
+  entitlements   PlatformLicenseEntitlement[]
+
+  @@index([organizationId])
+  @@index([planId])
+}
+
+model PlatformLicenseEntitlement {
+  licenseId    String
+  moduleId     String
+  enabled      Boolean
+  maxUsers     Int?
+  maxDevices   Int?
+  maxStorageMb Int?
+  license      PlatformLicense @relation(fields: [licenseId], references: [id])
+  module       PlatformModule  @relation(fields: [moduleId], references: [id])
+
+  @@id([licenseId, moduleId])
+}
+
+model PlatformUser {
+  id             String             @id
+  organizationId String?
+  email          String             @unique
+  displayName    String
+  status         String
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  organization   Organization?      @relation(fields: [organizationId], references: [id])
+  roles          PlatformUserRole[]
+  auditLogs      PlatformAuditLog[]
+}
+
+model PlatformRole {
+  id          String             @id
+  key         String             @unique
+  displayName String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  users       PlatformUserRole[]
+}
+
+model PlatformUserRole {
+  userId String
+  roleId String
+  user   PlatformUser @relation(fields: [userId], references: [id])
+  role   PlatformRole @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+}
+
+model PlatformAuditLog {
+  id             String        @id
+  organizationId String?
+  actorUserId    String?
+  action         String
+  targetType     String
+  targetId       String?
+  requestId      String?
+  supportSessionId String?
+  result         String
+  metadata       Json?
+  occurredAt     DateTime      @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  actorUser      PlatformUser? @relation(fields: [actorUserId], references: [id])
+
+  @@index([organizationId])
+  @@index([actorUserId])
+  @@index([requestId])
+}

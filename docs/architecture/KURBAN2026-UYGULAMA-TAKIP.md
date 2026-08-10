@@ -113,3 +113,17 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Yeni operasyon kapsamı | Planlandı | `PRO-030..PRO-036` kayıtları `11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md` içine eklendi. |
 | Mükerrer olmayan güçlendirmeler | Planlandı | Yapay zekâ güvenli rolü, placeholder kuralı, kritik işlem güvenliği, güvenli sürüm geçişi ve Kurban Günü Provası ana yol haritası ile faz-risk belgesinde güçlendirildi. |
 | Faz 2A durumu | Değişmedi | Bu uyumlandırma Faz 2A uygulama kapsamını büyütmez ve Faz 2A tamamlandı anlamına gelmez. |
+
+## Faz 2B durumu
+
+**Durum:** Başladı — 2B-1 platform domain ve database-platform şema temeli uygulandı.
+
+| İş | Durum | Kanıt |
+|---|---|---|
+| `packages/platform` domain paketi | Uygulandı | `Organization`, `TenantInstance`, `Plan`, `ModuleDefinition`, `License`, `LicenseEntitlement` domain temeli ve saf doğrulama fonksiyonları eklendi. |
+| `packages/database-platform` şema paketi | Uygulandı | Ayrı PostgreSQL provider kullanan `packages/database-platform/prisma/schema.prisma` ve `0001_platform_baseline` migration SQL'i eklendi. |
+| Platform repository port/adaptörleri | Uygulandı | Organization, TenantInstance ve plan/license repository portları ile Prisma adaptör eşlemeleri eklendi. |
+| Platform–tenant veri sınırı | Uygulandı | Platform şemasında tenant operasyon modelleri, DB URL/parola/secret alanları ve tenant operasyon repository'si yoktur. |
+| PostgreSQL integration | Eksik | Docker kullanılamıyor ve `PLATFORM_TEST_DATABASE_URL` tanımlı değil; gerçek test DB'ye migration uygulanmadı. Prisma schema validate ve offline migration diff çalıştırıldı. |
+
+Bu kayıt Faz 2B'nin tamamlandığı, Platform PostgreSQL'in canlıya hazır olduğu, Süper Admin'in hazır olduğu, tenant provisioning'in hazır olduğu veya çok firmalı sistemin tamamlandığı anlamına gelmez.

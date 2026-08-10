@@ -138,6 +138,56 @@ describe("Faz 2A mimari bağımlılık sınırları", () => {
     ).toEqual([]);
   });
 
+  it("packages/platform framework, Prisma ve tenant uygulama katmanlarına bağımlı değildir", () => {
+    const files = listTrackedSourceFiles("packages/platform");
+
+    expect(files.length).toBeGreaterThan(0);
+    expect(
+      violations(files, [
+        /from\s+["']next(\/|["'])/,
+        /from\s+["']react["']/,
+        /from\s+["']@prisma\/client["']/,
+        /from\s+["']@\/(app|modules|shared|components)(\/|["'])/,
+        /from\s+["'](\.\.\/)+database-platform(\/|["'])/,
+      ]),
+    ).toEqual([]);
+  });
+
+  it("packages/database-platform tenant uygulamasına ve framework katmanlarına ters bağımlılık oluşturmaz", () => {
+    const files = listTrackedSourceFiles("packages/database-platform");
+
+    expect(files.length).toBeGreaterThan(0);
+    expect(
+      violations(files, [
+        /from\s+["']next(\/|["'])/,
+        /from\s+["']react["']/,
+        /from\s+["']@\/(app|modules|shared|components)(\/|["'])/,
+      ]),
+    ).toEqual([]);
+  });
+
+  it("tenant uygulama kodu platform database paketine doğrudan bağlanmaz", () => {
+    const files = listTrackedSourceFiles("app", "modules", "shared", "components");
+
+    expect(
+      violations(files, [
+        /from\s+["']@tilbecore\/database-platform(\/|["'])/,
+        /from\s+["'](\.\.\/)+packages\/database-platform(\/|["'])/,
+      ]),
+    ).toEqual([]);
+  });
+
+  it("uygulama katmanları paketlerin yalnız public export yüzeyini kullanır", () => {
+    const files = listTrackedSourceFiles("app", "modules", "shared", "components", "tests");
+
+    expect(
+      violations(files, [
+        /from\s+["']@tilbecore\/[^"']+\/src(\/|["'])/,
+        /from\s+["'](\.\.\/)+packages\/[^"']+\/src(\/|["'])/,
+      ]),
+    ).toEqual([]);
+  });
+
   it("domain katmanı Next, React, Prisma ve route adapterlerine bağımlı değildir", () => {
     const files = listTrackedSourceFiles("modules").filter((file) =>
       file.split(/[\\/]/).includes("domain"),

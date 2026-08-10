@@ -19,9 +19,10 @@ export default defineConfig({
     include: [
       "shared/**/*.test.ts",
       "modules/**/*.test.ts",
+      "packages/**/*.test.ts",
       "tests/**/*.test.ts",
     ],
-    exclude: ["node_modules", ".next", "dist"],
+    exclude: ["node_modules", "**/node_modules/**", ".next", "dist"],
     reporters: ["default"],
     coverage: {
       provider: "v8",
