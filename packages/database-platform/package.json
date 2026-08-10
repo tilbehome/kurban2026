@@ -9,5 +9,9 @@
       "types": "./src/index.ts",
       "default": "./src/index.ts"
     }
+  },
+  "dependencies": {
+    "@tilbecore/contracts": "workspace:*",
+    "@tilbecore/platform": "workspace:*"
   }
 }

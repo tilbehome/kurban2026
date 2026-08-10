@@ -2,11 +2,14 @@ import type {
   OrganizationId,
   ReleaseChannel,
   TenantDatabaseRef,
+  TenantDatabaseRefId,
   TenantInstanceId,
+  TenantModuleEntitlement,
+  TenantOperationalLimits,
   TenantProvisioningStatus,
   TenantSlug,
-} from "../../../contracts/src";
-import { assertPlatformTenantDescriptorSafe } from "../../../contracts/src";
+} from "@tilbecore/contracts";
+import { assertPlatformTenantDescriptorSafe } from "@tilbecore/contracts";
 
 type Brand<TValue, TBrand extends string> = TValue & { readonly __brand: TBrand };
 
@@ -18,6 +21,7 @@ export type OrganizationStatus = "draft" | "active" | "suspended" | "closed";
 export type PlatformPlanStatus = "draft" | "active" | "retired";
 export type PlatformModuleStatus = "active" | "retired";
 export type PlatformLicenseStatus = "draft" | "active" | "suspended" | "expired" | "cancelled";
+export type TenantDatabaseRefStatus = "active" | "suspended" | "removed";
 
 export interface Organization {
   id: OrganizationId;
@@ -36,6 +40,11 @@ export interface TenantInstance {
   databaseRef: TenantDatabaseRef;
 }
 
+export interface TenantDatabaseRefRecord extends TenantDatabaseRef {
+  id: TenantDatabaseRefId;
+  status: TenantDatabaseRefStatus;
+}
+
 export interface ModuleDefinition {
   id: PlatformModuleId;
   key: string;
@@ -43,16 +52,8 @@ export interface ModuleDefinition {
   status: PlatformModuleStatus;
 }
 
-export interface EntitlementLimits {
-  maxUsers?: number;
-  maxDevices?: number;
-  maxStorageMb?: number;
-}
-
-export interface LicenseEntitlement {
+export interface LicenseEntitlement extends TenantModuleEntitlement {
   moduleId: PlatformModuleId;
-  enabled: boolean;
-  limits: EntitlementLimits;
 }
 
 export interface PlatformPlan {
@@ -60,6 +61,7 @@ export interface PlatformPlan {
   code: string;
   displayName: string;
   status: PlatformPlanStatus;
+  limits: TenantOperationalLimits;
   entitlements: readonly LicenseEntitlement[];
 }
 
@@ -70,6 +72,7 @@ export interface PlatformLicense {
   status: PlatformLicenseStatus;
   startsAt: string;
   expiresAt?: string;
+  limits: TenantOperationalLimits;
   entitlements: readonly LicenseEntitlement[];
 }
 
@@ -114,7 +117,6 @@ export function assertPlanEntitlementsKnown(
     if (!knownModuleIds.has(entitlement.moduleId)) {
       throw new Error(`UNKNOWN_PLATFORM_MODULE:${entitlement.moduleId}`);
     }
-    assertEntitlementLimits(entitlement.limits);
   }
 }
 
@@ -131,6 +133,8 @@ export function assertLicenseConsistent(
   if (license.planId !== plan.id) {
     throw new Error("LICENSE_PLAN_MISMATCH");
   }
+  assertOperationalLimits(plan.limits);
+  assertOperationalLimits(license.limits);
   assertPlanEntitlementsKnown(plan.entitlements, modules);
   assertPlanEntitlementsKnown(license.entitlements, modules);
 }
@@ -163,10 +167,10 @@ export function assertTenantDatabaseRefSafe(databaseRef: TenantDatabaseRef): Ten
   }).databaseRef;
 }
 
-function assertEntitlementLimits(limits: EntitlementLimits): void {
+export function assertOperationalLimits(limits: TenantOperationalLimits): void {
   for (const [key, value] of Object.entries(limits)) {
     if (value !== undefined && (!Number.isInteger(value) || value < 0)) {
-      throw new Error(`ENTITLEMENT_LIMIT_INVALID:${key}`);
+      throw new Error(`OPERATIONAL_LIMIT_INVALID:${key}`);
     }
   }
 }

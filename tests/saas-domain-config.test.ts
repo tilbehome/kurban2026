@@ -6,7 +6,7 @@ import {
   privateServiceUrl,
   resolveHost,
   type CustomDomainConfigEntry,
-} from "../packages/config/src";
+} from "@tilbecore/config";
 
 describe("TilbeCore SaaS domain ve origin sözleşmesi", () => {
   it("production platform ve tenant URL'lerini portsuz üretir", () => {

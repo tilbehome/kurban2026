@@ -3,13 +3,15 @@ import type {
   Organization,
   PlatformLicense,
   PlatformPlan,
+  TenantDatabaseRefRecord,
   TenantInstance,
 } from "../domain/platform-domain";
 import type {
   OrganizationId,
+  TenantDatabaseRefId,
   TenantInstanceId,
   TenantSlug,
-} from "../../../contracts/src";
+} from "@tilbecore/contracts";
 
 export interface OrganizationRepository {
   create(organization: Organization): Promise<Organization>;
@@ -19,8 +21,17 @@ export interface OrganizationRepository {
 
 export interface TenantInstanceRepository {
   create(tenant: TenantInstance): Promise<TenantInstance>;
+  createWithDatabaseRef(
+    tenant: TenantInstance,
+    databaseRef: TenantDatabaseRefRecord,
+  ): Promise<TenantInstance>;
   findById(id: TenantInstanceId): Promise<TenantInstance | null>;
   findBySlug(slug: TenantSlug): Promise<TenantInstance | null>;
+}
+
+export interface TenantDatabaseRefRepository {
+  create(databaseRef: TenantDatabaseRefRecord): Promise<TenantDatabaseRefRecord>;
+  findById(id: TenantDatabaseRefId): Promise<TenantDatabaseRefRecord | null>;
 }
 
 export interface PlanLicenseRepository {

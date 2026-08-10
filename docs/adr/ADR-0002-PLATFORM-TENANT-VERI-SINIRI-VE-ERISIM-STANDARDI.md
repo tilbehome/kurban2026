@@ -116,6 +116,10 @@ Aşağıdaki durumlarda sistem güvenli biçimde reddeder:
 
 Reddedilen istekler güvenli hata kodu ve requestId döndürür; DB secret, connection string, stack trace veya PII sızdırmaz.
 
+## PlatformUser firma sınırı
+
+Platform kullanıcısı doğrudan `organizationId` alanıyla tenant operasyon yetkisi kazanmaz. Firma kapsamı gerektiren platform işlemleri ayrı metadata, audit ve gerekiyorsa süreli `SupportSession` kapsamı üzerinden izlenir. Bu nedenle platform temel şemasında `PlatformUser.organizationId` alanı tenant yetki kaynağı olarak kullanılmaz.
+
 ## Sonuçlar
 
 - Platform ve tenant veri sınırı Faz 2A’da yazılı sözleşme haline gelir.

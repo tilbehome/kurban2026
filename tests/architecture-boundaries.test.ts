@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync, statSync } from "node:fs";
-import { join, sep } from "node:path";
+import { dirname, join, sep } from "node:path";
 import { execFileSync } from "node:child_process";
 
 const repoRoot = join(__dirname, "..");
@@ -75,6 +75,26 @@ function manifestDependencies(file: string) {
   ];
 
   return dependencyGroups.flatMap((dependencies) => Object.keys(dependencies));
+}
+
+function packageNameForSource(file: string): string | null {
+  const parts = file.split(/[\\/]/);
+  if (parts[0] !== "packages" || !parts[1]) return null;
+  return `@tilbecore/${parts[1]}`;
+}
+
+function packageManifestForSource(file: string): string | null {
+  const parts = file.split(/[\\/]/);
+  if (parts[0] !== "packages" || !parts[1]) return null;
+  return `packages/${parts[1]}/package.json`;
+}
+
+function importSpecifiers(files: string[]) {
+  return importLines(files).flatMap(({ file, line }) => {
+    const match = line.match(/from\s+["']([^"']+)["']|^import\s+["']([^"']+)["']/);
+    const specifier = match?.[1] ?? match?.[2];
+    return specifier ? [{ file, specifier }] : [];
+  });
 }
 
 describe("Faz 2A mimari bağımlılık sınırları", () => {
@@ -178,6 +198,33 @@ describe("Faz 2A mimari bağımlılık sınırları", () => {
   });
 
   it("uygulama katmanları paketlerin yalnız public export yüzeyini kullanır", () => {
+    const packageFiles = listTrackedSourceFiles("packages");
+
+    expect(
+      importSpecifiers(packageFiles).filter(({ file, specifier }) => {
+        if (!specifier.startsWith(".")) return false;
+        const normalized = join(dirname(file), specifier).split(sep).join("/");
+        const sourcePackage = file.split("/")[1];
+        const targetPackage = normalized.match(/^packages\/([^/]+)\/src(\/|$)/)?.[1];
+        return Boolean(targetPackage && targetPackage !== sourcePackage);
+      }),
+    ).toEqual([]);
+
+    const manifestCache = new Map<string, string[]>();
+    expect(
+      importSpecifiers(packageFiles).filter(({ file, specifier }) => {
+        if (!specifier.startsWith("@tilbecore/")) return false;
+        const ownPackage = packageNameForSource(file);
+        if (!ownPackage || specifier === ownPackage) return false;
+        const manifest = packageManifestForSource(file);
+        if (!manifest) return true;
+        if (!manifestCache.has(manifest)) {
+          manifestCache.set(manifest, manifestDependencies(manifest));
+        }
+        return !manifestCache.get(manifest)?.includes(specifier);
+      }),
+    ).toEqual([]);
+
     const files = listTrackedSourceFiles("app", "modules", "shared", "components", "tests");
 
     expect(

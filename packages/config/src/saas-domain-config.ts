@@ -1,4 +1,4 @@
-import type { CustomDomainStatus, TenantSlug } from "../../contracts/src";
+import type { CustomDomainStatus, TenantSlug } from "@tilbecore/contracts";
 
 export type DeploymentEnvironment = "production" | "staging" | "local";
 export type OriginKind = "marketing" | "platform" | "tenant" | "system" | "customTenant";

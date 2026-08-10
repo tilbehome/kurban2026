@@ -1,12 +1,21 @@
-import type { OrganizationRepository, PlanLicenseRepository } from "../contracts/platform-repositories";
+import type {
+  OrganizationRepository,
+  PlanLicenseRepository,
+  TenantDatabaseRefRepository,
+  TenantInstanceRepository,
+} from "../contracts/platform-repositories";
 import {
   assertLicenseConsistent,
+  assertOperationalLimits,
   assertOrganizationSlugAvailable,
   assertPlanEntitlementsKnown,
+  assertTenantDatabaseRefSafe,
   type ModuleDefinition,
   type Organization,
   type PlatformLicense,
   type PlatformPlan,
+  type TenantDatabaseRefRecord,
+  type TenantInstance,
 } from "../domain/platform-domain";
 
 export async function registerOrganization(
@@ -22,6 +31,7 @@ export async function registerPlan(
   plan: PlatformPlan,
   modules: readonly ModuleDefinition[],
 ): Promise<PlatformPlan> {
+  assertOperationalLimits(plan.limits);
   assertPlanEntitlementsKnown(plan.entitlements, modules);
   return repository.createPlan(plan);
 }
@@ -35,4 +45,27 @@ export async function registerLicense(
 ): Promise<PlatformLicense> {
   assertLicenseConsistent(license, plan, organization, modules);
   return repository.createLicense(license);
+}
+
+export async function registerTenantDatabaseRef(
+  repository: TenantDatabaseRefRepository,
+  databaseRef: TenantDatabaseRefRecord,
+): Promise<TenantDatabaseRefRecord> {
+  assertTenantDatabaseRefSafe(databaseRef);
+  if (databaseRef.status !== "active") {
+    throw new Error(`TENANT_DATABASE_REF_NOT_ACTIVE:${databaseRef.status}`);
+  }
+  return repository.create(databaseRef);
+}
+
+export async function registerTenantInstanceWithDatabaseRef(
+  repository: TenantInstanceRepository,
+  tenant: TenantInstance,
+  databaseRef: TenantDatabaseRefRecord,
+): Promise<TenantInstance> {
+  assertTenantDatabaseRefSafe(databaseRef);
+  if (databaseRef.status !== "active" || tenant.databaseRef.id !== databaseRef.id) {
+    throw new Error("TENANT_DATABASE_REF_MISMATCH");
+  }
+  return repository.createWithDatabaseRef(tenant, databaseRef);
 }

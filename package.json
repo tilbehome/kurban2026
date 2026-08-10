@@ -57,6 +57,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@tilbecore/config": "workspace:*",
+    "@tilbecore/contracts": "workspace:*",
     "@tailwindcss/postcss": "^4",
     "@types/archiver": "^7.0.0",
     "@types/bcrypt": "^6.0.0",

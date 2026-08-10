@@ -2,11 +2,17 @@ import { describe, expect, it } from "vitest";
 import type {
   OrganizationId,
   TenantDatabaseRef,
+  TenantInstanceId,
   TenantSlug,
-} from "../../../contracts/src";
+} from "@tilbecore/contracts";
+import {
+  registerTenantDatabaseRef,
+  registerTenantInstanceWithDatabaseRef,
+} from "../application/platform-services";
 import {
   assertLicenseConsistent,
   assertOrganizationSlugAvailable,
+  assertOperationalLimits,
   assertPlanEntitlementsKnown,
   assertTenantDatabaseRefSafe,
   assertTenantLifecycleTransition,
@@ -34,7 +40,8 @@ const plan: PlatformPlan = {
   code: "starter",
   displayName: "Starter",
   status: "active",
-  entitlements: [{ moduleId, enabled: true, limits: { maxUsers: 5 } }],
+  limits: { maxUsers: 5 },
+  entitlements: [{ moduleId, enabled: true, validUntil: "2026-12-31T00:00:00.000Z" }],
 };
 
 describe("platform domain sözleşmesi", () => {
@@ -61,18 +68,16 @@ describe("platform domain sözleşmesi", () => {
   it("negatif kullanıcı, cihaz ve depolama limitini reddeder", () => {
     const negativeLimitPlan: PlatformPlan = {
       ...plan,
-      entitlements: [{ moduleId, enabled: true, limits: { maxUsers: -1, maxDevices: -1, maxStorageMb: -1 } }],
+      limits: { maxUsers: -1, maxDevices: -1, maxStorageMb: -1 },
     };
 
-    expect(() => assertPlanEntitlementsKnown(negativeLimitPlan.entitlements, modules)).toThrow(
-      "ENTITLEMENT_LIMIT_INVALID",
-    );
+    expect(() => assertOperationalLimits(negativeLimitPlan.limits)).toThrow("OPERATIONAL_LIMIT_INVALID");
   });
 
   it("plan içinde bilinmeyen modül hakkını reddeder", () => {
     const unknownModulePlan: PlatformPlan = {
       ...plan,
-      entitlements: [{ moduleId: "unknown_module" as PlatformModuleId, enabled: true, limits: {} }],
+      entitlements: [{ moduleId: "unknown_module" as PlatformModuleId, enabled: true }],
     };
 
     expect(() => assertPlanEntitlementsKnown(unknownModulePlan.entitlements, modules)).toThrow(
@@ -98,6 +103,51 @@ describe("platform domain sözleşmesi", () => {
 
     expect(() => assertTenantDatabaseRefSafe(unsafeRef)).toThrow("PLATFORM_TENANT_DESCRIPTOR_UNSAFE");
   });
+
+  it("aktif olmayan TenantDatabaseRef kaydını uygulama servisinde reddeder", async () => {
+    await expect(
+      registerTenantDatabaseRef(
+        {
+          create: async (databaseRef) => databaseRef,
+          findById: async () => null,
+        },
+        {
+          id: "dbref_1" as TenantDatabaseRef["id"],
+          engine: "postgresql",
+          managed: true,
+          status: "suspended",
+        },
+      ),
+    ).rejects.toThrow("TENANT_DATABASE_REF_NOT_ACTIVE");
+  });
+
+  it("TenantInstance yanlış DatabaseRef ile oluşturulamaz", async () => {
+    await expect(
+      registerTenantInstanceWithDatabaseRef(
+        {
+          create: async (tenant) => tenant,
+          createWithDatabaseRef: async (tenant) => tenant,
+          findById: async () => null,
+          findBySlug: async () => null,
+        },
+        {
+          id: "tenant_1" as TenantInstanceId,
+          organizationId: organization.id,
+          slug: organization.slug,
+          displayName: organization.displayName,
+          provisioningStatus: "draft",
+          releaseChannel: "pilot",
+          databaseRef: { id: "dbref_1" as TenantDatabaseRef["id"], engine: "postgresql", managed: true },
+        },
+        {
+          id: "dbref_2" as TenantDatabaseRef["id"],
+          engine: "postgresql",
+          managed: true,
+          status: "active",
+        },
+      ),
+    ).rejects.toThrow("TENANT_DATABASE_REF_MISMATCH");
+  });
 });
 
 function licenseFixture(overrides: Partial<PlatformLicense> = {}): PlatformLicense {
@@ -108,7 +158,8 @@ function licenseFixture(overrides: Partial<PlatformLicense> = {}): PlatformLicen
     status: "active",
     startsAt: "2026-01-01T00:00:00.000Z",
     expiresAt: "2026-12-31T00:00:00.000Z",
-    entitlements: [{ moduleId, enabled: true, limits: { maxUsers: 5 } }],
+    limits: { maxUsers: 5 },
+    entitlements: [{ moduleId, enabled: true, validUntil: "2026-12-31T00:00:00.000Z" }],
     ...overrides,
   };
 }

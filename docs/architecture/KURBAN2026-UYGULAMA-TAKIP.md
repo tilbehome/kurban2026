@@ -125,5 +125,6 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Platform repository port/adaptörleri | Uygulandı | Organization, TenantInstance ve plan/license repository portları ile Prisma adaptör eşlemeleri eklendi. |
 | Platform–tenant veri sınırı | Uygulandı | Platform şemasında tenant operasyon modelleri, DB URL/parola/secret alanları ve tenant operasyon repository'si yoktur. |
 | PostgreSQL integration | Eksik | Docker kullanılamıyor ve `PLATFORM_TEST_DATABASE_URL` tanımlı değil; gerçek test DB'ye migration uygulanmadı. Prisma schema validate ve offline migration diff çalıştırıldı. |
+| Faz 2B-1A platform Prisma/domain sınırı sağlamlaştırma | Uygulandı | `@tilbecore/*` public package importları, workspace dependency manifestleri, generated platform Prisma tipleri, nested relation write sözleşmeleri, `TenantDatabaseRefRepository`, `validUntil` ve tenant/lisans genel limit ayrımı, `0002_platform_baseline_hardening` migration SQL'i ve boundary/schema/repository testleri eklendi. |
 
 Bu kayıt Faz 2B'nin tamamlandığı, Platform PostgreSQL'in canlıya hazır olduğu, Süper Admin'in hazır olduğu, tenant provisioning'in hazır olduğu veya çok firmalı sistemin tamamlandığı anlamına gelmez.

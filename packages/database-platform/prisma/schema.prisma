@@ -17,7 +17,6 @@ model Organization {
   updatedAt       DateTime         @updatedAt
   tenants         TenantInstance[]
   licenses        PlatformLicense[]
-  users           PlatformUser[]
   auditLogs       PlatformAuditLog[]
 }
 
@@ -58,6 +57,9 @@ model PlatformPlan {
   updatedAt    DateTime               @updatedAt
   modules      PlatformPlanModule[]
   licenses     PlatformLicense[]
+  maxUsers     Int?
+  maxDevices   Int?
+  maxStorageMb Int?
 }
 
 model PlatformModule {
@@ -75,9 +77,7 @@ model PlatformPlanModule {
   planId       String
   moduleId     String
   enabled      Boolean
-  maxUsers     Int?
-  maxDevices   Int?
-  maxStorageMb Int?
+  validUntil   DateTime?
   plan         PlatformPlan   @relation(fields: [planId], references: [id])
   module       PlatformModule @relation(fields: [moduleId], references: [id])
 
@@ -91,6 +91,9 @@ model PlatformLicense {
   status         String
   startsAt       DateTime
   expiresAt      DateTime?
+  maxUsers       Int?
+  maxDevices     Int?
+  maxStorageMb   Int?
   createdAt      DateTime                     @default(now())
   updatedAt      DateTime                     @updatedAt
   organization   Organization                 @relation(fields: [organizationId], references: [id])
@@ -105,9 +108,7 @@ model PlatformLicenseEntitlement {
   licenseId    String
   moduleId     String
   enabled      Boolean
-  maxUsers     Int?
-  maxDevices   Int?
-  maxStorageMb Int?
+  validUntil   DateTime?
   license      PlatformLicense @relation(fields: [licenseId], references: [id])
   module       PlatformModule  @relation(fields: [moduleId], references: [id])
 
@@ -115,16 +116,14 @@ model PlatformLicenseEntitlement {
 }
 
 model PlatformUser {
-  id             String             @id
-  organizationId String?
-  email          String             @unique
-  displayName    String
-  status         String
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  organization   Organization?      @relation(fields: [organizationId], references: [id])
-  roles          PlatformUserRole[]
-  auditLogs      PlatformAuditLog[]
+  id          String             @id
+  email       String             @unique
+  displayName String
+  status      String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  roles       PlatformUserRole[]
+  auditLogs   PlatformAuditLog[]
 }
 
 model PlatformRole {

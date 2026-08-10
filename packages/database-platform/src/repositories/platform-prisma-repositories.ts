@@ -1,28 +1,44 @@
 import type {
-  OrganizationRepository,
-  PlanLicenseRepository,
-  TenantInstanceRepository,
-} from "../../../platform/src";
-import type {
   LicenseEntitlement,
   Organization,
+  OrganizationRepository,
+  PlanLicenseRepository,
   PlatformLicense,
   PlatformPlan,
+  TenantDatabaseRefRecord,
+  TenantDatabaseRefRepository,
   TenantInstance,
-} from "../../../platform/src";
+  TenantInstanceRepository,
+} from "@tilbecore/platform";
 import type {
   OrganizationId,
-  TenantDatabaseRef,
+  TenantDatabaseRefId,
   TenantInstanceId,
   TenantSlug,
-} from "../../../contracts/src";
-import type { PlatformPrismaClientLike } from "../client";
+} from "@tilbecore/contracts";
+import type {
+  OrganizationRow,
+  PlatformLicenseWithEntitlementsRow,
+  PlatformPlanWithModulesRow,
+  PlatformPrismaClientLike,
+  PlatformTransactionClient,
+  TenantDatabaseRefRow,
+  TenantInstanceWithDatabaseRefRow,
+} from "../client";
+
+const TENANT_INCLUDE_DATABASE_REF = { databaseRef: true } as const;
+const PLAN_INCLUDE_MODULES = { modules: true } as const;
+const LICENSE_INCLUDE_ENTITLEMENTS = { entitlements: true } as const;
 
 export class PrismaOrganizationRepository implements OrganizationRepository {
   constructor(private readonly db: PlatformPrismaClientLike) {}
 
   async create(organization: Organization): Promise<Organization> {
-    return mapOrganizationRow(await this.db.organization.create({ data: organizationToRow(organization) }));
+    return mapOrganizationRow(
+      await this.db.organization.create({
+        data: organizationToCreateInput(organization),
+      }),
+    );
   }
 
   async findById(id: OrganizationId): Promise<Organization | null> {
@@ -36,20 +52,65 @@ export class PrismaOrganizationRepository implements OrganizationRepository {
   }
 }
 
+export class PrismaTenantDatabaseRefRepository implements TenantDatabaseRefRepository {
+  constructor(private readonly db: PlatformPrismaClientLike) {}
+
+  async create(databaseRef: TenantDatabaseRefRecord): Promise<TenantDatabaseRefRecord> {
+    return mapTenantDatabaseRefRow(
+      await this.db.tenantDatabaseRef.create({
+        data: databaseRefToCreateInput(databaseRef),
+      }),
+    );
+  }
+
+  async findById(id: TenantDatabaseRefId): Promise<TenantDatabaseRefRecord | null> {
+    const row = await this.db.tenantDatabaseRef.findUnique({ where: { id } });
+    return row ? mapTenantDatabaseRefRow(row) : null;
+  }
+}
+
 export class PrismaTenantInstanceRepository implements TenantInstanceRepository {
   constructor(private readonly db: PlatformPrismaClientLike) {}
 
   async create(tenant: TenantInstance): Promise<TenantInstance> {
-    return mapTenantInstanceRow(await this.db.tenantInstance.create({ data: tenantInstanceToRow(tenant) }));
+    return mapTenantInstanceRow(
+      await this.db.tenantInstance.create({
+        data: tenantInstanceToCreateInput(tenant),
+        include: TENANT_INCLUDE_DATABASE_REF,
+      }),
+    );
+  }
+
+  async createWithDatabaseRef(
+    tenant: TenantInstance,
+    databaseRef: TenantDatabaseRefRecord,
+  ): Promise<TenantInstance> {
+    return this.db.$transaction(async (tx) => {
+      await tx.tenantDatabaseRef.create({
+        data: databaseRefToCreateInput(databaseRef),
+      });
+      return mapTenantInstanceRow(
+        await tx.tenantInstance.create({
+          data: tenantInstanceToCreateInput(tenant),
+          include: TENANT_INCLUDE_DATABASE_REF,
+        }),
+      );
+    });
   }
 
   async findById(id: TenantInstanceId): Promise<TenantInstance | null> {
-    const row = await this.db.tenantInstance.findUnique({ where: { id } });
+    const row = await this.db.tenantInstance.findUnique({
+      where: { id },
+      include: TENANT_INCLUDE_DATABASE_REF,
+    });
     return row ? mapTenantInstanceRow(row) : null;
   }
 
   async findBySlug(slug: TenantSlug): Promise<TenantInstance | null> {
-    const row = await this.db.tenantInstance.findUnique({ where: { slug } });
+    const row = await this.db.tenantInstance.findUnique({
+      where: { slug },
+      include: TENANT_INCLUDE_DATABASE_REF,
+    });
     return row ? mapTenantInstanceRow(row) : null;
   }
 }
@@ -58,20 +119,36 @@ export class PrismaPlanLicenseRepository implements PlanLicenseRepository {
   constructor(private readonly db: PlatformPrismaClientLike) {}
 
   async createPlan(plan: PlatformPlan): Promise<PlatformPlan> {
-    return mapPlatformPlanRow(await this.db.platformPlan.create({ data: planToRow(plan) }));
+    return mapPlatformPlanRow(
+      await this.db.platformPlan.create({
+        data: planToCreateInput(plan),
+        include: PLAN_INCLUDE_MODULES,
+      }),
+    );
   }
 
   async findPlanById(id: PlatformPlan["id"]): Promise<PlatformPlan | null> {
-    const row = await this.db.platformPlan.findUnique({ where: { id } });
+    const row = await this.db.platformPlan.findUnique({
+      where: { id },
+      include: PLAN_INCLUDE_MODULES,
+    });
     return row ? mapPlatformPlanRow(row) : null;
   }
 
   async createLicense(license: PlatformLicense): Promise<PlatformLicense> {
-    return mapPlatformLicenseRow(await this.db.platformLicense.create({ data: licenseToRow(license) }));
+    return mapPlatformLicenseRow(
+      await this.db.platformLicense.create({
+        data: licenseToCreateInput(license),
+        include: LICENSE_INCLUDE_ENTITLEMENTS,
+      }),
+    );
   }
 
   async findLicenseById(id: PlatformLicense["id"]): Promise<PlatformLicense | null> {
-    const row = await this.db.platformLicense.findUnique({ where: { id } });
+    const row = await this.db.platformLicense.findUnique({
+      where: { id },
+      include: LICENSE_INCLUDE_ENTITLEMENTS,
+    });
     return row ? mapPlatformLicenseRow(row) : null;
   }
 
@@ -79,16 +156,30 @@ export class PrismaPlanLicenseRepository implements PlanLicenseRepository {
     licenseId: PlatformLicense["id"],
     entitlements: readonly LicenseEntitlement[],
   ): Promise<PlatformLicense> {
-    return mapPlatformLicenseRow(
-      await this.db.platformLicense.update({
-        where: { id: licenseId },
-        data: { entitlements: entitlementRows(entitlements) },
-      }),
-    );
+    return this.db.$transaction(async (tx) => replaceLicenseEntitlements(tx, licenseId, entitlements));
   }
 }
 
-function organizationToRow(organization: Organization): Record<string, unknown> {
+async function replaceLicenseEntitlements(
+  tx: PlatformTransactionClient,
+  licenseId: PlatformLicense["id"],
+  entitlements: readonly LicenseEntitlement[],
+): Promise<PlatformLicense> {
+  await tx.platformLicenseEntitlement.deleteMany({ where: { licenseId } });
+  if (entitlements.length > 0) {
+    await tx.platformLicenseEntitlement.createMany({
+      data: entitlements.map((entitlement) => entitlementToCreateManyInput(licenseId, entitlement)),
+    });
+  }
+  const row = await tx.platformLicense.findUnique({
+    where: { id: licenseId },
+    include: LICENSE_INCLUDE_ENTITLEMENTS,
+  });
+  if (!row) throw new Error("PLATFORM_LICENSE_NOT_FOUND");
+  return mapPlatformLicenseRow(row);
+}
+
+function organizationToCreateInput(organization: Organization) {
   return {
     id: organization.id,
     slug: organization.slug,
@@ -97,121 +188,156 @@ function organizationToRow(organization: Organization): Record<string, unknown> 
   };
 }
 
-function tenantInstanceToRow(tenant: TenantInstance): Record<string, unknown> {
+function databaseRefToCreateInput(databaseRef: TenantDatabaseRefRecord) {
+  return {
+    id: databaseRef.id,
+    engine: databaseRef.engine,
+    managed: databaseRef.managed,
+    region: databaseRef.region,
+    status: databaseRef.status,
+  };
+}
+
+function tenantInstanceToCreateInput(tenant: TenantInstance) {
   return {
     id: tenant.id,
-    organizationId: tenant.organizationId,
     slug: tenant.slug,
     displayName: tenant.displayName,
     provisioningStatus: tenant.provisioningStatus,
     releaseChannel: tenant.releaseChannel,
-    databaseRefId: tenant.databaseRef.id,
+    organization: { connect: { id: tenant.organizationId } },
+    databaseRef: { connect: { id: tenant.databaseRef.id } },
   };
 }
 
-function planToRow(plan: PlatformPlan): Record<string, unknown> {
+function planToCreateInput(plan: PlatformPlan) {
   return {
     id: plan.id,
     code: plan.code,
     displayName: plan.displayName,
     status: plan.status,
-    modules: entitlementRows(plan.entitlements),
-  };
-}
-
-function licenseToRow(license: PlatformLicense): Record<string, unknown> {
-  return {
-    id: license.id,
-    organizationId: license.organizationId,
-    planId: license.planId,
-    status: license.status,
-    startsAt: new Date(license.startsAt),
-    expiresAt: license.expiresAt ? new Date(license.expiresAt) : null,
-    entitlements: entitlementRows(license.entitlements),
-  };
-}
-
-function entitlementRows(entitlements: readonly LicenseEntitlement[]): Record<string, unknown>[] {
-  return entitlements.map((entitlement) => ({
-    moduleId: entitlement.moduleId,
-    enabled: entitlement.enabled,
-    maxUsers: entitlement.limits.maxUsers,
-    maxDevices: entitlement.limits.maxDevices,
-    maxStorageMb: entitlement.limits.maxStorageMb,
-  }));
-}
-
-function mapOrganizationRow(row: unknown): Organization {
-  const value = row as Record<string, unknown>;
-  return {
-    id: value.id as OrganizationId,
-    slug: value.slug as TenantSlug,
-    displayName: String(value.displayName),
-    status: value.status as Organization["status"],
-  };
-}
-
-function mapTenantInstanceRow(row: unknown): TenantInstance {
-  const value = row as Record<string, unknown>;
-  return {
-    id: value.id as TenantInstanceId,
-    organizationId: value.organizationId as OrganizationId,
-    slug: value.slug as TenantSlug,
-    displayName: String(value.displayName),
-    provisioningStatus: value.provisioningStatus as TenantInstance["provisioningStatus"],
-    releaseChannel: value.releaseChannel as TenantInstance["releaseChannel"],
-    databaseRef: {
-      id: value.databaseRefId as TenantDatabaseRef["id"],
-      engine: "postgresql",
-      managed: true,
+    maxUsers: plan.limits.maxUsers,
+    maxDevices: plan.limits.maxDevices,
+    maxStorageMb: plan.limits.maxStorageMb,
+    modules: {
+      create: plan.entitlements.map((entitlement) => ({
+        module: { connect: { id: entitlement.moduleId } },
+        enabled: entitlement.enabled,
+        validUntil: optionalDate(entitlement.validUntil),
+      })),
     },
   };
 }
 
-function mapPlatformPlanRow(row: unknown): PlatformPlan {
-  const value = row as Record<string, unknown>;
+function licenseToCreateInput(license: PlatformLicense) {
   return {
-    id: value.id as PlatformPlan["id"],
-    code: String(value.code),
-    displayName: String(value.displayName),
-    status: value.status as PlatformPlan["status"],
-    entitlements: mapEntitlements(value.modules),
+    id: license.id,
+    status: license.status,
+    startsAt: new Date(license.startsAt),
+    expiresAt: optionalDate(license.expiresAt),
+    maxUsers: license.limits.maxUsers,
+    maxDevices: license.limits.maxDevices,
+    maxStorageMb: license.limits.maxStorageMb,
+    organization: { connect: { id: license.organizationId } },
+    plan: { connect: { id: license.planId } },
+    entitlements: {
+      create: license.entitlements.map((entitlement) => ({
+        module: { connect: { id: entitlement.moduleId } },
+        enabled: entitlement.enabled,
+        validUntil: optionalDate(entitlement.validUntil),
+      })),
+    },
   };
 }
 
-function mapPlatformLicenseRow(row: unknown): PlatformLicense {
-  const value = row as Record<string, unknown>;
+function entitlementToCreateManyInput(
+  licenseId: PlatformLicense["id"],
+  entitlement: LicenseEntitlement,
+) {
   return {
-    id: value.id as PlatformLicense["id"],
-    organizationId: value.organizationId as OrganizationId,
-    planId: value.planId as PlatformPlan["id"],
-    status: value.status as PlatformLicense["status"],
-    startsAt: isoDate(value.startsAt),
-    expiresAt: value.expiresAt ? isoDate(value.expiresAt) : undefined,
-    entitlements: mapEntitlements(value.entitlements),
+    licenseId,
+    moduleId: entitlement.moduleId,
+    enabled: entitlement.enabled,
+    validUntil: optionalDate(entitlement.validUntil),
   };
 }
 
-function mapEntitlements(value: unknown): LicenseEntitlement[] {
-  if (!Array.isArray(value)) return [];
-  return value.map((item) => {
-    const row = item as Record<string, unknown>;
-    return {
-      moduleId: row.moduleId as LicenseEntitlement["moduleId"],
-      enabled: Boolean(row.enabled),
-      limits: {
-        maxUsers: optionalNumber(row.maxUsers),
-        maxDevices: optionalNumber(row.maxDevices),
-        maxStorageMb: optionalNumber(row.maxStorageMb),
-      },
-    };
-  });
+function mapOrganizationRow(row: OrganizationRow): Organization {
+  return {
+    id: row.id as OrganizationId,
+    slug: row.slug as TenantSlug,
+    displayName: row.displayName,
+    status: row.status as Organization["status"],
+  };
 }
 
-function isoDate(value: unknown): string {
-  return value instanceof Date ? value.toISOString() : String(value);
+function mapTenantDatabaseRefRow(row: TenantDatabaseRefRow): TenantDatabaseRefRecord {
+  return {
+    id: row.id as TenantDatabaseRefRecord["id"],
+    engine: row.engine as TenantDatabaseRefRecord["engine"],
+    managed: row.managed,
+    region: row.region ?? undefined,
+    status: row.status as TenantDatabaseRefRecord["status"],
+  };
 }
 
-function optionalNumber(value: unknown): number | undefined {
-  return typeof value === "number" ? value : undefined;
+function mapTenantInstanceRow(row: TenantInstanceWithDatabaseRefRow): TenantInstance {
+  return {
+    id: row.id as TenantInstanceId,
+    organizationId: row.organizationId as OrganizationId,
+    slug: row.slug as TenantSlug,
+    displayName: row.displayName,
+    provisioningStatus: row.provisioningStatus as TenantInstance["provisioningStatus"],
+    releaseChannel: row.releaseChannel as TenantInstance["releaseChannel"],
+    databaseRef: {
+      id: row.databaseRef.id as TenantDatabaseRefId,
+      engine: row.databaseRef.engine as TenantInstance["databaseRef"]["engine"],
+      managed: row.databaseRef.managed,
+      region: row.databaseRef.region ?? undefined,
+    },
+  };
+}
+
+function mapPlatformPlanRow(row: PlatformPlanWithModulesRow): PlatformPlan {
+  return {
+    id: row.id as PlatformPlan["id"],
+    code: row.code,
+    displayName: row.displayName,
+    status: row.status as PlatformPlan["status"],
+    limits: {
+      maxUsers: row.maxUsers ?? undefined,
+      maxDevices: row.maxDevices ?? undefined,
+      maxStorageMb: row.maxStorageMb ?? undefined,
+    },
+    entitlements: row.modules.map((module) => ({
+      moduleId: module.moduleId as LicenseEntitlement["moduleId"],
+      enabled: module.enabled,
+      validUntil: module.validUntil ? module.validUntil.toISOString() : undefined,
+    })),
+  };
+}
+
+function mapPlatformLicenseRow(row: PlatformLicenseWithEntitlementsRow): PlatformLicense {
+  return {
+    id: row.id as PlatformLicense["id"],
+    organizationId: row.organizationId as OrganizationId,
+    planId: row.planId as PlatformPlan["id"],
+    status: row.status as PlatformLicense["status"],
+    startsAt: row.startsAt.toISOString(),
+    expiresAt: row.expiresAt ? row.expiresAt.toISOString() : undefined,
+    limits: {
+      maxUsers: row.maxUsers ?? undefined,
+      maxDevices: row.maxDevices ?? undefined,
+      maxStorageMb: row.maxStorageMb ?? undefined,
+    },
+    entitlements: row.entitlements.map((entitlement) => ({
+      moduleId: entitlement.moduleId as LicenseEntitlement["moduleId"],
+      enabled: entitlement.enabled,
+      validUntil: entitlement.validUntil ? entitlement.validUntil.toISOString() : undefined,
+    })),
+  };
+}
+
+function optionalDate(value: string | undefined): Date | undefined {
+  return value ? new Date(value) : undefined;
 }

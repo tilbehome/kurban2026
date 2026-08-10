@@ -3,7 +3,7 @@ import {
   assertPlatformTenantDescriptorSafe,
   platformCanReadTenantOperationData,
   type PlatformTenantDescriptor,
-} from "../packages/contracts/src";
+} from "@tilbecore/contracts";
 
 const descriptor: PlatformTenantDescriptor = {
   organizationId: "org_1" as PlatformTenantDescriptor["organizationId"],

@@ -67,7 +67,11 @@ const withPWA = withPWAInit({
       },
     },
   ],
-  buildExcludes: [/middleware-manifest\.json$/],
+  buildExcludes: [
+    /middleware-manifest\.json$/,
+    /packages[\\/]database-platform[\\/]generated[\\/]/,
+    /packages[\\/][^\\/]+[\\/]node_modules[\\/]/,
+  ],
 });
 
 const nextConfig: NextConfig = {

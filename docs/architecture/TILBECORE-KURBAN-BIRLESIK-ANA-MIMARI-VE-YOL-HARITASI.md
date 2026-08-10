@@ -804,7 +804,7 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 #### Faz 2B — Platform Control Plane ve Süper Admin MVP
 
-**Mevcut durum:** Başladı — 2B-1 platform domain ve database-platform şema temeli uygulandı. Platform PostgreSQL gerçek integration doğrulaması, Süper Admin ekranı, platform login/session, provisioning ve tenant routing henüz tamamlanmadı.
+**Mevcut durum:** Başladı — 2B-1 platform domain ve database-platform şema temeli uygulandı; 2B-1A ile public package import sınırı, workspace dependency manifestleri, generated platform Prisma tipleri, nested relation write sözleşmeleri, `TenantDatabaseRefRepository`, `validUntil` ve genel operasyonel limit ayrımı, `0002_platform_baseline_hardening` migration SQL'i ve boundary/schema/repository testleri eklendi. Platform PostgreSQL gerçek integration doğrulaması, Süper Admin ekranı, platform login/session, provisioning ve tenant routing henüz tamamlanmadı.
 
 - Platform PostgreSQL
 - Organization/instance/lisans/paket/modül modelleri

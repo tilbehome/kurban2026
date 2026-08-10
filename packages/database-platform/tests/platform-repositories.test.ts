@@ -1,118 +1,318 @@
 import { describe, expect, it } from "vitest";
-import type { OrganizationId, TenantDatabaseRefId, TenantInstanceId, TenantSlug } from "../../contracts/src";
+import type {
+  OrganizationId,
+  TenantDatabaseRefId,
+  TenantInstanceId,
+  TenantSlug,
+} from "@tilbecore/contracts";
+import type {
+  PlatformLicense,
+  PlatformModuleId,
+  PlatformPlanId,
+  TenantDatabaseRefRecord,
+} from "@tilbecore/platform";
 import type { PlatformPrismaClientLike } from "../src/client";
 import {
-  PrismaOrganizationRepository,
   PrismaPlanLicenseRepository,
+  PrismaTenantDatabaseRefRepository,
   PrismaTenantInstanceRepository,
 } from "../src/repositories/platform-prisma-repositories";
-import type { PlatformLicense, PlatformModuleId, PlatformPlanId } from "../../platform/src";
 
 describe("platform Prisma repository adaptörleri", () => {
-  it("Organization ve TenantInstance eşlemelerini domain nesnesi olarak döndürür", async () => {
-    const db = fakeDb();
-    const organizations = new PrismaOrganizationRepository(db);
+  it("TenantDatabaseRef metadata'sını secret taşımadan oluşturur ve gerçek mapper değerlerini döndürür", async () => {
+    const calls: unknown[] = [];
+    const db = fakeDb({ calls });
+    const refs = new PrismaTenantDatabaseRefRepository(db);
+
+    const created = await refs.create(databaseRefFixture({ managed: false, region: "eu-central-1" }));
+
+    expect(created).toEqual(databaseRefFixture({ managed: false, region: "eu-central-1" }));
+    expect(JSON.stringify(calls)).not.toMatch(/databaseUrl|connectionString|password|secret|token/i);
+  });
+
+  it("TenantInstance mevcut DatabaseRef'e connect olur ve mapper engine/managed/region değerlerini relation'dan okur", async () => {
+    const calls: unknown[] = [];
+    const db = fakeDb({ calls });
     const tenants = new PrismaTenantInstanceRepository(db);
 
-    const organization = await organizations.create({
-      id: "org_1" as OrganizationId,
-      slug: "firma-a" as TenantSlug,
-      displayName: "Firma A",
-      status: "active",
-    });
     const tenant = await tenants.create({
       id: "tenant_1" as TenantInstanceId,
-      organizationId: organization.id,
-      slug: organization.slug,
+      organizationId: "org_1" as OrganizationId,
+      slug: "firma-a" as TenantSlug,
       displayName: "Firma A",
       provisioningStatus: "draft",
       releaseChannel: "pilot",
-      databaseRef: { id: "dbref_1" as TenantDatabaseRefId, engine: "postgresql", managed: true },
+      databaseRef: { id: "dbref_1" as TenantDatabaseRefId, engine: "postgresql", managed: false, region: "eu" },
     });
 
-    expect(await organizations.findBySlug("firma-a" as TenantSlug)).toEqual(organization);
-    expect(await tenants.findById(tenant.id)).toEqual(tenant);
+    expect(calls.at(-1)).toMatchObject({
+      data: {
+        organization: { connect: { id: "org_1" } },
+        databaseRef: { connect: { id: "dbref_1" } },
+      },
+      include: { databaseRef: true },
+    });
+    expect(tenant.databaseRef).toEqual({
+      id: "dbref_1",
+      engine: "postgresql",
+      managed: false,
+      region: "eu",
+    });
   });
 
-  it("plan ve lisans repositoryleri Prisma satırını dışarı sızdırmadan domain nesnesi döndürür", async () => {
-    const db = fakeDb();
+  it("TenantInstance ile DatabaseRef'i tek transaction içinde oluşturabilir", async () => {
+    const calls: unknown[] = [];
+    const db = fakeDb({ calls });
+    const tenants = new PrismaTenantInstanceRepository(db);
+
+    await tenants.createWithDatabaseRef(
+      {
+        id: "tenant_1" as TenantInstanceId,
+        organizationId: "org_1" as OrganizationId,
+        slug: "firma-a" as TenantSlug,
+        displayName: "Firma A",
+        provisioningStatus: "draft",
+        releaseChannel: "pilot",
+        databaseRef: { id: "dbref_1" as TenantDatabaseRefId, engine: "postgresql", managed: true },
+      },
+      databaseRefFixture(),
+    );
+
+    expect(calls.map((call) => (call as { op: string }).op)).toEqual([
+      "transaction",
+      "tenantDatabaseRef.create",
+      "tenantInstance.create",
+    ]);
+  });
+
+  it("plan modüllerini nested relation olarak oluşturur ve validUntil değerini korur", async () => {
+    const calls: unknown[] = [];
+    const db = fakeDb({ calls });
     const repository = new PrismaPlanLicenseRepository(db);
     const moduleId = "module_sales" as PlatformModuleId;
-    const planId = "plan_starter" as PlatformPlanId;
 
     const plan = await repository.createPlan({
-      id: planId,
+      id: "plan_starter" as PlatformPlanId,
       code: "starter",
       displayName: "Starter",
       status: "active",
-      entitlements: [{ moduleId, enabled: true, limits: { maxUsers: 5 } }],
-    });
-    const license = await repository.createLicense({
-      id: "lic_1" as PlatformLicense["id"],
-      organizationId: "org_1" as OrganizationId,
-      planId,
-      status: "active",
-      startsAt: "2026-01-01T00:00:00.000Z",
-      expiresAt: "2026-12-31T00:00:00.000Z",
-      entitlements: [{ moduleId, enabled: true, limits: { maxUsers: 5 } }],
+      limits: { maxUsers: 5 },
+      entitlements: [{ moduleId, enabled: true, validUntil: "2026-12-31T00:00:00.000Z" }],
     });
 
-    expect(plan.entitlements[0]?.limits.maxUsers).toBe(5);
-    expect(license.entitlements[0]?.moduleId).toBe(moduleId);
-    expect(license).not.toHaveProperty("createdAt");
+    expect(calls.at(-1)).toMatchObject({
+      data: {
+        modules: {
+          create: [
+            {
+              module: { connect: { id: moduleId } },
+              enabled: true,
+            },
+          ],
+        },
+      },
+      include: { modules: true },
+    });
+    expect(plan.limits.maxUsers).toBe(5);
+    expect(plan.entitlements[0]?.validUntil).toBe("2026-12-31T00:00:00.000Z");
+  });
+
+  it("lisans entitlement'larını nested relation olarak oluşturur ve limitleri lisans genelinde tutar", async () => {
+    const calls: unknown[] = [];
+    const db = fakeDb({ calls });
+    const repository = new PrismaPlanLicenseRepository(db);
+    const moduleId = "module_sales" as PlatformModuleId;
+
+    const license = await repository.createLicense(licenseFixture(moduleId));
+
+    expect(calls.at(-1)).toMatchObject({
+      data: {
+        organization: { connect: { id: "org_1" } },
+        plan: { connect: { id: "plan_starter" } },
+        maxUsers: 5,
+        entitlements: {
+          create: [
+            {
+              module: { connect: { id: moduleId } },
+              enabled: true,
+            },
+          ],
+        },
+      },
+      include: { entitlements: true },
+    });
+    expect(license.limits.maxUsers).toBe(5);
+    expect(license.entitlements[0]?.validUntil).toBe("2026-12-31T00:00:00.000Z");
+  });
+
+  it("entitlement replacement deleteMany + createMany + reload işlemlerini tek transaction içinde yapar", async () => {
+    const calls: unknown[] = [];
+    const db = fakeDb({ calls });
+    const repository = new PrismaPlanLicenseRepository(db);
+    const moduleId = "module_sales" as PlatformModuleId;
+
+    const license = await repository.replaceLicenseEntitlements("lic_1" as PlatformLicense["id"], [
+      { moduleId, enabled: false, validUntil: "2026-06-01T00:00:00.000Z" },
+    ]);
+
+    expect(calls.map((call) => (call as { op: string }).op)).toEqual([
+      "transaction",
+      "platformLicenseEntitlement.deleteMany",
+      "platformLicenseEntitlement.createMany",
+      "platformLicense.findUnique",
+    ]);
+    expect(license.entitlements).toEqual([
+      { moduleId, enabled: false, validUntil: "2026-06-01T00:00:00.000Z" },
+    ]);
   });
 });
 
-function fakeDb(): PlatformPrismaClientLike {
-  const organizationRows = new Map<string, Record<string, unknown>>();
-  const tenantRows = new Map<string, Record<string, unknown>>();
-  const planRows = new Map<string, Record<string, unknown>>();
-  const licenseRows = new Map<string, Record<string, unknown>>();
-
+function databaseRefFixture(overrides: Partial<TenantDatabaseRefRecord> = {}): TenantDatabaseRefRecord {
   return {
+    id: "dbref_1" as TenantDatabaseRefId,
+    engine: "postgresql",
+    managed: true,
+    status: "active",
+    ...overrides,
+  };
+}
+
+function licenseFixture(moduleId: PlatformModuleId): PlatformLicense {
+  return {
+    id: "lic_1" as PlatformLicense["id"],
+    organizationId: "org_1" as OrganizationId,
+    planId: "plan_starter" as PlatformPlanId,
+    status: "active",
+    startsAt: "2026-01-01T00:00:00.000Z",
+    expiresAt: "2026-12-31T00:00:00.000Z",
+    limits: { maxUsers: 5 },
+    entitlements: [{ moduleId, enabled: true, validUntil: "2026-12-31T00:00:00.000Z" }],
+  };
+}
+
+function fakeDb({ calls }: { calls: unknown[] }): PlatformPrismaClientLike {
+  const db = {
+    $transaction: async (fn: (tx: unknown) => unknown) => {
+      calls.push({ op: "transaction" });
+      return fn(db);
+    },
     organization: {
-      async create({ data }) {
-        organizationRows.set(String(data.id), data);
-        return data;
+      create: async ({ data }: { data: Record<string, unknown> }) => data,
+      findUnique: async () => null,
+    },
+    tenantDatabaseRef: {
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        calls.push({ op: "tenantDatabaseRef.create", data });
+        return { ...data, region: data.region ?? null };
       },
-      async findUnique({ where }) {
-        if (where.id) return organizationRows.get(String(where.id)) ?? null;
-        return [...organizationRows.values()].find((row) => row.slug === where.slug) ?? null;
-      },
+      findUnique: async () => null,
     },
     tenantInstance: {
-      async create({ data }) {
-        tenantRows.set(String(data.id), data);
-        return data;
+      create: async (args: { data: Record<string, unknown>; include: unknown }) => {
+        calls.push({ op: "tenantInstance.create", ...args });
+        const data = args.data;
+        return {
+          id: data.id,
+          organizationId: (data.organization as { connect: { id: string } }).connect.id,
+          slug: data.slug,
+          displayName: data.displayName,
+          provisioningStatus: data.provisioningStatus,
+          runtimeStatus: "unknown",
+          releaseChannel: data.releaseChannel,
+          databaseRefId: (data.databaseRef as { connect: { id: string } }).connect.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          databaseRef: {
+            id: (data.databaseRef as { connect: { id: string } }).connect.id,
+            engine: "postgresql",
+            managed: false,
+            region: "eu",
+            status: "active",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        };
       },
-      async findUnique({ where }) {
-        if (where.id) return tenantRows.get(String(where.id)) ?? null;
-        return [...tenantRows.values()].find((row) => row.slug === where.slug) ?? null;
-      },
+      findUnique: async () => null,
     },
     platformPlan: {
-      async create({ data }) {
-        planRows.set(String(data.id), data);
-        return data;
+      create: async (args: { data: Record<string, unknown>; include: unknown }) => {
+        calls.push({ op: "platformPlan.create", ...args });
+        const modules = (args.data.modules as { create: Record<string, unknown>[] }).create;
+        return {
+          ...args.data,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          modules: modules.map((module) => ({
+            planId: args.data.id,
+            moduleId: ((module.module as { connect: { id: string } }).connect.id),
+            enabled: module.enabled,
+            validUntil: module.validUntil,
+          })),
+        };
       },
-      async findUnique({ where }) {
-        return planRows.get(String(where.id)) ?? null;
-      },
+      findUnique: async () => null,
     },
     platformLicense: {
-      async create({ data }) {
-        licenseRows.set(String(data.id), data);
-        return data;
+      create: async (args: { data: Record<string, unknown>; include: unknown }) => {
+        calls.push({ op: "platformLicense.create", ...args });
+        return licenseRowFromData(args.data);
       },
-      async findUnique({ where }) {
-        return licenseRows.get(String(where.id)) ?? null;
-      },
-      async update({ where, data }) {
-        const current = licenseRows.get(String(where.id)) ?? {};
-        const next = { ...current, ...data };
-        licenseRows.set(String(where.id), next);
-        return next;
+      findUnique: async () => {
+        calls.push({ op: "platformLicense.findUnique" });
+        return licenseRowFromData({
+          id: "lic_1",
+          organization: { connect: { id: "org_1" } },
+          plan: { connect: { id: "plan_starter" } },
+          status: "active",
+          startsAt: new Date("2026-01-01T00:00:00.000Z"),
+          expiresAt: new Date("2026-12-31T00:00:00.000Z"),
+          maxUsers: 5,
+          entitlements: {
+            create: [
+              {
+                module: { connect: { id: "module_sales" } },
+                enabled: false,
+                validUntil: new Date("2026-06-01T00:00:00.000Z"),
+              },
+            ],
+          },
+        });
       },
     },
+    platformLicenseEntitlement: {
+      deleteMany: async (args: unknown) => {
+        calls.push({ op: "platformLicenseEntitlement.deleteMany", args });
+        return { count: 1 };
+      },
+      createMany: async (args: unknown) => {
+        calls.push({ op: "platformLicenseEntitlement.createMany", args });
+        return { count: 1 };
+      },
+    },
+  };
+  return db as unknown as PlatformPrismaClientLike;
+}
+
+function licenseRowFromData(data: Record<string, unknown>) {
+  const entitlements = (data.entitlements as { create: Record<string, unknown>[] }).create;
+  return {
+    id: data.id,
+    organizationId: (data.organization as { connect: { id: string } }).connect.id,
+    planId: (data.plan as { connect: { id: string } }).connect.id,
+    status: data.status,
+    startsAt: data.startsAt,
+    expiresAt: data.expiresAt,
+    maxUsers: data.maxUsers ?? null,
+    maxDevices: data.maxDevices ?? null,
+    maxStorageMb: data.maxStorageMb ?? null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    entitlements: entitlements.map((entitlement) => ({
+      licenseId: data.id,
+      moduleId: (entitlement.module as { connect: { id: string } }).connect.id,
+      enabled: entitlement.enabled,
+      validUntil: entitlement.validUntil,
+    })),
   };
 }
