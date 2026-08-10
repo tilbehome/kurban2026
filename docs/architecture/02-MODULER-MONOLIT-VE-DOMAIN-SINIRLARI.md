@@ -68,4 +68,3 @@ Başlangıç olay seti:
 - `hisse.teslim_edildi`
 - `firma.yedek_alindi`
 - `migration.tamamlandi`
-

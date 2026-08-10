@@ -180,4 +180,3 @@ Toplu klasör taşıma yapılmayacaktır. Her taşıma küçük commit, test ve 
 - Bu belge onaylanmadan fiziksel dizin taşıması yapılmaz.
 - İlk kodlama paketi hâlâ UTF-8/i18n temeli olmalıdır.
 - Saha satış pilotu modüler sınırların ilk çalışan kanıtı olacaktır.
-

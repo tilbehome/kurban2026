@@ -49,4 +49,3 @@ Kategoriler:
 - Orta risk: sidebar ve placeholder alanlarının üretim menüsünde karmaşa oluşturması.
 
 P0 engelleyici güvenlik/doğruluk warning görülmedi; ancak Faz 1.1’de warning bütçesi sıfıra indirilmeli.
-

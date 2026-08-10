@@ -60,4 +60,3 @@ Temel alanlar:
 ## Faz riski
 
 Float → kuruş/Decimal dönüşümü yüksek risklidir. Mevcut yerel veri test verisi kabul edilse bile migration scripti dry-run, tutar fark raporu ve rollback planı ile yazılmalıdır.
-

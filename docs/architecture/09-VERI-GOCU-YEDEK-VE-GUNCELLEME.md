@@ -44,4 +44,3 @@ Firma istediğinde:
 - Belge/dosya arşivi.
 - Audit export.
 - Okunabilir CSV/Excel rapor paketi.
-

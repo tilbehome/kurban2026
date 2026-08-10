@@ -50,4 +50,3 @@ Firma Uygulaması
 - Kullanıcı mesajları metne bağlı iş mantığı üretmez; hata kodu + mesaj anahtarı kullanılır.
 - Firma veritabanı bağlantısı istemciye, loga veya hata mesajına çıkmaz.
 - Platform Süper Admin, firma içi `SUPER_ADMIN` rolü değildir.
-

@@ -62,4 +62,3 @@ Destek oturumu alanları:
 - kapsam: okuma/yazma, modül sınırı
 - görülen/değiştirilen kayıt audit’i
 - firma tarafından iptal
-

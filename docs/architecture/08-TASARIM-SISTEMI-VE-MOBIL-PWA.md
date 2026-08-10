@@ -41,4 +41,3 @@ Mobil PWA, masaüstünün aynası olmamalı.
 - Ekran okuyucu etiketleri.
 - TV ekranlarında yüksek kontrast.
 - Belge/PDF tasarımlarında font gömme.
-

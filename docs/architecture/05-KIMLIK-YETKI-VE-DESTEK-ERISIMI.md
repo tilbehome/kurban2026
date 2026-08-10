@@ -43,4 +43,3 @@
 - `teslimat.qr_kapat`
 - `firma.ayar.guncelle`
 - `platform.firma.provision`
-

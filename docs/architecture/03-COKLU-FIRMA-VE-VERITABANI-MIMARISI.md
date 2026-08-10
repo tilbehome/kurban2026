@@ -74,4 +74,3 @@ Bulut sürüm:
 4. Mevcut tek firma verisini firma DB’sine taşıma scripti: dry-run + checksum + rapor.
 5. Yerel kurulum için provisioning komutu.
 6. Bulut için tenant resolver sadece test tenantlarında açılır.
-
