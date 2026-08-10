@@ -405,7 +405,7 @@ Mobil PWA masaüstünün küçültülmüş hâli değildir. Role göre dört tem
 
 ## 7.1 Profesyonel panel ve işletim kapsamı
 
-10 Ağustos 2026 sonrası kullanıcı tarafından onaylanan profesyonel panel gereksinimleri, mevcut 68 iş akışının yerine geçmez ve `REQ-001..REQ-068` sayısını değiştirmez. Bu kapsam `PRO-001..PRO-029` kimlikleriyle `11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md` içinde ayrı takip edilir.
+10 Ağustos 2026 sonrası kullanıcı tarafından onaylanan profesyonel panel, ürün ve operasyon gereksinimleri, mevcut 68 iş akışının yerine geçmez ve `REQ-001..REQ-068` sayısını değiştirmez. Bu kapsam `PRO-001..PRO-036` kimlikleriyle `11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md` içinde ayrı takip edilir.
 
 Firma/kullanıcı paneli aşağıdaki işletim yüzeyleriyle genişletilir:
 
@@ -421,6 +421,16 @@ Firma/kullanıcı paneli aşağıdaki işletim yüzeyleriyle genişletilir:
 - Kullanıcı eğitim, yardım ve sentetik demo modu.
 - WCAG 2.2 AA erişilebilirlik hedefi.
 
+Ek planlı ürün/operasyon kapsamı:
+
+- Sezon durum makinesi: hazırlık → satış → kesim → teslimat → mutabakat → arşiv.
+- Sezon öncesi uçtan uca prova/simülasyon ortamı; gerçek firma, müşteri ve finans verisini etkilemez.
+- Otomatik operasyonel tutarlılık denetimleri; 7 hisse, mükerrer satış, eksik vekâlet, ödeme/kasa farkı, teslim edilmeyen paket ve kapanış kontrollerini istisna kuyruğuna bağlar.
+- Güvenli çevrimdışı işlem kuyruğu; izinli işlemleri idempotent senkronize eder, kritik finans/satış/kesim/teslim yazılarını sessiz tamamlanmış saymaz.
+- Acil durum / yalnızca okuma modu; arıza veya bakım sırasında güvenli görüntüleme, listeleme, çıktı ve operasyon devamlılığı sağlar.
+- Donanım adaptör katmanı; terazi, barkod/QR okuyucu, etiket yazıcısı, termal yazıcı ve TV cihazlarını domain kodundan ayırır.
+- Güvenli entegrasyon merkezi; SMS, e-posta, ödeme ve muhasebe entegrasyonlarında webhook, outbox, retry, imza doğrulama ve idempotency standardını uygular.
+
 Platform Süper Admin kapsamı mevcut Platform Control Plane kararlarını aşağıdaki işletim yüzeyleriyle genişletir:
 
 - Firma kurulum/provisioning sihirbazı.
@@ -435,6 +445,13 @@ Platform Süper Admin kapsamı mevcut Platform Control Plane kararlarını aşa�
 - Yedekten dönüş provası ve doğrulama kanıtı.
 
 Bu başlıklar Faz 2A'ya yığılmaz. Bağımlı oldukları platform, firma, finans, operasyon, test, güvenlik ve canlıya hazırlık fazlarına dağıtılır.
+
+Bağlayıcı ürün ilkeleri:
+
+- Yapay zekâ ilk aşamada yalnız öneri, özet ve anormallik tespiti yapar; ödeme, iptal, teslimat, yetki veya finansal işlem gerçekleştirmez.
+- Placeholder/yakında sayfaları tamamlanmış modül kabul edilmez; menüde veya raporda “tamamlandı” gibi sunulamaz.
+- Her yeni gereksinimin sahibi, kabul kriteri, test kanıtı, planlanan fazı ve geri dönüş yöntemi bulunur.
+- İlk canlı sezon öncesinde uçtan uca Kurban Günü Provası zorunlu kabul kapısıdır; gerçek üretim verisini etkilemeyen kanıtlı prova olmadan canlıya hazır denmez.
 
 ## 7.2 Teknoloji ve kalite standartları
 
@@ -813,6 +830,7 @@ Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/
 #### Faz 2D — Firma çekirdek şeması
 
 - Season, customer, supplier, animal, share card, sale ve ledger temeli
+- Sezon durum makinesi sözleşmesi: hazırlık → satış → kesim → teslimat → mutabakat → arşiv
 - Decimal para ve Numeric kilo
 - command/service/repository katmanı
 - authorization, audit, idempotency ve outbox
@@ -853,6 +871,7 @@ Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/
 
 - Hisse kartı ve fiyat sürümü
 - Hayvana tam yedi hisse
+- Otomatik tutarlılık denetimleri için 7 hisse, çifte satış ve satış kapanış kuralları
 - Uygun hisse önerisi
 - Evrensel hisse/QR araması
 - Rezervasyon ve süre
@@ -876,6 +895,7 @@ Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/
 - Tedarikçi ödeme ve gider
 - Günlük kasa açılış/kapanış
 - Finansal mutabakat
+- Kritik finansal işlem güvenliği; ödemeli hisse iptali, kasa kapatma ve toplu finans işlemlerinde yeniden doğrulama veya ikinci yetkili onayı
 
 **Çıkış:** Cari, kasa, banka/POS ve raporlar sıfır farkla aynı ledger’a bağlanır.
 
@@ -907,6 +927,7 @@ Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/
 ### Faz 9 — Tartım, paketleme ve kilo farkı
 
 - Ürün/bileşen tartımı
+- Terazi ve etiket yazıcı adapter sözleşmeleri
 - Yedi hisseye miktar/değer dengesi
 - Alt paket ve dış paket
 - A4 etiket
@@ -923,10 +944,14 @@ Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/
 - Hisse bazlı tek kullanımlık QR teslim
 - Role özel PWA
 - Bağlantı kaybı ve yeniden bağlanma
+- Güvenli çevrimdışı işlem kuyruğu ve çakışma yönetimi
+- Acil durum / yalnızca okuma modu
+- QR okuyucu, termal yazıcı ve TV cihaz adapterleri
 - Anonim TV
 - PII’siz tokenlı müşteri takip
 - Cihaz, oturum ve giriş güvenliği yönetimi
 - Bildirim gönderim ve başarısızlık geçmişi
+- SMS, e-posta, ödeme ve muhasebe entegrasyonları için güvenli entegrasyon merkezi temeli
 
 **Çıkış:** Her hisse yalnız bir kez kapanır; 5–20 cihaz testinde saha hızlı ve güvenlidir.
 
@@ -950,6 +975,7 @@ Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/
 
 - Platform ve firma UAT
 - Gerçek uçtan uca kurban provası
+- Sezon öncesi simülasyon ortamı ve zorunlu Kurban Günü Provası kabul kapısı
 - İki firma ile izolasyon provası
 - 5–20 cihaz yük testi
 - Playwright masaüstü/mobil/locale/RTL E2E ve axe erişilebilirlik testleri
@@ -962,6 +988,7 @@ Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/
 - Demo veri temizliği
 - Kullanıcı eğitimleri ve acil durum talimatı
 - Release channel ve sürüm dondurma
+- Pilot firma/canary yayın, health check, bakım modu ve hızlı geri dönüş
 - Canlıya alma ve geri dönüş planı
 
 **Çıkış:** Platform operatörü ve firma personeli kendi uçtan uca senaryolarını hatasız tamamlar; firma verileri karışmaz ve yedekten dönüş kanıtlanır.
