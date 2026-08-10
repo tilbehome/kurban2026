@@ -74,7 +74,7 @@ async function setup(opts?: {
     },
     odeme: {
       create: vi.fn().mockImplementation(async () => {
-        if (opts?.odemeHatasi) throw new Error("DB_PASSWORD=secret");
+        if (opts?.odemeHatasi) throw new Error("GIZLI_DEGER=ornek");
         return { id: "odeme-1" };
       }),
     },
@@ -125,7 +125,27 @@ describe("POST /api/saha-satis", () => {
   it("yetkisiz kullanici satis yapamaz", async () => {
     const { POST, prisma } = await setup({ oturum: null });
     const res = await POST(jsonReq(payload));
+    const body = await res.json();
+
     expect(res.status).toBe(401);
+    expect(body).toMatchObject({
+      basarili: false,
+      kod: "AUTH_REQUIRED",
+      mesajAnahtari: "error.auth.required",
+    });
+    expect(body.hata).toBe("Önce giriş yapmalısınız.");
+    expect(body.requestId).toBeTruthy();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("hisse atama yetkisi yoksa merkezi 403 hata dondurur", async () => {
+    const { POST, prisma } = await setup({ izinler: ["tahsilat.olustur"] });
+    const res = await POST(jsonReq(payload));
+    const body = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(body.kod).toBe("PERMISSION_DENIED");
+    expect(body.mesajAnahtari).toBe("error.permission.denied");
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -153,6 +173,7 @@ describe("POST /api/saha-satis", () => {
 
     expect(res.status).toBe(409);
     expect(body.basarili).toBe(false);
+    expect(body.kod).toBe("SHARE_CONCURRENT_ASSIGNMENT");
     expect(tx.odeme.create).not.toHaveBeenCalled();
     expect(tx.kasaHareketi.create).not.toHaveBeenCalled();
   });
@@ -171,8 +192,15 @@ describe("POST /api/saha-satis", () => {
       ],
     });
     const res = await POST(jsonReq(payload));
+    const body = await res.json();
 
     expect(res.status).toBe(409);
+    expect(body).toMatchObject({
+      kod: "SHARE_ALREADY_ASSIGNED",
+      mesajAnahtari: "error.share.alreadyAssigned",
+      parametreler: { shareLabel: "7.1" },
+    });
+    expect(body.hata).toBe("Hisse #7.1 zaten dolu.");
     expect(tx.hisse.updateMany).not.toHaveBeenCalled();
     expect(tx.odeme.create).not.toHaveBeenCalled();
   });
@@ -189,7 +217,9 @@ describe("POST /api/saha-satis", () => {
     const { POST, prisma } = await setup();
 
     expect((await POST(jsonReq({ ...payload, nakit: 50_000 }))).status).toBe(400);
-    expect((await POST(jsonReq({ ...payload, hisseFiyati: 0 }))).status).toBe(400);
+    const negatifFiyat = await POST(jsonReq({ ...payload, hisseFiyati: 0 }));
+    expect(negatifFiyat.status).toBe(400);
+    expect((await negatifFiyat.json()).kod).toBe("VALIDATION_INVALID");
     expect((await POST(jsonReq({ ...payload, nakit: -1 }))).status).toBe(400);
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
@@ -212,12 +242,20 @@ describe("POST /api/saha-satis", () => {
   });
 
   it("kapora yazimi hata verirse hassas hata mesaji sizdirmaz", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { POST } = await setup({ odemeHatasi: true });
     const res = await POST(jsonReq(payload));
     const body = await res.json();
 
     expect(res.status).toBe(500);
-    expect(body.hata).toBe("SatÄ±ÅŸ iÅŸlemi tamamlanamadÄ±");
-    expect(body.hata).not.toContain("secret");
+    expect(body.hata).toBe("Satış işlemi tamamlanamadı.");
+    expect(body.kod).toBe("INTERNAL_SALE_FAILED");
+    expect(body.mesajAnahtari).toBe("error.internal.saleCouldNotComplete");
+    expect(body.hata).not.toContain("ornek");
+    expect(JSON.stringify(body)).not.toContain("GIZLI_DEGER");
+    expect(JSON.stringify(body)).not.toContain("stack");
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("ornek");
+    expect(JSON.stringify(consoleSpy.mock.calls)).not.toContain("GIZLI_DEGER");
+    consoleSpy.mockRestore();
   });
 });

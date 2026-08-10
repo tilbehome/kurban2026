@@ -50,8 +50,41 @@ describe("POST /api/hisseler/toplu-ata", () => {
 
     const { POST } = await import("@/app/api/hisseler/toplu-ata/route");
     const res = await POST(req());
+    const body = await res.json();
 
     expect(res.status).toBe(409);
+    expect(body).toMatchObject({
+      basarili: false,
+      kod: "SHARE_ALREADY_ASSIGNED",
+      mesajAnahtari: "error.share.alreadyAssigned",
+      parametreler: { shareLabel: "2" },
+    });
     expect(tx.hisse.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("oturum yoksa merkezi 401 hata dondurur", async () => {
+    vi.resetModules();
+
+    const prisma = { $transaction: vi.fn() };
+    vi.doMock("@/shared/lib/prisma", () => ({ prisma }));
+    vi.doMock("@/shared/lib/session", () => ({
+      aktifOturum: vi.fn().mockResolvedValue(null),
+    }));
+    vi.doMock("@/shared/lib/izinler", () => ({
+      izinKontrol: vi.fn(() => true),
+    }));
+    vi.doMock("@/shared/lib/audit", () => ({
+      auditLog: vi.fn(),
+      ipCikar: vi.fn(() => "127.0.0.1"),
+    }));
+    vi.doMock("@/shared/lib/events", () => ({ yayinla: vi.fn() }));
+
+    const { POST } = await import("@/app/api/hisseler/toplu-ata/route");
+    const res = await POST(req());
+    const body = await res.json();
+
+    expect(res.status).toBe(401);
+    expect(body.kod).toBe("AUTH_REQUIRED");
+    expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 });

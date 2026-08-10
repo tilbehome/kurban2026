@@ -4,6 +4,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { izinKontrol } from "@/shared/lib/izinler";
+import { apiHataGovdesi, apiHataYaniti, zodHataYaniti } from "@/shared/lib/api-hata";
 
 const IptalSchema = z.object({
   sebep: z.string().trim().min(3).max(500),
@@ -24,8 +25,11 @@ interface RouteParams {
  */
 export async function POST(req: Request, { params }: RouteParams) {
   const oturum = await aktifOturum();
-  if (!oturum || !izinKontrol(oturum, "hisseler.iptal")) {
-    return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 403 });
+  if (!oturum) {
+    return apiHataYaniti("PERMISSION_DENIED");
+  }
+  if (!izinKontrol(oturum, "hisseler.iptal")) {
+    return apiHataYaniti("PERMISSION_DENIED");
   }
   const { id } = await params;
 
@@ -34,8 +38,8 @@ export async function POST(req: Request, { params }: RouteParams) {
     const govde = (await req.json()) as unknown;
     veri = IptalSchema.parse(govde);
   } catch (e) {
-    const m = e instanceof z.ZodError ? e.issues[0]?.message : "Geçersiz veri";
-    return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
+    if (e instanceof z.ZodError) return zodHataYaniti(e);
+    return apiHataYaniti("VALIDATION_INVALID");
   }
 
   const hisse = await prisma.hisse.findFirst({
@@ -45,25 +49,20 @@ export async function POST(req: Request, { params }: RouteParams) {
     },
   });
   if (!hisse) {
-    return NextResponse.json(
-      { basarili: false, hata: "Hisse bulunamadı" },
-      { status: 404 },
-    );
+    return apiHataYaniti("SHARE_NOT_FOUND");
   }
   if (hisse.musteriId === null) {
-    return NextResponse.json(
-      { basarili: false, hata: "Bu hisse zaten boş" },
-      { status: 400 },
-    );
+    return apiHataYaniti("SHARE_ALREADY_EMPTY");
   }
 
   const odenenToplam = hisse.odemeler.reduce((s, o) => s + o.toplamTutar, 0);
   if (odenenToplam > 0) {
     return NextResponse.json(
       {
-        basarili: false,
-        hata:
-          "Bu hissede aktif tahsilat var. Önce tahsilatı iptal/iade edin veya mahsup sürecini tamamlayın.",
+        ...apiHataGovdesi("FINANCE_SHARE_HAS_ACTIVE_PAYMENT", {
+          hisseId: id,
+          odenenToplam,
+        }),
         veri: { hisseId: id, odenenToplam },
       },
       { status: 409 },

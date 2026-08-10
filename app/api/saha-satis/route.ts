@@ -6,6 +6,11 @@ import { izinKontrol } from "@/shared/lib/izinler";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { yayinla } from "@/shared/lib/events";
 import { yuvarla } from "@/shared/lib/para";
+import {
+  apiHataYaniti,
+  beklenmeyenHataYaniti,
+  zodHataYaniti,
+} from "@/shared/lib/api-hata";
 import { belirleYontem, hisselereDagit } from "@/modules/tahsilat/lib/dagitim";
 import { sonrakiDekontNo } from "@/modules/tahsilat/lib/tahsilat.service";
 
@@ -22,41 +27,39 @@ const SahaSatisSchema = z.object({
 
 type SahaSatisBody =
   | { basarili: true; musteriId: string; hisseIds: string[]; odemeIds: string[] }
-  | { basarili: false; hata: string };
+  | {
+      basarili: false;
+      hata: string;
+      kod?: string;
+      mesajAnahtari?: string;
+      parametreler?: Record<string, string | number | boolean | null>;
+      requestId?: string;
+    };
 
 export async function POST(req: Request) {
   const oturum = await aktifOturum();
   if (!oturum) {
-    return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 401 });
+    return apiHataYaniti("AUTH_REQUIRED");
   }
   if (!izinKontrol(oturum, "hisseler.ata")) {
-    return NextResponse.json(
-      { basarili: false, hata: "Hisse atama yetkiniz yok" },
-      { status: 403 },
-    );
+    return apiHataYaniti("PERMISSION_DENIED");
   }
 
   let veri: z.infer<typeof SahaSatisSchema>;
   try {
     veri = SahaSatisSchema.parse((await req.json()) as unknown);
   } catch (e) {
-    const m = e instanceof z.ZodError ? e.issues[0]?.message : "Geçersiz veri";
-    return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
+    if (e instanceof z.ZodError) return zodHataYaniti(e);
+    return apiHataYaniti("VALIDATION_INVALID");
   }
 
   const toplamKapora = yuvarla(veri.nakit + veri.havale + veri.kart);
   const toplamBedel = yuvarla(veri.hisseFiyati * veri.hisseIds.length);
   if (toplamKapora > 0 && !izinKontrol(oturum, "tahsilat.olustur")) {
-    return NextResponse.json(
-      { basarili: false, hata: "Kapora/tahsilat yetkiniz yok" },
-      { status: 403 },
-    );
+    return apiHataYaniti("PERMISSION_DENIED");
   }
   if (toplamKapora > toplamBedel + 0.01) {
-    return NextResponse.json(
-      { basarili: false, hata: "Kapora toplamı satış bedelini aşamaz" },
-      { status: 400 },
-    );
+    return apiHataYaniti("FINANCE_DOWN_PAYMENT_EXCEEDS_SALE");
   }
 
   try {
@@ -67,13 +70,7 @@ export async function POST(req: Request) {
       return NextResponse.json(JSON.parse(onceki.sonucJson) as SahaSatisBody);
     }
     if (onceki) {
-      return NextResponse.json(
-        {
-          basarili: false,
-          hata: "Bu satış isteği işleniyor. Lütfen sonucu kontrol edin.",
-        },
-        { status: 409 },
-      );
+      return apiHataYaniti("REQUEST_ALREADY_PROCESSING");
     }
 
     const body = await prisma.$transaction(async (tx) => {
@@ -270,40 +267,21 @@ export async function POST(req: Request) {
   } catch (e) {
     if (e instanceof Error) {
       if (e.message === "MUSTERI_YOK") {
-        return NextResponse.json(
-          { basarili: false, hata: "Müşteri bulunamadı" },
-          { status: 404 },
-        );
+        return apiHataYaniti("CUSTOMER_NOT_FOUND");
       }
       if (e.message === "HISSE_YOK") {
-        return NextResponse.json(
-          { basarili: false, hata: "Hisseler bulunamadı" },
-          { status: 404 },
-        );
+        return apiHataYaniti("SHARES_NOT_FOUND");
       }
       if (e.message.startsWith("HISSE_DOLU:")) {
-        return NextResponse.json(
-          {
-            basarili: false,
-            hata: `Hisse #${e.message.slice("HISSE_DOLU:".length)} zaten dolu`,
-          },
-          { status: 409 },
-        );
+        return apiHataYaniti("SHARE_ALREADY_ASSIGNED", {
+          shareLabel: e.message.slice("HISSE_DOLU:".length),
+        });
       }
       if (e.message === "HISSE_ESZAMANLI_ATANDI") {
-        return NextResponse.json(
-          {
-            basarili: false,
-            hata: "Hisselerden biri eşzamanlı başka kullanıcı tarafından dolduruldu. Listeyi yenileyip tekrar deneyin.",
-          },
-          { status: 409 },
-        );
+        return apiHataYaniti("SHARE_CONCURRENT_ASSIGNMENT");
       }
-      return NextResponse.json(
-        { basarili: false, hata: "SatÄ±ÅŸ iÅŸlemi tamamlanamadÄ±" },
-        { status: 500 },
-      );
+      return beklenmeyenHataYaniti(e, "INTERNAL_SALE_FAILED", "Saha satış tamamlanamadı");
     }
-    throw e;
+    return beklenmeyenHataYaniti(e, "INTERNAL_SALE_FAILED", "Saha satış tamamlanamadı");
   }
 }

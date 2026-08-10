@@ -4,6 +4,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { izinKontrol } from "@/shared/lib/izinler";
+import { apiHataYaniti } from "@/shared/lib/api-hata";
 import {
   vekaletDosyaYoluBul,
   vekaletMimeTipi,
@@ -15,8 +16,11 @@ interface RouteParams {
 
 export async function GET(req: Request, { params }: RouteParams) {
   const oturum = await aktifOturum();
-  if (!oturum || !izinKontrol(oturum, "musteriler.vekalet.oku")) {
-    return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 403 });
+  if (!oturum) {
+    return apiHataYaniti("PERMISSION_DENIED");
+  }
+  if (!izinKontrol(oturum, "musteriler.vekalet.oku")) {
+    return apiHataYaniti("PERMISSION_DENIED");
   }
   const { id } = await params;
 
@@ -30,28 +34,19 @@ export async function GET(req: Request, { params }: RouteParams) {
     },
   });
   if (!vekalet) {
-    return NextResponse.json(
-      { basarili: false, hata: "Vekalet bulunamadı" },
-      { status: 404 },
-    );
+    return apiHataYaniti("PROXY_NOT_FOUND");
   }
 
   const dosyaYolu = vekaletDosyaYoluBul(vekalet.dosyaUrl);
   if (!dosyaYolu) {
-    return NextResponse.json(
-      { basarili: false, hata: "Vekalet dosya yolu geçersiz" },
-      { status: 404 },
-    );
+    return apiHataYaniti("FILE_INVALID_PROXY_PATH");
   }
 
   let buffer: Buffer;
   try {
     buffer = await fs.readFile(dosyaYolu);
   } catch {
-    return NextResponse.json(
-      { basarili: false, hata: "Vekalet dosyası bulunamadı" },
-      { status: 404 },
-    );
+    return apiHataYaniti("FILE_PROXY_NOT_FOUND");
   }
 
   await auditLog({
@@ -75,8 +70,11 @@ export async function GET(req: Request, { params }: RouteParams) {
 
 export async function DELETE(req: Request, { params }: RouteParams) {
   const oturum = await aktifOturum();
-  if (!oturum || !izinKontrol(oturum, "musteriler.vekalet.yaz")) {
-    return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 403 });
+  if (!oturum) {
+    return apiHataYaniti("PERMISSION_DENIED");
+  }
+  if (!izinKontrol(oturum, "musteriler.vekalet.yaz")) {
+    return apiHataYaniti("PERMISSION_DENIED");
   }
   const { id } = await params;
 
@@ -84,10 +82,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
     where: { id, silindiMi: false },
   });
   if (!vekalet) {
-    return NextResponse.json(
-      { basarili: false, hata: "Vekalet bulunamadı" },
-      { status: 404 },
-    );
+    return apiHataYaniti("PROXY_NOT_FOUND");
   }
 
   // Soft delete

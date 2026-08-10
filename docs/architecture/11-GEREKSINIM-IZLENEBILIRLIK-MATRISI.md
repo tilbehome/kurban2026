@@ -77,6 +77,17 @@ Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dö
 
 ## 68 iş akışı modeli
 
+## Faz 1 UTF-8 / hata kodu / i18n checkpoint'i
+
+- `REQ-052`: `scripts/check-utf8.mjs`, `pnpm check:utf8` ve `tests/utf8-check.test.ts` ile otomatik mojibake kalite kapısı eklendi.
+- `REQ-053`: Merkezi hata katalogu ve API hata gövdesi eklendi; pilot route'lar geriye uyumlu `hata` alanıyla birlikte `kod`, `mesajAnahtari`, `parametreler`, `requestId` döndürür.
+- `REQ-054`: `tr` ana mesaj sözlüğü, `en/ar` genişletilebilir iskelet, Türkçe fallback ve istemci mesaj çözme yardımcısı eklendi.
+- `REQ-055`: `ar` için RTL yön yardımcısı eklendi. Tam RTL layout ve görsel regresyon testleri Faz 12 kapsamındadır.
+
+Bu checkpoint altyapı ve pilot uygulamadır; tüm UI metinlerinin taşındığı veya tam çeviri paketlerinin tamamlandığı anlamına gelmez.
+
+Programın tamamına yayılan ekran/API/model envanteri ve 68 iş akışı dışında kalan kod/ürün kapsamı `14-PROGRAM-TAM-KAPSAM-ENVANTERI.md` belgesinde ayrıca takip edilir.
+
 Ana yol haritasındaki 68 akış, yukarıdaki REQ kimlikleriyle takip edilecektir. Her akış için ayrıntılı state machine dokümanı uygulama fazında açılacaktır. Zorunlu alanlar:
 
 - başlangıç
@@ -126,7 +137,18 @@ Ana tablo 68 benzersiz gereksinimi korur. Hedef fiziksel dizinler şimdi oluştu
 ## Eksiksizlik kontrolü
 
 - 68 iş akışı temsil ediliyor: `REQ-001` ile `REQ-068` arasında benzersiz kimlikler var.
+- Bu `68/68` ifadesi yalnızca kullanıcı görüşmelerinden ve ana yol haritasından çıkarılan iş gereksinimlerinin belgede temsil edildiğini gösterir; programın tüm kaynak kodunun, tüm ekranlarının, tüm API'lerinin veya profesyonel ürün kapsamının tamamlandığı anlamına gelmez.
 - Her gereksinimde modül, veri modeli, domain kuralı, API/use-case, masaüstü, mobil, yetki, normal akış, istisna, audit, otomatik test, kullanıcı kabul testi, mevcut durum ve planlanan faz alanı bulunuyor.
 - Çoklu firma, Süper Admin, Firma Admin, UTF-8, Türkçe/Arapça dil paketi, RTL, lisans, yerel/bulut ve yedekleme kararları matrise dahil edildi.
 - Hedef dizin/modül karşılığı bu ek bölümde gösterildi; detaylı dizin standardı `13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md` belgesindedir.
 - Birden fazla kritik iş kuralı tek belirsiz satırda eritilmedi; büyük zincirler ayrı REQ aralıklarıyla takip ediliyor.
+
+## İzlenebilirlik kapsamları
+
+Bundan sonra üç kapsam ayrı takip edilir:
+
+1. Kullanıcı görüşmelerinden çıkan 68 iş akışı: Bu dosyadaki `REQ-001..REQ-068` satırlarıdır.
+2. Kaynak kodundan keşfedilen sistem alanları: Sayfa, API, bileşen, modül, Prisma modeli, script, test, PWA ve altyapı envanteri `14-PROGRAM-TAM-KAPSAM-ENVANTERI.md` belgesindedir.
+3. İleride sektör araştırmasıyla belirlenecek profesyonel ürün gereksinimleri: Bu aşamada karar değil aday kapsam olarak izlenir; kullanıcı onayı ve mimari değerlendirme olmadan kodlanmış sayılmaz.
+
+Programın tamamı analiz edilmeden veya test edilmeden “tüm sistem tamamlandı” ifadesi kullanılmaz.

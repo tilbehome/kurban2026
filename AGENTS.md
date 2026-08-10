@@ -36,6 +36,7 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - `docs/architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md`
 - `docs/architecture/12-FAZLAR-RISKLER-VE-GERI-DONUS.md`
 - `docs/architecture/13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md`
+- `docs/architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md`
 - `docs/KURBAN2026-UYGULAMA-TAKIP.md`
 - Ana yol haritası: `KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
 - `MIMARI.md`, `DATABASE_FACE_AUDIT.md`, `README.md`, `CLAUDE.md`
@@ -65,6 +66,7 @@ UI/API → Application → Domain
 ## 4. Temel iş zincirleri
 
 - Sistem tek doğrusal zincir değildir; birbirini tetikleyen çok sayıda iş akışından oluşur.
+- Geliştirme kapsamı yalnızca görüşmelerde belirtilen gereksinimlerle sınırlanamaz. Codex; mevcut kaynak kodunu, tüm ekranları, API’leri, veri modellerini, altyapıyı ve profesyonel ürün gereksinimlerini bütünsel olarak incelemeli; keşfedilen eksik, hatalı, gereksiz ve belgelenmemiş alanları izlenebilirlik sistemine dâhil etmelidir.
 - İşlemleri kopuk ekranlar olarak değil, zincirleme veri akışları olarak ele al.
 - Ana omurga şunları kapsar: tedarikçi, alış faturası, hayvan kaydı, küpe numarası, tartım geçmişi, kurban uygunluğu, hisse kartı, hayvana hisse oluşturma, müşteri kaydı, hisse atama ve satış, kapora, cari hesap, tahsilat, karma ödeme, indirim, iptal, iade, mahsup, vekâlet, kesim sırası, kesim belgesi, kesim takibi, gerçek tartım, parçalama, paketleme, teslimat, adrese teslim, kasa, banka, POS, giderler, raporlama, sezon ve arşiv.
 - Satış, tahsilat, kasa, vekâlet, kesim, paketleme ve teslimat olayları birbirinin verisini güvenli biçimde güncellemelidir.

@@ -42,7 +42,7 @@ export type AuditEylem =
   | "pwa-yukleme";
 
 export interface AuditVeri {
-  /** Transaction iÃ§inde audit yazmak iÃ§in opsiyonel Prisma client */
+  /** Transaction içinde audit yazmak için opsiyonel Prisma client */
   tx?: Prisma.TransactionClient;
   eylem: AuditEylem;
   /** Etkilenen model adı (Musteri, Odeme vb.) — opsiyonel */

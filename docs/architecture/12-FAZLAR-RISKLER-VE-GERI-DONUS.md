@@ -86,6 +86,18 @@
 
 Faz 1 önerilir: UTF-8 temizlik ve hata kodu/i18n mesaj anahtarı temeli. Nedeni: kod davranışını geniş çapta değiştirmeden, sonraki tüm fazların hata mesajı, dil, PDF, API ve test altyapısını güvenli hale getirir.
 
+### Faz 1 uygulama checkpoint'i
+
+Bu paketle Faz 1'in ilk uygulama katmanı başlatıldı:
+
+- Mojibake tarama scripti ve test kalite kapısı eklendi.
+- Merkezi hata katalogu ve standart API hata gövdesi eklendi.
+- Geriye uyum için `hata` alanı korunurken yeni `kod/mesajAnahtari/parametreler/requestId` alanları eklendi.
+- `tr/en/ar` i18n iskeleti, Türkçe fallback, RTL yön bilgisi ve locale format yardımcıları eklendi.
+- Pilot route kapsamı: saha satış, tekli/toplu hisse atama, hisse iptal ve vekâlet dosya route'u.
+
+Kapsam dışı kalanlar: tüm UI metinlerinin i18n'e taşınması, tam Arapça/İngilizce çeviri seti, görsel RTL dönüşümü ve fiziksel `packages/i18n` taşıması.
+
 ## Hedef dizin dönüşümünün zamanı
 
 Kesin kurallar:

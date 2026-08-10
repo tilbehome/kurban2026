@@ -6,6 +6,12 @@ import { izinKontrol } from "@/shared/lib/izinler";
 import { yuvarla } from "@/shared/lib/para";
 import { yayinla } from "@/shared/lib/events";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
+import {
+  apiHataGovdesi,
+  apiHataYaniti,
+  beklenmeyenHataYaniti,
+  zodHataYaniti,
+} from "@/shared/lib/api-hata";
 
 const AtamaSchema = z.object({
   hisseIds: z.array(z.string().min(1)).min(1),
@@ -16,16 +22,10 @@ const AtamaSchema = z.object({
 export async function POST(req: Request) {
   const oturum = await aktifOturum();
   if (!oturum) {
-    return NextResponse.json(
-      { basarili: false, hata: "Yetki yok" },
-      { status: 401 },
-    );
+    return apiHataYaniti("AUTH_REQUIRED");
   }
   if (!izinKontrol(oturum, "hisseler.ata")) {
-    return NextResponse.json(
-      { basarili: false, hata: "Atama yetkiniz yok" },
-      { status: 403 },
-    );
+    return apiHataYaniti("PERMISSION_DENIED");
   }
 
   let veri: z.infer<typeof AtamaSchema>;
@@ -33,8 +33,8 @@ export async function POST(req: Request) {
     const govde = (await req.json()) as unknown;
     veri = AtamaSchema.parse(govde);
   } catch (e) {
-    const m = e instanceof z.ZodError ? e.issues[0]?.message : "Geçersiz veri";
-    return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
+    if (e instanceof z.ZodError) return zodHataYaniti(e);
+    return apiHataYaniti("VALIDATION_INVALID");
   }
 
   let sonuc: {
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     if (!musteri) {
       return {
         status: 404,
-        body: { basarili: false, hata: "Müşteri bulunamadı" },
+        body: apiHataGovdesi("CUSTOMER_NOT_FOUND"),
       };
     }
 
@@ -59,8 +59,8 @@ export async function POST(req: Request) {
     });
     if (hisseler.length !== veri.hisseIds.length) {
       return {
-        status: 400,
-        body: { basarili: false, hata: "Hisseler bulunamadı" },
+        status: 404,
+        body: apiHataGovdesi("SHARES_NOT_FOUND"),
       };
     }
 
@@ -68,10 +68,9 @@ export async function POST(req: Request) {
     if (doluHisse) {
       return {
         status: 409,
-        body: {
-          basarili: false,
-          hata: `Hisse #${doluHisse.no} zaten dolu (önce serbest bırakın)`,
-        },
+        body: apiHataGovdesi("SHARE_ALREADY_ASSIGNED", {
+          shareLabel: doluHisse.no,
+        }),
       };
     }
 
@@ -108,15 +107,9 @@ export async function POST(req: Request) {
     });
   } catch (e) {
     if (e instanceof Error && e.message === "HISSE_ESZAMANLI_ATANDI") {
-      return NextResponse.json(
-        {
-          basarili: false,
-          hata: "Hisselerden biri eşzamanlı başka kullanıcı tarafından dolduruldu. Listeyi yenileyip tekrar deneyin.",
-        },
-        { status: 409 },
-      );
+      return apiHataYaniti("SHARE_CONCURRENT_ASSIGNMENT");
     }
-    throw e;
+    return beklenmeyenHataYaniti(e);
   }
 
   if (sonuc.status !== 200) {

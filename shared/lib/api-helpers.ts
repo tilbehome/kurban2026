@@ -1,19 +1,20 @@
 /**
- * Standart API yardımcıları — MIMARI.md §6.3 + §11.2
- *
- * Tüm API route'ları bu helper'ları kullanır.
+ * Standart API yardımcıları.
  */
 
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import {
-  UygulamaHatasi,
-  ValidasyonHatası,
-} from "./hatalar";
-import { log } from "./log";
+import { UygulamaHatasi, ValidasyonHatasi } from "./hatalar";
 import type { ApiYanit, ApiOzet } from "@/shared/types/api";
+import {
+  apiHataGovdesi,
+  beklenmeyenHataYaniti,
+  requestIdOlustur,
+  zodHataYaniti,
+} from "./api-hata";
+import { HATA_KATALOGU, type HataKodu } from "./hata-katalogu";
 
-/** Başarılı yanıt (HTTP 200) */
+/** Başarılı yanıt. */
 export function basariliYanit<T>(
   veri: T,
   ozet?: ApiOzet,
@@ -24,14 +25,30 @@ export function basariliYanit<T>(
     : { basarili: true, veri };
   return NextResponse.json(body, { status });
 }
-
-/** Hata yanıtı */
+/**
+ * Geriye uyumlu hata yanıtı.
+ *
+ * Yeni hata kodları için zengin sözleşme döner; eski serbest kodlarda mevcut
+ * `{ basarili:false, hata, kod, detaylar }` biçimini korur.
+ */
 export function hataYaniti(
   mesaj: string,
   status = 500,
   kod?: string,
   detaylar?: unknown,
 ): NextResponse {
+  if (kod && katalogKoduMu(kod)) {
+    const requestId = requestIdOlustur();
+    return NextResponse.json(
+      {
+        ...apiHataGovdesi(kod, undefined, requestId),
+        hata: mesaj,
+        detaylar,
+      },
+      { status },
+    );
+  }
+
   const body: ApiYanit<never> = {
     basarili: false,
     hata: mesaj,
@@ -41,28 +58,13 @@ export function hataYaniti(
   return NextResponse.json(body, { status });
 }
 
-/**
- * try-catch içinde fırlatılan herhangi bir hatayı uygun HTTP yanıtına çevirir.
- *
- * Kullanım:
- * ```ts
- * try { ... } catch (e) { return hataYakala(e); }
- * ```
- */
+/** try-catch içinde fırlatılan hatayı güvenli HTTP yanıtına çevirir. */
 export function hataYakala(hata: unknown): NextResponse {
   if (hata instanceof z.ZodError) {
-    return hataYaniti(
-      "Geçersiz veri",
-      400,
-      "VALIDASYON",
-      hata.issues.map((i) => ({
-        path: i.path.join("."),
-        message: i.message,
-      })),
-    );
+    return zodHataYaniti(hata);
   }
 
-  if (hata instanceof ValidasyonHatası) {
+  if (hata instanceof ValidasyonHatasi) {
     return hataYaniti(hata.message, hata.statusCode, hata.kod, hata.detaylar);
   }
 
@@ -70,12 +72,9 @@ export function hataYakala(hata: unknown): NextResponse {
     return hataYaniti(hata.message, hata.statusCode, hata.kod);
   }
 
-  log.hata("Beklenmeyen API hatası", hata);
-  return hataYaniti(
-    process.env.NODE_ENV === "development" && hata instanceof Error
-      ? hata.message
-      : "Sunucu hatası",
-    500,
-    "BEKLENMEYEN",
-  );
+  return beklenmeyenHataYaniti(hata);
+}
+
+function katalogKoduMu(kod: string): kod is HataKodu {
+  return kod in HATA_KATALOGU;
 }

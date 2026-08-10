@@ -46,8 +46,42 @@ describe("POST /api/hisseler/[id]/iptal", () => {
 
     expect(res.status).toBe(409);
     expect(body.basarili).toBe(false);
+    expect(body.kod).toBe("FINANCE_SHARE_HAS_ACTIVE_PAYMENT");
+    expect(body.mesajAnahtari).toBe("error.finance.shareHasActivePayment");
+    expect(body.parametreler).toMatchObject({ hisseId: "hisse-1", odenenToplam: 1000 });
     expect(body.veri.odenenToplam).toBe(1000);
     expect(prisma.hisse.update).not.toHaveBeenCalled();
     expect(prisma.vekalet.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("oturum yoksa eski status ile merkezi 403 hata dondurur", async () => {
+    vi.resetModules();
+
+    const prisma = {
+      hisse: { findFirst: vi.fn() },
+      vekalet: { updateMany: vi.fn() },
+    };
+
+    vi.doMock("@/shared/lib/prisma", () => ({ prisma }));
+    vi.doMock("@/shared/lib/session", () => ({
+      aktifOturum: vi.fn().mockResolvedValue(null),
+    }));
+    vi.doMock("@/shared/lib/izinler", () => ({
+      izinKontrol: vi.fn(() => true),
+    }));
+    vi.doMock("@/shared/lib/audit", () => ({
+      auditLog: vi.fn(),
+      ipCikar: vi.fn(() => "127.0.0.1"),
+    }));
+
+    const { POST } = await import("@/app/api/hisseler/[id]/iptal/route");
+    const res = await POST(jsonReq({ sebep: "yanlis kayit" }), {
+      params: Promise.resolve({ id: "hisse-1" }),
+    });
+    const body = await res.json();
+
+    expect(res.status).toBe(403);
+    expect(body.kod).toBe("PERMISSION_DENIED");
+    expect(prisma.hisse.findFirst).not.toHaveBeenCalled();
   });
 });

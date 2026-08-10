@@ -1,8 +1,8 @@
 /**
- * Custom hata sınıfları — MIMARI.md §11.1
+ * Uygulama hata sınıfları.
  *
- * Tüm uygulama hataları UygulamaHatasi'ndan türer.
- * API katmanı bu hataları yakalayıp uygun HTTP status'a çevirir (api-helpers.ts).
+ * Yeni kodlarda mümkün olduğunca `KatalogHatasi` ve merkezi hata kataloğu
+ * kullanılmalıdır. Bu sınıflar eski modüllerle uyumluluk için korunur.
  */
 
 export class UygulamaHatasi extends Error {
@@ -15,48 +15,54 @@ export class UygulamaHatasi extends Error {
     this.name = "UygulamaHatasi";
   }
 }
-
-export class BulunamadıHatası extends UygulamaHatasi {
+export class BulunamadiHatasi extends UygulamaHatasi {
   constructor(mesaj = "Kayıt bulunamadı") {
-    super(mesaj, "BULUNAMADI", 404);
-    this.name = "BulunamadıHatası";
+    super(mesaj, "SHARE_NOT_FOUND", 404);
+    this.name = "BulunamadiHatasi";
   }
 }
 
-export class YetkiHatası extends UygulamaHatasi {
+export class YetkiHatasi extends UygulamaHatasi {
   constructor(mesaj = "Bu işlem için yetkiniz yok") {
-    super(mesaj, "YETKI_YOK", 403);
-    this.name = "YetkiHatası";
+    super(mesaj, "PERMISSION_DENIED", 403);
+    this.name = "YetkiHatasi";
   }
 }
 
-export class GirisYokHatası extends UygulamaHatasi {
+export class GirisYokHatasi extends UygulamaHatasi {
   constructor(mesaj = "Önce giriş yapmalısınız") {
-    super(mesaj, "GIRIS_YOK", 401);
-    this.name = "GirisYokHatası";
+    super(mesaj, "AUTH_REQUIRED", 401);
+    this.name = "GirisYokHatasi";
   }
 }
 
-export class ValidasyonHatası extends UygulamaHatasi {
+export class ValidasyonHatasi extends UygulamaHatasi {
   constructor(
     mesaj = "Geçersiz veri",
     public detaylar?: unknown[],
   ) {
-    super(mesaj, "VALIDASYON", 400);
-    this.name = "ValidasyonHatası";
+    super(mesaj, "VALIDATION_INVALID", 400);
+    this.name = "ValidasyonHatasi";
   }
 }
 
 export class CakismaHatasi extends UygulamaHatasi {
   constructor(mesaj = "Çakışan kayıt") {
-    super(mesaj, "CAKISMA", 409);
+    super(mesaj, "SHARE_CONCURRENT_ASSIGNMENT", 409);
     this.name = "CakismaHatasi";
   }
 }
 
 export class IsKuraliHatasi extends UygulamaHatasi {
-  constructor(mesaj: string, kod = "IS_KURALI") {
+  constructor(mesaj: string, kod = "VALIDATION_INVALID") {
     super(mesaj, kod, 422);
     this.name = "IsKuraliHatasi";
   }
 }
+
+export {
+  BulunamadiHatasi as BulunamadıHatası,
+  GirisYokHatasi as GirisYokHatası,
+  ValidasyonHatasi as ValidasyonHatası,
+  YetkiHatasi as YetkiHatası,
+};

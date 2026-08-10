@@ -16,6 +16,7 @@
     "sw:version": "node scripts/sw-version-gen.mjs",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint",
+    "check:utf8": "node scripts/check-utf8.mjs",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
