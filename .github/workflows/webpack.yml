@@ -35,15 +35,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup pnpm 11.2.2
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.2.2
+          run_install: false
+
       - name: Use Node.js 22.12.0
         uses: actions/setup-node@v4
         with:
           node-version: "22.12.0"
-
-      - name: Enable pnpm 11.2.2
-        run: |
-          corepack enable
-          corepack prepare pnpm@11.2.2 --activate
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
