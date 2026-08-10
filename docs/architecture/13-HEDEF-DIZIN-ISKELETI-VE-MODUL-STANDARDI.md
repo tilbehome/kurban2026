@@ -77,6 +77,7 @@ fixtures/
 | `packages/platform` | Firma, lisans, deployment, support domain/use-case | Tenant operasyon verisi |
 | `packages/database-platform` | Platform Prisma/SQL migration ve repository adapter | Firma operasyon tabloları |
 | `packages/database-tenant` | Firma operasyon DB migration, repository adapter | Platform kullanıcı/secret UI |
+| `packages/provisioning` | Firma kurulum/provisioning application use-case'i; DB create/migrate/verify, platform kayıt ve rollback sırası | UI, gerçek secret veya tenant operasyon verisi |
 | `packages/identity-platform` | Platform auth, MFA, platform session ve izinler | Firma içi rol varsayımı |
 | `packages/identity-tenant` | Firma kullanıcı, rol, izin, destek oturumu adapter’ı | Platform admin ayrıcalığı |
 | `packages/ui` | Ortak tasarım sistemi, form, tablo/kart, shell parçaları | Domain iş kuralı |

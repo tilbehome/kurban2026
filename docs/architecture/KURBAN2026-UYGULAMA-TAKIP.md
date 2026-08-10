@@ -131,10 +131,25 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Faz 2B control-plane metadata temeli | Uygulandı — genel doğrulama bekliyor | `packages/platform/src/domain/platform-control-plane.ts` ve `0003_platform_control_plane_metadata` migration'ı eklendi. MFA/passkey kayıtları, platform session/device, provisioning job, tenant health snapshot, emergency stop, incident, maintenance ve support ticket link metadata'sı platform DB sınırında tutulur; tenant operasyon verisi eklenmedi. |
 | Faz 2C/2D tenant çekirdek sözleşmesi ve DB başlangıcı | Uygulandı — genel doğrulama bekliyor | `@tilbecore/tenant-core` ve `@tilbecore/database-tenant` paketleri eklendi. Season, Customer, Supplier, Animal, ShareCard, Share, Sale, LedgerEntry, TenantAuditLog ve TenantOutboxMessage için PostgreSQL şema/migration başlangıcı oluşturuldu. Para/kilo alanları Decimal/Numeric sözleşmeyle tanımlandı; eski SQLite importu henüz yalnız iskelet düzeyindedir. |
 | Faz 2C tenant resolution ve connection sınırı | Uygulandı — genel doğrulama bekliyor | `@tilbecore/tenant-runtime` paketi eklendi. Host/custom-domain çözümleme, registry üzerinden tenant descriptor alma, inactive tenant reddi, session/databaseRef mismatch fail-closed davranışı ve connection pool key sözleşmesi kodlandı. DNS/TLS/deployment yapılmadı. |
+| Faz 2B/2C provisioning orkestrasyonu | Uygulandı — genel doğrulama bekliyor | `@tilbecore/provisioning` paketi eklendi. Tenant DB oluşturma, migration uygulama, izolasyon doğrulama, platform organization/tenant kaydı ve Firma Admin davet hazırlığı tek fail-closed use-case sırasına bağlandı; migration hatasında platform kayıtlarına geçmeden rollback portu çağrılır. Gerçek DB admin adapteri, Süper Admin UI ve canlı provisioning komutu henüz eklenmedi. |
 
 2B-1B integration test kapsamı `packages/database-platform/tests/platform-postgres.integration.test.ts` içindedir. Testler `RUN_PLATFORM_POSTGRES_TESTS=1` ve `PLATFORM_TEST_DATABASE_URL` olmadan normal unit koşusunda atlanır; CI'da geçici PostgreSQL servisiyle çalışır. Kapsam: boş DB'ye `0001`+`0002`, `0001` sonrası örnek kayıtlarla `0002`, drift/idempotent deploy, check constraint, foreign key, unique, gerçek repository create/read/nested write, transaction commit/rollback ve connection string sızıntısı kontrolü.
 
-Bu kayıt Faz 2B'nin tamamlandığı, Platform PostgreSQL'in canlıya hazır olduğu, Süper Admin'in hazır olduğu, tenant provisioning'in hazır olduğu veya çok firmalı sistemin tamamlandığı anlamına gelmez.
+Bu kayıt Faz 2B'nin tamamlandığı, Platform PostgreSQL'in canlıya hazır olduğu, Süper Admin'in hazır olduğu, tenant provisioning'in uçtan uca canlıya hazır olduğu veya çok firmalı sistemin tamamlandığı anlamına gelmez.
+
+## Faz 2–12 kalan işler ve uygulama sırası matrisi
+
+Bu matris yalnız kaynak kod, migration, test ve takip belgesi kanıtıyla tutulur; kanıtı olmayan iş tamamlandı sayılmaz.
+
+| Sıra | Faz | Kanıtla tamamlanan işler | Uygulanmış fakat belgede eksik görünen işler | Yalnız sözleşme/iskelet kalan işler | Başlanmamış veya sonraki davranış işleri |
+|---|---|---|---|---|---|
+| 1 | Faz 2B | Platform domain, platform PostgreSQL şeması, `0001..0003` migration zinciri, repository port/adaptörleri, gerçek PostgreSQL CI testi, platform kullanıcı/rol temeli, control-plane metadata. | `@tilbecore/provisioning` ile provisioning orkestrasyon use-case'i ve rollback sırası eklendi. | MFA/passkey, session/device, incident, maintenance, support ticket linkleri metadata düzeyinde. | Süper Admin UI, platform login/session, gerçek MFA/passkey doğrulama, provisioning durum ekranı, firma/modül emergency stop davranışı. |
+| 2 | Faz 2C | Tenant PostgreSQL başlangıç şeması, tenant migration CI deploy, host/custom-domain tenant resolution, session/databaseRef fail-closed guard, connection pool key sözleşmesi. | Provisioning use-case'i tenant DB oluşturma/migration/izolasyon adımlarını sıraya bağladı. | Connection registry ve DB admin adapter port düzeyinde; gerçek tenant app runtime bağlantısı yok. | Gerçek firma DB oluşturma adapteri, iki firma isolation koşusu, tenant-aware pool runtime, backup/restore izolasyon otomasyonu. |
+| 3 | Faz 2D–6 | Tenant core customer/supplier/animal/share/sale/ledger domain sözleşmeleri, Decimal/Numeric para-kilo kuralları ve hedefli unit testleri. | Yok. | Eski SQLite importu ve mevcut app taşıması iskelet düzeyinde. | Mevcut müşteri/hayvan/satış/tahsilat API'lerinin yeni tenant DB ve ledger'a taşınması. |
+| 4 | Faz 7–10 | Proxy document, QR token, slaughter state machine, weighing/package/delivery/offline/device adapter sözleşmeleri ve tenant DB `0002`. | Yok. | PWA sync, TV/customer tracking ve cihaz doğrulama sözleşme düzeyinde. | Vekâlet belge runtime, kesim/paket/teslim API taşıması, offline sync runtime, cihaz adapter uygulamaları. |
+| 5 | Faz 11–12 | Operations package: dashboard KPI, exception queue, universal search, observability, release, backup/restore, simulation readiness ve acil durum runbook. | Yok. | OpenTelemetry/axe/Playwright/ASVS/WCAG kabul hedefleri sözleşme düzeyinde. | Yönetim paneli veri bağlantısı, E2E/prova, tenant izolasyon genel doğrulaması, güvenlik/veri bütünlüğü/kapsamlı build dönemi. |
+
+Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 geliştirmesini durdurmaz; nihai CI/altyapı temizlik aşamasına bırakıldı.
 
 ## Faz 3–6 durumu
 

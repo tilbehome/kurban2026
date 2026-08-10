@@ -55,6 +55,8 @@ Bu dağılım `REQ-001..REQ-068` sayımını değiştirmez ve Faz 2A’nın mevc
 |---|---|---|
 | Faz 2B | `PRO-012`, `PRO-013`, `PRO-015`, `PRO-016`, `PRO-017`, `PRO-018`, `PRO-019`, `PRO-020`, `PRO-026`, `PRO-028` | Platform DB, Süper Admin, güvenlik merkezi, provisioning, destek ve feature flag sözleşmeleri bu fazda doğar. |
 | Faz 2C | `PRO-012`, `PRO-014`, `PRO-017`, `PRO-021`, `PRO-029` | Firma DB provisioning, migration ön kontrolü, kapasite ve restore/PITR kanıtı tenant DB sınırıyla birlikte doğrulanır. |
+
+Faz 2B/2C uygulama notu: `@tilbecore/provisioning` paketi tenant DB oluşturma, tenant migration, izolasyon doğrulama, platform kayıt ve Firma Admin davet hazırlığını fail-closed sıraya bağlar. Gerçek DB admin adapteri, Süper Admin provisioning ekranı, canlı tenant connection pool ve iki firma isolation koşusu hâlâ sonraki Faz 2C/nihai genel doğrulama işleridir.
 | Faz 2D | `PRO-003`, `PRO-030` | Import, veri kalitesi ve sezon durum makinesi sözleşmesi firma çekirdek şemasıyla birlikte hazırlanır; Faz 2A’ya kod olarak yığılmaz. |
 | Faz 3 | `PRO-004`, `PRO-005`, `PRO-009` | Müşteri, telefon, KVKK, iletişim izni ve veri kalitesi müşteri/sezon/cari modeliyle ilişkilidir. |
 | Faz 4 | `PRO-003`, `PRO-004`, `PRO-005` | Hayvan, küpe, tedarik ve toplu veri içe aktarma bu fazın veri sınırına bağlıdır. |

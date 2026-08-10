@@ -804,7 +804,7 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 #### Faz 2B — Platform Control Plane ve Süper Admin MVP
 
-**Mevcut durum:** Başladı — 2B-1 platform domain ve database-platform şema temeli uygulandı; 2B-1A ile public package import sınırı, workspace dependency manifestleri, generated platform Prisma tipleri, nested relation write sözleşmeleri, `TenantDatabaseRefRepository`, `validUntil` ve genel operasyonel limit ayrımı, `0002_platform_baseline_hardening` migration SQL'i ve boundary/schema/repository testleri eklendi. 2B-1B ile PostgreSQL 16 servisli CI kapısı, gerçek migration deploy ve gerçek Prisma repository integration testleri eklendi. Platform kullanıcı/rol repository temeli ve control-plane metadata temeli uygulandı — genel doğrulama bekliyor. Süper Admin ekranı, platform login/session akışı, MFA/passkey doğrulama ekranı, provisioning UI ve tenant routing henüz tamamlanmadı.
+**Mevcut durum:** Başladı — 2B-1 platform domain ve database-platform şema temeli uygulandı; 2B-1A ile public package import sınırı, workspace dependency manifestleri, generated platform Prisma tipleri, nested relation write sözleşmeleri, `TenantDatabaseRefRepository`, `validUntil` ve genel operasyonel limit ayrımı, `0002_platform_baseline_hardening` migration SQL'i ve boundary/schema/repository testleri eklendi. 2B-1B ile PostgreSQL 16 servisli CI kapısı, gerçek migration deploy ve gerçek Prisma repository integration testleri eklendi. Platform kullanıcı/rol repository temeli ve control-plane metadata temeli uygulandı — genel doğrulama bekliyor. `@tilbecore/provisioning` ile tenant DB oluşturma, migration, izolasyon doğrulama, platform kayıt ve Firma Admin davet hazırlığı fail-closed uygulama sırasına bağlandı. Süper Admin ekranı, platform login/session akışı, MFA/passkey doğrulama ekranı, provisioning UI, gerçek DB admin adapteri ve tenant routing runtime bağlantısı henüz tamamlanmadı.
 
 - Platform PostgreSQL
 - Organization/instance/lisans/paket/modül modelleri
@@ -824,7 +824,7 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 #### Faz 2C — Firma başına ayrı PostgreSQL ve tenant yönlendirme
 
-**Mevcut durum:** Başladı — `@tilbecore/database-tenant` paketi ve tenant PostgreSQL çekirdek şema/migration başlangıcı eklendi; `@tilbecore/tenant-runtime` ile host/custom-domain tenant resolution, session/databaseRef fail-closed guard ve connection pool key sözleşmesi eklendi; genel doğrulama bekliyor. DNS/TLS/deployment, gerçek connection pool runtime ve iki firma isolation koşusu henüz genel doğrulama dönemine bırakıldı.
+**Mevcut durum:** Başladı — `@tilbecore/database-tenant` paketi ve tenant PostgreSQL çekirdek şema/migration başlangıcı eklendi; `@tilbecore/tenant-runtime` ile host/custom-domain tenant resolution, session/databaseRef fail-closed guard ve connection pool key sözleşmesi eklendi; `@tilbecore/provisioning` ile tenant DB create/migrate/verify sırası ve rollback davranışı uygulandı; genel doğrulama bekliyor. DNS/TLS/deployment, gerçek connection pool runtime, gerçek DB admin adapteri ve iki firma isolation koşusu henüz genel doğrulama dönemine bırakıldı.
 
 - Güvenli tenant resolution
 - Firma DB connection registry

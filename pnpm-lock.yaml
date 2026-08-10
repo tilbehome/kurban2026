@@ -183,6 +183,15 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  packages/provisioning:
+    dependencies:
+      '@tilbecore/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@tilbecore/platform':
+        specifier: workspace:*
+        version: link:../platform
+
   packages/tenant-core:
     dependencies:
       '@tilbecore/contracts':
