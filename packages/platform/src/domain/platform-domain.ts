@@ -16,11 +16,14 @@ type Brand<TValue, TBrand extends string> = TValue & { readonly __brand: TBrand 
 export type PlatformPlanId = Brand<string, "PlatformPlanId">;
 export type PlatformModuleId = Brand<string, "PlatformModuleId">;
 export type PlatformLicenseId = Brand<string, "PlatformLicenseId">;
+export type PlatformUserId = Brand<string, "PlatformUserId">;
+export type PlatformRoleId = Brand<string, "PlatformRoleId">;
 
 export type OrganizationStatus = "draft" | "active" | "suspended" | "closed";
 export type PlatformPlanStatus = "draft" | "active" | "retired";
 export type PlatformModuleStatus = "active" | "retired";
 export type PlatformLicenseStatus = "draft" | "active" | "suspended" | "expired" | "cancelled";
+export type PlatformUserStatus = "active" | "suspended" | "closed";
 export type TenantDatabaseRefStatus = "active" | "suspended" | "removed";
 
 export interface Organization {
@@ -74,6 +77,20 @@ export interface PlatformLicense {
   expiresAt?: string;
   limits: TenantOperationalLimits;
   entitlements: readonly LicenseEntitlement[];
+}
+
+export interface PlatformRole {
+  id: PlatformRoleId;
+  key: string;
+  displayName: string;
+}
+
+export interface PlatformUser {
+  id: PlatformUserId;
+  email: string;
+  displayName: string;
+  status: PlatformUserStatus;
+  roles: readonly PlatformRole[];
 }
 
 const ALLOWED_TENANT_TRANSITIONS: Record<TenantProvisioningStatus, readonly TenantProvisioningStatus[]> = {
@@ -172,5 +189,11 @@ export function assertOperationalLimits(limits: TenantOperationalLimits): void {
     if (value !== undefined && (!Number.isInteger(value) || value < 0)) {
       throw new Error(`OPERATIONAL_LIMIT_INVALID:${key}`);
     }
+  }
+}
+
+export function assertPlatformUserEmail(email: string): void {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error("PLATFORM_USER_EMAIL_INVALID");
   }
 }

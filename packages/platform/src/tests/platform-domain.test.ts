@@ -8,8 +8,10 @@ import type {
 import {
   registerTenantDatabaseRef,
   registerTenantInstanceWithDatabaseRef,
+  registerPlatformUser,
 } from "../application/platform-services";
 import {
+  assertPlatformUserEmail,
   assertLicenseConsistent,
   assertOrganizationSlugAvailable,
   assertOperationalLimits,
@@ -22,6 +24,7 @@ import {
   type PlatformModuleId,
   type PlatformPlan,
   type PlatformPlanId,
+  type PlatformUser,
 } from "../domain/platform-domain";
 
 const moduleId = "module_sales" as PlatformModuleId;
@@ -147,6 +150,30 @@ describe("platform domain sözleşmesi", () => {
         },
       ),
     ).rejects.toThrow("TENANT_DATABASE_REF_MISMATCH");
+  });
+
+  it("PlatformUser e-posta sözleşmesini doğrular", async () => {
+    const user: PlatformUser = {
+      id: "platform_user_1" as PlatformUser["id"],
+      email: "admin@example.test",
+      displayName: "Platform Admin",
+      status: "active",
+      roles: [],
+    };
+
+    expect(() => assertPlatformUserEmail(user.email)).not.toThrow();
+    await expect(
+      registerPlatformUser(
+        {
+          createUser: async (platformUser) => platformUser,
+          findUserById: async () => null,
+          findUserByEmail: async () => null,
+          createRole: async (role) => role,
+          assignRole: async () => user,
+        },
+        { ...user, email: "gecersiz" },
+      ),
+    ).rejects.toThrow("PLATFORM_USER_EMAIL_INVALID");
   });
 });
 

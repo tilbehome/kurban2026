@@ -1,6 +1,7 @@
 import type {
   OrganizationRepository,
   PlanLicenseRepository,
+  PlatformUserRepository,
   TenantDatabaseRefRepository,
   TenantInstanceRepository,
 } from "../contracts/platform-repositories";
@@ -8,12 +9,15 @@ import {
   assertLicenseConsistent,
   assertOperationalLimits,
   assertOrganizationSlugAvailable,
+  assertPlatformUserEmail,
   assertPlanEntitlementsKnown,
   assertTenantDatabaseRefSafe,
   type ModuleDefinition,
   type Organization,
   type PlatformLicense,
   type PlatformPlan,
+  type PlatformRole,
+  type PlatformUser,
   type TenantDatabaseRefRecord,
   type TenantInstance,
 } from "../domain/platform-domain";
@@ -68,4 +72,19 @@ export async function registerTenantInstanceWithDatabaseRef(
     throw new Error("TENANT_DATABASE_REF_MISMATCH");
   }
   return repository.createWithDatabaseRef(tenant, databaseRef);
+}
+
+export async function registerPlatformUser(
+  repository: PlatformUserRepository,
+  user: PlatformUser,
+): Promise<PlatformUser> {
+  assertPlatformUserEmail(user.email);
+  return repository.createUser(user);
+}
+
+export async function registerPlatformRole(
+  repository: PlatformUserRepository,
+  role: PlatformRole,
+): Promise<PlatformRole> {
+  return repository.createRole(role);
 }

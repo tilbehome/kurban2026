@@ -5,6 +5,9 @@ import type {
   PlanLicenseRepository,
   PlatformLicense,
   PlatformPlan,
+  PlatformRole,
+  PlatformUser,
+  PlatformUserRepository,
   TenantDatabaseRefRecord,
   TenantDatabaseRefRepository,
   TenantInstance,
@@ -21,7 +24,9 @@ import type {
   PlatformLicenseWithEntitlementsRow,
   PlatformPlanWithModulesRow,
   PlatformPrismaClientLike,
+  PlatformRoleRow,
   PlatformTransactionClient,
+  PlatformUserWithRolesRow,
   TenantDatabaseRefRow,
   TenantInstanceWithDatabaseRefRow,
 } from "../client";
@@ -29,6 +34,7 @@ import type {
 const TENANT_INCLUDE_DATABASE_REF = { databaseRef: true } as const;
 const PLAN_INCLUDE_MODULES = { modules: true } as const;
 const LICENSE_INCLUDE_ENTITLEMENTS = { entitlements: true } as const;
+const USER_INCLUDE_ROLES = { roles: { include: { role: true } } } as const;
 
 export class PrismaOrganizationRepository implements OrganizationRepository {
   constructor(private readonly db: PlatformPrismaClientLike) {}
@@ -160,6 +166,58 @@ export class PrismaPlanLicenseRepository implements PlanLicenseRepository {
   }
 }
 
+export class PrismaPlatformUserRepository implements PlatformUserRepository {
+  constructor(private readonly db: PlatformPrismaClientLike) {}
+
+  async createUser(user: PlatformUser): Promise<PlatformUser> {
+    return mapPlatformUserRow(
+      await this.db.platformUser.create({
+        data: userToCreateInput(user),
+        include: USER_INCLUDE_ROLES,
+      }),
+    );
+  }
+
+  async findUserById(id: PlatformUser["id"]): Promise<PlatformUser | null> {
+    const row = await this.db.platformUser.findUnique({
+      where: { id },
+      include: USER_INCLUDE_ROLES,
+    });
+    return row ? mapPlatformUserRow(row) : null;
+  }
+
+  async findUserByEmail(email: string): Promise<PlatformUser | null> {
+    const row = await this.db.platformUser.findUnique({
+      where: { email },
+      include: USER_INCLUDE_ROLES,
+    });
+    return row ? mapPlatformUserRow(row) : null;
+  }
+
+  async createRole(role: PlatformRole): Promise<PlatformRole> {
+    return mapPlatformRoleRow(
+      await this.db.platformRole.create({
+        data: roleToCreateInput(role),
+      }),
+    );
+  }
+
+  async assignRole(userId: PlatformUser["id"], roleId: PlatformRole["id"]): Promise<PlatformUser> {
+    await this.db.platformUserRole.create({
+      data: {
+        user: { connect: { id: userId } },
+        role: { connect: { id: roleId } },
+      },
+    });
+    const row = await this.db.platformUser.findUnique({
+      where: { id: userId },
+      include: USER_INCLUDE_ROLES,
+    });
+    if (!row) throw new Error("PLATFORM_USER_NOT_FOUND");
+    return mapPlatformUserRow(row);
+  }
+}
+
 async function replaceLicenseEntitlements(
   tx: PlatformTransactionClient,
   licenseId: PlatformLicense["id"],
@@ -250,6 +308,28 @@ function licenseToCreateInput(license: PlatformLicense) {
   };
 }
 
+function userToCreateInput(user: PlatformUser) {
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    status: user.status,
+    roles: {
+      create: user.roles.map((role) => ({
+        role: { connect: { id: role.id } },
+      })),
+    },
+  };
+}
+
+function roleToCreateInput(role: PlatformRole) {
+  return {
+    id: role.id,
+    key: role.key,
+    displayName: role.displayName,
+  };
+}
+
 function entitlementToCreateManyInput(
   licenseId: PlatformLicense["id"],
   entitlement: LicenseEntitlement,
@@ -335,6 +415,24 @@ function mapPlatformLicenseRow(row: PlatformLicenseWithEntitlementsRow): Platfor
       enabled: entitlement.enabled,
       validUntil: entitlement.validUntil ? entitlement.validUntil.toISOString() : undefined,
     })),
+  };
+}
+
+function mapPlatformRoleRow(row: PlatformRoleRow): PlatformRole {
+  return {
+    id: row.id as PlatformRole["id"],
+    key: row.key,
+    displayName: row.displayName,
+  };
+}
+
+function mapPlatformUserRow(row: PlatformUserWithRolesRow): PlatformUser {
+  return {
+    id: row.id as PlatformUser["id"],
+    email: row.email,
+    displayName: row.displayName,
+    status: row.status as PlatformUser["status"],
+    roles: row.roles.map((userRole) => mapPlatformRoleRow(userRole.role)),
   };
 }
 

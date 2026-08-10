@@ -9,11 +9,14 @@ import type {
   PlatformLicense,
   PlatformModuleId,
   PlatformPlanId,
+  PlatformRole,
+  PlatformUser,
   TenantDatabaseRefRecord,
 } from "@tilbecore/platform";
 import type { PlatformPrismaClientLike } from "../src/client";
 import {
   PrismaPlanLicenseRepository,
+  PrismaPlatformUserRepository,
   PrismaTenantDatabaseRefRepository,
   PrismaTenantInstanceRepository,
 } from "../src/repositories/platform-prisma-repositories";
@@ -165,6 +168,28 @@ describe("platform Prisma repository adaptörleri", () => {
       { moduleId, enabled: false, validUntil: "2026-06-01T00:00:00.000Z" },
     ]);
   });
+
+  it("PlatformUser ve rol ilişkisini secret taşımadan public mapper üzerinden döndürür", async () => {
+    const calls: unknown[] = [];
+    const db = fakeDb({ calls });
+    const repository = new PrismaPlatformUserRepository(db);
+
+    const role = await repository.createRole({
+      id: "role_super_admin" as PlatformRole["id"],
+      key: "platform_super_admin",
+      displayName: "Platform Süper Admin",
+    });
+    const user = await repository.createUser({
+      id: "platform_user_1" as PlatformUser["id"],
+      email: "admin@example.test",
+      displayName: "Platform Admin",
+      status: "active",
+      roles: [role],
+    });
+
+    expect(user.roles[0]?.key).toBe("platform_super_admin");
+    expect(JSON.stringify(calls)).not.toMatch(/password|secret|token|databaseUrl|connectionString/i);
+  });
 });
 
 function databaseRefFixture(overrides: Partial<TenantDatabaseRefRecord> = {}): TenantDatabaseRefRecord {
@@ -290,6 +315,26 @@ function fakeDb({ calls }: { calls: unknown[] }): PlatformPrismaClientLike {
         return { count: 1 };
       },
     },
+    platformRole: {
+      create: async ({ data }: { data: Record<string, unknown> }) => {
+        calls.push({ op: "platformRole.create", data });
+        return { ...data, createdAt: new Date(), updatedAt: new Date() };
+      },
+      findUnique: async () => null,
+    },
+    platformUser: {
+      create: async (args: { data: Record<string, unknown>; include: unknown }) => {
+        calls.push({ op: "platformUser.create", ...args });
+        return platformUserRowFromData(args.data);
+      },
+      findUnique: async () => null,
+    },
+    platformUserRole: {
+      create: async (args: unknown) => {
+        calls.push({ op: "platformUserRole.create", args });
+        return {};
+      },
+    },
   };
   return db as unknown as PlatformPrismaClientLike;
 }
@@ -313,6 +358,29 @@ function licenseRowFromData(data: Record<string, unknown>) {
       moduleId: (entitlement.module as { connect: { id: string } }).connect.id,
       enabled: entitlement.enabled,
       validUntil: entitlement.validUntil,
+    })),
+  };
+}
+
+function platformUserRowFromData(data: Record<string, unknown>) {
+  const roles = (data.roles as { create: Array<{ role: { connect: { id: string } } }> }).create;
+  return {
+    id: data.id,
+    email: data.email,
+    displayName: data.displayName,
+    status: data.status,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    roles: roles.map((userRole) => ({
+      userId: data.id,
+      roleId: userRole.role.connect.id,
+      role: {
+        id: userRole.role.connect.id,
+        key: "platform_super_admin",
+        displayName: "Platform Süper Admin",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
     })),
   };
 }

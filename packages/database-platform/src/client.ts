@@ -12,6 +12,9 @@ export type PlatformPrismaClientLike = Pick<
   | "platformPlan"
   | "platformLicense"
   | "platformLicenseEntitlement"
+  | "platformUser"
+  | "platformRole"
+  | "platformUserRole"
 >;
 
 export type PlatformTransactionClient = Pick<
@@ -22,6 +25,9 @@ export type PlatformTransactionClient = Pick<
   | "platformPlan"
   | "platformLicense"
   | "platformLicenseEntitlement"
+  | "platformUser"
+  | "platformRole"
+  | "platformUserRole"
 >;
 
 export type OrganizationRow = Prisma.OrganizationGetPayload<object>;
@@ -34,4 +40,8 @@ export type PlatformPlanWithModulesRow = Prisma.PlatformPlanGetPayload<{
 }>;
 export type PlatformLicenseWithEntitlementsRow = Prisma.PlatformLicenseGetPayload<{
   include: { entitlements: true };
+}>;
+export type PlatformRoleRow = Prisma.PlatformRoleGetPayload<object>;
+export type PlatformUserWithRolesRow = Prisma.PlatformUserGetPayload<{
+  include: { roles: { include: { role: true } } };
 }>;

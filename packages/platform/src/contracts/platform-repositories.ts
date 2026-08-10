@@ -3,6 +3,8 @@ import type {
   Organization,
   PlatformLicense,
   PlatformPlan,
+  PlatformRole,
+  PlatformUser,
   TenantDatabaseRefRecord,
   TenantInstance,
 } from "../domain/platform-domain";
@@ -43,4 +45,12 @@ export interface PlanLicenseRepository {
     licenseId: PlatformLicense["id"],
     entitlements: readonly LicenseEntitlement[],
   ): Promise<PlatformLicense>;
+}
+
+export interface PlatformUserRepository {
+  createUser(user: PlatformUser): Promise<PlatformUser>;
+  findUserById(id: PlatformUser["id"]): Promise<PlatformUser | null>;
+  findUserByEmail(email: string): Promise<PlatformUser | null>;
+  createRole(role: PlatformRole): Promise<PlatformRole>;
+  assignRole(userId: PlatformUser["id"], roleId: PlatformRole["id"]): Promise<PlatformUser>;
 }

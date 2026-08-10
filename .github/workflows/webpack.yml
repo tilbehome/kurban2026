@@ -31,7 +31,9 @@ jobs:
     env:
       PLATFORM_DATABASE_URL: postgresql://tilbecore:tilbecore_test_password@localhost:5432/tilbecore_platform_ci
       PLATFORM_TEST_DATABASE_URL: postgresql://tilbecore:tilbecore_test_password@localhost:5432/tilbecore_platform_ci
+      DATABASE_URL: file:./ci.sqlite
       SESSION_SECRET: ci_only_session_secret_32_chars_minimum
+      DEKONT_DOGRULAMA_SECRET: ci_only_dekont_secret_32_chars_minimum
 
     steps:
       - uses: actions/checkout@v4
