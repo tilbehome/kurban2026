@@ -70,7 +70,7 @@ Bayram günü kesim merkezindeki **TV/büyük monitör** için **profesyonel can
 ├──────────────────────────────────────────────────────────────────┤
 │ ALT BİLGİ ŞERİDİ (4 bölüm)                                       │
 │ 📢 DUYURULAR  | 👥 SIRA       | 🛡️ HİJYEN      | 📱 WHATSAPP    │
-│ Kesim alanı...| Sıranız.....  | Hijyen kural.. | 0532 123 45 67 │
+│ Kesim alanı...| Sıranız.....  | Hijyen kural.. | <EXAMPLE_PHONE> │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -270,8 +270,8 @@ Vekalet → Kesim → Parçalama → Tartım → Teslim
 
 #### Bölüm 4: 📱 WHATSAPP İLETİŞİM
 - Başlık: "WHATSAPP İLETİŞİM"
-- Telefon: "0532 123 45 67" (büyük, tıklanır)
-- Tıklayınca: `wa.me/905321234567` açılır
+- Telefon: "<EXAMPLE_PHONE>" (büyük, tıklanır)
+- Tıklayınca: `wa.me/<EXAMPLE_PHONE>` açılır
 
 **Bu bölümler:**
 - Müşteri ve personel için bilgilendirici
@@ -438,7 +438,7 @@ model TvAyari {
   { anahtarKey: 'duyuru', deger: 'Kesim alanında anonslar takip ediniz.' },
   { anahtarKey: 'sira_hatirlatma', deger: 'Sıranız geldiğinde ekranda ve anonsla bilgilendirileceksiniz.' },
   { anahtarKey: 'hijyen', deger: 'Hijyen kurallarına uyalım, sağlığımızı birlikte koruyalım.' },
-  { anahtarKey: 'whatsapp_tel', deger: '0532 123 45 67' },
+  { anahtarKey: 'whatsapp_tel', deger: '<EXAMPLE_PHONE>' },
   { anahtarKey: 'lokasyon', deger: 'Merkez Kesim Alanı' },
 ]
 ```

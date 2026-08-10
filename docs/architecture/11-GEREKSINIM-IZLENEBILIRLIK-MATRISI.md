@@ -1,6 +1,14 @@
 # 11 — Gereksinim İzlenebilirlik Matrisi
 
-Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dönüştürür. Detaylar fazlarda genişletilecek; hiçbir madde sessizce kapsam dışına çıkarılamaz.
+Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dönüştürür. Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Detaylar fazlarda genişletilecek; hiçbir madde sessizce kapsam dışına çıkarılamaz.
+
+## 10 Ağustos 2026 uyum notu
+
+- Faz 1 tamamlandı ve `origin/main` dalına gönderildi: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
+- Faz 2 henüz başlamadı.
+- Eski belgelerde çok firma, SaaS veya PostgreSQL’in ileri faza bırakıldığı yerlerde yerine geçen karar şudur: çok firma veri izolasyonu, Platform Süper Admin ve firma başına ayrı PostgreSQL Faz 2’nin zorunlu çekirdeğidir; self-service üyelik, otomatik abonelik/faturalama ve gelişmiş ticari SaaS özellikleri sonraya bırakılır.
+- Sistem yalnız büyükbaş kurban içindir; küçükbaş/adak/akika kapsam dışıdır.
+- Placeholder/yakında sayfaları tamamlanmış özellik sayılmaz.
 
 ## Gereksinim matrisi
 
@@ -53,25 +61,25 @@ Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dö
 | REQ-045 | Bayram günü yüksek stres modu | UI | tercih | Az tık, büyük aksiyon | UI | Hızlı ekran | Mobil | Rol | Görev bitir | Geri al | Var | Yok | 20 cihaz prova | Kısmi | Faz 16 |
 | REQ-046 | Yedek/geri yükleme | Sistem | backup | Yedek test edilir | Yedek | Ayarlar | Yok | Yönetici | Yedek al | Restore | Zorunlu | Yok | Restore prova | Kısmi | Faz 15 |
 | REQ-047 | Demo/test veri yönetimi | Veri | seed profili | Demo canlıdan ayrı | Seed | Admin | Yok | Teknik | Seed reset | Canlı engeli | Var | Yok | Test reset | Kısmi | Faz 9 |
-| REQ-048 | Firma başına ayrı PostgreSQL | Tenant | tenant DB | Operasyon veri izolasyonu | Provision | Platform | Yok | Platform | DB oluştur | Hata rollback | Zorunlu | Yok | İki firma izolasyon | Yok | Faz 5 |
-| REQ-049 | Platform operasyon verisi tutmaz | Platform | Platform DB | PII/operasyon yok | Platform | Platform | Yok | Platform | Firma meta | Destek onayı | Zorunlu | Yok | PII yok | Yok | Faz 6 |
-| REQ-050 | Platform Süper Admin ayrı | Platform IAM | PlatformUser | Firma rolü değildir | Auth | Platform | Yok | Platform | Giriş | MFA | Zorunlu | Yok | Ayrı cookie | Yok | Faz 6 |
+| REQ-048 | Firma başına ayrı PostgreSQL | Tenant | tenant DB | Operasyon veri izolasyonu | Provision | Platform | Yok | Platform | DB oluştur | Hata rollback | Zorunlu | Yok | İki firma izolasyon | Yok | Faz 2C |
+| REQ-049 | Platform operasyon verisi tutmaz | Platform | Platform DB | PII/operasyon yok | Platform | Platform | Yok | Platform | Firma meta | Destek onayı | Zorunlu | Yok | PII yok | Yok | Faz 2B |
+| REQ-050 | Platform Süper Admin ayrı | Platform IAM | PlatformUser | Firma rolü değildir | Auth | Platform | Yok | Platform | Giriş | MFA | Zorunlu | Yok | Ayrı cookie | Yok | Faz 2B |
 | REQ-051 | Lisans toleransı | Lisans | License | Bayram günü aniden durmaz | Lisans | Platform | Yerel uyarı | Platform | Check | Offline grace | Var | Yok | İnternetsiz kullanım | Yok | Faz 15 |
 | REQ-052 | UTF-8 kaynak | i18n | Yok | Mojibake engel | Build/test | Tüm UI | Tüm UI | Teknik | Tarama | Hata fail | Yok | Yok | Mojibake testi | Kısmi | Faz 1 |
 | REQ-053 | Hata kodu + mesaj anahtarı | i18n/API | error code | Cümleyle iş mantığı yok | API helper | Tüm UI | Tüm UI | Teknik | Kod döner | Fallback | Var | Yok | Dil değişir | Yok | Faz 1 |
 | REQ-054 | Türkçe/Arapça/İngilizce altyapı | i18n | dil tercihi | DB durum kodu saklar | i18n | UI | UI/TV | Firma | Çeviri | Eksik fallback | Yok | Yok | Dil seçimi | Yok | Faz 12 |
 | REQ-055 | RTL | UI/i18n | Yok | Arapça gerçek RTL | Layout | UI | UI | Firma | dir rtl | Karma belge | Yok | Yok | RTL ekran | Yok | Faz 12 |
 | REQ-056 | Firma marka ayrımı | Branding | Ayar | Ürün/firma ayrılır | Branding | Shell/belge | PWA | Firma admin | Logo ayarla | Snapshot | Var | Yok | Firma değişimi | Kısmi | Faz 4 |
-| REQ-057 | Modüler monolit | Mimari | Yok | Route ince kalır | Use-case | Yok | Yok | Teknik | Servis çağır | Hata map | Yok | Kısmi | Route testleri | Kısmi | Faz 2 |
-| REQ-058 | Domain olayları | Mimari | Event | Yan etkiler olaylı | Event bus | Yok | Yok | Teknik | Event publish | Retry | Var | Yok | Audit/event uyum | Kısmi | Faz 2 |
-| REQ-059 | Destek erişimi onaylı | Platform | SupportAccess | Sessiz erişim yok | Support | Platform | Firma onay | Platform+firma | Onay aç | İptal | Zorunlu | Yok | Süreli erişim | Yok | Faz 6 |
-| REQ-060 | Route yetkileri | Güvenlik | Permission | API her zaman kontrol eder | Middleware/use-case | Tüm | Tüm | Rol | İzinli | 403 | Zorunlu | Kısmi | Yetkisiz test | Kısmi | Faz 2 |
+| REQ-057 | Modüler monolit | Mimari | Yok | Route ince kalır | Use-case | Yok | Yok | Teknik | Servis çağır | Hata map | Yok | Kısmi | Route testleri | Kısmi | Faz 2A |
+| REQ-058 | Domain olayları | Mimari | Event | Yan etkiler olaylı | Event bus | Yok | Yok | Teknik | Event publish | Retry | Var | Yok | Audit/event uyum | Kısmi | Faz 2A |
+| REQ-059 | Destek erişimi onaylı | Platform | SupportAccess | Sessiz erişim yok | Support | Platform | Firma onay | Platform+firma | Onay aç | İptal | Zorunlu | Yok | Süreli erişim | Yok | Faz 2B |
+| REQ-060 | Route yetkileri | Güvenlik | Permission | API her zaman kontrol eder | Middleware/use-case | Tüm | Tüm | Rol | İzinli | 403 | Zorunlu | Kısmi | Yetkisiz test | Kısmi | Faz 2A |
 | REQ-061 | Dosya güvenliği | Belge | FileRef | Fiziksel yol sızmaz | Dosya API | Belge | Mobil | Vekâlet | Yetkili oku | 403/404 | Var | Var | Public erişim yok | P0 | Faz 7 |
-| REQ-062 | PII loglara çıkmaz | Güvenlik | Log policy | Secret/DB URL yok | Logger | Yok | Yok | Teknik | Maskeli log | Hata | Zorunlu | Yok | Log inceleme | Kısmi | Faz 2 |
-| REQ-063 | Migration dry-run | Veri | MigrationLog | Önce rapor | Script | Teknik | Yok | Teknik | Dry-run | Apply | Var | Kısmi | Rapor üretir | Kısmi | Faz 5 |
+| REQ-062 | PII loglara çıkmaz | Güvenlik | Log policy | Secret/DB URL yok | Logger | Yok | Yok | Teknik | Maskeli log | Hata | Zorunlu | Yok | Log inceleme | Kısmi | Faz 2A |
+| REQ-063 | Migration dry-run | Veri | MigrationLog | Önce rapor | Script | Teknik | Yok | Teknik | Dry-run | Apply | Var | Kısmi | Rapor üretir | Kısmi | Faz 2C |
 | REQ-064 | Yedek öncesi güncelleme | Sistem | BackupLog | Migration öncesi yedek | Update | Platform | Yok | Platform | Yedek al | Durdur | Zorunlu | Yok | Yedeksiz migrate yok | Yok | Faz 15 |
-| REQ-065 | Placeholder kapsam denetimi | Ürün | FeatureFlag | Çekirdeğe karışmaz | Menü | Menü | Menü | Admin | Flag kapalı | Pilot | Yok | Yok | Çekirdek menü sade | Kısmi | Faz 3 |
-| REQ-066 | Test PostgreSQL | Test | Test DB | Mock yetmez | Test infra | Yok | Yok | Teknik | CI test | Rollback | Yok | Yok | PG integration | Yok | Faz 3 |
+| REQ-065 | Placeholder kapsam denetimi | Ürün | FeatureFlag | Çekirdeğe karışmaz | Menü | Menü | Menü | Admin | Flag kapalı | Pilot | Yok | Yok | Çekirdek menü sade | Kısmi | Faz 2A |
+| REQ-066 | Test PostgreSQL | Test | Test DB | Mock yetmez | Test infra | Yok | Yok | Teknik | CI test | Rollback | Yok | Yok | PG integration | Yok | Faz 2C |
 | REQ-067 | 5–20 cihaz yük | Test | Senaryo | Bayram LAN provası | Load script | Yok | Cihazlar | Teknik | Prova | Kesinti | Var | Yok | Yük raporu | Yok | Faz 16 |
 | REQ-068 | Denetim ve olay inceleme | Audit | Audit/Event | Kim, neyi, neden | Timeline | Timeline | Özet | Yetkili | İncele | Export | Var | Kısmi | Kayıt izi | Kısmi | Faz 14 |
 
@@ -120,16 +128,16 @@ Ana tablo 68 benzersiz gereksinimi korur. Hedef fiziksel dizinler şimdi oluştu
 
 | Gereksinim aralığı | Hedef iş modülü | Hedef paket/uygulama | Not |
 |---|---|---|---|
-| `REQ-001..REQ-003`, `REQ-015..REQ-023` | `share-sales` | `apps/tenant`, ileride `packages/contracts`, `packages/workflow-engine` | Saha satış modüler pilotunun ana kapsamı. |
-| `REQ-004..REQ-008` | `customer-season-current` | `apps/tenant`, ileride `packages/database-tenant` | Müşteri kimliği, sezon ve cari ayrımı birlikte ele alınır. |
-| `REQ-009..REQ-014` | `procurement-animal` | `apps/tenant`, ileride `packages/database-tenant` | Tedarikçi, alış faturası, hayvan kartı ve uygunluk. |
+| `REQ-001..REQ-003`, `REQ-015..REQ-023` | `share-sales` | `apps/tenant-web`, ileride `packages/contracts`, `packages/workflow-engine` | Saha satış modüler pilotunun ana kapsamı. |
+| `REQ-004..REQ-008` | `customer-season-current` | `apps/tenant-web`, ileride `packages/database-tenant` | Müşteri kimliği, sezon ve cari ayrımı birlikte ele alınır. |
+| `REQ-009..REQ-014` | `procurement-animal` | `apps/tenant-web`, ileride `packages/database-tenant` | Tedarikçi, alış faturası, hayvan kartı ve uygunluk. |
 | `REQ-024..REQ-028`, `REQ-039..REQ-040` | `finance-ledger` | `packages/core`, `packages/database-tenant`, `packages/rules-engine` | Float dönüşümü ve ters kayıt mimarisi burada kanıtlanır. |
 | `REQ-029..REQ-034`, `REQ-061` | `proxy-documents` | `packages/documents`, `packages/file-storage` | Vekâlet, belge snapshot, QR ve dosya güvenliği. |
-| `REQ-035..REQ-038`, `REQ-041..REQ-043` | `slaughter-packaging-delivery` | `packages/workflow-engine`, `apps/tenant` | Kesim, tartım, paketleme ve teslim durum makineleri. |
-| `REQ-044..REQ-045` | `mobile-pwa-task-ui` | `packages/ui`, `packages/i18n`, `apps/tenant` | Mobil PWA yüksek stres görev ekranları. |
+| `REQ-035..REQ-038`, `REQ-041..REQ-043` | `slaughter-packaging-delivery` | `packages/workflow-engine`, `apps/tenant-web`, `apps/tenant-mobile` | Kesim, tartım, paketleme ve teslim durum makineleri. |
+| `REQ-044..REQ-045` | `mobile-pwa-task-ui` | `packages/ui`, `packages/i18n`, `apps/tenant-mobile` | Mobil PWA yüksek stres görev ekranları. |
 | `REQ-046`, `REQ-051`, `REQ-063..REQ-064`, `REQ-067` | `operations-continuity` | `apps/worker`, `packages/observability`, `infrastructure`, `scripts` | Yedek, lisans toleransı, migration ve saha provası. |
 | `REQ-047`, `REQ-066` | `test-data-quality` | `packages/testing`, `tests`, `scripts` | Demo/test veri yönetimi ve gerçek PostgreSQL test harness. |
-| `REQ-048..REQ-050`, `REQ-059` | `platform-tenant-admin` | `apps/platform`, `packages/platform`, `packages/database-platform`, `packages/identity-platform` | Platform, Süper Admin, destek erişimi ve firma meta sınırı. |
+| `REQ-048..REQ-050`, `REQ-059` | `platform-tenant-admin` | `apps/platform-admin`, `packages/platform`, `packages/database-platform`, `packages/identity-platform` | Platform, Süper Admin, destek erişimi ve firma meta sınırı. |
 | `REQ-052..REQ-055` | `i18n-encoding-rtl` | `packages/i18n`, `packages/ui`, `packages/core` | İlk uygulama fazının çekirdeği. |
 | `REQ-056`, `REQ-065` | `branding-module-registry` | `packages/module-registry`, `packages/feature-flags`, `packages/ui` | Ürün/firma marka ayrımı ve üretim menü sadeleştirme. |
 | `REQ-057..REQ-058`, `REQ-060`, `REQ-062`, `REQ-068` | `architecture-governance` | `packages/core`, `packages/event-bus`, `packages/observability`, `packages/contracts` | Modüler monolit, olay, yetki, log ve denetim omurgası. |

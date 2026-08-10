@@ -16,9 +16,9 @@
 4. **Duplikat kontrolü:** Aynı telefon varsa uyarı
 
 ### B. Akıllı Telefon Formatlama
-- `5321234567` → `0532 123 45 67` (auto-format)
-- `+90 532 123 45 67` → `0532 123 45 67` (normalize)
-- `905321234567` → `0532 123 45 67`
+- `5321234567` → `<EXAMPLE_PHONE>` (auto-format)
+- `<EXAMPLE_PHONE>` → `<EXAMPLE_PHONE>` (normalize)
+- `<EXAMPLE_PHONE>` → `<EXAMPLE_PHONE>`
 - Geçersiz: kırmızı border + hata mesajı
 
 ### C. Etiketler (Schema'da `etiketler` JSON alanı zaten var)
@@ -134,7 +134,7 @@ export function telefonNormalize(tel: string): string {
   return sade.substring(0, 11);
 }
 
-/** "0532 123 45 67" görsel format */
+/** "<EXAMPLE_PHONE>" görsel format */
 export function telefonGoster(tel: string): string {
   const sade = telefonNormalize(tel);
   if (sade.length < 4) return sade;
@@ -468,7 +468,7 @@ export function YeniMusteriForm({ next }: { next?: string }) {
                 id="telefon"
                 type="tel"
                 inputMode="tel"
-                placeholder="0532 123 45 67"
+                placeholder="<EXAMPLE_PHONE>"
                 value={veri.telefon}
                 onChange={(e) => telefonDegis(e.target.value)}
                 className={cn(
@@ -723,7 +723,7 @@ const yeni = await prisma.musteri.create({
 ## ✅ TAMAMLAMA KRİTERLERİ
 
 - [ ] Ad Soyad: min 2 kelime kontrolü çalışıyor, hata mesajı görünür
-- [ ] Telefon: `5321234567` yazınca otomatik `0532 123 45 67` olur
+- [ ] Telefon: `5321234567` yazınca otomatik `<EXAMPLE_PHONE>` olur
 - [ ] Telefon: geçersiz numara → kırmızı border + hata
 - [ ] Telefon: geçerli → yeşil border + "Geçerli numara" mesajı
 - [ ] TC: 11 hane olmazsa hata, algoritma kontrolü yapılır
@@ -742,7 +742,7 @@ const yeni = await prisma.musteri.create({
 
 1. **Sadece "Ahmet" yaz** → "Ad ve soyad ayrı olmalı" uyarısı
 2. **"Ahmet Yılmaz" yaz** → uyarı kaybolur, kaydet aktifleşir
-3. **`5321234567` yaz** → otomatik `0532 123 45 67`
+3. **`5321234567` yaz** → otomatik `<EXAMPLE_PHONE>`
 4. **`12345` yaz** → kırmızı border + "Geçerli bir cep numarası girin"
 5. **TC `12345678900` yaz** → "Geçersiz TC numarası"
 6. **TC `10000000146` yaz** → yeşil border (algoritma doğru)

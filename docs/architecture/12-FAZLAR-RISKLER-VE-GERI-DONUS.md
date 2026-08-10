@@ -1,6 +1,31 @@
 # 12 — Fazlar, Riskler ve Geri Dönüş
 
+Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu dosya faz, risk ve geri dönüş özetini o belgeye göre tutar.
+
+## 10 Ağustos 2026 bağlayıcı faz durumu
+
+- Faz 1 tamamlandı ve `origin/main` dalına gönderildi.
+- Faz 1 commit: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
+- Faz 2 henüz başlamadı.
+- Sıradaki aşama Faz 2A’dır: mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı.
+- Faz 2A’da kaynak kod davranışı, Prisma şeması, PostgreSQL kurulumu veya Süper Admin kodlaması yapılmaz; bunlar onaylı sonraki uygulama paketlerine ayrılır.
+
+## Yerine geçen faz kararı
+
+Önceki tabloda çok firma, PostgreSQL, platform DB ve Süper Admin ayrı fazlara veya daha ileri SaaS aşamalarına yayılmıştı. Yerine geçen karar:
+
+| Aşama | Geçerli kapsam | Eski kararın yerine geçme gerekçesi |
+|---|---|---|
+| Faz 2A | Mimari sözleşme, monorepo/dizin iskeleti, bağımlılık sınırları, kök dizin tasnifi ve taşıma matrisi | Çok firma çekirdeğine başlamadan önce davranış değiştirmeyen sözleşme gerekir. |
+| Faz 2B | Platform Control Plane ve Süper Admin MVP | Platform kimliği firma admininden ayrı olmak zorunda. |
+| Faz 2C | Firma başına ayrı PostgreSQL, güvenli tenant yönlendirme, isolation testleri | Veri izolasyonu sonraya bırakılacak SaaS özelliği değil, temel güvenlik şartı. |
+| Faz 2D | Firma çekirdek şeması, sezon, müşteri, hayvan, hisse, satış ve ledger temeli | İş domainleri yeni platform/firma sınırına göre kurulmalı. |
+
+Self-service üyelik, otomatik abonelik/faturalama, gelişmiş ticari SaaS, gelişmiş çok şube ve dış servis otomasyonları sonraki ürünleşme fazlarına bırakılır.
+
 ## Önerilen uygulama fazları
+
+Aşağıdaki tablo eski faz planının tarihsel özetidir; yeni ana belgeyle çeliştiği yerlerde yukarıdaki “yerine geçen faz kararı” uygulanır.
 
 | Faz | Amaç | Kapsam | DB etkisi | Test | Geri dönüş | Çıkış kriteri | Risk |
 |---|---|---|---|---|---|---|---|
@@ -84,7 +109,7 @@
 
 ## İlk uygulanacak faz
 
-Faz 1 önerilir: UTF-8 temizlik ve hata kodu/i18n mesaj anahtarı temeli. Nedeni: kod davranışını geniş çapta değiştirmeden, sonraki tüm fazların hata mesajı, dil, PDF, API ve test altyapısını güvenli hale getirir.
+Faz 1 tamamlandı. İlk uygulanacak yeni aşama Faz 2A’dır: mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı. Nedeni: Platform Süper Admin, ayrı firma PostgreSQL veritabanları ve tenant izolasyonu başlamadan önce bağımlılık sınırlarının davranış değiştirmeden belgelenmesi ve testlenebilir hale getirilmesi gerekir.
 
 ### Faz 1 uygulama checkpoint'i
 
@@ -102,32 +127,51 @@ Kapsam dışı kalanlar: tüm UI metinlerinin i18n'e taşınması, tam Arapça/�
 
 Kesin kurallar:
 
-- Bütün gelişmiş dizinler şimdi oluşturulmayacak.
-- Önce UTF-8/i18n temeli kurulacak.
-- Ardından saha satış modüler pilotu yapılacak.
-- Modüler sınırlar çalışan kod ve testlerle kanıtlandıktan sonra fiziksel monorepo taşıması başlayacak.
-- Platform uygulaması, firma sınırı ve ayrı veritabanı temeli hazır olmadan `apps/platform` oluşturulmayacak.
+- Bütün gelişmiş dizinler tek seferde kod taşıyarak oluşturulmayacak.
+- UTF-8/i18n temeli Faz 1’de tamamlandı.
+- Faz 2A’da önce mimari sözleşme, workspace/dizin iskeleti, kök dizin tasnifi ve taşıma matrisi davranış değiştirmeden hazırlanır.
+- Platform uygulaması, firma sınırı ve ayrı veritabanı temeli tasarlanmadan Süper Admin kodlamasına başlanmayacak.
 - Boş `apps/*` veya `packages/*` klasörleri açılmayacak; her klasör gerçek çalışan kod, test ve sahiplik kararıyla birlikte doğacak.
+
+## Kök dizin tasnifi zorunluluğu
+
+Faz 2A’nın çıkış şartlarından biri mevcut proje kökünün tamamen sınıflandırılmasıdır. Bu sınıflandırma `13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md` içindeki kök taşıma matrisiyle izlenir.
+
+Zorunlu kararlar:
+
+- `.env` Git’e eklenmez; yalnız `.env.example` şablon kalır.
+- `.next`, `node_modules` ve `*.tsbuildinfo` kaynak kod değildir; `.gitignore` kapsamı doğrulanır.
+- `backups` ve gerçek `data` repo dışında runtime volume/yedek alanı olarak tutulur.
+- Örnek veya seed verisi canlı veri içermediği kanıtlandıktan sonra `fixtures/` altına alınır.
+- `app`, `public`, `middleware.ts` ve tenant web kaynakları `apps/tenant-web` hedefine yalnız küçük `git mv` commitleriyle taşınır.
+- `shared`, `components`, test yardımcıları ve veritabanı adapterleri `packages/*` altında yalnız sahipliği ve bağımlılık sınırı netleşince ayrıştırılır.
+- Eski belgeler ve sprint/prompt dosyaları silinmeden önce `docs/archive` veya tarihsel belge statüsüyle korunur.
+- İşlevi doğrulanmadan hiçbir eski dosya silinmez.
+- Her taşıma sonrasında `pnpm exec tsc --noEmit`, `pnpm test`, `pnpm lint`, `pnpm build` ve ilgili smoke testleri çalıştırılır.
+- Geri dönüş yöntemi her taşıma için commit revert, alias/fallback revert veya runtime volume restore olarak önceden belirtilir.
 
 Önerilen dizin dönüşüm sırası:
 
 | Sıra | Dizin dönüşümü | Zaman | Giriş şartı | Commit noktası | Geri dönüş |
 |---|---|---|---|---|---|
 | 1 | UTF-8 ve i18n temeli | Faz 1 | P0 ve mimari belgeler tamam | Hata kodu/i18n temel commit’i | Commit revert |
-| 2 | Saha satış modüler pilotu | Faz 2 | Hata mesajı altyapısı hazır | Pilot use-case commit’i | Route adaptörü revert |
-| 3 | Müşteri/hayvan/hisse modülleri | Faz 3–5 | Pilot kalıbı kanıtlandı | Modül bazlı küçük commitler | Modül revert |
-| 4 | Tahsilat ve finans modülleri | Faz 6/10 | PG test ve para modeli kararı | Finans checkpoint | Backup + revert |
-| 5 | Vekâlet/kesim/paket/teslimat | Faz 7/11/12 | Dosya ve workflow portları hazır | Operasyon checkpoint | Feature flag kapatma |
-| 6 | Ortak `shared` ayrıştırması | Faz 6–7 | Import graph çıkarıldı | Paket hazırlık commitleri | Alias revert |
-| 7 | `packages/core`, `ui`, `i18n`, `contracts` | Faz 7 | Gerçek kod ayrıştırması var | Workspace/package commit’i | Workspace revert |
-| 8 | Mevcut uygulamanın `apps/tenant` altına taşınması | Faz 8 | App importları paketlerden besleniyor | Git move commit’i | Git move revert |
-| 9 | Platform ve firma veritabanı sınırı | Faz 9 | Tenant app stabil, PG provisioning hazır | DB boundary commit’i | DB snapshot restore |
-| 10 | `apps/platform` Süper Admin | Faz 10 | Platform DB ve IAM hazır | Platform app commit’i | Feature flag kapatma |
-| 11 | Worker ve ileri entegrasyon uygulamaları | Faz 15+ | Gerçek async/sync ihtiyaçları doğdu | Agent/worker commit’i | Agent kapatma |
+| 2 | Kök dizin tasnifi ve taşıma matrisi | Faz 2A | Faz 1 commit’i ve ana belge uyumu | Dokümantasyon/plan commit’i | Commit revert |
+| 3 | Davranış değiştirmeyen workspace/monorepo iskeleti | Faz 2A | Kök tasnif matrisi onaylı | İskelet commit’i | Commit revert |
+| 4 | Saha satış modüler pilotu | Faz 2A sonrası | Hata mesajı altyapısı ve taşıma planı hazır | Pilot use-case commit’i | Route adaptörü revert |
+| 5 | Müşteri/hayvan/hisse modülleri | Faz 3–5 | Pilot kalıbı kanıtlandı | Modül bazlı küçük commitler | Modül revert |
+| 6 | Tahsilat ve finans modülleri | Faz 6/10 | PG test ve para modeli kararı | Finans checkpoint | Backup + revert |
+| 7 | Vekâlet/kesim/paket/teslimat | Faz 7/11/12 | Dosya ve workflow portları hazır | Operasyon checkpoint | Feature flag kapatma |
+| 8 | Ortak `shared` ayrıştırması | Faz 2A sonrası | Import graph çıkarıldı | Paket hazırlık commitleri | Alias revert |
+| 9 | `packages/core`, `ui`, `i18n`, `contracts` | Faz 2A sonrası | Gerçek kod ayrıştırması var | Workspace/package commit’i | Workspace revert |
+| 10 | Mevcut uygulamanın `apps/tenant-web` rolüne taşınması | Faz 2A sonrası taşıma paketi | App importları paketlerden besleniyor | Git move commit’i | Git move revert |
+| 11 | Platform ve firma veritabanı sınırı | Faz 2C | Tenant app stabil, PG provisioning hazır | DB boundary commit’i | DB snapshot restore |
+| 12 | `apps/platform-admin` Süper Admin | Faz 2B | Platform DB ve IAM hazır | Platform app commit’i | Feature flag kapatma |
+| 13 | Worker ve ileri entegrasyon uygulamaları | Faz 15+ | Gerçek async/sync ihtiyaçları doğdu | Agent/worker commit’i | Agent kapatma |
 
 ## Geri dönüş planı
 
-- Geri dönüş noktası: `e47bbe5`.
+- Faz 1 geri dönüş noktası: `a6720378123f01fb4e19db3fd782a910f18c0acf` commit’i ayrı revert edilebilir.
+- Eski `e47bbe5` referansı tarihsel nottur; artık geçerli kapanış commit’i değildir.
 - Her faz küçük commitlerle uygulanır.
 - DB etkili fazlarda önce yedek, sonra dry-run, sonra apply.
 - Feature flag ile yeni mimari parçalar aşamalı açılır.

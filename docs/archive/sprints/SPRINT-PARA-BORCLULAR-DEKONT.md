@@ -265,7 +265,7 @@ Mevcut dekont basit/sade. **Kurumsal fatura standartlarında**, QR kodlu, bayram
 │  [Tilbe Logo]                                  [Ana QR Kod]      │
 │  Tilbe Kurban                                  ┌──────────┐      │
 │  Sakarya / Serdivan                            │ ▣▣▣▣▣▣▣  │      │
-│  Tel: 0530 889 54 34                           │ ▣▣▣▣▣▣▣  │      │
+│  Tel: <EXAMPLE_PHONE>                           │ ▣▣▣▣▣▣▣  │      │
 │  Tilbe Adabereket Vakfi                        └──────────┘      │
 │                                                Kurbanını canlı    │
 │                                                takip et →         │

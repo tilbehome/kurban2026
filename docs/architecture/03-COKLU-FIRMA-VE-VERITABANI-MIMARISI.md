@@ -2,11 +2,15 @@
 
 ## Kesin karar
 
-Tek kod tabanı kullanılacak; her firmanın operasyon verisi kendisine ait ayrı PostgreSQL veritabanında tutulacaktır. Firma özel kod kopyaları oluşturulmayacaktır.
+Tek kod tabanı kullanılacak; platform için ayrı PostgreSQL, her firmanın operasyon verisi için kendisine ait ayrı PostgreSQL veritabanı bulunacaktır. Firma özel kod kopyaları oluşturulmayacaktır.
+
+10 Ağustos 2026 yerine geçen karar: Çok firma veri izolasyonu ileri SaaS hedefi değildir; Faz 2’nin zorunlu çekirdeğidir. Self-service firma kaydı, otomatik abonelik/faturalama ve gelişmiş ticari SaaS özellikleri sonraya bırakılır.
 
 ## Dağıtım karşılaştırması
 
-| Kriter | İlk ticari sürüm: firma özel uygulama + ayrı DB | İleri aşama: ortak bulut runtime + tenant DB yönlendirme |
+Bu tablo iki dağıtım modelini karşılaştırır; hangi model seçilirse seçilsin platform DB ve firma başına ayrı PostgreSQL kararı değişmez.
+
+| Kriter | Yönetilen/yerel firma runtime + ayrı DB | Ortak bulut runtime + güvenli tenant DB yönlendirme |
 |---|---|---|
 | Güvenlik | İzolasyon güçlü, yanlış tenant routing riski düşük | Routing, secret yönetimi ve connection pool kritik |
 | Maliyet | Firma başı kurulum/VM maliyeti yüksek olabilir | Ortak runtime maliyeti düşürür |
@@ -65,6 +69,10 @@ Bulut sürüm:
 - Resolver yalnız platform DB’den bağlantı referansını alır.
 - Uygulama logları bağlantı stringi yazmaz.
 - Prisma client pool tenant-aware cache ile sınırlanır ve idle temizlenir.
+
+## Süper Admin veri sınırı
+
+Platform Süper Admin normal şartlarda firma operasyon, müşteri ve finans verilerini görmez. Platform tarafında firma/lisans/provisioning/sürüm/sağlık/yedek metadata’sı tutulur. Operasyon verisine destek amacıyla erişim gerekiyorsa süreli, gerekçeli, firma onaylı veya politika ile açıkça yetkilendirilmiş ve hem platform hem firma audit’ine yazılan bir destek oturumu gerekir.
 
 ## Geçiş yolu
 

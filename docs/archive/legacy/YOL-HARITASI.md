@@ -1,5 +1,9 @@
 # TİLBECORE KURBAN — YOL HARİTASI VE YENİ MODÜLLER
 
+> 10 Ağustos 2026 uyum notu: Bu belge tarihsel fikir/yol haritası kaynağıdır. Birinci bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir.
+>
+> Yerine geçen kararlar: Eski “Multi-Tenant SaaS Faz 6” yaklaşımı geçerli değildir; çok firma veri izolasyonu, Platform Süper Admin, Platform PostgreSQL ve firma başına ayrı PostgreSQL Faz 2 çekirdeğine alınmıştır. Self-service müşteri/üyelik, otomatik abonelik/faturalama, gelişmiş çok şube, dış servis otomasyonları ve ticari SaaS özellikleri sonraya bırakılır. Sistem yalnız büyükbaş kurban içindir; placeholder sayfalar tamamlanmış özellik sayılmaz.
+
 > **Bu belge, refactor sonrasında uygulanacak özelliklerin tam listesidir.**
 > Hem kullanıcının iste­dik­leri hem de Claude'un önerdikleri burada.
 >

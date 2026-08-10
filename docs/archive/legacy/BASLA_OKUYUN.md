@@ -1,5 +1,7 @@
 # Tilbe Kurban — Hızlı Başlangıç (Modüler Mimari)
 
+> 10 Ağustos 2026 uyum notu: Bu belge tarihsel hızlı başlangıç kaynağıdır. TilbeCore – Kurban Takip için birinci bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Küçükbaş, gelişmiş SaaS, otomatik abonelik/faturalama, gelişmiş çok şube veya placeholder üretimi önerileri yeni ana belgeye göre kapsam dışı/sonraki faz kabul edilir.
+
 ## 🎯 Bu sistemin özelliği
 
 **MODÜLER YAPI** — her özellik (müşteriler, hayvanlar, tahsilat, kasa, raporlar, kesim takip) kendi klasöründe. Sonradan:

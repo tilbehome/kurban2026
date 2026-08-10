@@ -29,6 +29,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+/logs/
+/tmp/
+/temp/
 
 # env files
 .env*
@@ -52,11 +61,13 @@ next-env.d.ts
 /backups/
 /uploads/
 public/uploads/
-/data/uploads/
+/data/
 
 # Müşteri verisi — PII içerir, repo'ya KOYMA
 /seed-data.json
-seed-data*.json
+/seed-data.eski.json
+/seed-data*.json
+!/fixtures/seed/*.example.json
 
 
 # PWA (next-pwa runtime output — build sırasında üretilir)

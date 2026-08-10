@@ -1,5 +1,7 @@
 # 04 — Platform Süper Admin ve Firma Admin
 
+Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir.
+
 ## Ayrım ilkesi
 
 Platform Süper Admin, firma uygulamasındaki normal bir `SUPER_ADMIN` rolü değildir. Ayrı kullanıcı modeli, ayrı session/cookie, ayrı route alanı, ayrı yetki ve ayrı audit gerektirir.
@@ -49,6 +51,8 @@ Göremeyecekleri:
 ## Destek erişim modeli
 
 Platform yöneticisi firma operasyon verilerine sessiz ve sınırsız erişemez.
+
+10 Ağustos 2026 yerine geçen karar: Süper Admin normal şartlarda firma operasyon, müşteri ve finans verilerini görmez. Eski “platformdan her şeyi yönetme” veya firma içi `SUPER_ADMIN` ile karıştırılan yaklaşımlar geçerli değildir. Destek erişimi yalnız süreli, gerekçeli, denetlenebilir ve firma onaylı ya da politika ile açıkça yetkilendirilmiş oturumla mümkündür.
 
 Destek oturumu alanları:
 

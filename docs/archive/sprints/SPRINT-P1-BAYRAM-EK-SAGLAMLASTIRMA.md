@@ -78,7 +78,7 @@ const adminSifre = process.env.ADMIN_INITIAL_PASSWORD;
 if (!adminSifre || adminSifre.length < 12) {
   throw new Error(
     "ADMIN_INITIAL_PASSWORD .env'de tanımlı değil veya 12 karakterden az. " +
-    "Örnek: ADMIN_INITIAL_PASSWORD=Bayram2026!Tilbe"
+    "Örnek: ADMIN_INITIAL_PASSWORD=<SECRET>
   );
 }
 
@@ -89,12 +89,12 @@ const sifreHash = await bcrypt.hash(adminSifre, 12);
 
 ```env
 # Admin ilk kurulum şifresi (sadece seed çalıştırılırken kullanılır)
-ADMIN_INITIAL_PASSWORD=DEGISTIRILECEK_GUVENLI_SIFRE
+ADMIN_INITIAL_PASSWORD=<SECRET>
 ```
 
 `.env` dosyasına ekle (commit edilmiyor):
 ```env
-ADMIN_INITIAL_PASSWORD=Bayram2026!Tilbe
+ADMIN_INITIAL_PASSWORD=<SECRET>
 ```
 
 **Süre: 10 dakika**

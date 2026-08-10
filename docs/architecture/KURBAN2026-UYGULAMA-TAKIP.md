@@ -1,10 +1,16 @@
-# Kurban 2026 Uygulama Takip Defteri
+# TilbeCore – Kurban Takip Uygulama Takip Defteri
 
-Kaynak sözleşme: `C:\Users\PC\Downloads\2026kuban\KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
+Birinci kaynak sözleşme: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
+
+Eski ana yol haritası, yeni ana belgeyle çelişmeyen tarihsel analiz kaynağıdır: `docs/archive/legacy/KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
 
 Bu defter, yol haritasındaki fazları ve 68 iş akışını kod değişikliklerine bağlamak için tutulur. Bir iş “tamamlandı” sayılmadan önce kod, yetki, hata senaryosu, test ve kabul kanıtı birlikte değerlendirilir.
 
 ## Faz 1 / P0 — güvenlik ve teknik stabilizasyon
+
+**Durum:** Tamamlandı ve `origin/main` dalına gönderildi.
+
+**Commit:** `a6720378123f01fb4e19db3fd782a910f18c0acf`
 
 | İş | Bağlı akışlar | Durum | Kanıt |
 |---|---:|---|---|
@@ -54,8 +60,8 @@ Bu defter, yol haritasındaki fazları ve 68 iş akışını kod değişiklikler
 ## Bilerek ertelenenler
 
 1. Saha satış ekranında yeni müşteri oluşturma: P0 atomiklik kuruldu; yeni müşteri yaratma ayrı davranış ve UX kararı gerektirdiği için Faz 2 paketine bırakıldı.
-2. Çoklu firma mimarisi: Kullanıcı notlarına uygun olarak P0 checkpoint tamamlanmadan başlanmadı.
-3. Ürün kimliği/platform panelleri: Kullanıcı notlarına uygun olarak bu checkpoint dışında tutuldu.
+2. Çoklu firma mimarisi: P0/Faz 1 kapanmadan başlanmadı; yeni ana belgeye göre veri izolasyonu ve çok firma temeli Faz 2’de zorunlu çekirdek kapsamdır.
+3. Ürün kimliği/platform panelleri: Faz 1 dışında tutuldu; Platform Süper Admin ve Firma Admin ayrımı Faz 2B/2C paketlerinde ele alınacaktır.
 4. Para modeli `Float` dönüşümü: Canlı veri migrasyon kararı ve yedek planı gerektirdiği için ayrı migrasyon paketi olarak ele alınacak.
 5. Tüm UI metinlerinin i18n'e taşınması: Faz 1'de altyapı ve pilot API hataları tamamlandı; ekran bazlı metin taşıma sonraki dil/RTL fazına bırakıldı.
 6. Tam Arapça/İngilizce çeviri seti: Faz 1'de `tr` ana kaynak ve `en/ar` genişleyebilir iskelet kuruldu; eksik çeviriler Türkçeye düşer.
@@ -64,3 +70,11 @@ Bu defter, yol haritasındaki fazları ve 68 iş akışını kod değişiklikler
 ## Geri alma notu
 
 Bu P0 paketi tek commit olarak tutulur. Geri alma gerektiğinde commit revert edilerek kod geri alınabilir. Vekâlet migrasyon scripti dry-run varsayılanlıdır; `--apply` çalıştırılmadıkça gerçek dosya/DB taşıması yapmaz.
+
+## Faz 2 durumu
+
+**Durum:** Henüz başlamadı.
+
+**Sıradaki aşama:** Faz 2A — mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı.
+
+Faz 2A başlamadan önce dokümantasyon uyumu, import grafiği, taşıma matrisi, platform/tenant veri sınırı ADR’si ve tenant isolation test planı hazırlanmalıdır. Faz 2A sırasında kaynak davranışı, Prisma şeması ve üretim verisi değiştirilmeden önce ayrıca uygulama kapsamı onaylanır.

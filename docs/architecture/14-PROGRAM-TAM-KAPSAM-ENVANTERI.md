@@ -4,6 +4,18 @@ Bu belge, TilbeCore – Kurban Takip yazılımını yalnızca görüşmelerde ge
 
 Bu belge bir tamamlanma beyanı değildir. Amaç, bulunan alanları görünür kılmak, durumlarını sınıflandırmak ve sonraki fazlara güvenli dönüşüm listesi vermektir.
 
+Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu envanterde görünen kod, ekran veya route varlığı tek başına ürün kararını veya tamamlanmış özelliği kanıtlamaz.
+
+## 10 Ağustos 2026 uyum notu
+
+- Ürün adı TilbeCore – Kurban Takip’tir.
+- Faz 1 tamamlandı: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
+- Faz 2 henüz başlamadı; sıradaki aşama Faz 2A’dır.
+- Çok firma veri izolasyonu, Platform Süper Admin ve firma başına ayrı PostgreSQL Faz 2’nin zorunlu temelidir.
+- Çok şube, self-service üyelik, otomatik abonelik/faturalama ve gelişmiş ticari SaaS özellikleri sonraya bırakılmıştır.
+- Sistem yalnız büyükbaş kurban içindir.
+- Placeholder/yakında sayfaları, menüde görünse bile tamamlanmış özellik sayılmaz.
+
 ## Kapsam kaynakları
 
 Program kapsamı dört kaynaktan birlikte çıkarılır:
@@ -24,6 +36,8 @@ Bu envanter üç ayrı kapsamı karıştırmadan takip eder:
 3. Profesyonel ürün aday gereksinimleri: Sektör araştırması, kullanıcı kararı ve mimari değerlendirme sonrası kesinleşecek alanlar.
 
 `68/68 temsil edildi` ifadesi yalnız görüşme gereksinimlerini kapsar. Bu ifade, programın tüm kod alanlarının tamamlandığı veya tüm profesyonel ürün kapsamının bitirildiği anlamına gelmez.
+
+Kaynak kodda şube, SaaS, entegrasyon, personel, AI/ROI veya benzeri ekranların bulunması bu alanların ilk canlı kapsamına alındığı anlamına gelmez. Yeni ana belgeye göre bunlar ya Faz 2 çekirdeğinin veri izolasyonu/provisioning tarafına bağlanır ya da sonraki ürünleşme fazlarına ertelenir.
 
 ## Repo envanter özeti
 
@@ -107,7 +121,7 @@ Repo içinde `placeholderSayfaUret` veya `YakindaSayfasi` kullanan çok sayıda 
 - Kesim/hayvan/rapor: birçok operasyon ve rapor alt ekranı placeholder veya yakın sayfa.
 - Ayarlar: entegrasyon, tema, şube, SaaS, roller, profil gibi alanlar placeholder.
 
-Bu alanların her biri sonraki fazlarda ya gerçek iş akışına bağlanmalı ya da ürün menüsünden kaldırılması/değiştirilmesi değerlendirilmelidir.
+Bu alanların her biri sonraki fazlarda ya gerçek iş akışına bağlanmalı ya da ürün menüsünden kaldırılması/değiştirilmesi değerlendirilmelidir. Placeholder sayfalar “kodda var” diye tamamlandı sayılmaz; veri modeli, yetki, hata, test ve kabul kanıtı olmadan canlı ürün kapsamı değildir.
 
 ## Faz 1 hata/i18n dönüşüm kapsamı
 
@@ -161,6 +175,8 @@ Bu alanlar otomatik olarak doğru kabul edilmez. Her biri iş değeri, veri mode
 - Paket kg farkı, alt kg iadesi, üst kg ek ücret kuralı.
 - Gerçek PostgreSQL integration testleri ve saha yük provası.
 - Tam i18n çeviri setleri ve görsel RTL dönüşümü.
+
+Bu eksiklerden platform/firma ayrımı, firma başına ayrı PostgreSQL ve izolasyon testleri artık “ileri SaaS” değil Faz 2B/2C çekirdek mimari kapsamıdır; self-service abonelik/faturalama ve gelişmiş çok şube ise sonraya bırakılmıştır.
 
 ## Profesyonel ürün için konuşulmamış ama gerekli görülen alanlar
 

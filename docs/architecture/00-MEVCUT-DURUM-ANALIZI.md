@@ -4,17 +4,18 @@
 
 | Kaynak | Durum | Kanıt |
 |---|---|---|
-| Ana yol haritası | Okundu / mevcut | `C:\Users\PC\Downloads\2026kuban\KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`, 76 KB, 2026-08-07 |
-| P0 takip defteri | Okundu / mevcut | `docs/KURBAN2026-UYGULAMA-TAKIP.md` |
-| Mimari belge | Okundu / mevcut | `MIMARI.md` |
-| Veri yüzey audit | Okundu / mevcut | `DATABASE_FACE_AUDIT.md` |
+| Bağlayıcı ana mimari | Okundu / mevcut | `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`, 2026-08-10 |
+| Eski ana yol haritası | Tarihsel kaynak | `docs/archive/legacy/KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`, 2026-08-07 |
+| P0 takip defteri | Okundu / mevcut | `docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md` |
+| Mimari belge | Okundu / tarihsel | `docs/archive/legacy/MIMARI.md` |
+| Veri yüzey audit | Okundu / tarihsel | `docs/archive/legacy/DATABASE_FACE_AUDIT.md` |
 | README | Okundu / mevcut | `README.md` |
 | Prisma şeması | Okundu / mevcut | `prisma/schema.prisma` |
 | Testler | Okundu / mevcut | `shared/lib/*.test.ts`, `modules/tahsilat/lib/dagitim.test.ts`, `tests/*.test.ts` |
-| P0 diff | Okundu / mevcut | `e47bbe5 fix: harden P0 security and atomic saha sales` |
+| Faz 1 kapanış commit’i | Okundu / mevcut | `a6720378123f01fb4e19db3fd782a910f18c0acf` |
 | Repo yapısı | Taranmış | `app`, `modules`, `shared`, `components`, `scripts`, `public` |
 
-Ana yol haritasında istenen bölümler mevcut: kesinleşen iş kuralları, zorunlu modül envanteri, kapsam sadeleştirme, gereksinim–faz–kabul testi izlenebilirliği, çoklu iş akışı mimarisi ve 68 ayrı iş akışı.
+Yeni ana mimari, eski yol haritasındaki kesinleşen iş kurallarını korur; çok firma veri izolasyonu, Platform Süper Admin, Platform PostgreSQL ve firma başına ayrı PostgreSQL kararlarını Faz 2 çekirdeğine alır. Eski “SaaS sonra” yaklaşımı yalnız self-service üyelik, otomatik abonelik/faturalama, gelişmiş çok şube ve ticari SaaS özellikleri için geçerlidir.
 
 ## Repo ölçeği
 
@@ -62,10 +63,9 @@ Zayıf taraflar:
 
 ## P0 geri dönüş noktası
 
-- HEAD: `e47bbe5`.
-- Commit mesajı: `fix: harden P0 security and atomic saha sales`.
-- Branch `main`, `origin/main` üzerinde 1 commit ileride.
-- Bu commit mimari dönüşüm için güvenli geri dönüş noktasıdır.
+- Faz 1 kapanış commit’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
+- Eski `e47bbe5` referansı tarihsel P0 ara noktasıdır; geçerli Faz 1 kapanış kanıtı değildir.
+- Faz 2 henüz başlamadı; sıradaki aşama Faz 2A mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planıdır.
 
 ## İlk önemli teknik kanıtlar
 

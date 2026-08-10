@@ -1,5 +1,7 @@
 # SPRINT 5 — Hissedar Atama Akışı + Hayvanlar Galerisi Geliştirme
 
+> 10 Ağustos 2026 uyum notu: Bu belge tarihsel sprint taslağıdır. Yeni ana belgeye göre sistem yalnız büyükbaş kurban içindir; küçükbaş örnekleri uygulanacak kapsam değildir.
+
 **Tahmini süre**: 3-4 saat
 **Aciliyet**: 🟡 Bayram öncesi yapılırsa hissedar atama hızlanır
 **Bağımlılık**: Sprint 0, 1, 2 commit edildi

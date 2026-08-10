@@ -488,7 +488,7 @@ export function cozumle(metin: string, musteri: Musteri, ek: any = {}): string {
 ```typescript
 // wa-link-uretici.ts
 export function urettWaLink(telefon: string, mesaj: string): string {
-  // Telefonu temizle: "0532 123 45 67" → "905321234567"
+  // Telefonu temizle: "<EXAMPLE_PHONE>" → "<EXAMPLE_PHONE>"
   const temizTelefon = telefon
     .replace(/\D/g, '')                          // sadece rakam
     .replace(/^0/, '')                           // baştaki 0'ı sil
@@ -500,8 +500,8 @@ export function urettWaLink(telefon: string, mesaj: string): string {
 }
 
 // Test:
-// urettWaLink("0532 123 45 67", "Merhaba")
-// → "https://wa.me/905321234567?text=Merhaba"
+// urettWaLink("<EXAMPLE_PHONE>", "Merhaba")
+// → "https://wa.me/<EXAMPLE_PHONE>?text=Merhaba"
 ```
 
 ---
@@ -663,9 +663,9 @@ WhatsApp ToS'a uygun olmalı:
 ### 3. Telefon Formatı
 Türkiye için: `0XXX XXX XX XX` → `90XXXXXXXXXX`
 ```typescript
-// "0532 123 45 67" → "905321234567"
-// "+90 532 123 4567" → "905321234567"
-// "5321234567" → "905321234567"
+// "<EXAMPLE_PHONE>" → "<EXAMPLE_PHONE>"
+// "<EXAMPLE_PHONE>" → "<EXAMPLE_PHONE>"
+// "5321234567" → "<EXAMPLE_PHONE>"
 ```
 
 ### 4. Mesaj Karakter Limiti

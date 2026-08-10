@@ -1,5 +1,7 @@
 # MASTER SPRINT — Ada Bereket Geçişi + Sistem İyileştirmeleri
 
+> 10 Ağustos 2026 uyum notu: Bu belge Ada Bereket’e özel tarihsel sprint paketidir. Ürün geneli karar kaynağı değildir. Güncel ürün adı TilbeCore – Kurban Takip’tir; firma markası, müşteri verisi ve iletişim örnekleri yeni ana belgeye göre firma ayarı/snapshot olarak ele alınır ve ürün kimliğiyle karıştırılmaz.
+
 **5 ayrı sprint, hepsi bağımsız commit. Her birinin başında PRE-WRITE GATE var — onay bekle, sonra yaz.**
 
 | # | Sprint | Süre | Aciliyet |
@@ -39,8 +41,8 @@ Slogan:       Güvenilir Hizmet, Bereketli Kazanç
 Adres:        Harmantepe, Örgün Sokak No: 24
               54104 Adapazarı / Sakarya
 
-Telefon:      +90 536 390 44 18 (aynı zamanda WhatsApp)
-E-posta:      adaberekethayvancilik@gmail.com
+Telefon:      <EXAMPLE_PHONE> (aynı zamanda WhatsApp)
+E-posta:      <EXAMPLE_EMAIL>
 Web:          adaberekethayvancilik.com.tr
 Instagram:    @adaberekethayvancilik
 TikTok:       @adaberekethayvancilik
@@ -102,9 +104,9 @@ const adabereketAyarlari = [
   { anahtar: "firma_adi", deger: "Ada Bereket Hayvancılık" },
   { anahtar: "firma_kisa_ad", deger: "Ada Bereket" },
   { anahtar: "firma_slogan", deger: "Güvenilir Hizmet, Bereketli Kazanç" },
-  { anahtar: "firma_telefon", deger: "+90 536 390 44 18" },
-  { anahtar: "firma_whatsapp", deger: "905363904418" },
-  { anahtar: "firma_email", deger: "adaberekethayvancilik@gmail.com" },
+  { anahtar: "firma_telefon", deger: "<EXAMPLE_PHONE>" },
+  { anahtar: "firma_whatsapp", deger: "<EXAMPLE_PHONE>" },
+  { anahtar: "firma_email", deger: "<EXAMPLE_EMAIL>" },
   { anahtar: "firma_web", deger: "adaberekethayvancilik.com.tr" },
   { anahtar: "firma_adres", deger: "Harmantepe, Örgün Sokak No: 24" },
   { anahtar: "firma_il", deger: "Sakarya" },
@@ -252,9 +254,9 @@ Bayram tarihi (modules/dashboard/lib/tema-tokens.ts):
 
 Firma bilgileri (ayarlar tablosu seed):
 - firma_adi: "Ada Bereket Hayvancilik"
-- firma_telefon: "+90 536 390 44 18" (WhatsApp ayni)
+- firma_telefon: "<EXAMPLE_PHONE>" (WhatsApp ayni)
 - firma_adres: "Harmantepe, Orgun Sokak No: 24, 54104 Adapazari/Sakarya"
-- firma_email: "adaberekethayvancilik@gmail.com"
+- firma_email: "<EXAMPLE_EMAIL>"
 - firma_web: "adaberekethayvancilik.com.tr"
 - firma_slogan: "Guvenilir Hizmet, Bereketli Kazanc"
 - marka_rengi: "#DE0B1E" (parlak kirmizi, logodan)
@@ -525,7 +527,7 @@ Mevcut basit dekont → Image 2'de gösterilen **gri tonlu, profesyonel, A4 yazd
 ```
 ┌───────────────────────────────────────────────────────────────┐
 │  [Ada Bereket Logo + Hayvancılık]    📍 Harmantepe, Örgün...   │
-│  (yatay logo, sol blok)              📞 +90 536 390 44 18      │
+│  (yatay logo, sol blok)              📞 <EXAMPLE_PHONE>      │
 │                                       ✉️  adabereket...@gmail   │
 │                                       🌐 adaberekethayvancilik │
 ├───────────────────────────────────────────────────────────────┤

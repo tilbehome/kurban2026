@@ -39,7 +39,7 @@ cp .env.example .env
 # 3. Veritabanını oluştur ve seed et
 pnpm prisma migrate dev --name init
 
-# 4. (Opsiyonel) Kendi seed-data.json'unu oluştur (örnek: seed-data.example.json)
+# 4. (Opsiyonel) Kendi seed-data.json'unu oluştur (örnek: fixtures/seed/seed-data.example.json)
 # Sonra:
 pnpm db:seed
 

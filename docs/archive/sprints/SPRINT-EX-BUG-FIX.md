@@ -198,7 +198,7 @@ setInterval(() => {
 
 `shared/lib/telefon.ts` (yeni veya genişlet):
 ```ts
-/** "05321234567" → "0532****567" */
+/** "<EXAMPLE_PHONE>" → "0532****567" */
 export function telefonMaskele(tel: string | null): string | null {
   if (!tel) return null;
   const rakam = tel.replace(/\D/g, "");
@@ -259,7 +259,7 @@ export async function GET(req: NextRequest) {
 ### Sorun
 `.env.example:9`:
 ```
-SESSION_SECRET="degistirin-bu-secret-en-az-32-karakter-uzunluk-olmali-2026"
+SESSION_SECRET=<SECRET>
 ```
 
 Kullanıcılar kopyalayıp değiştirmezler. Public + tahmin edilebilir secret = cookie forge'a açık.
@@ -273,7 +273,7 @@ Kullanıcılar kopyalayıp değiştirmezler. Public + tahmin edilebilir secret =
 # Bu dosyayı .env olarak kopyalayın ve değerleri güncelleyin
 
 # SQLite veritabanı yolu
-DATABASE_URL="file:./tilbe.db"
+DATABASE_URL=<SECRET>
 
 # Iron-session şifreleme anahtarı — MUTLAKA KENDİ DEĞERİNİZİ ÜRETİN
 # Üretmek için (terminal):
@@ -295,7 +295,7 @@ SESSION_SECRET=
    ```bash
    openssl rand -base64 48
    ```
-3. Çıkan değeri `.env`'deki `SESSION_SECRET=` satırına yapıştır
+3. Çıkan değeri `.env`'deki `SESSION_SECRET=<SECRET> satırına yapıştır
 4. `pnpm install && pnpm db:migrate && pnpm db:seed`
 5. `pnpm dev`
 ```
@@ -378,9 +378,9 @@ const TELEFON_REGEX = /^(?:\+90)?[\s-]*0?5\d{9}$/;
 ```
 
 Fail durumları:
-- `"0532 123 45 67"` (boşluklu)
-- `"+90 532 123 45 67"` (boşluklu +90)
-- `"0532-123-45-67"` (tireli)
+- `"<EXAMPLE_PHONE>"` (boşluklu)
+- `"<EXAMPLE_PHONE>"` (boşluklu +90)
+- `"<EXAMPLE_PHONE>"` (tireli)
 - `"+90-532-..."` (tireli +90)
 
 Müşteri TV/m'de telefon girince **bulamaz**.
@@ -393,8 +393,8 @@ Yardımcı fonksiyon ve test logic:
 /**
  * Türkçe telefon formatlarından 10-haneli mobil numarayı çıkarır.
  * Tanır:
- *  "0532 123 45 67" / "0532-123-45-67" / "05321234567"
- *  "+90 532 ..." / "+905321234567"
+ *  "<EXAMPLE_PHONE>" / "<EXAMPLE_PHONE>" / "<EXAMPLE_PHONE>"
+ *  "+90 532 ..." / "<EXAMPLE_PHONE>"
  *  "5321234567"
  *
  * Döner: 10 haneli numara (5XX-XXXXXXX) veya null
@@ -433,8 +433,8 @@ if (tel10) {
 `shared/lib/telefon.ts`'e ekle (BUG #3 ile aynı dosya — telefonMaskele yanına).
 
 ### Test
-- `telefonNormalize("0532 123 45 67")` → `"5321234567"`
-- `telefonNormalize("+90 532-123-4567")` → `"5321234567"`
+- `telefonNormalize("<EXAMPLE_PHONE>")` → `"5321234567"`
+- `telefonNormalize("<EXAMPLE_PHONE>")` → `"5321234567"`
 - `telefonNormalize("invalid")` → `null`
 - TV/m'de boşluklu telefon → müşteri bulundu
 
@@ -679,7 +679,7 @@ BUG #3 — TV musteri-bul guvenligi
 - app/api/tv/musteri-bul/route.ts: min 3 char + rate limit + maskele
 
 BUG #4 — SESSION_SECRET guvenligi
-- .env.example: SESSION_SECRET= (bos, talimat yorum)
+- .env.example: SESSION_SECRET= <SECRET> talimat yorum)
 - README.md: openssl rand -base64 48 talimati
 
 BUG #5 — Borclular API endpoint (yeni)
@@ -692,7 +692,7 @@ BUG #5 — Borclular API endpoint (yeni)
 BUG #6 — Telefon regex Turkce formatlar
 - shared/lib/telefon.ts: telefonNormalize() helper
 - modules/tv/lib/musteri-bul.ts: regex yerine normalize
-- "0532 123 45 67", "+90 532-..." vs tum formatlar
+- "<EXAMPLE_PHONE>", "+90 532-..." vs tum formatlar
 
 BUG #7 — BildirimLog.kullaniciId
 - prisma/schema.prisma: kullaniciId String? + index
@@ -743,7 +743,7 @@ Commit öncesi her bug için test:
 | #3 | curl ile 35 hızlı istek → 30. sonrası 429 + telefon maskeli |
 | #4 | `.env` bozulmuşsa app başlamıyor (mevcut guard çalışıyor) |
 | #5 | curl /api/musteriler/borclular?telefon=var → JSON ile filtreli |
-| #6 | TV/m'de "+90 536 390 44 18" yaz → Burhan bulundu |
+| #6 | TV/m'de "<EXAMPLE_PHONE>" yaz → Burhan bulundu |
 | #7 | Push gönder → BildirimLog'da kullaniciId dolu |
 | #8 | pushFiltreliGonder({}) çağır → log uyarısı, 0 push |
 | #9 | curl POST push-abonelik with p256dh:"" → 400 |

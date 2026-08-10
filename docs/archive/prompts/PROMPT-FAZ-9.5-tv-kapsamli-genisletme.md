@@ -175,7 +175,7 @@ async function musteriBul(input: string) {
 - `"kurban 18"` → DANA-18 bulur
 - `"DANA-18"` → DANA-18 bulur
 - `"000286"` → Mehmet Yılmaz bulur
-- `"05321234567"` → Mehmet Yılmaz bulur
+- `"<EXAMPLE_PHONE>"` → Mehmet Yılmaz bulur
 - `"4729"` → geçici kod ile bulur
 
 #### Müşteri Ana Görünümü

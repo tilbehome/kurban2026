@@ -1,5 +1,7 @@
 # TİLBE KURBAN — Claude Code Master Prompt (Modüler Mimari v2)
 
+> 10 Ağustos 2026 uyum notu: Bu prompt tarihsel referanstır. Güncel bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Küçükbaş modül örnekleri, eski klasör sırası ve tek firma varsayımları yeni ana belgeyle çelişirse uygulanmaz.
+
 > Bu prompt'u kopyala, yeni bir Claude Code oturumunda yapıştır.
 > **Modüler mimari** ile gelecekte ekleme/genişletme kolay.
 
@@ -495,7 +497,7 @@ model KasaHareketi {
 ```
 ┌──────────────────────────────────────────────────────┐
 │ ← Geri (Esc)         AHMET YILMAZ                    │
-│                      📞 0532 123 4521  ✏️           │
+│                      📞 <EXAMPLE_PHONE>  ✏️           │
 ├──────────────────────────────────────────────────────┤
 │  📌 HİSSE DETAYI                                     │
 │  Kurban #18 — 5. hisse                               │
@@ -525,7 +527,7 @@ model KasaHareketi {
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│  GÜRKAN ÇELİK    📞 0535 222 3344                    │
+│  GÜRKAN ÇELİK    📞 <EXAMPLE_PHONE>                    │
 ├──────────────────────────────────────────────────────┤
 │  📌 HİSSELERİ (4 adet) — Kurban #18                  │
 │  Hisse Bedeli (her biri):    50.000 ₺                │
@@ -653,7 +655,7 @@ pnpm add -D prisma tsx @types/bcrypt @types/node
 pnpm dlx shadcn@latest init
 pnpm dlx shadcn@latest add button input label card dialog table badge tabs select textarea separator dropdown-menu sheet command toast
 
-echo 'DATABASE_URL="file:./tilbe.db"' > .env
+echo 'DATABASE_URL=<SECRET>' > .env
 pnpm prisma init --datasource-provider sqlite
 # schema.prisma'yı yukarıdaki içerikle doldur
 pnpm prisma migrate dev --name init

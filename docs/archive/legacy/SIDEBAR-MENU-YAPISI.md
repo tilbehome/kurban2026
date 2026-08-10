@@ -1,5 +1,7 @@
 # TİLBECORE KURBAN — PROFESYONEL SIDEBAR MENÜ YAPISI
 
+> 10 Ağustos 2026 uyum notu: Bu belge tarihsel menü/ürünleşme araştırmasıdır. Yeni ana belgeye göre placeholder/yakında sayfaları tamamlanmış özellik sayılmaz; çok firma veri izolasyonu Faz 2 çekirdeğidir, gelişmiş ticari SaaS ve çok şube sonraya bırakılır.
+
 > **Yerli yazılımlar:** Kurban Dijital, Bikurbanlık, Kurban360, Kurban Takip Sistemi, Sistem Plus, Nesasoft
 > **Yabancı yazılımlar:** inecta (slaughterhouse ERP), TRAX-IT (slaughter traceability), Farmbrite (livestock), Folio3, Chetu, Farmkeep
 > **Tarih:** 24 Mayıs 2026

@@ -1,21 +1,23 @@
 # CLAUDE.md — Adabereket Hayvancılık Geliştirme Kuralları
 
+> 10 Ağustos 2026 uyum notu: Bu belge tarihsel Claude çalışma notudur. Güncel bağlayıcı kök talimat `AGENTS.md`, birinci mimari kaynak ise `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Adabereket’e özel marka/kişi/veri örnekleri ürün geneli kural sayılmaz.
+
 > Bu dosyayı projenin **köküne** (`kurban2026/CLAUDE.md`) koy.
 > Her Claude Code oturumunda **ilk mesajda** şunu de:
-> 
+>
 > **"Önce CLAUDE.md'yi oku ve ona uygun çalış. Geliştirme yapmadan önce mevcut yapıyı incele, plan sun, onayımı bekle."**
 
 ---
 
 ## 🎯 PROJE BİLGİSİ
 
-**İsim:** Adabereket Hayvancılık - Kurban Takip Yazılımı  
-**Sahibi:** Burhan KOCABAY (Adabereket Hayvancılık)  
-**Geliştiren:** Tilbehome (Sakarya / Serdivan)  
-**Repo:** `github.com/tilbehome/kurban2026`  
-**Vizyon:** TilbeCore ürün ailesi parçası. İleride SaaS olarak diğer çiftliklere de satılacak.  
-**Deadline:** 26 Mayıs 2026 (3 gün) — Hazır olması gereken tarih.  
-**Kurban Bayramı:** 5-7 Haziran 2026 — Asıl kullanım tarihi.  
+**İsim:** Adabereket Hayvancılık - Kurban Takip Yazılımı
+**Sahibi:** Burhan KOCABAY (Adabereket Hayvancılık)
+**Geliştiren:** Tilbehome (Sakarya / Serdivan)
+**Repo:** `github.com/tilbehome/kurban2026`
+**Vizyon:** TilbeCore ürün ailesi parçası. İleride SaaS olarak diğer çiftliklere de satılacak.
+**Deadline:** 26 Mayıs 2026 (3 gün) — Hazır olması gereken tarih.
+**Kurban Bayramı:** 5-7 Haziran 2026 — Asıl kullanım tarihi.
 
 **Mevcut Faz Durumu:**
 | Faz | İçerik | Durum |
@@ -151,10 +153,10 @@ export async function POST(req: NextRequest) {
   // 3. Auth kontrolü
   const session = await getSession();
   if (!session) return NextResponse.json({ hata: 'Yetkisiz' }, { status: 401 });
-  
+
   // 4. Body parse + Zod validation
   const body = Schema.parse(await req.json());
-  
+
   // 5. Try-catch ile business logic
   try {
     const sonuc = await yapBirSey(body);
@@ -221,10 +223,10 @@ formatTarih(new Date());       // "23.05.2026 21:42"
 import { yayinla } from '@/shared/lib/events';
 
 // Ödeme alındığında olay yayınla
-yayinla('odeme:tamamlandi', { 
-  odemeId, 
-  musteriId, 
-  tutar 
+yayinla('odeme:tamamlandi', {
+  odemeId,
+  musteriId,
+  tutar
 });
 
 // modules/musteriler içinde:
@@ -259,17 +261,17 @@ export const bagisModule: ModuleConfig = {
   anaRota: '/bagis',
   izinler: ['admin', 'kasiyer'],
   bagimliliklar: ['musteriler'],
-  
+
   sayfalar: [
     { yol: '/bagis', component: 'pages/liste', ad: 'Bağışlar' },
     { yol: '/bagis/yeni', component: 'pages/yeni', ad: 'Yeni Bağış' },
   ],
-  
+
   api: [
     { yol: '/api/bagis/liste', methods: ['GET'] },
     { yol: '/api/bagis/yeni', methods: ['POST'] },
   ],
-  
+
   olaylar: {
     yayinla: ['bagis:tamamlandi'],
     dinle: ['musteri:silindi'],
@@ -311,9 +313,9 @@ curl -s -c /tmp/c.txt -X POST http://localhost:3000/api/giris \
 
 # 2. Test müşteri al (ilk müşteri + ilk hisse)
 node -e "
-const { PrismaClient } = require('@prisma/client'); 
-const p = new PrismaClient(); 
-p.musteri.findFirst({ include: { hisseler: true } }).then(m => 
+const { PrismaClient } = require('@prisma/client');
+const p = new PrismaClient();
+p.musteri.findFirst({ include: { hisseler: true } }).then(m =>
   console.log('Müşteri ID:', m.id, '| Hisse ID:', m.hisseler[0]?.id, '| Fiyat:', m.hisseler[0]?.hisseFiyati)
 );
 "
@@ -327,9 +329,9 @@ curl -s -b /tmp/c.txt -X POST http://localhost:3000/api/tahsilat/odeme \
 
 # 4. TEMİZLİK: Test ödemeyi sil
 node -e "
-const { PrismaClient } = require('@prisma/client'); 
-const p = new PrismaClient(); 
-p.odeme.deleteMany({ where: { notlar: 'TEST_SAGLIK' } }).then(r => 
+const { PrismaClient } = require('@prisma/client');
+const p = new PrismaClient();
+p.odeme.deleteMany({ where: { notlar: 'TEST_SAGLIK' } }).then(r =>
   console.log('Silinen test ödeme:', r.count)
 );
 "

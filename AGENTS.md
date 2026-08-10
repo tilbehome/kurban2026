@@ -1,6 +1,6 @@
 # AGENTS.md — TilbeCore – Kurban Takip Codex Kuralları
 
-Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu kuralları, sonra göreve en yakın mimari/gereksinim belgelerini uygular.
+Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu kuralları, sonra bağlayıcı ana mimari belgeyi ve göreve en yakın mimari/gereksinim belgelerini uygular. Ayrıntılı mimari kararları burada tekrar etme; kararın kaynağı olarak ilgili belgeye yönel.
 
 ## 1. Ürün kimliği
 
@@ -22,6 +22,7 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 
 Öncelikli kaynaklar:
 
+- Birinci kaynak: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
 - `docs/architecture/00-MEVCUT-DURUM-ANALIZI.md`
 - `docs/architecture/01-HEDEF-SISTEM-MIMARISI.md`
 - `docs/architecture/02-MODULER-MONOLIT-VE-DOMAIN-SINIRLARI.md`
@@ -37,16 +38,18 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - `docs/architecture/12-FAZLAR-RISKLER-VE-GERI-DONUS.md`
 - `docs/architecture/13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md`
 - `docs/architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md`
-- `docs/KURBAN2026-UYGULAMA-TAKIP.md`
-- Ana yol haritası: `KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
-- `MIMARI.md`, `DATABASE_FACE_AUDIT.md`, `README.md`, `CLAUDE.md`
+- `docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md`
+- Eski ana yol haritası: `docs/archive/legacy/KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
+- Tarihsel kaynaklar: `docs/archive/legacy/MIMARI.md`, `docs/archive/legacy/DATABASE_FACE_AUDIT.md`, `README.md`, `docs/archive/legacy/CLAUDE.md`
+
+Yeni ana belgeyle eski belgeler çelişirse yeni ana belge uygulanır; eski karar sessizce silinmez, ilgili dokümanda “yerine geçen karar” ve gerekçesiyle işaretlenir.
 
 ## 3. Hedef mimari
 
 - Modüler monolit kullanılacaktır.
 - Tek kod tabanı korunacaktır.
-- Firma başına ayrı PostgreSQL operasyon veritabanı hedeflenecektir.
-- Platform veritabanı ile firma operasyon veritabanları ayrılacaktır.
+- Faz 2’de çok firma ve veri izolasyonu temel mimari gereksinimdir; ayrıntılar birinci kaynak ana belgede tanımlıdır.
+- Platform için ayrı PostgreSQL ve her firma için ayrı PostgreSQL operasyon veritabanı hedeflenecektir.
 - Platform Süper Admin ile Firma Admin ayrı kimlik, oturum, yetki ve audit alanlarına sahip olacaktır.
 - Firma verisi başka firmalardan kesin olarak izole edilecektir.
 - Domain katmanı Next.js, React, Prisma, HTTP, dosya sistemi ve kullanıcı arayüzünden bağımsız olacaktır.
@@ -61,7 +64,7 @@ UI/API → Application → Domain
 - İş kuralları route dosyalarına veya React bileşenlerine yığılmaz.
 - Boş veya göstermelik klasör açılmaz.
 - Büyük dizin dönüşümü aşamalı, testli ve geri alınabilir yapılır.
-- Fiziksel `apps/*` ve `packages/*` taşıması, çalışan modüler sınırlar kanıtlandıktan sonra yapılır.
+- Fiziksel `apps/*` ve `packages/*` taşıması Faz 2A’da davranış değiştirmeyen mimari sözleşme, iskelet ve taşıma planı ile başlar; kaynak kod taşıma ve davranış değişikliği ayrıca onaylanmış uygulama paketlerinde yapılır.
 
 ## 4. Temel iş zincirleri
 

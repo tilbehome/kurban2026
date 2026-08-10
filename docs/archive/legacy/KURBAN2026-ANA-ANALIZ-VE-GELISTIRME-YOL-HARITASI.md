@@ -5,7 +5,9 @@
 **İncelenen sürüm:** `main` / `ffc809d`
 **Kapsam:** Kod, veritabanı, muhasebe, iş akışları, masaüstü ve mobil arayüz, yerel sunucu, güvenlik, yedekleme, test, veri taşıma ve canlıya geçiş.
 
-> Bu belge geliştirmeyi başlatan ana sözleşmedir. Henüz kaynak kod değiştirilmemiştir. Önce doğru hedef belirlenmiş, ardından aşamalı uygulama planı hazırlanmıştır.
+> 10 Ağustos 2026 uyum notu: Bu belge tarihsel ana analiz kaynağıdır. Birinci bağlayıcı kaynak artık `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Eski “ana sözleşme” ifadeleri yeni ana belgeyle çeliştiğinde geçerli değildir.
+>
+> Yerine geçen kararlar: Ürün adı TilbeCore – Kurban Takip’tir; tek kod tabanı korunur; çok firma veri izolasyonu, Platform Süper Admin, Platform PostgreSQL ve firma başına ayrı PostgreSQL Faz 2 çekirdeğidir. Self-service üyelik, otomatik abonelik/faturalama, gelişmiş çok şube ve ticari SaaS özellikleri sonraya bırakılır. Sistem yalnız büyükbaş kurban içindir ve placeholder sayfalar tamamlanmış özellik sayılmaz.
 
 ## 1. Yönetici kararı
 

@@ -126,7 +126,7 @@ Mevcut `dekont-dogrulama-kodu.ts`:
 ```env
 # Dekont doğrulama HMAC secret (32+ karakter, rastgele üret)
 # Örnek üretim: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-DEKONT_DOGRULAMA_SECRET=DEGISTIRILECEK_32_KARAKTERLIK_RASTGELE_HEX
+DEKONT_DOGRULAMA_SECRET=<SECRET>
 ```
 
 #### B) `.env` dosyasına gerçek secret yaz:
@@ -134,7 +134,7 @@ DEKONT_DOGRULAMA_SECRET=DEGISTIRILECEK_32_KARAKTERLIK_RASTGELE_HEX
 Kullanıcı yapacak:
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-# Çıktıyı .env'e ekle: DEKONT_DOGRULAMA_SECRET=...
+# Çıktıyı .env'e ekle: DEKONT_DOGRULAMA_SECRET=<SECRET>
 ```
 
 #### C) `modules/tahsilat/dekont/dekont-dogrulama-kodu.ts` rewrite:
@@ -142,7 +142,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```ts
 import { createHmac } from "node:crypto";
 
-const SECRET = process.env.DEKONT_DOGRULAMA_SECRET;
+const SECRET = <SECRET>
 
 // Boot-time kontrol
 if (!SECRET || SECRET.length < 32) {
@@ -528,7 +528,7 @@ pnpm build
 # 3. .env kontrol
 cat .env | grep DEKONT_DOGRULAMA_SECRET
 # Yoksa üret: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-# .env'e ekle: DEKONT_DOGRULAMA_SECRET=...
+# .env'e ekle: DEKONT_DOGRULAMA_SECRET=<SECRET>
 
 # 4. Dev
 pnpm dev

@@ -83,8 +83,8 @@ import webpush from "web-push";
 
 const keys = webpush.generateVAPIDKeys();
 console.log("VAPID_PUBLIC_KEY=" + keys.publicKey);
-console.log("VAPID_PRIVATE_KEY=" + keys.privateKey);
-console.log("VAPID_SUBJECT=mailto:admin@tilbehome.com");
+console.log("VAPID_PRIVATE_KEY=<SECRET> + keys.privateKey);
+console.log("VAPID_SUBJECT=mailto:<EXAMPLE_EMAIL>");
 ```
 
 Çalıştır:
@@ -96,7 +96,7 @@ pnpm tsx scripts/vapid-uret.ts >> .env
 ```
 VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
-VAPID_SUBJECT=mailto:admin@tilbehome.com
+<SECRET>
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 ```
 
@@ -417,7 +417,7 @@ import { auditLog } from "@/shared/lib/audit";
 // VAPID setup (modül seviyesinde, bir kere)
 const VAPID_PUBLIC = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY;
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:admin@tilbehome.com";
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:<EXAMPLE_EMAIL>";
 
 if (VAPID_PUBLIC && VAPID_PRIVATE) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);

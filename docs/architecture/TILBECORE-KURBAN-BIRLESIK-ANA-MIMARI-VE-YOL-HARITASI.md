@@ -2,7 +2,7 @@
 ## Birleşik Ana Mimari, Gelişmiş Dizin Yapısı ve Düzeltilmiş Yol Haritası
 
 **Belge tarihi:** 10 Ağustos 2026
-**Belge durumu:** Bağlayıcı ana mimari taslağı
+**Belge durumu:** Bağlayıcı ana mimari ve yol haritası
 **Ürün adı:** TilbeCore – Kurban Takip
 **Kısa ad:** TilbeCore Kurban
 **Teknik kod adı:** `tilbecore-kurban`
@@ -666,7 +666,9 @@ Mevcut numaralandırma korunur. Çok firma kararı Faz 2’nin zorunlu parçası
 
 ### Faz 1 — P0 güvenlik ve teknik stabilizasyon
 
-**Mevcut durum:** Kapanışta; son rapora göre kalite komutları yeşil fakat commit/push yapılmadı.
+**Mevcut durum:** Tamamlandı ve `origin/main` dalına gönderildi.
+
+**Kapanış commit’i:** `a6720378123f01fb4e19db3fd782a910f18c0acf`
 
 Tamamlandığı bildirilenler:
 
@@ -679,15 +681,13 @@ Tamamlandığı bildirilenler:
 - TypeScript, 102 test, lint 0 hata, build ve diff kontrolü
 - Tam program envanteri
 
-Kapanışta ayrıca kanıtlanacaklar:
+Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 
-- kritik kasa/hisse API yetkileri,
-- veritabanı seviyesinde eşzamanlı hisse koruması,
-- public vekâlet dosyalarının güvenli depoya taşınması,
-- build/start ve Node/pnpm sabitlemesi,
-- generated PWA ayrımı,
-- test DB üzerinde baseline integration testleri,
-- Faz 1 commit hash’i ve temiz çalışma ağacı.
+- finansal `Float` dönüşümü ve ledger modeli,
+- platform/firma PostgreSQL ayrımı,
+- tenant izolasyonu ve gerçek PostgreSQL integration testleri,
+- tüm route ve ekranların merkezi hata/i18n dönüşümü,
+- placeholder/yakında sayfalarının ürün kapsamından ayrıştırılması.
 
 **Çıkış:** Mevcut uygulama para/veri kaybettiren açık davranış içermiyor ve bütün kalite kapıları yeşil.
 
@@ -695,8 +695,11 @@ Kapanışta ayrıca kanıtlanacaklar:
 
 #### Faz 2A — Mimari sözleşme ve monorepo iskeleti
 
+**Mevcut durum:** Henüz başlamadı. Bu aşamadan önce yalnız dokümantasyon uyumu yapılır; kaynak kod, Prisma şeması, package yapısı ve fiziksel klasör taşıması yapılmaz.
+
 - Bu belgenin repo dokümanlarına işlenmesi
 - `AGENTS.md`, gereksinim matrisi, risk/geri dönüş ve envanter uyumu
+- mevcut kök dizinin tam tasnifi ve taşıma matrisi
 - pnpm workspace ve hedef paket sınırları
 - mimari bağımlılık testleri
 - mevcut modüllerin taşıma matrisi
@@ -936,33 +939,31 @@ docs/
 
 ## 14. Şu anki gerçek konum ve sonraki doğru adım
 
-Son paylaşılan rapora göre:
+10 Ağustos 2026 dokümantasyon uyumlandırması itibarıyla:
 
-- çalışma ağacında Faz 1 değişiklikleri bulunuyor,
-- commit/push yapılmadı,
-- 11 test dosyasında 102 test geçiyor,
-- TypeScript, lint ve build geçiyor,
+- Faz 1 tamamlandı ve `origin/main` dalına gönderildi,
+- Faz 1 commit’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`,
+- Faz 2 henüz başlamadı,
 - merkezi hata/i18n yalnız beş pilot route’ta,
 - finansal `Float`, yeni ledger, PostgreSQL, tenant izolasyonu ve gerçek integration/E2E testleri henüz yapılmadı,
 - 69 placeholder/yakında sayfası gerçek özellik kabul edilmiyor.
 
 Doğru sıra:
 
-1. Faz 1 kapanış kontrol listesini gerçek repo üzerinde tamamla.
-2. Faz 1’i bağımsız, geri alınabilir commit olarak sabitle.
-3. Bu birleşik mimariyi ayrı dokümantasyon commit’iyle ana belgelere işle.
-4. Eski “çok firma/SaaS sonra” cümlesini “çok firma izolasyon temeli şimdi; self-service ticari SaaS sonra” şeklinde düzelt.
-5. Faz 2A’da önce monorepo ve bağımlılık sınırlarını davranış değiştirmeden kur.
-6. Faz 2B/2C’de Platform DB, Süper Admin, provisioning ve firma başına ayrı PostgreSQL’i testlerle oluştur.
-7. Ancak bundan sonra müşteri/finans gibi yeni çekirdek domain geliştirmesine geç.
+1. Bu birleşik mimariyi ayrı dokümantasyon değişikliğiyle ana belgelere işle.
+2. Eski “çok firma/SaaS sonra” cümlesini “çok firma izolasyon temeli şimdi; self-service ticari SaaS sonra” şeklinde düzelt.
+3. Faz 2A’da önce mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planını davranış değiştirmeden kur.
+4. Faz 2B/2C’de Platform DB, Süper Admin, provisioning ve firma başına ayrı PostgreSQL’i testlerle oluştur.
+5. Ancak bundan sonra müşteri/finans gibi yeni çekirdek domain geliştirmesine geç.
 
 Faz 2 başlamadan önce verilecek zorunlu kanıtlar:
 
-- temiz `git status`,
-- Faz 1 commit hash’i,
+- Faz 1 commit hash’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`,
+- Faz 2A için temiz veya bilinçli kapsamlandırılmış `git status`,
 - yedek ve geri yükleme sonucu,
 - CI sonucu,
 - mevcut import grafiği,
+- kök dizin tasnifi ve taşıma matrisi,
 - yeni dizin taşıma matrisi,
 - platform/tenant veri sınırı ADR’si,
 - tenant isolation test planı.

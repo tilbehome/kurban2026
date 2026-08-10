@@ -1,5 +1,7 @@
 # TİLBECORE KURBAN YÖNETİM SİSTEMİ — TAM VİZYON TASARIM BRİEF
 
+> 10 Ağustos 2026 uyum notu: Bu belge tarihsel tam vizyon/tasarım briefidir. Birinci bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Küçükbaş/adak/akika, gelişmiş çok şube, self-service üyelik, otomatik abonelik/faturalama ve ticari SaaS ayrıntıları ilk canlı kapsamı değildir; çok firma veri izolasyonu ise Faz 2 çekirdeğidir.
+
 > **Bu belge, ürünün nihai halini anlatır.** Tasarımcı (sen), Figma/Adobe XD/Sketch gibi bir programda bu vizyonu çizecek. Sonra Claude Code'a verip uygulayacağız.
 >
 > **Hedef:** Türkiye'nin en profesyonel kurban yönetim SaaS'ı. Tek çiftlikten dev kombinaya kadar.

@@ -758,7 +758,7 @@ export function TvAltSerit({ ayarlar }: Props) {
       icon: MessageCircle,
       iconBg: "bg-green-500",
       label: "WHATSAPP İLETİŞİM",
-      icerik: ayarlar.whatsappTel || "0536 390 44 18",
+      icerik: ayarlar.whatsappTel || "<EXAMPLE_PHONE>",
       isPhone: true,
     },
   ];
@@ -860,7 +860,7 @@ Tarayıcı `/tv`:
 - [ ] Kurban numaraları doğru (1, 2, 41, 42, 43...)
 - [ ] Sayaçlar çalışıyor (Kesimdekiler: "GEÇEN SÜRE: 18 dk")
 - [ ] Alt şerit 4 bilgi kartı (Duyurular/Ekran Takibi/Bilgi/WhatsApp)
-- [ ] WhatsApp numarası "0536 390 44 18" doğru
+- [ ] WhatsApp numarası "<EXAMPLE_PHONE>" doğru
 - [ ] KUTSAL: ABH-2026-NNN dekont çalışıyor
 
 ---

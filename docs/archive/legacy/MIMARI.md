@@ -1,5 +1,7 @@
 # MIMARI.md — TilbeCore Mimari Belgesi
 
+> 10 Ağustos 2026 uyum notu: Bu belge tarihsel TilbeCore mimari standardı olarak korunur. TilbeCore – Kurban Takip için birinci bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Eski klasör, ürün adı, tek firma veya refactor sırası ifadeleri yeni ana belgeyle çelişirse yeni ana belge uygulanır.
+
 > **TilbeCore** ürün ailesinin geliştirme standartlarını tanımlar.
 > Bu belge **Adabereket Kurban Takip** projesi için yazıldı ama tüm TilbeCore ürünlerine uygulanır.
 >
