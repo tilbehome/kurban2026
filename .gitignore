@@ -73,5 +73,6 @@ public/uploads/
 # PWA (next-pwa runtime output — build sırasında üretilir)
 public/sw.js
 public/sw.js.map
+public/sw-version.json
 public/workbox-*.js
 public/workbox-*.js.map

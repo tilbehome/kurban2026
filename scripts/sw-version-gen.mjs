@@ -25,16 +25,34 @@ function swHash() {
   return crypto.createHash("sha256").update(icerik).digest("hex").slice(0, 16);
 }
 
+function mevcutVersion() {
+  if (!fs.existsSync(CIKTI)) {
+    return null;
+  }
+  try {
+    const veri = JSON.parse(fs.readFileSync(CIKTI, "utf8"));
+    return typeof veri.version === "string" ? veri.version : null;
+  } catch {
+    return null;
+  }
+}
+
 function main() {
   const hash = swHash();
+  const version = hash ?? "no-sw";
+  if (mevcutVersion() === version) {
+    console.log(`✓ sw-version.json güncel: ${version}`);
+    return;
+  }
+
   const veri = {
-    version: hash ?? "no-sw",
+    version,
     buildTime: new Date().toISOString(),
     note:
       "Service worker sürümü. Client bu dosyayı periyodik kontrol eder; " +
       "version alanı değişirse kullanıcıya güncelleme bildirimi gösterilir.",
   };
-  fs.writeFileSync(CIKTI, JSON.stringify(veri, null, 2));
+  fs.writeFileSync(CIKTI, `${JSON.stringify(veri, null, 2)}\n`);
   console.log(`✓ sw-version.json yazıldı:`, veri);
 }
 
