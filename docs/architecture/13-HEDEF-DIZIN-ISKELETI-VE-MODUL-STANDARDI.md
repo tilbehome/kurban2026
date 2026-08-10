@@ -39,6 +39,7 @@ packages/
   documents/
   file-storage/
   contracts/
+  config/
   event-bus/
   workflow-engine/
   rules-engine/
@@ -83,6 +84,7 @@ fixtures/
 | `packages/documents` | Dekont, QR belge, PDF/HTML belge şablonları | Fiziksel dosya yolu sızıntısı |
 | `packages/file-storage` | Yerel/S3 benzeri storage port/adapters | Doğrudan UI erişimi |
 | `packages/contracts` | API/event sözleşmeleri, DTO, schema | Runtime iş kuralı |
+| `packages/config` | Ortam, domain, URL, origin, trusted host, cookie ve public/private servis sözleşmeleri | Next.js, React, Prisma, app/domain kodu, secret değeri |
 | `packages/event-bus` | Domain event publish/subscribe, idempotent outbox | UI state |
 | `packages/workflow-engine` | Kesim, satış, teslim gibi state machine motoru | Prisma doğrudan erişimi |
 | `packages/rules-engine` | Yetki dışı iş kuralları, kabul/override politikaları | Kullanıcı session implementasyonu |
@@ -244,7 +246,7 @@ Zorunlu kurallar:
 
 | Aşama | Giriş şartı | Değişecek alanlar | Testler | Build kontrolü | Smoke testi | Commit noktası | Geri dönüş |
 |---|---|---|---|---|---|---|---|
-| 1. Faz 2A mimari sözleşme ve iskelet | Faz 1 commit’i ve ana belge uyumu | Workspace/dizin sözleşmesi, import graph, taşıma matrisi, platform/tenant contract | Belge bağlantısı, mimari kural kontrolleri, sözleşme testleri | `pnpm build` davranış değişmeden geçmeli | Giriş + kritik route smoke | `feat(faz-2a): workspace ve mimari sınırları oluştur` | Commit revert |
+| 1. Faz 2A mimari sözleşme ve iskelet | Faz 1 commit’i ve ana belge uyumu | Workspace/dizin sözleşmesi, import graph, taşıma matrisi, platform/tenant contract, domain/origin config | Belge bağlantısı, mimari kural kontrolleri, sözleşme testleri | `pnpm build` davranış değişmeden geçmeli | Giriş + kritik route smoke | `feat(faz-2a): workspace ve mimari sınırları oluştur` ve domain/origin sözleşme commit’i | Commit revert |
 | 2. Saha satış modüler pilotu | Erken pilot olarak tamamlandı | `/api/saha-satis`, tahsilat/hisse use-case | Unit, mock route | `pnpm build` | Kaporalı/kaporasız satış | `b536078` erken pilot commit’i | Route eski adaptöre döner |
 | 3. Müşteri/hayvan/hisse modülleri | Pilot kalıbı kanıtlandı | Domain/application ayrımı | Unit + route | `pnpm build` | Müşteri/hisse atama | Modül bazlı commit | Modül revert |
 | 4. Tahsilat ve finans modülleri | PG test harness hazır | Tahsilat, kasa, ledger hazırlığı | Ledger unit, concurrency | `pnpm build` | Tahsilat/dekont | Finans checkpoint | Backup + revert |

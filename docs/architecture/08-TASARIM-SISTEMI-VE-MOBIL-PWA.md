@@ -24,6 +24,8 @@
 
 Mobil PWA, masaüstünün aynası olmamalı.
 
+Saha PWA firma tenant origin’i altında `/saha` path’iyle sunulur: `https://{tenantSlug}.tilbecore.com/saha`. Service worker scope’u yalnız `/saha/` ile sınırlı olmalı; firma paneli, TV, takip veya API rotalarını kontrol etmemelidir.
+
 Önerilen rol bazlı hızlı ekranlar:
 
 - Saha satış: müşteri ara/oluştur, hisse seç, kapora al.
@@ -32,6 +34,8 @@ Mobil PWA, masaüstünün aynası olmamalı.
 - Tartım: keypad, tartım kaydı.
 - Paketleme: hisse paket kontrol.
 - Teslimat: QR okut, borç/vekalet kontrol, teslim kapat.
+
+Firma paneli `/panel`, TV `/tv`, müşteri takip `/takip/{opaqueToken}`, QR çözümleme `/q/{opaqueToken}`, davet `/davet/{opaqueToken}` path’leriyle aynı tenant origin altında ayrılır. Bu paket route veya ekran taşıması yapmaz; yalnız origin/path sahipliği sözleşmesini tanımlar.
 
 ## RTL ve erişilebilirlik
 

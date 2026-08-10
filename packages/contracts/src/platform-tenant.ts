@@ -19,6 +19,21 @@ export type TenantProvisioningStatus =
 export type TenantRuntimeStatus = "unknown" | "healthy" | "degraded" | "offline";
 export type TenantDatabaseEngine = "postgresql";
 export type ReleaseChannel = "stable" | "preview" | "pilot";
+export type TenantAccessTokenPurpose =
+  | "customerTracking"
+  | "qrSlaughterCheck"
+  | "qrDelivery"
+  | "userInvite"
+  | "tvDevicePairing"
+  | "supportAccess";
+export type CustomDomainStatus =
+  | "PENDING"
+  | "VERIFYING"
+  | "VERIFIED"
+  | "ACTIVE"
+  | "FAILED"
+  | "SUSPENDED"
+  | "REMOVED";
 
 export interface TenantDatabaseRef {
   id: TenantDatabaseRefId;
@@ -97,6 +112,31 @@ export interface SupportSessionContract {
   startsAt: string;
   expiresAt: string;
   scopes: string[];
+}
+
+export interface TenantAccessTokenContract {
+  purpose: TenantAccessTokenPurpose;
+  opaqueToken: string;
+  tenantInstanceId: TenantInstanceId;
+  expiresAt?: string;
+  singleUse: boolean;
+  revokedAt?: string;
+}
+
+export interface TenantCustomDomainContract {
+  hostname: string;
+  tenantInstanceId: TenantInstanceId;
+  status: CustomDomainStatus;
+  dnsVerifiedAt?: string;
+  tlsReadyAt?: string;
+  activatedAt?: string;
+  removedAt?: string;
+}
+
+export function customDomainCanBeActivated(
+  domain: TenantCustomDomainContract,
+): boolean {
+  return domain.status === "VERIFIED" && Boolean(domain.dnsVerifiedAt && domain.tlsReadyAt);
 }
 
 export type PlatformTenantEvent =

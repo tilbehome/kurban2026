@@ -152,6 +152,7 @@ Kesin kurallar:
 - Bütün gelişmiş dizinler tek seferde kod taşıyarak oluşturulmayacak.
 - UTF-8/i18n temeli Faz 1’de tamamlandı.
 - Faz 2A’da önce mimari sözleşme, workspace/dizin iskeleti, kök dizin tasnifi ve taşıma matrisi davranış değiştirmeden hazırlanır.
+- Profesyonel domain/origin standardı Faz 2A’da `packages/config`, `packages/contracts`, ADR ve testlerle davranış değiştirmeden sözleşmeye bağlanır; gerçek DNS, TLS, reverse proxy, deployment ve auth/session değişikliği yapılmaz.
 - Platform uygulaması, firma sınırı ve ayrı veritabanı temeli tasarlanmadan Süper Admin kodlamasına başlanmayacak.
 - Boş `apps/*` veya `packages/*` klasörleri açılmayacak; her klasör gerçek çalışan kod, test ve sahiplik kararıyla birlikte doğacak.
 
@@ -179,6 +180,7 @@ Zorunlu kararlar:
 | 1 | UTF-8 ve i18n temeli | Faz 1 | P0 ve mimari belgeler tamam | Hata kodu/i18n temel commit’i | Commit revert |
 | 2 | Kök dizin tasnifi ve taşıma matrisi | Faz 2A | Faz 1 commit’i ve ana belge uyumu | Dokümantasyon/plan commit’i | Commit revert |
 | 3 | Davranış değiştirmeyen workspace/monorepo iskeleti | Faz 2A | Kök tasnif matrisi onaylı | İskelet commit’i | Commit revert |
+| 3a | Profesyonel domain/origin config sözleşmesi | Faz 2A | Workspace ve contracts paketi mevcut | `feat(faz-2a): profesyonel domain ve origin sozlesmesini ekle` | Commit revert |
 | 4 | Saha satış modüler pilotu | Erken pilot olarak tamamlandı | Hata mesajı altyapısı ve route ayrıştırma hedefi | `b536078` erken pilot commit’i | Route adaptörü revert |
 | 5 | Müşteri/hayvan/hisse modülleri | Faz 3–5 | Pilot kalıbı kanıtlandı | Modül bazlı küçük commitler | Modül revert |
 | 6 | Tahsilat ve finans modülleri | Faz 6/10 | PG test ve para modeli kararı | Finans checkpoint | Backup + revert |

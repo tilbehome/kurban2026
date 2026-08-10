@@ -23,6 +23,10 @@ Bu dizin, güncel mimari belgeleri tarihsel çalışma kayıtlarından ayırır.
 - [Faz 2A import grafiği ve taşıma matrisi](architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md)
 - [Uygulama takip defteri](architecture/KURBAN2026-UYGULAMA-TAKIP.md)
 
+## Güncel ADR kayıtları
+
+- [ADR-0001 — Profesyonel SaaS Domain, URL, Origin ve Tenant Host Çözümleme Standardı](adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md)
+
 ## Belge durumları
 
 | Dizin | Durum | Kullanım |

@@ -61,14 +61,21 @@ Yerel sürüm:
 - Tek firma konfigürasyonu.
 - `.env` veya şifreli yerel secret store firma DB referansını tutar.
 - İnternet yokken lisans toleransı çalışır.
+- Kullanıcı adresi local development için `https://{tenantSlug}.tilbecore.test`, yerel/hibrit canlı kurulum için firma tarafından yönetilen domain veya split-DNS ile çözülen profesyonel HTTPS adresidir.
 
 Bulut sürüm:
 
-- `firma-slug.tilbecore.com` veya `/f/{firmaKodu}`.
+- `https://{tenantSlug}.tilbecore.com`; path tabanlı `/f/{firmaKodu}` ana tenant çözümleme yöntemi değildir.
 - Request başında tenant resolver.
 - Resolver yalnız platform DB’den bağlantı referansını alır.
 - Uygulama logları bağlantı stringi yazmaz.
 - Prisma client pool tenant-aware cache ile sınırlanır ve idle temizlenir.
+
+Tenant yalnız Host header metnine güvenilerek seçilmez. Host normalize edilir, port ve geçersiz karakterler ayrıştırılır, reserved subdomain ve trusted host kontrolü yapılır, platform hostları tenant hostlarından ayrılır, tenant slug doğrulanır ve tenant platform registry üzerinden aktif tenant + DB referansına çözülür. Bilinmeyen host, hatalı slug, doğrulanmamış custom domain, Host header enjeksiyonu ve başka firmaya ait session/cookie reddedilir.
+
+Ayrılmış tenant slug isimleri merkezi config sözleşmesinde tutulur: `console`, `status`, `help`, `updates`, `assets`, `api`, `hooks`, `www`, `staging`.
+
+Custom domain desteği hedef mimariye dahildir. Durumlar `PENDING`, `VERIFYING`, `VERIFIED`, `ACTIVE`, `FAILED`, `SUSPENDED`, `REMOVED` olarak izlenir. DNS sahipliği ve TLS hazır olmadan custom domain aktif sayılmaz; domain değişikliği tenant veya DB kimliğini değiştirmez.
 
 ## Süper Admin veri sınırı
 

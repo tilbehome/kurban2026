@@ -35,6 +35,14 @@ Firma Uygulaması
   └─ Sadece kendi PostgreSQL veritabanına bağlanır
 ```
 
+## Profesyonel erişim mimarisi
+
+Production ana domain `tilbecore.com` olarak belirlenmiştir. Kullanıcıya açık platform adresi `https://console.tilbecore.com`, firma origin standardı `https://{tenantSlug}.tilbecore.com` biçimindedir. Firma paneli, saha PWA, TV, takip, QR, davet ve tenant API aynı tenant origin altında sırasıyla `/panel`, `/saha`, `/tv`, `/takip/{opaqueToken}`, `/q/{opaqueToken}`, `/davet/{opaqueToken}` ve `/api/v1` path’leriyle sahiplenilir.
+
+Staging `staging.tilbecore.com`, local development `tilbecore.test` temel domainini kullanır. `.test` canlı ortamda kullanılmaz. Kullanıcıya gösterilen adreslerde port bulunmaz; HTTPS ve doğru origin zorunludur.
+
+Domain hard-code edilmez; ortam, base domain, platform origin, tenant origin üretimi, reserved subdomain listesi, trusted host ve cookie politikası `packages/config` sözleşmesinden yönetilir. Kararın ayrıntısı ADR-0001’dedir.
+
 ## Marka ayrıştırma sınıfları
 
 | Sınıf | Mevcut örnek | Hedef |

@@ -8,7 +8,9 @@ Platform Süper Admin, firma uygulamasındaki normal bir `SUPER_ADMIN` rolü de�
 
 ## Platform alanı
 
-Önerilen alan: `platform.tilbecore.com`.
+Kesin platform origin: `https://console.tilbecore.com`.
+
+`platform.tilbecore.com` eski öneridir ve yerine `console.tilbecore.com` geçmiştir. Gerekçe: platform yönetimi ile firma tenant originlerini açık biçimde ayırmak, cookie/session namespace sınırını netleştirmek ve production/staging/local adres sözleşmesini tek merkezde yönetmek.
 
 Bilgi mimarisi:
 

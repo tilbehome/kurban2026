@@ -67,6 +67,21 @@ describe("Faz 2A mimari bağımlılık sınırları", () => {
     ).toEqual([]);
   });
 
+  it("packages/config yalnız contracts ve standart TypeScript'e bağımlıdır", () => {
+    const files = listTrackedSourceFiles("packages/config");
+
+    expect(files.length).toBeGreaterThan(0);
+    expect(
+      violations(files, [
+        /from\s+["']next(\/|["'])/,
+        /from\s+["']react["']/,
+        /from\s+["']@prisma\/client["']/,
+        /from\s+["']@\/(app|modules|shared|components)(\/|["'])/,
+        /from\s+["']@\/packages\/(?!contracts)([^"']+)/,
+      ]),
+    ).toEqual([]);
+  });
+
   it("domain katmanı Next, React, Prisma ve route adapterlerine bağımlı değildir", () => {
     const files = listTrackedSourceFiles("modules").filter((file) =>
       file.split(/[\\/]/).includes("domain"),

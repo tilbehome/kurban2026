@@ -98,3 +98,4 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Mimari bağımlılık sınır testi | Uygulandı | `tests/architecture-boundaries.test.ts`. |
 | Sözleşme davranış testi | Uygulandı | `tests/platform-tenant-contracts.test.ts`. |
 | Import grafiği ve taşıma matrisi | Uygulandı | `docs/architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`. |
+| Profesyonel domain/origin sözleşmesi | Uygulandı | `packages/config`, `packages/contracts`, `tests/saas-domain-config.test.ts`, ADR-0001. |

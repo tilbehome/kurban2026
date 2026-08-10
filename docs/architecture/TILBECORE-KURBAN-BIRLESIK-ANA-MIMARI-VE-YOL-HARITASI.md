@@ -237,6 +237,32 @@ Mimari iki dağıtım biçimini destekleyebilir:
 
 Bayram günü kritik saha operasyonunda yerel runtime ve yerel ağ birincildir. İnternet kesintisi platform kontrol düzlemini etkileyebilir fakat firmanın aktif sezon operasyonunu durdurmamalıdır. Kritik firma yazıları, firma PostgreSQL’ine ulaşmadan başarı sayılmaz.
 
+### 4.6 Profesyonel domain, URL ve origin standardı
+
+Production ana domain `tilbecore.com` olarak kesinleşmiştir. Domain ve host çözümleme kararı `docs/adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md` içinde bağlayıcı ADR olarak tutulur.
+
+Kullanıcıya açık URL standardı:
+
+- Ürün/tanıtım: `https://tilbecore.com`
+- Platform Süper Admin: `https://console.tilbecore.com`
+- Firma ana origin: `https://{tenantSlug}.tilbecore.com`
+- Firma girişi: `https://{tenantSlug}.tilbecore.com/giris`
+- Firma yönetim paneli: `https://{tenantSlug}.tilbecore.com/panel`
+- Saha PWA: `https://{tenantSlug}.tilbecore.com/saha`
+- TV ekranı: `https://{tenantSlug}.tilbecore.com/tv`
+- Müşteri takip: `https://{tenantSlug}.tilbecore.com/takip/{opaqueToken}`
+- QR çözümleme: `https://{tenantSlug}.tilbecore.com/q/{opaqueToken}`
+- Kullanıcı daveti: `https://{tenantSlug}.tilbecore.com/davet/{opaqueToken}`
+- Firma API: `https://{tenantSlug}.tilbecore.com/api/v1`
+- Sistem durumu: `https://status.tilbecore.com`
+- Yardım merkezi: `https://help.tilbecore.com`
+- Güncellemeler: `https://updates.tilbecore.com`
+- Hassas olmayan statik varlıklar: `https://assets.tilbecore.com`
+
+Staging `staging.tilbecore.com`, local development `tilbecore.test` temel domainini kullanır. Kullanıcıya gösterilen URL’lerde uygulama portu bulunmaz; iç portlar reverse proxy/gateway arkasında kalır. `api.tilbecore.com/v1` ve `hooks.tilbecore.com/v1` yalnız gelecek entegrasyon sözleşmesidir; bu pakette API, webhook, DNS, TLS veya deployment kurulmaz.
+
+Tenant çözümleme host normalize, port ayrıştırma, allowlist/pattern, platform/tenant host ayrımı, tenant slug validasyonu, platform registry çözümlemesi, aktif tenant kontrolü ve değişmez request tenant context sırasını izler. Platform ve tenant session/cookie alanları ayrıdır; cookie sözleşmesi host-only, Secure, HttpOnly, ortam bazlı farklı isim ve ayrı namespace kullanır.
+
 ---
 
 ## 5. Veri ve işlem mimarisi
@@ -751,8 +777,9 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - mimari bağımlılık testleri
 - mevcut modüllerin taşıma matrisi
 - platform/tenant contract’ları
+- profesyonel domain/origin config sözleşmesi ve testleri
 
-Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği ve taşıma matrisi `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md` içinde tutulur.
+Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/origin config paketi ve taşıma matrisi `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md` içinde tutulur.
 
 #### Faz 2B — Platform Control Plane ve Süper Admin MVP
 

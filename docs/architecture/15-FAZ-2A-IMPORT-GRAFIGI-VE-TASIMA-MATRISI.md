@@ -42,8 +42,9 @@ Faz 2A öncesinde `pnpm-workspace.yaml` dosyasında `packages` deseni yoktu; yal
 İlk gerçek paket:
 
 - `packages/contracts`
+- `packages/config`
 
-Bu paket sadece platform/tenant TypeScript sözleşmelerini içerir; Next.js, React, Prisma, uygulama route’u veya veritabanı bağımlılığı yoktur.
+`packages/contracts` platform/tenant TypeScript sözleşmelerini içerir. `packages/config` ortam, domain, URL, origin, trusted host, cookie ve public/private servis sözleşmesini içerir. Bu paketlerde Next.js, React, Prisma, uygulama route’u veya veritabanı bağımlılığı yoktur.
 
 ## Kök bazlı import grafiği
 
@@ -80,6 +81,7 @@ Faz 2A’da testle yakalanan ilk sınırlar:
 | Alan | İzinli yön | Yasaklanan bağımlılık | Test |
 |---|---|---|---|
 | `packages/contracts` | Salt TypeScript sözleşmeleri | Next.js, React, Prisma, `@/app`, `@/modules`, `@/shared`, `@/components` | `tests/architecture-boundaries.test.ts` |
+| `packages/config` | Ortam/domain/origin üretimi ve host validasyonu; yalnız `packages/contracts` tiplerini kullanabilir | Next.js, React, Prisma, `@/app`, `@/modules`, `@/shared`, `@/components` | `tests/architecture-boundaries.test.ts`, `tests/saas-domain-config.test.ts` |
 | `modules/**/domain` | Domain kuralı ve framework bağımsız yardımcılar | Next.js, React, Prisma, route adapterleri, dosya sistemi | `tests/architecture-boundaries.test.ts` |
 | `modules/**/application` | Use-case orkestrasyonu | Next.js, React, doğrudan Prisma client değeri, route/UI importları | `tests/architecture-boundaries.test.ts` |
 
@@ -100,6 +102,27 @@ Geçiş notu: `modules/tahsilat/application` içinde yalnız `import type { Pris
 Test:
 
 - `tests/platform-tenant-contracts.test.ts`
+
+## Domain/origin config sözleşmesi
+
+`packages/config/src/saas-domain-config.ts` içinde şu kararlar kodla testlenebilir sözleşmeye bağlandı:
+
+- production base domain: `tilbecore.com`,
+- staging base domain: `staging.tilbecore.com`,
+- local base domain: `tilbecore.test`,
+- platform origin: `https://console.{baseDomain}`,
+- tenant origin: `https://{tenantSlug}.{baseDomain}`,
+- tenant yüzeyleri: `/giris`, `/panel`, `/saha`, `/tv`, `/takip/{opaqueToken}`, `/q/{opaqueToken}`, `/davet/{opaqueToken}`, `/api/v1`,
+- reserved subdomain listesi,
+- host header normalize ve validasyon kuralları,
+- platform/tenant/system/custom domain host ayrımı,
+- custom domain aktiflik için DNS + TLS + `ACTIVE` koşulu,
+- private servisler için public URL üretmeme kuralı,
+- platform/tenant cookie namespace sözleşmesi.
+
+Test:
+
+- `tests/saas-domain-config.test.ts`
 
 ## Taşıma matrisi
 
@@ -127,7 +150,9 @@ Test:
 |---|---|---|
 | Workspace durumu doğrulandı | Karşılandı | `pnpm-workspace.yaml` incelendi; `packages/*` deseni eklendi. |
 | Gerçek sözleşme paketi var | Karşılandı | `packages/contracts` TypeScript sözleşme ve test içeriyor. |
+| Gerçek config paketi var | Karşılandı | `packages/config` TypeScript URL/origin sözleşmesi ve test içeriyor. |
 | Platform/tenant TS sözleşmeleri var | Karşılandı | `PlatformTenantDescriptor`, `TenantRuntimeContext`, `TenantDatabaseRef`, `SupportSessionContract`. |
+| Profesyonel domain/origin sözleşmesi var | Karşılandı | `packages/config`, ADR-0001 ve `tests/saas-domain-config.test.ts`. |
 | Paket/app bağımlılık sınırları tanımlandı | Karşılandı | Bu belge ve `tests/architecture-boundaries.test.ts`. |
 | Yasak bağımlılıkları yakalayan test var | Karşılandı | `tests/architecture-boundaries.test.ts`. |
 | Mevcut import grafiği çıkarıldı | Karşılandı | Kök ve modül bazlı sayım tablosu. |

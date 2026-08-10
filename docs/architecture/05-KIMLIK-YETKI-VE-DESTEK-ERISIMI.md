@@ -26,6 +26,9 @@
 - API, use-case, repository ve veri erişiminde yetki doğrulanmalıdır.
 - Kritik işlemler için sebep alanı ve audit zorunlu olmalıdır.
 - Platform kullanıcısı ile firma kullanıcısı farklı session/cookie alanı kullanmalıdır.
+- Platform origin `https://console.tilbecore.com`, tenant origin `https://{tenantSlug}.tilbecore.com` standardını izler; staging ve local ortamlar kendi base domain ve cookie namespace değerlerini kullanır.
+- Platform cookie’si tenant tarafından, tenant cookie’si platform tarafından kabul edilmez. Cookie sözleşmesi host-only, Secure, HttpOnly, uygun SameSite, session rotation, logout/revoke ve ortam bazlı farklı isim ister.
+- Tenant session başka tenant hostunda geçerli sayılmaz; tenant context request boyunca değiştirilemez.
 - Destek erişimi firma onayı olmadan operasyon verisine erişmemelidir.
 - Platform yöneticileri için WebAuthn/passkey ve MFA hedeflenir; recovery ve reset işlemleri de auditlenir (`PRO-013`, `PRO-026`).
 - Firma cihaz/oturum yönetimi kendi firma sınırı içinde çalışır; başka firmaların cihazları veya oturumları görünmez (`PRO-008`).
@@ -53,3 +56,7 @@
 - `support.session.onayla`
 - `cihaz.oturum.iptal`
 - `kvkk.talep.yonet`
+
+## Token ve cihaz erişim sınırı
+
+Müşteri takip tokenı, QR kesim kontrol tokenı, QR teslim tokenı, kullanıcı davet tokenı, TV cihaz eşleştirme tokenı ve destek erişim tokenı ayrı amaçlara sahiptir. Tokenlar tahmin edilemez, açık kimlik/telefon içermez, amaç sınırlı, süreli veya tek kullanımlık, iptal edilebilir ve audit edilebilir olmalıdır. Bir token başka amaç için kullanılamaz.
