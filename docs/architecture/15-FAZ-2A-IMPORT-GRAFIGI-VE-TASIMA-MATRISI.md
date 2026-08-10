@@ -108,6 +108,7 @@ Test:
 `packages/config/src/saas-domain-config.ts` içinde şu kararlar kodla testlenebilir sözleşmeye bağlandı:
 
 - production base domain: `tilbecore.com`,
+- production domain sahipliği doğrulandı; bağlayıcı değer `BASE_DOMAIN=tilbecore.com`,
 - staging base domain: `staging.tilbecore.com`,
 - local base domain: `tilbecore.test`,
 - platform origin: `https://console.{baseDomain}`,

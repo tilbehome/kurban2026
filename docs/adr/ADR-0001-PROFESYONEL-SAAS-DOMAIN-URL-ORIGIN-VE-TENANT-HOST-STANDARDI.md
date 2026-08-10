@@ -4,9 +4,11 @@
 
 Kabul edildi. Bu ADR Faz 2A kapsamında davranış değiştirmeyen sözleşme ve test kararını tanımlar.
 
+Domain sahipliği doğrulandı: `tilbecore.com` alan adı kullanıcı tarafından satın alınmış ve domain kayıt panelinde aktif olduğu doğrulanmıştır. Production ana domain kararı taslak değildir; bağlayıcı production değeri `BASE_DOMAIN=tilbecore.com` olarak kabul edilir.
+
 ## Karar
 
-TilbeCore Kurban için production ana domain `tilbecore.com` olarak kabul edilir.
+TilbeCore Kurban için production ana domain `tilbecore.com` olarak kabul edilir ve sahipliği doğrulanmıştır.
 
 Kullanıcıya açık adres standardı:
 
@@ -36,6 +38,7 @@ Staging `staging.tilbecore.com`, local development `tilbecore.test` temel domain
 ## Gerekçe
 
 - Kullanıcıya port göstermeyen profesyonel HTTPS adres standardı gerekir.
+- Satın alınmış ve aktifliği doğrulanmış ana domain üstünden ürünleşme kararı netleşmiştir.
 - Platform Süper Admin ve tenant kullanıcıları ayrı origin, cookie ve session alanlarında kalmalıdır.
 - Firma paneli, saha PWA, TV, takip ve tenant API aynı tenant origin altında path ile ayrılınca CORS karmaşıklığı azalır.
 - Tenant yalnız Host header metnine güvenerek seçilmez; normalize edilmiş host, allowlist/pattern ve platform registry çözümlemesi gerekir.
@@ -69,7 +72,7 @@ Staging `staging.tilbecore.com`, local development `tilbecore.test` temel domain
 
 | Ortam | Base domain | Platform | Tenant örneği |
 |---|---|---|---|
-| Production | `tilbecore.com` | `https://console.tilbecore.com` | `https://firma.tilbecore.com` |
+| Production | `tilbecore.com` / `BASE_DOMAIN=tilbecore.com` | `https://console.tilbecore.com` | `https://firma.tilbecore.com` |
 | Staging | `staging.tilbecore.com` | `https://console.staging.tilbecore.com` | `https://firma.staging.tilbecore.com` |
 | Local | `tilbecore.test` | `https://console.tilbecore.test` | `https://firma.tilbecore.test` |
 

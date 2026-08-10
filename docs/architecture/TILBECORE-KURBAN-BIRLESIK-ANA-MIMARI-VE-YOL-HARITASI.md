@@ -239,7 +239,7 @@ Bayram günü kritik saha operasyonunda yerel runtime ve yerel ağ birincildir. 
 
 ### 4.6 Profesyonel domain, URL ve origin standardı
 
-Production ana domain `tilbecore.com` olarak kesinleşmiştir. Domain ve host çözümleme kararı `docs/adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md` içinde bağlayıcı ADR olarak tutulur.
+Production ana domain `tilbecore.com` olarak kesinleşmiştir. Kullanıcı `tilbecore.com` alan adını satın almış ve domain kayıt panelinde aktif olduğunu doğrulamıştır. Bu nedenle production ana domain kararı taslak değildir; bağlayıcı production değeri `BASE_DOMAIN=tilbecore.com` olarak kabul edilir. Domain ve host çözümleme kararı `docs/adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md` içinde bağlayıcı ADR olarak tutulur.
 
 Kullanıcıya açık URL standardı:
 
@@ -259,7 +259,7 @@ Kullanıcıya açık URL standardı:
 - Güncellemeler: `https://updates.tilbecore.com`
 - Hassas olmayan statik varlıklar: `https://assets.tilbecore.com`
 
-Staging `staging.tilbecore.com`, local development `tilbecore.test` temel domainini kullanır. Kullanıcıya gösterilen URL’lerde uygulama portu bulunmaz; iç portlar reverse proxy/gateway arkasında kalır. `api.tilbecore.com/v1` ve `hooks.tilbecore.com/v1` yalnız gelecek entegrasyon sözleşmesidir; bu pakette API, webhook, DNS, TLS veya deployment kurulmaz.
+Staging `staging.tilbecore.com`, local development `tilbecore.test` temel domainini kullanır. Domain değeri kodun farklı yerlerine dağıtılmaz; merkezi tipli `packages/config` sözleşmesi üzerinden kullanılır. Kullanıcıya gösterilen URL’lerde uygulama portu bulunmaz; iç portlar reverse proxy/gateway arkasında kalır. `api.tilbecore.com/v1` ve `hooks.tilbecore.com/v1` yalnız gelecek entegrasyon sözleşmesidir; bu pakette API, webhook, DNS, nameserver, SSL/TLS veya deployment kurulmaz.
 
 Tenant çözümleme host normalize, port ayrıştırma, allowlist/pattern, platform/tenant host ayrımı, tenant slug validasyonu, platform registry çözümlemesi, aktif tenant kontrolü ve değişmez request tenant context sırasını izler. Platform ve tenant session/cookie alanları ayrıdır; cookie sözleşmesi host-only, Secure, HttpOnly, ortam bazlı farklı isim ve ayrı namespace kullanır.
 
