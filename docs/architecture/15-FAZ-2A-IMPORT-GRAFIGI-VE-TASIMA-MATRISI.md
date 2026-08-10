@@ -82,6 +82,7 @@ Faz 2A’da testle yakalanan ilk sınırlar:
 |---|---|---|---|
 | `packages/contracts` | Salt TypeScript sözleşmeleri | Next.js, React, Prisma, `@/app`, `@/modules`, `@/shared`, `@/components` | `tests/architecture-boundaries.test.ts` |
 | `packages/config` | Ortam/domain/origin üretimi ve host validasyonu; yalnız `packages/contracts` tiplerini kullanabilir | Next.js, React, Prisma, `@/app`, `@/modules`, `@/shared`, `@/components` | `tests/architecture-boundaries.test.ts`, `tests/saas-domain-config.test.ts` |
+| `packages/*/package.json` | Paket manifestleri davranışsız sözleşme ve config bağımlılıklarını taşır | Next.js, React, Prisma ve uygulama alias paket bağımlılıkları | `tests/architecture-boundaries.test.ts` |
 | `modules/**/domain` | Domain kuralı ve framework bağımsız yardımcılar | Next.js, React, Prisma, route adapterleri, dosya sistemi | `tests/architecture-boundaries.test.ts` |
 | `modules/**/application` | Use-case orkestrasyonu | Next.js, React, doğrudan Prisma client değeri, route/UI importları | `tests/architecture-boundaries.test.ts` |
 

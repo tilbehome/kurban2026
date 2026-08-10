@@ -96,6 +96,7 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Workspace paket deseni | Uygulandı | `pnpm-workspace.yaml` içinde `packages/*` tanımlandı. |
 | Platform/tenant TypeScript sözleşmeleri | Uygulandı | `packages/contracts/src/platform-tenant.ts`. |
 | Mimari bağımlılık sınır testi | Uygulandı | `tests/architecture-boundaries.test.ts`. |
+| Paket manifest bağımlılık sınırı | Uygulandı | `tests/architecture-boundaries.test.ts` artık `packages/*/package.json` bağımlılıklarında Next.js, React, Prisma ve uygulama alias bağımlılıklarını yasaklar. |
 | Sözleşme davranış testi | Uygulandı | `tests/platform-tenant-contracts.test.ts`. |
 | Import grafiği ve taşıma matrisi | Uygulandı | `docs/architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`. |
 | Profesyonel domain/origin sözleşmesi | Uygulandı | `packages/config`, `packages/contracts`, `tests/saas-domain-config.test.ts`, ADR-0001. |

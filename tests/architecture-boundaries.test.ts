@@ -12,6 +12,13 @@ interface ImportLine {
   line: string;
 }
 
+interface PackageManifest {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+}
+
 function listTrackedSourceFiles(...roots: string[]) {
   const output = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", ...roots], {
     cwd: repoRoot,
@@ -45,12 +52,61 @@ function violations(files: string[], forbidden: RegExp[]) {
   );
 }
 
+function listTrackedPackageManifests(...roots: string[]) {
+  const output = execFileSync("git", ["ls-files", "--cached", "--others", "--exclude-standard", ...roots], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+
+  return output
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .filter((file) => file.endsWith("package.json"))
+    .filter((file) => !file.split(/[\\/]/).some((part) => ignoredSegments.has(part)));
+}
+
+function manifestDependencies(file: string) {
+  const manifest = JSON.parse(readFileSync(join(repoRoot, file), "utf8")) as PackageManifest;
+  const dependencyGroups = [
+    manifest.dependencies ?? {},
+    manifest.devDependencies ?? {},
+    manifest.peerDependencies ?? {},
+    manifest.optionalDependencies ?? {},
+  ];
+
+  return dependencyGroups.flatMap((dependencies) => Object.keys(dependencies));
+}
+
 describe("Faz 2A mimari bağımlılık sınırları", () => {
   it("workspace gerçek sözleşme paketlerini kapsar", () => {
     const workspace = readFileSync(join(repoRoot, "pnpm-workspace.yaml"), "utf8");
 
     expect(workspace).toContain("packages:");
     expect(workspace).toContain('"packages/*"');
+  });
+
+  it("workspace paket manifestleri uygulama frameworklerine veya veritabanına bağlanmaz", () => {
+    const manifests = listTrackedPackageManifests("packages");
+    const forbiddenDependencies = [
+      "next",
+      "react",
+      "react-dom",
+      "@prisma/client",
+      "prisma",
+      "@/app",
+      "@/modules",
+      "@/shared",
+      "@/components",
+    ];
+
+    expect(manifests.length).toBeGreaterThan(0);
+    expect(
+      manifests.flatMap((file) =>
+        manifestDependencies(file)
+          .filter((dependency) => forbiddenDependencies.includes(dependency))
+          .map((dependency) => ({ file, dependency })),
+      ),
+    ).toEqual([]);
   });
 
   it("packages/contracts uygulama, UI, Next, React veya Prisma'ya bağımlı değildir", () => {
