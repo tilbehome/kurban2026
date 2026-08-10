@@ -26,9 +26,6 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
     "@prisma/client": "^6.19.3",
