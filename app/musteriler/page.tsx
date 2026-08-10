@@ -4,7 +4,6 @@ import { SayfaBaslik } from "@/shared/components/SayfaBaslik";
 import { musterileriListele } from "@/modules/musteriler/lib/musteri.service";
 import { musteriIstatistik } from "@/modules/musteriler/lib/istatistik";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { formatPara } from "@/shared/lib/para";
 import { UserPlus, Search, Wallet, Phone, MessageCircle } from "lucide-react";

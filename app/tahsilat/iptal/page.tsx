@@ -1,7 +1,6 @@
 import { AppShell } from "@/shared/components/AppShell";
 import { SayfaBaslik } from "@/shared/components/SayfaBaslik";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { prisma } from "@/shared/lib/prisma";
 import { formatPara } from "@/shared/lib/para";
 import { formatTarihSaat } from "@/shared/lib/tarih";

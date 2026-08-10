@@ -51,7 +51,6 @@ interface VekaletlerTabProps {
 }
 
 export function VekaletlerTab({
-  musteriId: _musteriId,
   satirlar,
   izinler,
 }: VekaletlerTabProps) {

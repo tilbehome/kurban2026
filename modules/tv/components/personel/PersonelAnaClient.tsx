@@ -91,7 +91,6 @@ export function PersonelAnaClient({
     try {
       const k = localStorage.getItem(STORAGE_GOREV);
       if (k && (PERSONEL_GOREVLERI as string[]).includes(k)) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAktifGorev(k as PersonelGorev);
       }
       const ai = localStorage.getItem(STORAGE_AKTIF_IS);

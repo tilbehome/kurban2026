@@ -45,7 +45,6 @@ interface TahsilatlarTabProps {
 }
 
 export function TahsilatlarTab({
-  musteriId: _musteriId,
   musteriTel,
   tahsilatlar,
   ozet,

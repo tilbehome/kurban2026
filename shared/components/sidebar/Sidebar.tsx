@@ -89,7 +89,6 @@ export function Sidebar({
     }
     setYuklendi(true);
     // sadece pathname değişince tekrar — diğer state'ler localStorage save ile döner
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aktifMenuId]);
 
   // localStorage save

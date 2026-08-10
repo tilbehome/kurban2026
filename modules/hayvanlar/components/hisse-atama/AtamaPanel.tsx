@@ -7,7 +7,6 @@ import {
   MousePointerClick,
   User,
   Beef,
-  Tag,
   CheckCircle2,
   X,
   Keyboard,

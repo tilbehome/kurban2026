@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/shared/lib/prisma";
-import { formatPara, topla, yuvarla } from "@/shared/lib/para";
+import { formatPara, yuvarla } from "@/shared/lib/para";
 import { formatTarih } from "@/shared/lib/tarih";
 import { FileSpreadsheet } from "lucide-react";
 

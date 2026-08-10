@@ -26,9 +26,9 @@ interface IadeModalProps {
  * Tam iade akışı (gerçek para iadesi + Odeme.iptal + KasaHareketi negatif kayıt)
  * Faz 5'te geliştirilecek. Şimdilik bilgi notu olarak çalışır.
  */
-export function IadeModal({ musteriId: _musteriId, acik, onClose }: IadeModalProps) {
+export function IadeModal({ acik, onClose }: IadeModalProps) {
   const [not, setNot] = useState("");
-  const [bekleniyor, _startTransition] = useTransition();
+  const [bekleniyor] = useTransition();
 
   return (
     <Dialog open={acik} onOpenChange={(v) => !v && onClose()}>

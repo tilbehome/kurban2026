@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Check, Loader2, ScrollText } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import type { PersonelKurbanVeri } from "@/app/tv/personel/page";
 
 interface Props {
