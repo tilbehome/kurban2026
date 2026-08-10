@@ -140,6 +140,10 @@ Bu turda eklenen gereksinimler planlandı durumundadır; uygulama kodu başlatı
 | PRO-035 | Donanım adapteri cihaz bazlı devre dışı bırakılır; manuel giriş/yazdırma fallback'i korunur. |
 | PRO-036 | Entegrasyon adapteri kanal bazlı durdurulur; outbox yeniden deneme kuyruğu dondurulur ve manuel mutabakat raporu üretilir. |
 
+### Faz 2A platform–tenant sınır checkpoint'i
+
+`REQ-048..REQ-050`, `REQ-059`, `REQ-062`, `REQ-066`, `PRO-012`, `PRO-020`, `PRO-021`, `PRO-027` ve `PRO-029` için platform–tenant veri sınırı kararı `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md` belgesine bağlıdır. Tenant izolasyon test planı `10-TEST-KALITE-VE-KABUL-PLANI.md` içinde tutulur. Bu checkpoint Faz 2A’da sözleşme ve test planı kanıtıdır; PostgreSQL kurulumu, tenant routing ve Süper Admin uygulaması Faz 2B/2C kapsamındadır.
+
 ## 68 iş akışı modeli
 
 ## Faz 1 UTF-8 / hata kodu / i18n checkpoint'i

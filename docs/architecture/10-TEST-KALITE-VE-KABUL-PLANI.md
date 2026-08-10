@@ -53,6 +53,27 @@ Toplam: 84 test.
 | `PRO-012..PRO-021` | Platform Süper Admin, provisioning, migration, kill switch, incident, export ve restore | Tenant isolation, backup/restore, security, platform audit |
 | `PRO-022..PRO-029` | Observability, E2E, erişilebilirlik, passkey/MFA, ASVS, feature flag, WAL/PITR | CI raporu, güvenlik kontrol listesi, trace/log/metric ve restore kanıtı |
 
+## Tenant izolasyon test planı
+
+Birinci karar kaynağı: `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`.
+
+Bu plan Faz 2A kapanışında dokümante edilir; test kodu, PostgreSQL kurulumu, Prisma şeması veya tenant routing uygulaması bu pakette yapılmaz. Gerçek otomasyon Faz 2B/2C ve ilgili taşıma paketlerinde yazılır.
+
+| Senaryo | Amaç | Test tipi | Kabul kanıtı | Planlanan faz |
+|---|---|---|---|---|
+| İki test firmasının ayrı DB kullanması | Her firmanın operasyon verisinin kendi tenant DB’sinde kaldığını kanıtlamak | PostgreSQL integration | Firma A ve Firma B aynı şema sürümünde ayrı bağlantı hedeflerine gider; çapraz sorgu yoktur | Faz 2C |
+| Aynı kayıt ID’lerinin firmalar arasında karışmaması | Aynı integer/UUID değerleri olsa bile tenant boundary’nin veri sızdırmadığını göstermek | Integration + repository test | Firma A’daki kayıt ID’si Firma B session’ı ile okunamaz/güncellenemez | Faz 2C |
+| Başka firmaya ait session/cookie reddi | Cookie veya session tenant kimliği resolved tenant ile uyuşmadığında fail-closed davranmak | Security route/E2E | Yanlış tenant cookie 401/403 güvenli hata döndürür; veri sızmaz | Faz 2B, Faz 2C |
+| Bilinmeyen ve reserved subdomain reddi | Tenant slug çözümlemesini güvenli yapmak | Contract + route test | Bilinmeyen veya reserved subdomain tenant context üretmez | Faz 2B |
+| Host header ve custom domain doğrulaması | Host spoofing ve doğrulanmamış custom domain riskini kapatmak | Security integration | Host header tenant kaydıyla eşleşmezse veya custom domain aktif değilse istek reddedilir | Faz 2B, Faz 2C |
+| Yanlış `TenantDatabaseRef` güvenli reddi | Opaque DB referansının başka firmaya veya platform DB’ye kaymasını önlemek | Contract + integration | Referans tenant kimliğiyle mutabık değilse bağlantı açılmaz; secret gösterilmez | Faz 2C |
+| `SupportSession` olmadan operasyon verisine erişememe | Süper Admin’in normal şartlarda firma verisini görememesini kanıtlamak | Security + authorization | SupportSession yokken müşteri/finans/vekalet/hisse/kesim/teslim verisi okunamaz | Faz 2B, Faz 2C |
+| Log/hata/API yanıtında DB secret sızmaması | Secret ve connection string değerlerinin dışarı çıkmasını engellemek | Log redaction + route test | Hata yanıtı yalnız güvenli kod/requestId içerir; loglarda DB secret yoktur | Faz 2A, Faz 2C, Faz 12 |
+| Tenant-aware connection pool ayrımı | Pool reuse nedeniyle yanlış DB’ye bağlanmayı engellemek | Integration + concurrency | Her tenant pool anahtarı tenant ve DB referansına bağlıdır; yanlış reuse fail-closed olur | Faz 2C |
+| Firma bazlı backup/restore izolasyonu | Bir firmanın restore işleminin başka firmayı etkilememesini kanıtlamak | Backup/restore prova | Restore yalnız hedef tenant DB’de çalışır; platform metadata ve diğer tenant DB’ler değişmez | Faz 2C, Faz 15 |
+
+Bu plan tamamlanmadan Platform DB, tenant routing veya firma başına PostgreSQL canlıya hazır sayılmaz.
+
 ## Lint warning durumu
 
 Son P0 doğrulaması: `pnpm lint` 0 hata, 38 warning.

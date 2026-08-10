@@ -44,7 +44,7 @@ Faz 2A öncesinde `pnpm-workspace.yaml` dosyasında `packages` deseni yoktu; yal
 - `packages/contracts`
 - `packages/config`
 
-`packages/contracts` platform/tenant TypeScript sözleşmelerini içerir. `packages/config` ortam, domain, URL, origin, trusted host, cookie ve public/private servis sözleşmesini içerir. Bu paketlerde Next.js, React, Prisma, uygulama route’u veya veritabanı bağımlılığı yoktur.
+`packages/contracts` platform/tenant TypeScript sözleşmelerini içerir. `packages/config` ortam, domain, URL, origin, trusted host, cookie ve public/private servis sözleşmesini içerir. Platform–tenant veri sınırı ayrıca `../adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md` içinde bağlayıcı ADR olarak kapanışa bağlanır. Bu paketlerde Next.js, React, Prisma, uygulama route’u veya veritabanı bağımlılığı yoktur.
 
 ## Kök bazlı import grafiği
 
@@ -155,10 +155,13 @@ Test:
 | Gerçek config paketi var | Karşılandı | `packages/config` TypeScript URL/origin sözleşmesi ve test içeriyor. |
 | Platform/tenant TS sözleşmeleri var | Karşılandı | `PlatformTenantDescriptor`, `TenantRuntimeContext`, `TenantDatabaseRef`, `SupportSessionContract`. |
 | Profesyonel domain/origin sözleşmesi var | Karşılandı | `packages/config`, ADR-0001 ve `tests/saas-domain-config.test.ts`. |
+| Platform–tenant veri sınırı ADR’si var | Karşılandı | `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`. |
+| Tenant izolasyon test planı var | Karşılandı | `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md` tenant izolasyon test planı. |
 | Paket/app bağımlılık sınırları tanımlandı | Karşılandı | Bu belge ve `tests/architecture-boundaries.test.ts`. |
 | Yasak bağımlılıkları yakalayan test var | Karşılandı | `tests/architecture-boundaries.test.ts`. |
 | Mevcut import grafiği çıkarıldı | Karşılandı | Kök ve modül bazlı sayım tablosu. |
 | Mevcut modüller için taşıma matrisi var | Karşılandı | Bu belgedeki taşıma matrisi. |
 | Toplu app/modules/shared taşıması yapılmadı | Karşılandı | Bu pakette fiziksel kaynak taşıma yok. |
 | Prisma/DB değişmedi | Karşılandı | `prisma/` değişmedi; DB kurulumu yok. |
-| Faz 2A tamamen kapandı | Eksik | Platform DB, tenant routing, PG isolation ve gerçek app taşıma sonraki Faz 2B/2C ve taşıma paketlerinin konusudur; bu paket yalnız Faz 2A’nın workspace/sözleşme/sınır kısmını karşılar. |
+| Platform DB, PostgreSQL, tenant routing ve gerçek app taşıma | Faz 2A dışı | Bu işler Faz 2B, Faz 2C veya sonraki küçük taşıma paketlerine aittir; Faz 2A kapanış eksiği gibi sayılmaz. |
+| Faz 2A kapanış paketi | Karşılandı | Workspace, sözleşme paketleri, domain/origin config, platform–tenant veri sınırı ADR’si, mimari sınır testleri, import grafiği, taşıma matrisi ve tenant izolasyon test planı dokümante edildi. |

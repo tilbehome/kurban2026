@@ -77,7 +77,7 @@ Bu P0 paketi tek commit olarak tutulur. Geri alma gerektiğinde commit revert ed
 
 **Sıradaki aşama:** Faz 2A — mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı.
 
-Faz 2A gerçek workspace/sözleşme/sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden başlatıldı. Faz 2A tamamlandı olarak kabul edilmez; tamamlanma ancak import grafiği, taşıma matrisi, platform/tenant sözleşmeleri, mimari bağımlılık testleri ve sonraki izolasyon/test planı kanıtlarıyla ayrıca değerlendirilecektir.
+Faz 2A gerçek workspace/sözleşme/sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden başlatıldı. Kapanış paketiyle Faz 2A’nın davranış değiştirmeyen sözleşme, dokümantasyon, import grafiği, taşıma matrisi ve tenant izolasyon test planı çıkış kriterleri karşılandı. Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçek app taşıması Faz 2A kapsamında değildir; Faz 2B, Faz 2C veya sonraki küçük taşıma paketlerine aittir.
 
 ### Faz 2A pilot — saha satış route ayrıştırması
 
@@ -100,6 +100,9 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Sözleşme davranış testi | Uygulandı | `tests/platform-tenant-contracts.test.ts`. |
 | Import grafiği ve taşıma matrisi | Uygulandı | `docs/architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`. |
 | Profesyonel domain/origin sözleşmesi | Uygulandı | `packages/config`, `packages/contracts`, `tests/saas-domain-config.test.ts`, ADR-0001. |
+| Platform–tenant veri sınırı ADR’si | Uygulandı | `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`. |
+| Tenant izolasyon test planı | Uygulandı | `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md`. |
+| Faz 2A kapanış değerlendirmesi | Uygulandı | Faz 2A yalnız davranış değiştirmeyen sözleşme/plan/matris/test planı kapsamına göre kapanır; DB, tenant routing ve app taşıma sonraki fazlara bırakıldı. |
 
 ### Profesyonel ürün ve operasyon önerileri uyumlandırması
 

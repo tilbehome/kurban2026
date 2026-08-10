@@ -785,7 +785,7 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 
 #### Faz 2A — Mimari sözleşme ve monorepo iskeleti
 
-**Mevcut durum:** Başladı; tamamlandı olarak kabul edilmez. `b536078` commit’i erken tamamlanan saha satış modüler pilotudur ve Faz 2A kapanışı değildir. `120afa16e8b635823a80b0967cbfe18e651bd2ad` sonrasında gerçek Faz 2A workspace/sözleşme/sınır paketi başlatılmıştır.
+**Mevcut durum:** Kapanış paketiyle davranış değiştirmeyen sözleşme, dokümantasyon, import grafiği, taşıma matrisi ve test planı çıkış kriterleri karşılandı. `b536078` commit’i erken tamamlanan saha satış modüler pilotudur ve tek başına Faz 2A kapanışı değildir. `120afa16e8b635823a80b0967cbfe18e651bd2ad` sonrasında gerçek Faz 2A workspace/sözleşme/sınır paketi başlatılmıştır.
 
 - Bu belgenin repo dokümanlarına işlenmesi
 - `AGENTS.md`, gereksinim matrisi, risk/geri dönüş ve envanter uyumu
@@ -795,8 +795,12 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - mevcut modüllerin taşıma matrisi
 - platform/tenant contract’ları
 - profesyonel domain/origin config sözleşmesi ve testleri
+- platform–tenant veri sınırı ADR’si
+- tenant izolasyon test planı
 
 Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/origin config paketi ve taşıma matrisi `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md` içinde tutulur.
+
+Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçek app taşıması Faz 2A işi değildir; Faz 2B, Faz 2C veya sonraki küçük taşıma paketlerinde uygulanır.
 
 #### Faz 2B — Platform Control Plane ve Süper Admin MVP
 
@@ -1050,11 +1054,8 @@ docs/
 │   ├── 12-FAZLAR-RISKLER-VE-GERI-DONUS.md
 │   └── 14-PROGRAM-TAM-KAPSAM-ENVANTERI.md
 ├── adr/
-│   ├── ADR-0001-TEK-KOD-AYRI-FIRMA-DB.md
-│   ├── ADR-0002-MODULER-MONOLIT.md
-│   ├── ADR-0003-PLATFORM-VE-TENANT-AYRIMI.md
-│   ├── ADR-0004-POSTGRESQL-VE-DECIMAL.md
-│   └── ADR-0005-KRITIK-OFFLINE-YAZI-YASAGI.md
+│   ├── ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md
+│   └── ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md
 ├── requirements/
 ├── workflows/
 └── runbooks/
@@ -1074,7 +1075,7 @@ docs/
 
 - Faz 1 tamamlandı ve `origin/main` dalına gönderildi,
 - Faz 1 commit’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`,
-- Faz 2A workspace/sözleşme/sınır paketi başladı; Faz 2A tamamlandı olarak kabul edilmez,
+- Faz 2A workspace/sözleşme/sınır paketi kapanış kriterleri dokümantasyon ve sözleşme düzeyinde karşılandı; Platform DB, PostgreSQL, tenant routing ve gerçek app taşıması Faz 2B/2C veya sonraki taşıma paketlerine aittir,
 - merkezi hata/i18n yalnız beş pilot route’ta,
 - finansal `Float`, yeni ledger, PostgreSQL, tenant izolasyonu ve gerçek integration/E2E testleri henüz yapılmadı,
 - 69 placeholder/yakında sayfası gerçek özellik kabul edilmiyor.
@@ -1105,7 +1106,7 @@ Faz 2 başlamadan önce verilecek zorunlu kanıtlar:
 - Bu pilot `/api/saha-satis` için route adaptörü, application/use-case ve domain kural ayrımını kanıtlar.
 - Bu pilot Faz 2A’nın tamamlandığı anlamına gelmez.
 - Gerçek Faz 2A workspace ve mimari sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden yürütülür.
-- Faz 2A çıkış kanıtları `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`, `packages/contracts` ve mimari bağımlılık testleriyle izlenir.
+- Faz 2A çıkış kanıtları `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`, `packages/contracts`, `packages/config`, `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`, tenant izolasyon test planı ve mimari bağımlılık testleriyle izlenir.
 
 ---
 

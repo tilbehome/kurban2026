@@ -26,6 +26,7 @@ Bu dizin, güncel mimari belgeleri tarihsel çalışma kayıtlarından ayırır.
 ## Güncel ADR kayıtları
 
 - [ADR-0001 — Profesyonel SaaS Domain, URL, Origin ve Tenant Host Çözümleme Standardı](adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md)
+- [ADR-0002 — Platform–Tenant Veri Sınırı ve Erişim Standardı](adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md)
 
 ## Belge durumları
 
