@@ -824,7 +824,7 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 #### Faz 2C — Firma başına ayrı PostgreSQL ve tenant yönlendirme
 
-**Mevcut durum:** Başladı — `@tilbecore/database-tenant` paketi ve tenant PostgreSQL çekirdek şema/migration başlangıcı eklendi; genel doğrulama bekliyor. Host/custom-domain tenant resolution, connection pool runtime ve iki firma isolation koşusu henüz genel doğrulama dönemine bırakıldı.
+**Mevcut durum:** Başladı — `@tilbecore/database-tenant` paketi ve tenant PostgreSQL çekirdek şema/migration başlangıcı eklendi; `@tilbecore/tenant-runtime` ile host/custom-domain tenant resolution, session/databaseRef fail-closed guard ve connection pool key sözleşmesi eklendi; genel doğrulama bekliyor. DNS/TLS/deployment, gerçek connection pool runtime ve iki firma isolation koşusu henüz genel doğrulama dönemine bırakıldı.
 
 - Güvenli tenant resolution
 - Firma DB connection registry

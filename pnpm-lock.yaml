@@ -183,6 +183,15 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  packages/tenant-runtime:
+    dependencies:
+      '@tilbecore/config':
+        specifier: workspace:*
+        version: link:../config
+      '@tilbecore/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
 packages:
 
   '@alloc/quick-lru@5.2.0':
