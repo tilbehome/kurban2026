@@ -241,6 +241,19 @@ describe("POST /api/saha-satis", () => {
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
+  it("sonucu yazilmamis clientRequestId icin islem suruyor hatasi dondurur", async () => {
+    const { POST, prisma } = await setup({
+      onceki: { sonucJson: null },
+    });
+
+    const res = await POST(jsonReq(payload));
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body.kod).toBe("REQUEST_ALREADY_PROCESSING");
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it("kapora yazimi hata verirse hassas hata mesaji sizdirmaz", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     const { POST } = await setup({ odemeHatasi: true });

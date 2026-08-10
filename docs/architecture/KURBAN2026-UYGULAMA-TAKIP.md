@@ -73,8 +73,16 @@ Bu P0 paketi tek commit olarak tutulur. Geri alma gerektiğinde commit revert ed
 
 ## Faz 2 durumu
 
-**Durum:** Henüz başlamadı.
+**Durum:** Başladı.
 
 **Sıradaki aşama:** Faz 2A — mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı.
 
 Faz 2A başlamadan önce dokümantasyon uyumu, import grafiği, taşıma matrisi, platform/tenant veri sınırı ADR’si ve tenant isolation test planı hazırlanmalıdır. Faz 2A sırasında kaynak davranışı, Prisma şeması ve üretim verisi değiştirilmeden önce ayrıca uygulama kapsamı onaylanır.
+
+### Faz 2A pilot — saha satış route ayrıştırması
+
+| İş | Bağlı akışlar | Durum | Kanıt |
+|---|---:|---|---|
+| `/api/saha-satis` ince adaptör pilotu | 21, 22, 29, 30, 60, 62 | Uygulandı | Route HTTP/Zod/oturum/hata adaptörüne indirildi; satış, idempotency, transaction, audit, kapora ve event orkestrasyonu `modules/tahsilat/application/saha-satis.use-case.ts` içine alındı. Saf hesap ve kural kontrolleri `modules/tahsilat/domain/saha-satis.ts` içinde testlendi. |
+
+Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı değiştirilmedi. Geriye uyum için başarılı cevap gövdesi, merkezi hata `kod/mesajAnahtari/requestId` alanları ve mevcut HTTP statusleri korunur.
