@@ -156,3 +156,14 @@ Bu kayıt Faz 2B'nin tamamlandığı, Platform PostgreSQL'in canlıya hazır old
 | Kesim operasyon motoru | Uygulandı — genel doğrulama bekliyor | `SlaughterJob` state machine ve tenant DB modeli eklendi. Yönetici istisnası/UI iş akışı henüz mevcut ekranlara bağlanmadı. |
 | Tartım, paketleme ve kilo farkı | Uygulandı — genel doğrulama bekliyor | `WeighingRecord`, `PackageRecord`, kilo Decimal/Numeric modeli ve kilo farkı ledger adjustment sözleşmesi eklendi. |
 | Teslimat, offline kuyruk ve cihaz adaptörleri | Uygulandı — genel doğrulama bekliyor | `DeliveryRecord`, teslimat geri alma, `OfflineQueueItem`, secret-safe offline payload guard ve cihaz adapter sözleşmeleri eklendi. PWA runtime senkronizasyonu genel doğrulama/daha sonraki bağlantı işlerine kaldı. |
+
+## Faz 11–12 durumu
+
+**Durum:** Başladı — yönetim, observability ve canlı hazırlık sözleşmeleri uygulandı — genel doğrulama bekliyor.
+
+| İş | Durum | Kanıt |
+|---|---|---|
+| Yönetim paneli/operasyon merkezi sözleşmeleri | Uygulandı — genel doğrulama bekliyor | `@tilbecore/operations` içinde dashboard KPI, istisna kuyruğu ve evrensel arama sonuç sözleşmeleri eklendi. |
+| Observability, erişilebilirlik ve güvenlik kabul hedefleri | Uygulandı — genel doğrulama bekliyor | Trace context, secret-redaction, WCAG 2.2 AA ve OWASP ASVS L2 kabul hedef sözleşmeleri eklendi. OpenTelemetry/axe/Playwright paket kurulumu genel doğrulama dönemine bırakıldı. |
+| Release, backup/restore ve simülasyon hazırlığı | Uygulandı — genel doğrulama bekliyor | Release gate, canary, rollback plan, backup/PITR değerlendirme, restore drill evidence ve Kurban Günü simülasyon kabul kapısı sözleşmeleri eklendi. |
+| Runbook | Uygulandı — genel doğrulama bekliyor | `docs/runbooks/KURBAN-GUNU-ACIL-DURUM-RUNBOOK.md` eklendi. |

@@ -171,6 +171,12 @@ importers:
         specifier: workspace:*
         version: link:../tenant-core
 
+  packages/operations:
+    dependencies:
+      '@tilbecore/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+
   packages/platform:
     dependencies:
       '@tilbecore/contracts':

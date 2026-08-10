@@ -983,6 +983,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 ### Faz 11 — Raporlama ve firma yönetim paneli
 
+**Mevcut durum:** Başladı — `@tilbecore/operations` içinde yönetim dashboard KPI, istisna kuyruğu ve evrensel arama sonuç sözleşmeleri uygulandı; mevcut ekranlar henüz yeni veri kaynaklarına tam bağlanmadı.
+
 - Yönetici dashboard
 - Operasyon Kontrol Merkezi
 - Satış, doluluk, fiyat ve indirim
@@ -998,6 +1000,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 **Çıkış:** Bütün raporlar kaynak ledger ve operasyon olaylarıyla otomatik mutabıktır.
 
 ### Faz 12 — Sertleştirme, platform işletimi ve canlıya geçiş
+
+**Mevcut durum:** Başladı — observability, WCAG/ASVS kabul hedefleri, release gate, rollback, backup/restore drill, sezon simülasyonu ve acil durum runbook hazırlığı uygulandı; genel doğrulama bekliyor. Canlı DNS/TLS/deployment veya gerçek firma açılışı yapılmadı.
 
 - Platform ve firma UAT
 - Gerçek uçtan uca kurban provası
