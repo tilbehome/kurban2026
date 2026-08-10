@@ -21,6 +21,7 @@ model Season {
   shareCards ShareCard[]
   sales     Sale[]
   ledgerEntries LedgerEntry[]
+  slaughterJobs SlaughterJob[]
 }
 
 model Customer {
@@ -37,6 +38,8 @@ model Customer {
   sales                  Sale[]
   shares                 Share[]
   ledgerEntries          LedgerEntry[]
+  proxyDocuments         ProxyDocument[]
+  deliveries             DeliveryRecord[]
 
   @@index([seasonId])
   @@index([normalizedPhone])
@@ -66,6 +69,8 @@ model Animal {
   season          Season   @relation(fields: [seasonId], references: [id])
   supplier        Supplier? @relation(fields: [supplierId], references: [id])
   shareCards      ShareCard[]
+  slaughterJobs   SlaughterJob[]
+  weighingRecords WeighingRecord[]
 
   @@unique([seasonId, earTag])
   @@index([supplierId])
@@ -82,6 +87,7 @@ model ShareCard {
   season           Season   @relation(fields: [seasonId], references: [id])
   animal           Animal   @relation(fields: [animalId], references: [id])
   shares           Share[]
+  slaughterJobs    SlaughterJob[]
 
   @@index([seasonId])
   @@index([animalId])
@@ -100,6 +106,9 @@ model Share {
   shareCard     ShareCard @relation(fields: [shareCardId], references: [id])
   customer      Customer? @relation(fields: [customerId], references: [id])
   saleShares    SaleShare[]
+  proxyDocumentShares ProxyDocumentShare[]
+  packages      PackageRecord[]
+  deliveries    DeliveryRecord[]
 
   @@unique([shareCardId, sequenceNo])
   @@index([customerId])
@@ -181,4 +190,122 @@ model TenantOutboxMessage {
 
   @@index([status])
   @@index([idempotencyKey])
+}
+
+model ProxyDocument {
+  id          String   @id
+  customerId  String
+  status      String
+  version     Int
+  storageKey  String
+  signedAt    DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  customer    Customer @relation(fields: [customerId], references: [id])
+  shares      ProxyDocumentShare[]
+
+  @@index([customerId])
+}
+
+model ProxyDocumentShare {
+  proxyDocumentId String
+  shareId         String
+  proxyDocument   ProxyDocument @relation(fields: [proxyDocumentId], references: [id])
+  share           Share @relation(fields: [shareId], references: [id])
+
+  @@id([proxyDocumentId, shareId])
+}
+
+model QrToken {
+  id          String   @id
+  purpose     String
+  targetId    String
+  opaqueToken String   @unique
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([purpose])
+  @@index([targetId])
+}
+
+model SlaughterJob {
+  id             String   @id
+  seasonId       String
+  animalId       String
+  shareCardId    String
+  status         String
+  queueNo        Int?
+  assignedUserId String?
+  updatedAt      DateTime @updatedAt
+  season         Season @relation(fields: [seasonId], references: [id])
+  animal         Animal @relation(fields: [animalId], references: [id])
+  shareCard      ShareCard @relation(fields: [shareCardId], references: [id])
+
+  @@index([seasonId])
+  @@index([animalId])
+  @@index([shareCardId])
+  @@index([queueNo])
+}
+
+model WeighingRecord {
+  id               String   @id
+  animalId         String
+  carcassWeightKg  Decimal  @db.Decimal(12, 3)
+  recordedByUserId String
+  recordedAt       DateTime
+  animal           Animal @relation(fields: [animalId], references: [id])
+
+  @@index([animalId])
+}
+
+model PackageRecord {
+  id            String   @id
+  shareId       String
+  grossWeightKg Decimal  @db.Decimal(12, 3)
+  labelNo       String
+  createdAt     DateTime @default(now())
+  share         Share @relation(fields: [shareId], references: [id])
+
+  @@index([shareId])
+  @@unique([labelNo])
+}
+
+model DeliveryRecord {
+  id             String   @id
+  shareId        String
+  customerId     String
+  status         String
+  deliveredAt    DateTime?
+  reversedAt     DateTime?
+  reversalReason String?
+  share          Share @relation(fields: [shareId], references: [id])
+  customer       Customer @relation(fields: [customerId], references: [id])
+
+  @@index([shareId])
+  @@index([customerId])
+}
+
+model OfflineQueueItem {
+  id             String   @id
+  idempotencyKey String   @unique
+  operation      String
+  payload        Json
+  status         String
+  createdAt      DateTime @default(now())
+
+  @@index([status])
+}
+
+model DeviceAdapter {
+  id           String   @id
+  kind         String
+  displayName  String
+  capabilities Json
+  enabled      Boolean
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([kind])
 }

@@ -145,3 +145,14 @@ Bu kayıt Faz 2B'nin tamamlandığı, Platform PostgreSQL'in canlıya hazır old
 | Müşteri/sezon cari sözleşmesi | Uygulandı — genel doğrulama bekliyor | `@tilbecore/tenant-core` içinde müşteri oluşturma, telefon normalizasyonu ve sezon bazlı cari hesap özet sözleşmesi eklendi. |
 | Satış ve hisse kuralı | Uygulandı — genel doğrulama bekliyor | `confirmSale` akışı satılabilir hisse kontrolü, fiyat snapshot'ı, idempotency key ve ledger satış kaydı üretir. |
 | Ledger/tahsilat temeli | Uygulandı — genel doğrulama bekliyor | Decimal string para sözleşmesi, ödeme dağıtımı toplam kontrolü, ödeme ledger kayıtları ve ters kayıt/reversal akışı eklendi. Yeni `Float` para modeli eklenmedi. |
+
+## Faz 7–10 durumu
+
+**Durum:** Başladı — operasyon, belge, kesim, paketleme, teslimat ve offline sözleşmeleri uygulandı — genel doğrulama bekliyor.
+
+| İş | Durum | Kanıt |
+|---|---|---|
+| Vekâlet, korumalı belge ve QR | Uygulandı — genel doğrulama bekliyor | `ProxyDocument`, `QrToken`, protected storage guard ve QR usable guard sözleşmeleri `@tilbecore/tenant-core` ile tenant DB `0002_tenant_operation_flow` migration'ına eklendi. |
+| Kesim operasyon motoru | Uygulandı — genel doğrulama bekliyor | `SlaughterJob` state machine ve tenant DB modeli eklendi. Yönetici istisnası/UI iş akışı henüz mevcut ekranlara bağlanmadı. |
+| Tartım, paketleme ve kilo farkı | Uygulandı — genel doğrulama bekliyor | `WeighingRecord`, `PackageRecord`, kilo Decimal/Numeric modeli ve kilo farkı ledger adjustment sözleşmesi eklendi. |
+| Teslimat, offline kuyruk ve cihaz adaptörleri | Uygulandı — genel doğrulama bekliyor | `DeliveryRecord`, teslimat geri alma, `OfflineQueueItem`, secret-safe offline payload guard ve cihaz adapter sözleşmeleri eklendi. PWA runtime senkronizasyonu genel doğrulama/daha sonraki bağlantı işlerine kaldı. |

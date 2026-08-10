@@ -919,6 +919,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 ### Faz 7 — Vekâlet, korumalı belge ve QR
 
+**Mevcut durum:** Başladı — proxy document, QR token, protected storage guard ve tenant DB modelleri uygulandı; genel doğrulama bekliyor.
+
 - Çok yöntemli ve çok hisseli vekâlet
 - Korumalı dosya deposu
 - A4/iki A5 belge şablonu
@@ -930,6 +932,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 **Çıkış:** Eski/kopya belge ikinci kesim veya teslim işlemi yaptıramaz.
 
 ### Faz 8 — Kesim operasyon motoru
+
+**Mevcut durum:** Başladı — kesim state machine ve `SlaughterJob` tenant DB modeli uygulandı; mevcut kesim ekranları henüz yeni tenant çekirdeğe taşınmadı.
 
 - Kontrollü aşama makinesi
 - Sıra havuzu ve geçmişi
@@ -944,6 +948,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 ### Faz 9 — Tartım, paketleme ve kilo farkı
 
+**Mevcut durum:** Başladı — tartım, paket ve kilo farkı ledger adjustment sözleşmeleri ile tenant DB modelleri uygulandı; genel doğrulama bekliyor.
+
 - Ürün/bileşen tartımı
 - Terazi ve etiket yazıcı adapter sözleşmeleri
 - Yedi hisseye miktar/değer dengesi
@@ -956,6 +962,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 **Çıkış:** Yedi hisse paket toplamları kaynak tartımlarla mutabıktır.
 
 ### Faz 10 — Teslimat, saha PWA, TV ve müşteri takip
+
+**Mevcut durum:** Başladı — teslimat geri alma, offline kuyruk, secret-safe payload guard ve cihaz adaptör sözleşmeleri uygulandı; PWA sync runtime, TV/customer tracking ekran bağlantıları ve cihaz saha doğrulaması henüz genel doğrulama/daha sonraki bağlantı işlerine kaldı.
 
 - Çiftlikten ve adrese teslim
 - Hazır/yüklendi/teslim edildi akışı
