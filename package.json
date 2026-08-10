@@ -22,6 +22,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "test": "vitest run",
+    "test:platform-postgres": "vitest run packages/database-platform/tests/platform-postgres.integration.test.ts",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
   },

@@ -1,4 +1,4 @@
-name: NodeJS with Webpack
+name: TilbeCore CI
 
 on:
   push:
@@ -6,23 +6,82 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: tilbecore
+          POSTGRES_PASSWORD: tilbecore_test_password
+          POSTGRES_DB: tilbecore_platform_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tilbecore -d tilbecore_platform_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PLATFORM_DATABASE_URL: postgresql://tilbecore:tilbecore_test_password@localhost:5432/tilbecore_platform_ci
+      PLATFORM_TEST_DATABASE_URL: postgresql://tilbecore:tilbecore_test_password@localhost:5432/tilbecore_platform_ci
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
+      - name: Use Node.js 22.12.0
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
 
-    - name: Build
-      run: |
-        npm install
-        npx webpack
+      - name: Enable pnpm 11.2.2
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.2.2 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: UTF-8 check
+        run: pnpm check:utf8
+
+      - name: Platform Prisma validate
+        run: pnpm exec prisma validate --schema packages/database-platform/prisma/schema.prisma
+
+      - name: Platform Prisma generate
+        run: pnpm exec prisma generate --schema packages/database-platform/prisma/schema.prisma
+
+      - name: Platform PostgreSQL migration apply
+        run: pnpm exec prisma migrate deploy --schema packages/database-platform/prisma/schema.prisma
+
+      - name: Platform PostgreSQL integration tests
+        run: pnpm test:platform-postgres
+        env:
+          RUN_PLATFORM_POSTGRES_TESTS: "1"
+
+      - name: TypeScript
+        run: pnpm exec tsc --noEmit
+
+      - name: Unit and route tests
+        run: pnpm test
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: PWA generated artifact checks
+        run: |
+          test -f public/sw-version.json
+          node scripts/check-sw-version-idempotent.mjs
+          test -z "$(git status --short --untracked-files=no)"
+
+      - name: Git diff check
+        run: git diff --check
