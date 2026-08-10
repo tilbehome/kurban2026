@@ -20,6 +20,8 @@ Mevcut yerel veriler geliştirme/test verisi kabul edilmiştir. Buna rağmen dö
 6. Dry-run: kayıt sayısı, hash, foreign key, parasal toplam mutabakatı.
 7. Test DB reset yöntemi belgelenir.
 8. Uygulama sadece doğrulanmış connection referansıyla başlar.
+9. Excel/CSV içe aktarma merkezi aynı dry-run, satır hata raporu ve geri alma ilkelerini kullanır; gerçek import canlı veriye doğrudan yazmadan önce rapor üretir (`PRO-003`).
+10. Yönetilen PostgreSQL kullanılan kurulumlarda WAL/PITR kabiliyeti, RPO/RTO hedefi ve restore provası değerlendirilir (`PRO-029`).
 
 ## Güncelleme modeli
 
@@ -35,6 +37,8 @@ Bulut:
 - Sürüm halkaları: internal → pilot firma → erken erişim → genel.
 - Firma bazlı migration sonucu.
 - Hata halinde tenant bazlı durdurma/rollback.
+- Güncelleme ve migration ön kontrolü; yedek, dry-run, tenant health, storage, kapasite, sürüm uyumu ve rollback hazır olma durumunu kanıtlar (`PRO-014`).
+- Firma/modül bazlı acil durdurma anahtarı feature flag sözleşmesiyle yürür; çekirdek operasyonu gereksiz yere durdurmadan riskli modülü kapatır (`PRO-015`, `PRO-028`).
 
 ## Veri teslimi
 
@@ -44,3 +48,5 @@ Firma istediğinde:
 - Belge/dosya arşivi.
 - Audit export.
 - Okunabilir CSV/Excel rapor paketi.
+- Firma kapatma, devir ve KVKK talepleri için export, saklama ve kapanış kanıtı ayrı auditlenir (`PRO-009`, `PRO-019`).
+- Yedekten dönüş provası checksum, kayıt sayısı ve kabul raporuyla kanıtlanır; sadece yedek dosyasının varlığı yeterli değildir (`PRO-021`).

@@ -46,6 +46,25 @@ Aşağıdaki tablo eski faz planının tarihsel özetidir; yeni ana belgeyle çe
 | 15 | Lisans/yedek/güncelleme | Tolerans, yedek, migration halkası | Orta | Restore + offline | Manuel paket | Offline durmaz | Yüksek |
 | 16 | Saha provası/canlı | 5–20 cihaz, LAN, kesinti | Yok | Operasyon prova | P0 snapshot | Tam gün prova geçer | Yüksek |
 
+## Profesyonel PRO kapsamının fazlara dağılımı
+
+Bu dağılım `REQ-001..REQ-068` sayımını değiştirmez ve Faz 2A’nın mevcut kapsamını büyütmez. Yeni onaylanan profesyonel kapsam, bağımlı olduğu mevcut fazlara yerleştirilir.
+
+| Faz | Bağlanan PRO kimlikleri | Gerekçe |
+|---|---|---|
+| Faz 2B | `PRO-012`, `PRO-013`, `PRO-015`, `PRO-016`, `PRO-017`, `PRO-018`, `PRO-019`, `PRO-020`, `PRO-026`, `PRO-028` | Platform DB, Süper Admin, güvenlik merkezi, provisioning, destek ve feature flag sözleşmeleri bu fazda doğar. |
+| Faz 2C | `PRO-012`, `PRO-014`, `PRO-017`, `PRO-021`, `PRO-029` | Firma DB provisioning, migration ön kontrolü, kapasite ve restore/PITR kanıtı tenant DB sınırıyla birlikte doğrulanır. |
+| Faz 2D | `PRO-003` | Import ve veri kalitesi sözleşmesi firma çekirdek şemasıyla birlikte hazırlanır; Faz 2A’ya kod olarak yığılmaz. |
+| Faz 3 | `PRO-004`, `PRO-005`, `PRO-009` | Müşteri, telefon, KVKK, iletişim izni ve veri kalitesi müşteri/sezon/cari modeliyle ilişkilidir. |
+| Faz 4 | `PRO-003`, `PRO-004`, `PRO-005` | Hayvan, küpe, tedarik ve toplu veri içe aktarma bu fazın veri sınırına bağlıdır. |
+| Faz 5 | `PRO-002`, `PRO-005` | Hisse, satış, yedinci hisse ve kritik satış onayları atomik satış fazında ele alınır. |
+| Faz 6 | `PRO-002` | Finansal onaylar ve tahsilat istisnaları ledger/tahsilat doğruluğuna bağlıdır. |
+| Faz 8 | `PRO-001`, `PRO-006` | Operasyon istisnaları ve vardiya devri kesim operasyon motoruyla birlikte anlam kazanır. |
+| Faz 10 | `PRO-006`, `PRO-007`, `PRO-008`, `PRO-011`, `PRO-023`, `PRO-024`, `PRO-025` | Mobil PWA, teslim, cihaz/oturum, bildirim ve erişilebilirlik kabulü bu yüzeylerde doğrulanır. |
+| Faz 11 | `PRO-001`, `PRO-010`, `PRO-011`, `PRO-025` | Firma yönetim paneli, eğitim/demo ve erişilebilirlik hedefleri raporlama/panel fazında tamamlanır. |
+| Faz 12 | `PRO-008`, `PRO-009`, `PRO-011`, `PRO-013`, `PRO-022`, `PRO-023`, `PRO-024`, `PRO-025`, `PRO-026`, `PRO-027` | Sertleştirme, güvenlik, E2E, observability ve erişilebilirlik kabul kapıları canlıya hazırlıkta kapanır. |
+| Faz 15 | `PRO-007`, `PRO-014`, `PRO-015`, `PRO-016`, `PRO-018`, `PRO-019`, `PRO-021`, `PRO-028`, `PRO-029` | Güncelleme, backup/restore, incident, bakım ve operasyon sürekliliği bu fazda kanıtlanır. |
+
 ## En kritik 20 teknik risk
 
 1. Float parasal model.

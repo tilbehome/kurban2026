@@ -377,6 +377,53 @@ Mobil PWA masaüstünün küçültülmüş hâli değildir. Role göre dört tem
 
 ---
 
+## 7.1 Profesyonel panel ve işletim kapsamı
+
+10 Ağustos 2026 sonrası kullanıcı tarafından onaylanan profesyonel panel gereksinimleri, mevcut 68 iş akışının yerine geçmez ve `REQ-001..REQ-068` sayısını değiştirmez. Bu kapsam `PRO-001..PRO-029` kimlikleriyle `11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md` içinde ayrı takip edilir.
+
+Firma/kullanıcı paneli aşağıdaki işletim yüzeyleriyle genişletilir:
+
+- Operasyon Kontrol Merkezi ve istisna kuyruğu.
+- Merkezi Onay Kutusu.
+- Excel/CSV Veri İçe Aktarma Merkezi.
+- Veri Kalitesi ve mükerrer kayıt merkezi.
+- Evrensel müşteri/telefon/küpe/kurban/hisse/QR araması.
+- Günlük görev ve vardiya devir teslimi.
+- Bildirim gönderim/başarısızlık geçmişi.
+- Cihaz, oturum ve giriş güvenliği yönetimi.
+- KVKK, iletişim izni, veri dışa aktarma ve saklama süreci.
+- Kullanıcı eğitim, yardım ve sentetik demo modu.
+- WCAG 2.2 AA erişilebilirlik hedefi.
+
+Platform Süper Admin kapsamı mevcut Platform Control Plane kararlarını aşağıdaki işletim yüzeyleriyle genişletir:
+
+- Firma kurulum/provisioning sihirbazı.
+- Platform güvenlik merkezi ve MFA/passkey politikası.
+- Güncelleme ve migration ön kontrolü.
+- Firma/modül bazlı acil durdurma anahtarı.
+- Olay, kesinti ve bakım yönetimi.
+- Kapasite, depolama, kullanıcı ve cihaz görünümü.
+- Firma yapılandırma ve sürüm karşılaştırması.
+- Firma veri dışa aktarma, kapatma ve devir süreci.
+- Destek talebini `SupportSession` ile ilişkilendirme.
+- Yedekten dönüş provası ve doğrulama kanıtı.
+
+Bu başlıklar Faz 2A'ya yığılmaz. Bağımlı oldukları platform, firma, finans, operasyon, test, güvenlik ve canlıya hazırlık fazlarına dağıtılır.
+
+## 7.2 Teknoloji ve kalite standartları
+
+Bu standartlar yeni mikroservis, Kubernetes, blockchain, tam event-sourcing, native mobil veya zorunlu yapay zekâ kararı değildir. Mevcut modüler monolit ve tek kod tabanı kararını güçlendirir.
+
+- OpenTelemetry tabanlı trace, metric ve log korelasyonu hedeflenir; PII/secret loglanmaz, requestId ve auditId ilişkilendirilebilir olur.
+- Playwright ile masaüstü, mobil, locale ve RTL E2E testleri koşulur.
+- axe tabanlı otomatik erişilebilirlik kontrolleri ve WCAG 2.2 AA kabul kriterleri test planına alınır.
+- Platform yöneticileri için WebAuthn/passkey ve MFA hedeflenir.
+- OWASP ASVS Level 2 güvenlik hedefi kimlik, oturum, yetki, dosya, hata, logging, tenant isolation ve destek erişimi başlıklarında kabul ölçütü olur.
+- OpenFeature uyumlu feature flag sözleşmesi hedeflenir.
+- Yönetilen PostgreSQL kurulumlarında WAL/PITR kabiliyeti değerlendirilir; yerel/hibrit kurulumlarda eşdeğer yedek/restore kanıtı aranır.
+
+---
+
 ## 8. Gelişmiş hedef dizin yapısı
 
 Hedef depo bir `pnpm workspace` monorepo olacaktır. İlk sürümde mikroservis kullanılmaz; uygulamalar ve domain paketleri aynı depoda, açık bağımlılık kurallarıyla tutulur.
@@ -710,10 +757,18 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - Platform PostgreSQL
 - Organization/instance/lisans/paket/modül modelleri
 - Platform kullanıcı ve yetkileri
+- Platform güvenlik merkezi, MFA/passkey politikası ve cihaz/oturum görünümü
 - Firma oluşturma ve admin daveti
 - provisioning durum ekranı
+- Firma kurulum/provisioning sihirbazı
 - sürüm, migration, sağlık ve yedek metadata’sı
+- firma/modül bazlı acil durdurma anahtarı
+- olay, kesinti ve bakım yönetimi
+- kapasite, depolama, kullanıcı ve cihaz görünümü
+- firma yapılandırma ve sürüm karşılaştırması
+- firma veri dışa aktarma, kapatma ve devir süreci
 - support session ve platform audit
+- destek talebi ile `SupportSession` ilişkilendirme
 
 #### Faz 2C — Firma başına ayrı PostgreSQL ve tenant yönlendirme
 
@@ -723,6 +778,7 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - Her firma için ayrı migration
 - tenant isolation testleri
 - firma bazlı yedek/geri yükleme
+- yönetilen PostgreSQL kurulumlarında WAL/PITR değerlendirmesi
 - bağlantı havuzu ve kapasite sınırları
 
 #### Faz 2D — Firma çekirdek şeması
@@ -732,6 +788,7 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - command/service/repository katmanı
 - authorization, audit, idempotency ve outbox
 - eski SQLite → yeni tenant DB import iskeleti
+- Excel/CSV içe aktarma dry-run ve veri kalitesi sözleşmesi
 
 **Çıkış:** İki test firması oluşturulur; ayrı DB’lerde aynı kimlikler bulunabilse bile veri sızıntısı olmaz; migration, backup/restore ve tenant isolation testleri geçer.
 
@@ -739,10 +796,13 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 
 - Kalıcı müşteri ve sezon hesapları
 - Mükerrer uyarısı ve normalize arama
+- Veri Kalitesi ve mükerrer kayıt merkezi
+- Evrensel müşteri/telefon araması
 - Müşteri 360° kartı
 - Sezon ekstresi ve tüm sezonlar geçmişi
 - Payer/beneficiary ayrımı
 - Müşteri veri sürümü ve audit
+- KVKK, iletişim izni, veri dışa aktarma ve saklama süreci temeli
 
 **Çıkış:** Aynı müşteri iki sezonda ayrı ekstreye ve birleşik geçmişe sahiptir.
 
@@ -750,8 +810,10 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 
 - Tedarikçi carisi
 - PDF ve toplu fatura satırları
+- Excel/CSV içe aktarma şablonları ve satır bazlı hata raporu
 - Faturadan hayvan oluşturma ve hayvandan faturaya bağlama
 - Tekil küpe ve gerçek alış bedeli
+- Evrensel küpe/kurban araması
 - Tartım ve sağlık/uygunluk geçmişi
 - Kurban no ve operasyon sıra geçmişi
 - Gider bağlantısı ve çift kayıt engeli
@@ -763,6 +825,7 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - Hisse kartı ve fiyat sürümü
 - Hayvana tam yedi hisse
 - Uygun hisse önerisi
+- Evrensel hisse/QR araması
 - Rezervasyon ve süre
 - Liste/indirim/net fiyat snapshot’ı
 - Satış + opsiyonel kapora tek transaction
@@ -778,6 +841,7 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - Tek makbuz ve yöntem parçaları
 - Çoklu borç dağıtımı
 - Nakit/banka/POS hesapları
+- Merkezi Onay Kutusu ile kritik finansal onaylar
 - POS taksit ve vade farkı
 - İndirim, iade, mahsup ve düzeltme
 - Tedarikçi ödeme ve gider
@@ -802,6 +866,8 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 
 - Kontrollü aşama makinesi
 - Sıra havuzu ve geçmişi
+- Operasyon Kontrol Merkezi ve istisna kuyruğu
+- Günlük görev ve vardiya devir teslimi
 - Role özel saha/kesim ekranları
 - Önkoşullar ve yönetici istisnası
 - Geri alma/düzeltme olayları
@@ -830,12 +896,15 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - Bağlantı kaybı ve yeniden bağlanma
 - Anonim TV
 - PII’siz tokenlı müşteri takip
+- Cihaz, oturum ve giriş güvenliği yönetimi
+- Bildirim gönderim ve başarısızlık geçmişi
 
 **Çıkış:** Her hisse yalnız bir kez kapanır; 5–20 cihaz testinde saha hızlı ve güvenlidir.
 
 ### Faz 11 — Raporlama ve firma yönetim paneli
 
 - Yönetici dashboard
+- Operasyon Kontrol Merkezi
 - Satış, doluluk, fiyat ve indirim
 - Cari, borç, tahsilat ve iade
 - Kasa, banka/POS ve gider
@@ -843,6 +912,8 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - Kesim süreleri ve darboğaz
 - Eksik vekâlet/paket ve override
 - Audit ve sezon karşılaştırması
+- Evrensel arama, eğitim/yardım ve sentetik demo modu
+- WCAG 2.2 AA erişilebilirlik kabulü
 
 **Çıkış:** Bütün raporlar kaynak ledger ve operasyon olaylarıyla otomatik mutabıktır.
 
@@ -852,8 +923,12 @@ Faz 1 dışı bırakılıp sonraki fazlara taşınan riskler:
 - Gerçek uçtan uca kurban provası
 - İki firma ile izolasyon provası
 - 5–20 cihaz yük testi
+- Playwright masaüstü/mobil/locale/RTL E2E ve axe erişilebilirlik testleri
+- OWASP ASVS Level 2 güvenlik hedefi doğrulaması
+- OpenTelemetry trace/metric/log korelasyonu doğrulaması
 - Ağ, elektrik ve sunucu kesintisi tatbikatı
 - Firma bazlı backup/restore ve yedek cihaz devralma
+- yedekten dönüş provası ve doğrulama kanıtı
 - SQLite import provası
 - Demo veri temizliği
 - Kullanıcı eğitimleri ve acil durum talimatı

@@ -27,6 +27,10 @@
 - Kritik işlemler için sebep alanı ve audit zorunlu olmalıdır.
 - Platform kullanıcısı ile firma kullanıcısı farklı session/cookie alanı kullanmalıdır.
 - Destek erişimi firma onayı olmadan operasyon verisine erişmemelidir.
+- Platform yöneticileri için WebAuthn/passkey ve MFA hedeflenir; recovery ve reset işlemleri de auditlenir (`PRO-013`, `PRO-026`).
+- Firma cihaz/oturum yönetimi kendi firma sınırı içinde çalışır; başka firmaların cihazları veya oturumları görünmez (`PRO-008`).
+- Güvenlik kabul hedefi OWASP ASVS Level 2’dir; kimlik, oturum, yetki, dosya, hata, logging, tenant isolation ve destek erişimi kontrolleri bu hedefe göre doğrulanır (`PRO-027`).
+- KVKK, iletişim izni, veri dışa aktarma ve saklama talepleri açık yetki, gerekçe ve audit gerektirir (`PRO-009`, `PRO-019`).
 
 ## Önerilen izin adlandırması
 
@@ -43,3 +47,9 @@
 - `teslimat.qr_kapat`
 - `firma.ayar.guncelle`
 - `platform.firma.provision`
+- `platform.guvenlik.yonet`
+- `platform.migration.onkontrol`
+- `platform.kill_switch.yonet`
+- `support.session.onayla`
+- `cihaz.oturum.iptal`
+- `kvkk.talep.yonet`

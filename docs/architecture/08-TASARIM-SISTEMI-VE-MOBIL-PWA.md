@@ -41,3 +41,12 @@ Mobil PWA, masaüstünün aynası olmamalı.
 - Ekran okuyucu etiketleri.
 - TV ekranlarında yüksek kontrast.
 - Belge/PDF tasarımlarında font gömme.
+
+## Profesyonel panel UX hedefleri
+
+- Operasyon Kontrol Merkezi ve istisna kuyruğu, tekrar eden kart kalabalığına dönüşmeden yoğun operasyon taraması için tablo, filtre ve durum bandı kullanır (`PRO-001`).
+- Merkezi Onay Kutusu kritik kararları tek yerde toplar; onay, ret, gerekçe ve etkilenmiş kayıtlar kolay taranır (`PRO-002`).
+- Evrensel arama masaüstünde hızlı komut/arama, mobilde barkod/QR ve metin aramasıyla çalışır; sonuçlar yetkiye göre maskelenir (`PRO-005`).
+- Günlük görev ve vardiya devir teslimi mobil görev mantığıyla tasarlanır; açık iş, risk ve teslim alan kişi görünür olur (`PRO-006`).
+- Kullanıcı yardım ve sentetik demo modu gerçek veriyle karışmayan eğitim akışları sağlar (`PRO-010`).
+- WCAG 2.2 AA hedefi yeni firma ve platform panel ekranlarının kabul kriteridir; klavye, focus, kontrast, label ve hata mesajı davranışı otomatik ve manuel testle doğrulanır (`PRO-011`, `PRO-025`).
