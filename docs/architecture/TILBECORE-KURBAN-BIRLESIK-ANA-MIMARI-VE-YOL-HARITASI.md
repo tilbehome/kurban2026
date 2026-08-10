@@ -851,6 +851,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 ### Faz 3 — Müşteri, sezon ve cari kart
 
+**Mevcut durum:** Başladı — `@tilbecore/tenant-core` içinde müşteri, telefon normalizasyonu ve sezon bazlı cari hesap sözleşmesi uygulandı; genel doğrulama bekliyor.
+
 - Kalıcı müşteri ve sezon hesapları
 - Mükerrer uyarısı ve normalize arama
 - Veri Kalitesi ve mükerrer kayıt merkezi
@@ -865,6 +867,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 ### Faz 4 — Tedarikçi, alış faturası, gider ve hayvan
 
+**Mevcut durum:** Başladı — tenant çekirdek command sözleşmelerinde tedarikçi ve hayvan kayıt akışı uygulandı; alış faturası/gider ekran ve API taşımaları henüz tamamlanmadı.
+
 - Tedarikçi carisi
 - PDF ve toplu fatura satırları
 - Excel/CSV içe aktarma şablonları ve satır bazlı hata raporu
@@ -878,6 +882,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 **Çıkış:** 20 satırlı faturadan 20 tekil hayvan ve doğru tedarikçi borcu atomik/tutarlı oluşur.
 
 ### Faz 5 — Hisse kartı, rezervasyon ve atomik satış
+
+**Mevcut durum:** Başladı — tenant çekirdek domain içinde 7 hisse kapasite kuralı, satılabilir hisse kontrolü, fiyat snapshot'lı satış ve idempotency sözleşmesi uygulandı; genel doğrulama bekliyor.
 
 - Hisse kartı ve fiyat sürümü
 - Hayvana tam yedi hisse
@@ -894,6 +900,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 **Çıkış:** Eşzamanlı iki satıştan yalnız biri başarılı olur; satış ve finans yarım kalmaz.
 
 ### Faz 6 — Ledger, tahsilat ve kasa
+
+**Mevcut durum:** Başladı — Decimal string para sözleşmesi, ödeme dağıtımı, ledger ters kayıt ve satış iptal reversal akışı uygulandı; mevcut tenant uygulaması henüz ledger'ı tek finans kaynağı olarak kullanacak şekilde taşınmadı.
 
 - Çift taraflı ledger
 - Tek makbuz ve yöntem parçaları

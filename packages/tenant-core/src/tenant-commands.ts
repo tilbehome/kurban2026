@@ -15,6 +15,7 @@ import type {
   TenantOutboxMessage,
 } from "./tenant-domain";
 import { assertShareCanBeSold } from "./tenant-domain";
+import { createReversalEntry } from "./finance-ledger";
 import type { TenantInstanceId, UserId } from "@tilbecore/contracts";
 
 export interface TenantCommandContext {
@@ -116,6 +117,26 @@ export function confirmSale(
     agreedPrice: input.priceSnapshot,
   }));
   return withAudit(context, { sale, ledger, shares }, "sale.confirmed", "Sale", input.id);
+}
+
+export function cancelSaleWithReversal(
+  context: TenantCommandContext,
+  sale: Sale,
+  ledgerEntries: readonly LedgerEntry[],
+): TenantCommandResult<{ sale: Sale; reversals: readonly LedgerEntry[] }> {
+  if (sale.status !== "confirmed") throw new Error(`SALE_NOT_CANCELLABLE:${sale.status}`);
+  const reversals = ledgerEntries
+    .filter((entry) => entry.saleId === sale.id && !entry.reversalOfEntryId)
+    .map((entry, index) =>
+      createReversalEntry(entry, `${sale.id}_reversal_${index + 1}` as LedgerEntry["id"], context.occurredAt),
+    );
+  return withAudit(
+    context,
+    { sale: { ...sale, status: "cancelled" }, reversals },
+    "sale.cancelled",
+    "Sale",
+    sale.id,
+  );
 }
 
 function withAudit<TEntity>(

@@ -135,3 +135,13 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 2B-1B integration test kapsamı `packages/database-platform/tests/platform-postgres.integration.test.ts` içindedir. Testler `RUN_PLATFORM_POSTGRES_TESTS=1` ve `PLATFORM_TEST_DATABASE_URL` olmadan normal unit koşusunda atlanır; CI'da geçici PostgreSQL servisiyle çalışır. Kapsam: boş DB'ye `0001`+`0002`, `0001` sonrası örnek kayıtlarla `0002`, drift/idempotent deploy, check constraint, foreign key, unique, gerçek repository create/read/nested write, transaction commit/rollback ve connection string sızıntısı kontrolü.
 
 Bu kayıt Faz 2B'nin tamamlandığı, Platform PostgreSQL'in canlıya hazır olduğu, Süper Admin'in hazır olduğu, tenant provisioning'in hazır olduğu veya çok firmalı sistemin tamamlandığı anlamına gelmez.
+
+## Faz 3–6 durumu
+
+**Durum:** Başladı — ticari domain ve finans çekirdeği uygulandı — genel doğrulama bekliyor.
+
+| İş | Durum | Kanıt |
+|---|---|---|
+| Müşteri/sezon cari sözleşmesi | Uygulandı — genel doğrulama bekliyor | `@tilbecore/tenant-core` içinde müşteri oluşturma, telefon normalizasyonu ve sezon bazlı cari hesap özet sözleşmesi eklendi. |
+| Satış ve hisse kuralı | Uygulandı — genel doğrulama bekliyor | `confirmSale` akışı satılabilir hisse kontrolü, fiyat snapshot'ı, idempotency key ve ledger satış kaydı üretir. |
+| Ledger/tahsilat temeli | Uygulandı — genel doğrulama bekliyor | Decimal string para sözleşmesi, ödeme dağıtımı toplam kontrolü, ödeme ledger kayıtları ve ters kayıt/reversal akışı eklendi. Yeni `Float` para modeli eklenmedi. |
