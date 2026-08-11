@@ -96,3 +96,37 @@ Destek oturumu alanları:
 - firma tarafından iptal
 - destek talebi ve `SupportSession` ilişki kimliği
 - erişim sonrası kapanış ve firma görünür özet
+
+## Faz 2B uygulama kanıtı ve route envanteri
+
+`apps/platform-admin` ayrı Next.js uygulaması olarak oluşturulmuştur. Host sınırı merkezi domain config üzerinden ortam başına yalnız `console.tilbecore.com`, `console.staging.tilbecore.com` veya `console.tilbecore.test` kabul eder. Uygulamanın tenant private paketlerine ve tenant Prisma istemcisine bağımlılığı mimari testle yasaktır.
+
+Gerçek sayfalar:
+
+| Route | İşlev |
+|---|---|
+| `/login` | Ayrı PlatformUser parola + zorunlu TOTP MFA girişi |
+| `/` | Gerçek Platform DB sinyalli komuta merkezi |
+| `/organizations` | Aranabilir/filtrelenebilir firma listesi |
+| `/organizations/[id]` | Platform metadata’sıyla Firma 360° kartı ve kontrollü yaşam döngüsü |
+| `/provisioning/new` | On adımlı alanları kapsayan async firma kurulum sihirbazı |
+| `/provisioning` | Kuyruk komutları ve provisioning job iş merkezi |
+| `/plans` | Plan, lisans, kota, entitlement ve gelecek tarihli değişiklik |
+| `/domains` | Custom domain talebi ve gerçek DNS/TLS doğrulama durumu |
+| `/backups` | Backup/verify/restore doğrulama komutları; destructive restore yok |
+| `/support` | Süreli, kapsamlı, gerekçeli SupportSession açma/sonlandırma |
+| `/users` | Platform kullanıcı 360°, rol/durum ve session iptali |
+| `/audit` | Secret-safe platform audit olayları |
+| `/unauthorized` | Geçerli oturumda application izni bulunmayan kullanıcı için güvenli durum |
+
+Route mutasyonları ince adaptördür; yetki, idempotency, lifecycle, support süresi/kapsamı ve secret-safe payload kuralları `@tilbecore/platform` application/domain katmanındadır. Platform DB erişimi `@tilbecore/database-platform` adaptöründedir. Firma Admin hazırlığı artık PlatformUser oluşturmaz; platform metadata’sında tenant’a bağlı `TenantAdminInvitation` olarak tutulur.
+
+Bu kanıt tam Faz 2B kapanışı değildir. Tam WebAuthn/passkey, recovery, canlı DNS/TLS, production destructive restore, abonelik/faturalama, emergency-stop/incident/bakım davranışları ve genel E2E/güvenlik kabul dönemi sonraki bağlayıcı işlerde kalır.
+
+### Yerel çalışma ve ilk kullanıcı
+
+Yerel hosts kaydında `127.0.0.1 console.tilbecore.test` bulunmalıdır. Platform DB migration’ı yetkili operatör tarafından uygulandıktan sonra gerekli environment değerleri terminal oturumuna verilir ve `pnpm platform-admin:dev` çalıştırılır. Adres `http://console.tilbecore.test:3100` olur.
+
+İlk kullanıcı otomatik oluşmaz. Boş PlatformUser tablosunda yalnız açık onayla `pnpm platform-admin:bootstrap` çalışır. Gerekli environment adları: `PLATFORM_DATABASE_URL`, `PLATFORM_BOOTSTRAP_CONFIRM=CREATE_FIRST_SUPER_ADMIN`, `PLATFORM_BOOTSTRAP_EMAIL`, `PLATFORM_BOOTSTRAP_DISPLAY_NAME`, en az 14 karakterli `PLATFORM_BOOTSTRAP_PASSWORD`, Base32 `PLATFORM_BOOTSTRAP_MFA_SECRET` ve 32 byte Base64 `PLATFORM_MFA_ENCRYPTION_KEY`. Production’da ayrıca `PLATFORM_BOOTSTRAP_PRODUCTION_ENABLED=true` açıkça verilmelidir. Parola, MFA secretı ve şifreleme anahtarı komut argümanına veya çıktıya yazılmaz.
+
+Async işler kontrollü süreç yöneticisi/operatör tarafından `pnpm provisioning:worker` ve `pnpm tenant:ops:worker` ile tek iş olarak yürütülebilir. Sürekli worker orchestration ve canlı deployment bu paketin kanıtı değildir.

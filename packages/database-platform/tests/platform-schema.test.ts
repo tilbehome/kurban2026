@@ -7,6 +7,10 @@ const hardeningMigration = readFileSync(
   join(__dirname, "../prisma/migrations/0002_platform_baseline_hardening/migration.sql"),
   "utf8",
 );
+const platformAdminMigration = readFileSync(
+  join(__dirname, "../prisma/migrations/0006_platform_admin_operations/migration.sql"),
+  "utf8",
+);
 
 describe("platform Prisma şeması", () => {
   it("yalnız PostgreSQL provider ve PLATFORM_DATABASE_URL kullanır", () => {
@@ -82,5 +86,16 @@ describe("platform Prisma şeması", () => {
     expect(hardeningMigration).toContain('"PlatformLicense_status_check"');
     expect(hardeningMigration).toContain('"PlatformPlan_limits_check"');
     expect(hardeningMigration).toContain('"PlatformLicense_limits_check"');
+  });
+
+  it("Platform Admin operasyon tabloları secret yerine opaque referans ve güvenli durum constraintleri kullanır", () => {
+    for (const model of ["PlatformAdminCommand", "OrganizationLifecycleEvent", "TenantAdminInvitation", "PlatformTenantBackup", "PlatformLicenseChange"]) {
+      expect(schema).toMatch(new RegExp(`model\\s+${model}\\b`));
+    }
+    const commandModel = schema.match(/model PlatformAdminCommand \{[\s\S]*?\n\}/)?.[0] ?? "";
+    expect(commandModel).not.toMatch(/connectionString|databaseUrl|password|secret/i);
+    expect(platformAdminMigration).toContain("'pending', 'running', 'succeeded', 'failed', 'cancelled'");
+    expect(platformAdminMigration).toContain('"TenantAdminInvitation_role_check"');
+    expect(platformAdminMigration).toContain('"PlatformUser_failedLoginCount_check"');
   });
 });

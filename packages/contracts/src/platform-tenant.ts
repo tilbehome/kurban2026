@@ -52,6 +52,8 @@ export interface TenantOperationalLimits {
   maxUsers?: number;
   maxDevices?: number;
   maxStorageMb?: number;
+  maxAnimals?: number;
+  maxSeasons?: number;
 }
 
 export interface TenantBackupSummary {
@@ -62,7 +64,15 @@ export interface TenantBackupSummary {
 
 export interface PlatformTenantDescriptor {
   organizationId: OrganizationId;
-  organizationStatus: "draft" | "active" | "suspended" | "closed";
+  organizationStatus:
+    | "draft"
+    | "provisioning"
+    | "active"
+    | "suspended"
+    | "restricted"
+    | "archived"
+    | "provisioning_failed"
+    | "closed";
   tenantInstanceId: TenantInstanceId;
   slug: TenantSlug;
   displayName: string;

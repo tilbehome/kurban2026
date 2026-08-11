@@ -11,12 +11,14 @@ import {
   PrismaTenantDatabaseRefRepository,
   PrismaTenantInstanceRepository,
 } from "../src/repositories/platform-prisma-repositories";
+import { PrismaPlatformAdminRepository } from "../src/repositories/platform-admin-prisma-repository";
 import type {
   Organization,
   PlatformLicense,
   PlatformModuleId,
   PlatformPlan,
   PlatformPlanId,
+  PlatformUserId,
   TenantDatabaseRefRecord,
   TenantInstance,
 } from "@tilbecore/platform";
@@ -44,6 +46,7 @@ const platformMigrationChain = [
   "0003_platform_control_plane_metadata",
   "0004_resumable_tenant_provisioning",
   "0005_tenant_request_runtime_metadata",
+  "0006_platform_admin_operations",
 ] as const;
 
 describePostgres("platform PostgreSQL migration zinciri", () => {
@@ -197,7 +200,7 @@ describePostgres("platform repository gerçek PostgreSQL integration", () => {
     databaseRefRepository = new PrismaTenantDatabaseRefRepository(db);
     tenantRepository = new PrismaTenantInstanceRepository(db);
     planLicenseRepository = new PrismaPlanLicenseRepository(db);
-  });
+  }, 30_000);
 
   afterAll(async () => {
     await db?.$disconnect();
@@ -265,6 +268,31 @@ describePostgres("platform repository gerçek PostgreSQL integration", () => {
       ),
     ).rejects.toThrow();
     await expect(databaseRefRepository.findById(rollbackIds.databaseRefId)).resolves.toBeNull();
+  });
+
+  test("Platform Admin komut kuyruğu pending durumunu ve idempotent tekrarı gerçek DB'de korur", async () => {
+    const actorId = `platform_actor_${schemaPrefix}` as PlatformUserId;
+    await db.platformUser.create({ data: { id: actorId, email: `${actorId}@example.test`, displayName: "Platform Actor", status: "active", passwordHash: "sensitive-password-hash" } });
+    await db.platformMfaEnrollment.create({ data: { id: `mfa_${schemaPrefix}`, userId: actorId, method: "totp", status: "active", secretCiphertext: "sensitive-mfa-ciphertext" } });
+    const repository = new PrismaPlatformAdminRepository(db);
+    const draft = {
+      id: `command_${schemaPrefix}`,
+      idempotencyKey: `idempotency_${schemaPrefix}`,
+      type: "tenant.backup.create" as const,
+      organizationId: `org_command_${schemaPrefix}` as OrganizationId,
+      tenantInstanceId: `tenant_command_${schemaPrefix}` as TenantInstanceId,
+      requestedByUserId: actorId,
+      requestId: `request_${schemaPrefix}`,
+      traceId: `trace_${schemaPrefix}`,
+      approvalReason: "Entegrasyon testi için onaylandı",
+      payload: {},
+    };
+    await expect(repository.enqueueCommand(draft)).resolves.toMatchObject({ status: "pending", duplicate: false });
+    await expect(repository.enqueueCommand({ ...draft, id: `${draft.id}_again` })).resolves.toMatchObject({ status: "pending", duplicate: true });
+    await expect(db.platformAdminCommand.count({ where: { idempotencyKey: draft.idempotencyKey } })).resolves.toBe(1);
+    const safeUsers = JSON.stringify(await repository.listPlatformUsers());
+    expect(safeUsers).not.toContain("sensitive-password-hash");
+    expect(safeUsers).not.toContain("sensitive-mfa-ciphertext");
   });
 });
 

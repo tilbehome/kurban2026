@@ -60,6 +60,9 @@ function slash(p) {
 
 function excluded(relativePath) {
   const normalized = slash(relativePath);
+  if (normalized.split("/").some((segment) => [".next", "node_modules", "dist", "coverage"].includes(segment))) {
+    return true;
+  }
   for (const dir of EXCLUDED_DIRS) {
     if (normalized === dir || normalized.startsWith(`${dir}/`)) return true;
   }

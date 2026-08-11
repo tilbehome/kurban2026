@@ -223,6 +223,17 @@ describe("Faz 2A mimari bağımlılık sınırları", () => {
     ).toEqual([]);
   });
 
+  it("platform-admin tenant private paketlerine veya tenant Prisma istemcisine bağlanmaz", () => {
+    const files = listTrackedSourceFiles("apps/platform-admin");
+    expect(files.length).toBeGreaterThan(0);
+    expect(violations(files, [
+      /from\s+["']@tilbecore\/(database-tenant|tenant-core|tenant-runtime|tenant-web-runtime)(\/|["'])/,
+      /from\s+["'](\.\.\/)+packages\/database-tenant(\/|["'])/,
+      /from\s+["'][^"']*database-tenant\/generated(\/|["'])/,
+      /from\s+["']@tilbecore\/[^"']+\/src(\/|["'])/,
+    ])).toEqual([]);
+  });
+
   it("uygulama katmanları paketlerin yalnız public export yüzeyini kullanır", () => {
     const packageFiles = listTrackedSourceFiles("packages");
 

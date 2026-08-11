@@ -2,7 +2,7 @@ import path from "node:path";
 import {
   createPlatformPrismaClient,
   PrismaOrganizationRepository,
-  PrismaPlatformUserRepository,
+  PrismaTenantAdminInvitationRepository,
   PrismaProvisioningJobRepository,
   PrismaTenantDatabaseRefRepository,
   PrismaTenantInstanceRepository,
@@ -14,9 +14,9 @@ import {
   safeProvisioningErrorCode,
   type ProvisioningJobRecord,
 } from "@tilbecore/provisioning";
-import { readProvisioningCommand } from "./input";
+import { parseProvisioningCommand, readProvisioningCommand } from "./input";
 
-type CommandName = "dry-run" | "create" | "status" | "resume" | "rollback";
+type CommandName = "dry-run" | "create" | "status" | "resume" | "rollback" | "worker";
 
 void main().catch((error) => {
   process.stderr.write(`${JSON.stringify({ ok: false, code: safeProvisioningErrorCode(error) })}\n`);
@@ -25,7 +25,7 @@ void main().catch((error) => {
 
 async function main(): Promise<void> {
   const commandName = process.argv[2] as CommandName | undefined;
-  if (!commandName || !["dry-run", "create", "status", "resume", "rollback"].includes(commandName)) {
+  if (!commandName || !["dry-run", "create", "status", "resume", "rollback", "worker"].includes(commandName)) {
     throw new Error("PROVISIONING_CLI_COMMAND_INVALID");
   }
 
@@ -45,6 +45,11 @@ async function main(): Promise<void> {
   const platform = createPlatformPrismaClient(platformDatabaseUrl);
   const jobRepository = new PrismaProvisioningJobRepository(platform);
   try {
+    if (commandName === "worker") {
+      if (!process.argv.includes("--once")) throw new Error("PROVISIONING_WORKER_ONCE_REQUIRED");
+      print(await runQueuedProvisioningCommand(platform, jobRepository));
+      return;
+    }
     if (commandName === "status") {
       const job = await jobRepository.findByTenantInstanceId(requiredArgument("--tenant-id") as ProvisioningJobRecord["tenantInstanceId"]);
       if (!job) throw new Error("PROVISIONING_JOB_NOT_FOUND");
@@ -74,7 +79,7 @@ async function main(): Promise<void> {
       organizationRepository: new PrismaOrganizationRepository(platform),
       tenantDatabaseRefRepository: new PrismaTenantDatabaseRefRepository(platform),
       tenantInstanceRepository: new PrismaTenantInstanceRepository(platform),
-      platformUserRepository: new PrismaPlatformUserRepository(platform),
+      tenantAdminInvitationRepository: new PrismaTenantAdminInvitationRepository(platform),
       provisioningJobRepository: jobRepository,
       tenantDatabaseProvisioner: tenantProvisioner,
     }, input);
@@ -83,6 +88,118 @@ async function main(): Promise<void> {
     await platform.$disconnect();
   }
 }
+
+async function runQueuedProvisioningCommand(
+  platform: ReturnType<typeof createPlatformPrismaClient>,
+  jobRepository: PrismaProvisioningJobRepository,
+): Promise<Record<string, unknown>> {
+  const queued = await platform.platformAdminCommand.findFirst({
+    where: { status: "pending", type: { in: ["tenant.provision", "tenant.provision.resume", "tenant.provision.rollback"] } },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!queued) return { ok: true, processed: false };
+  const claimed = await platform.platformAdminCommand.updateMany({
+    where: { id: queued.id, status: "pending", version: queued.version },
+    data: { status: "running", startedAt: new Date(), attempts: { increment: 1 }, version: { increment: 1 } },
+  });
+  if (claimed.count !== 1) return { ok: true, processed: false, raced: true };
+  const tenantProvisioner = new PostgresTenantDatabaseProvisioner({
+    adminDatabaseUrl: requiredEnvironment("TENANT_DATABASE_ADMIN_URL"), repositoryRoot: path.resolve(process.cwd()),
+  });
+  try {
+    if (!queued.tenantInstanceId) throw new Error("PROVISIONING_COMMAND_TENANT_REQUIRED");
+    if (queued.type === "tenant.provision.rollback") {
+      const job = await rollbackProvisioningJob({ provisioningJobRepository: jobRepository, tenantDatabaseProvisioner: tenantProvisioner }, { tenantInstanceId: queued.tenantInstanceId as ProvisioningJobRecord["tenantInstanceId"], requestId: queued.requestId });
+      await completeQueuedCommand(platform, queued.id, job.id);
+      return { ok: true, processed: true, commandId: queued.id, jobId: job.id, status: job.status };
+    }
+    const source = queued.type === "tenant.provision.resume"
+      ? await platform.platformAdminCommand.findFirst({ where: { tenantInstanceId: queued.tenantInstanceId, type: "tenant.provision", status: { in: ["failed", "succeeded"] } }, orderBy: { createdAt: "desc" } })
+      : queued;
+    if (!source) throw new Error("PROVISIONING_SOURCE_COMMAND_NOT_FOUND");
+    const payload = requireRecord(source.payload);
+    const corePayload = Object.fromEntries(Object.entries(payload).filter(([key]) => key !== "onboarding"));
+    const command = parseProvisioningCommand(corePayload);
+    const result = await provisionTenant({
+      organizationRepository: new PrismaOrganizationRepository(platform),
+      tenantDatabaseRefRepository: new PrismaTenantDatabaseRefRepository(platform),
+      tenantInstanceRepository: new PrismaTenantInstanceRepository(platform),
+      tenantAdminInvitationRepository: new PrismaTenantAdminInvitationRepository(platform),
+      provisioningJobRepository: jobRepository,
+      tenantDatabaseProvisioner: tenantProvisioner,
+    }, command);
+    await finalizeOnboarding(platform, command, payload.onboarding, queued.requestedByUserId, queued.requestId);
+    await completeQueuedCommand(platform, queued.id, result.job.id);
+    return { ok: true, processed: true, commandId: queued.id, jobId: result.job.id, status: result.job.status };
+  } catch (error) {
+    const code = safeProvisioningErrorCode(error);
+    await platform.platformAdminCommand.update({ where: { id: queued.id }, data: { status: "failed", errorCode: code, finishedAt: new Date() } });
+    return { ok: false, processed: true, commandId: queued.id, code };
+  }
+}
+
+async function finalizeOnboarding(
+  platform: ReturnType<typeof createPlatformPrismaClient>,
+  command: ReturnType<typeof parseProvisioningCommand>,
+  onboardingValue: unknown,
+  actorUserId: string,
+  requestId: string,
+): Promise<void> {
+  const onboarding = requireRecord(onboardingValue);
+  const domain = requiredText(onboarding.domain);
+  const planId = requiredText(onboarding.planId);
+  const limits = requireRecord(onboarding.limits);
+  const moduleKeys = Array.isArray(onboarding.modules) ? onboarding.modules.filter((item): item is string => typeof item === "string") : [];
+  const plan = await platform.platformPlan.findUnique({
+    where: { id: planId }, include: { modules: { include: { module: true } } },
+  });
+  if (!plan) throw new Error("PROVISIONING_PLAN_NOT_FOUND");
+  const allowedModules = plan.modules.filter((item) => item.enabled && item.module.status === "active");
+  const modules = allowedModules.filter((item) => moduleKeys.includes(item.module.key)).map((item) => item.module);
+  if (modules.length !== new Set(moduleKeys).size) throw new Error("PROVISIONING_MODULE_NOT_ENTITLED");
+  const maxUsers = positiveInteger(limits.maxUsers);
+  const maxAnimals = positiveInteger(limits.maxAnimals);
+  const maxSeasons = positiveInteger(limits.maxSeasons);
+  assertWithinPlanLimit("USERS", maxUsers, plan.maxUsers);
+  assertWithinPlanLimit("ANIMALS", maxAnimals, plan.maxAnimals);
+  assertWithinPlanLimit("SEASONS", maxSeasons, plan.maxSeasons);
+  await platform.$transaction(async (tx) => {
+    await tx.organization.update({ where: { id: command.organization.id }, data: { status: "active", version: { increment: 1 } } });
+    await tx.tenantInstance.update({ where: { id: command.tenant.id }, data: { provisioningStatus: "active" } });
+    await tx.organizationLifecycleEvent.upsert({
+      where: { id: `lifecycle_${command.tenant.id}_activated` },
+      create: {
+        id: `lifecycle_${command.tenant.id}_activated`, organizationId: command.organization.id,
+        fromStatus: command.organization.status, toStatus: "active", reason: "Provisioning başarıyla tamamlandı",
+        impactSummary: "Tenant veritabanı ve platform metadata kaydı etkinleştirildi", approvedByUserId: actorUserId, requestId,
+      },
+      update: {},
+    });
+    await tx.tenantCustomDomain.upsert({
+      where: { hostname: domain },
+      create: { id: `domain_${command.tenant.id}_default`, tenantInstanceId: command.tenant.id, hostname: domain, status: "pending_verification", dnsVerified: false, tlsReady: false, isPrimary: true },
+      update: {},
+    });
+    await tx.platformLicense.upsert({
+      where: { id: `license_${command.organization.id}` },
+      create: {
+        id: `license_${command.organization.id}`, organizationId: command.organization.id, planId,
+        status: "active", startsAt: new Date(), maxUsers,
+        maxAnimals, maxSeasons,
+        entitlements: { create: modules.map((module) => ({ moduleId: module.id, enabled: true })) },
+      }, update: {},
+    });
+  });
+}
+
+async function completeQueuedCommand(platform: ReturnType<typeof createPlatformPrismaClient>, id: string, resultRef: string): Promise<void> {
+  await platform.platformAdminCommand.update({ where: { id }, data: { status: "succeeded", resultRef, errorCode: null, finishedAt: new Date() } });
+}
+
+function requireRecord(value: unknown): Record<string, unknown> { if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("PROVISIONING_COMMAND_PAYLOAD_INVALID"); return value as Record<string, unknown>; }
+function requiredText(value: unknown): string { if (typeof value !== "string" || !value) throw new Error("PROVISIONING_COMMAND_PAYLOAD_INVALID"); return value; }
+function positiveInteger(value: unknown): number { if (typeof value !== "number" || !Number.isInteger(value) || value < 1) throw new Error("PROVISIONING_COMMAND_LIMIT_INVALID"); return value; }
+function assertWithinPlanLimit(name: string, requested: number, planLimit: number | null): void { if (planLimit !== null && requested > planLimit) throw new Error(`PROVISIONING_${name}_LIMIT_EXCEEDED`); }
 
 function requiredEnvironment(name: "PLATFORM_DATABASE_URL" | "TENANT_DATABASE_ADMIN_URL"): string {
   const value = process.env[name];

@@ -1,0 +1,7 @@
+import Link from "next/link";
+import { AdminShell, JsonPanel, PageHead } from "../../src/components";
+import { pageActor } from "../../src/page-auth";
+import { platformRepository } from "../../src/platform-server";
+
+export const dynamic="force-dynamic";
+export default async function ProvisioningPage(){await pageActor("platform.provisioning.read");const rows=await platformRepository().listProvisioningJobs();return <AdminShell><PageHead title="Provisioning İş Merkezi" description="Kuyruk komutları ve gerçek provisioning job durumları birlikte izlenir." action={<Link className="button" href="/provisioning/new">Yeni kurulum</Link>}/><div className="stack">{rows.length===0?<div className="card">Henüz provisioning işi bulunmuyor.</div>:rows.map((row,index)=><article className={`card ${row.status==="failed"?"danger":""}`} key={String(row.id??index)}><h2>{String(row.id??"İş")}</h2><p><span className="status">{String(row.status??"unknown")}</span> · {String(row.currentStep??row.type??"bekliyor")}</p><JsonPanel value={row}/>{row.status==="failed"?<form className="form-grid" action="/api/commands" method="post"><input type="hidden" name="type" value="tenant.provision.resume"/><input type="hidden" name="organizationId" value={String(row.organizationId??"")}/><input type="hidden" name="tenantInstanceId" value={String(row.tenantInstanceId??"")}/><label>Onay nedeni<input name="approvalReason" required minLength={8}/></label><button className="button" type="submit">Resume kuyruğa al</button></form>:null}</article>)}</div></AdminShell>}

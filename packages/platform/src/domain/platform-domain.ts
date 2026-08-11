@@ -19,11 +19,20 @@ export type PlatformLicenseId = Brand<string, "PlatformLicenseId">;
 export type PlatformUserId = Brand<string, "PlatformUserId">;
 export type PlatformRoleId = Brand<string, "PlatformRoleId">;
 
-export type OrganizationStatus = "draft" | "active" | "suspended" | "closed";
+export type OrganizationStatus =
+  | "draft"
+  | "provisioning"
+  | "active"
+  | "suspended"
+  | "restricted"
+  | "archived"
+  | "provisioning_failed"
+  | "closed";
 export type PlatformPlanStatus = "draft" | "active" | "retired";
 export type PlatformModuleStatus = "active" | "retired";
 export type PlatformLicenseStatus = "draft" | "active" | "suspended" | "expired" | "cancelled";
 export type PlatformUserStatus = "active" | "suspended" | "closed";
+export type PlatformRoleStatus = "active" | "suspended";
 export type TenantDatabaseRefStatus = "active" | "suspended" | "removed";
 
 export interface Organization {
@@ -83,6 +92,8 @@ export interface PlatformRole {
   id: PlatformRoleId;
   key: string;
   displayName: string;
+  status?: PlatformRoleStatus;
+  permissions?: readonly string[];
 }
 
 export interface PlatformUser {

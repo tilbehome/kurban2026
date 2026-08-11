@@ -31,6 +31,8 @@ Bu dizin, güncel mimari belgeleri tarihsel çalışma kayıtlarından ayırır.
 
 Faz 2C PostgreSQL provisioning, tenant request runtime, pool gözlemlenebilirliği ve firma bazlı backup/restore uygulama kanıtları ADR-0002, ADR-0003, [test ve kabul planı](architecture/10-TEST-KALITE-VE-KABUL-PLANI.md) ve [uygulama takip defterinde](architecture/KURBAN2026-UYGULAMA-TAKIP.md) birlikte izlenir.
 
+Faz 2B Platform Süper Admin 360° uygulama kanıtı ve route envanteri [Platform Süper Admin ve Firma Admin](architecture/04-PLATFORM-SUPER-ADMIN-VE-FIRMA-ADMIN.md) belgesinde; güncel tamamlanan/kalan işler ise [uygulama takip defterinde](architecture/KURBAN2026-UYGULAMA-TAKIP.md) tutulur.
+
 ## Belge durumları
 
 | Dizin | Durum | Kullanım |

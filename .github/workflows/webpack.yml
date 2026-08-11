@@ -114,6 +114,11 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Platform Admin build
+        run: pnpm --filter @tilbecore/platform-admin build
+        env:
+          PLATFORM_MFA_ENCRYPTION_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
       - name: PWA generated artifact checks
         run: |
           test -f public/sw-version.json

@@ -19,6 +19,16 @@ export type PlatformPrismaClientLike = Pick<
   | "tenantCustomDomain"
   | "platformSupportSession"
   | "platformAuditLog"
+  | "platformMfaEnrollment"
+  | "platformDevice"
+  | "platformSession"
+  | "platformAdminCommand"
+  | "organizationLifecycleEvent"
+  | "tenantAdminInvitation"
+  | "platformTenantBackup"
+  | "platformLicenseChange"
+  | "tenantHealthSnapshot"
+  | "platformIncident"
 >;
 
 export type PlatformTenantRuntimePrismaClientLike = Pick<

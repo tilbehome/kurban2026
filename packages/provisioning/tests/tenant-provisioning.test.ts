@@ -6,13 +6,13 @@ import {
   type ProvisioningJobRecord,
   type ProvisioningJobRepository,
   type TenantDatabaseProvisioner,
+  type TenantAdminInvitationRepository,
 } from "../src";
 import type {
   Organization,
   OrganizationRepository,
   PlatformUser,
   PlatformUserId,
-  PlatformUserRepository,
   TenantDatabaseRefRecord,
   TenantDatabaseRefRepository,
   TenantInstance,
@@ -118,20 +118,15 @@ function createFixture(options: { failMigrationOnce?: boolean; failAdminOnce?: b
     async findById(id) { return tenants.get(id) ?? null; },
     async findBySlug(slug) { return [...tenants.values()].find((item) => item.slug === slug) ?? null; },
   };
-  const platformUserRepository: PlatformUserRepository = {
-    async createUser(input) {
-      calls.push("platformUser.createUser");
+  const tenantAdminInvitationRepository: TenantAdminInvitationRepository = {
+    async ensureInvitation(input) {
+      calls.push("tenantAdminInvitation.ensureInvitation");
       if (options.failAdminOnce && !adminFailed) {
         adminFailed = true;
         throw new Error("PLATFORM_ADMIN_CREATE_FAILED:private-detail");
       }
-      users.set(input.id, input);
-      return input;
+      users.set(input.id as PlatformUserId, adminUser());
     },
-    async findUserById(id) { return users.get(id) ?? null; },
-    async findUserByEmail(email) { return [...users.values()].find((item) => item.email === email) ?? null; },
-    async createRole(input) { return input; },
-    async assignRole() { return adminUser(); },
   };
   const tenantDatabaseProvisioner: TenantDatabaseProvisioner = {
     async createDatabase() { calls.push("db.create"); return { createdNow: true, ownedByProvisioningJob: true }; },
@@ -154,7 +149,7 @@ function createFixture(options: { failMigrationOnce?: boolean; failAdminOnce?: b
       organizationRepository,
       tenantDatabaseRefRepository,
       tenantInstanceRepository,
-      platformUserRepository,
+      tenantAdminInvitationRepository,
       provisioningJobRepository: jobs,
       tenantDatabaseProvisioner,
       now: () => "2026-08-10T00:00:00.000Z",

@@ -1,0 +1,12 @@
+import Link from "next/link";
+import { searchPlatformOrganizations } from "@tilbecore/platform";
+import { AdminShell, PageHead, formatDate } from "../../src/components";
+import { pageActor } from "../../src/page-auth";
+import { platformRepository } from "../../src/platform-server";
+
+export const dynamic = "force-dynamic";
+export default async function OrganizationsPage({ searchParams }: { searchParams: Promise<Record<string,string|undefined>> }) {
+  const actor = await pageActor("platform.organization.read"); const query = await searchParams;
+  const rows = await searchPlatformOrganizations(platformRepository(), actor, { search: query.q, status: query.status, plan: query.plan, licenseStatus: query.license, provisioningStatus: query.provisioning });
+  return <AdminShell><PageHead title="Firmalar" description="Platform metadata’sından beslenen firma envanteri; tenant operasyon verisi içermez." action={<Link className="button" href="/provisioning/new">Yeni firma kurulumu</Link>} /><form className="card toolbar" method="get"><label>Arama <input name="q" defaultValue={query.q} placeholder="Ad, slug, ID, domain" /></label><label>Durum <select name="status" defaultValue={query.status ?? ""}><option value="">Tümü</option>{["draft","provisioning","active","suspended","restricted","archived","provisioning_failed"].map(x=><option key={x}>{x}</option>)}</select></label><label>Lisans <select name="license" defaultValue={query.license ?? ""}><option value="">Tümü</option>{["active","suspended","expired","cancelled"].map(x=><option key={x}>{x}</option>)}</select></label><button className="button" type="submit">Filtrele</button></form><div className="card table-wrap"><table><thead><tr><th>Firma</th><th>Durum</th><th>Plan / lisans</th><th>Domain</th><th>DB / backup</th><th>Provisioning</th><th>Oluşturma</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><td><Link href={`/organizations/${row.id}`}><strong>{row.displayName}</strong></Link><br/><small>{row.slug}<br/>{row.id}</small></td><td><span className="status">{row.status}</span></td><td>{row.planName ?? "—"}<br/><small>{row.licenseStatus ?? "—"}</small></td><td>{row.domain ?? "—"}</td><td>{row.databaseStatus ?? "—"}<br/><small>{row.backupStatus ?? "—"}</small></td><td>{row.provisioningStatus ?? "—"}{row.criticalAlert ? <div className="error">{row.criticalAlert}</div>:null}</td><td>{formatDate(row.createdAt)}</td></tr>)}</tbody></table></div></AdminShell>;
+}

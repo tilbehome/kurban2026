@@ -277,6 +277,8 @@ function planToCreateInput(plan: PlatformPlan) {
     maxUsers: plan.limits.maxUsers,
     maxDevices: plan.limits.maxDevices,
     maxStorageMb: plan.limits.maxStorageMb,
+    maxAnimals: plan.limits.maxAnimals,
+    maxSeasons: plan.limits.maxSeasons,
     modules: {
       create: plan.entitlements.map((entitlement) => ({
         module: { connect: { id: entitlement.moduleId } },
@@ -296,6 +298,8 @@ function licenseToCreateInput(license: PlatformLicense) {
     maxUsers: license.limits.maxUsers,
     maxDevices: license.limits.maxDevices,
     maxStorageMb: license.limits.maxStorageMb,
+    maxAnimals: license.limits.maxAnimals,
+    maxSeasons: license.limits.maxSeasons,
     organization: { connect: { id: license.organizationId } },
     plan: { connect: { id: license.planId } },
     entitlements: {
@@ -327,6 +331,8 @@ function roleToCreateInput(role: PlatformRole) {
     id: role.id,
     key: role.key,
     displayName: role.displayName,
+    status: role.status ?? "active",
+    permissions: [...(role.permissions ?? [])],
   };
 }
 
@@ -388,6 +394,8 @@ function mapPlatformPlanRow(row: PlatformPlanWithModulesRow): PlatformPlan {
       maxUsers: row.maxUsers ?? undefined,
       maxDevices: row.maxDevices ?? undefined,
       maxStorageMb: row.maxStorageMb ?? undefined,
+      ...(row.maxAnimals === null ? {} : { maxAnimals: row.maxAnimals }),
+      ...(row.maxSeasons === null ? {} : { maxSeasons: row.maxSeasons }),
     },
     entitlements: row.modules.map((module) => ({
       moduleId: module.moduleId as LicenseEntitlement["moduleId"],
@@ -409,6 +417,8 @@ function mapPlatformLicenseRow(row: PlatformLicenseWithEntitlementsRow): Platfor
       maxUsers: row.maxUsers ?? undefined,
       maxDevices: row.maxDevices ?? undefined,
       maxStorageMb: row.maxStorageMb ?? undefined,
+      ...(row.maxAnimals === null ? {} : { maxAnimals: row.maxAnimals }),
+      ...(row.maxSeasons === null ? {} : { maxSeasons: row.maxSeasons }),
     },
     entitlements: row.entitlements.map((entitlement) => ({
       moduleId: entitlement.moduleId as LicenseEntitlement["moduleId"],
@@ -423,6 +433,8 @@ function mapPlatformRoleRow(row: PlatformRoleRow): PlatformRole {
     id: row.id as PlatformRole["id"],
     key: row.key,
     displayName: row.displayName,
+    status: row.status as PlatformRole["status"],
+    permissions: Array.isArray(row.permissions) ? row.permissions.filter((item): item is string => typeof item === "string") : [],
   };
 }
 

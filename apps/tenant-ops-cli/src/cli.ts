@@ -15,10 +15,15 @@ void main().catch((error) => {
 });
 
 async function main(): Promise<void> {
-  const command = parseTenantOpsCommand(process.argv.slice(2));
   const platform = createPlatformPrismaClient(requiredEnvironment("PLATFORM_DATABASE_URL"));
   const storageRoot = requiredEnvironment("TENANT_BACKUP_ROOT");
   try {
+    if (process.argv[2] === "worker") {
+      if (!process.argv.includes("--once")) throw new Error("TENANT_OPS_WORKER_ONCE_REQUIRED");
+      print(await runQueuedTenantOperation(platform, storageRoot));
+      return;
+    }
+    const command = parseTenantOpsCommand(process.argv.slice(2));
     const binding = await resolveActiveTenantBinding(platform, command.tenantId);
     const service = new PostgresTenantBackupService({
       adminDatabaseUrl: requiredEnvironment("TENANT_DATABASE_ADMIN_URL"),
@@ -50,6 +55,62 @@ async function main(): Promise<void> {
     }
   } finally {
     await platform.$disconnect();
+  }
+}
+
+async function runQueuedTenantOperation(
+  platform: ReturnType<typeof createPlatformPrismaClient>,
+  storageRoot: string,
+): Promise<Record<string, unknown>> {
+  const queued = await platform.platformAdminCommand.findFirst({
+    where: { status: "pending", type: { in: ["tenant.backup.create", "tenant.backup.verify", "tenant.restore.verify"] } },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!queued) return { ok: true, processed: false };
+  const claimed = await platform.platformAdminCommand.updateMany({
+    where: { id: queued.id, status: "pending", version: queued.version },
+    data: { status: "running", startedAt: new Date(), attempts: { increment: 1 }, version: { increment: 1 } },
+  });
+  if (claimed.count !== 1) return { ok: true, processed: false, raced: true };
+  try {
+    if (!queued.tenantInstanceId) throw new Error("TENANT_OPS_TENANT_ID_REQUIRED");
+    const binding = await resolveActiveTenantBinding(platform, queued.tenantInstanceId);
+    const service = new PostgresTenantBackupService({
+      adminDatabaseUrl: requiredEnvironment("TENANT_DATABASE_ADMIN_URL"), storageRoot,
+      repositoryRoot: path.resolve(process.cwd()), postgresBinDirectory: optionalEnvironment("POSTGRES_BIN_DIR"),
+      audit: new JsonFileTenantBackupAuditPort(storageRoot),
+    });
+    const payload = queued.payload && typeof queued.payload === "object" && !Array.isArray(queued.payload) ? queued.payload as Record<string, unknown> : {};
+    let metadata;
+    if (queued.type === "tenant.backup.create") metadata = await service.createBackup(binding, queued.requestId);
+    else {
+      const backupId = typeof payload.backupId === "string" ? payload.backupId : undefined;
+      if (!backupId) throw new Error("TENANT_OPS_BACKUP_ID_REQUIRED");
+      metadata = queued.type === "tenant.backup.verify"
+        ? await service.verifyBackup(binding, backupId, queued.requestId)
+        : await service.verifyRestorePlan(binding, backupId, queued.requestId);
+    }
+    await platform.platformTenantBackup.upsert({
+      where: { id: metadata.id },
+      create: {
+        id: metadata.id, tenantInstanceId: metadata.tenantInstanceId, databaseRefId: metadata.databaseRefId,
+        createdAt: new Date(metadata.createdAt), migrationVersion: metadata.migrationVersion,
+        checksumSha256: metadata.checksumSha256, sizeBytes: metadata.sizeBytes === undefined ? null : BigInt(metadata.sizeBytes), status: metadata.status,
+        verificationStatus: metadata.verificationStatus, verifiedAt: metadata.verifiedAt ? new Date(metadata.verifiedAt) : null,
+        failureCode: metadata.failureCode,
+      },
+      update: {
+        checksumSha256: metadata.checksumSha256, sizeBytes: metadata.sizeBytes === undefined ? null : BigInt(metadata.sizeBytes), status: metadata.status,
+        verificationStatus: metadata.verificationStatus, verifiedAt: metadata.verifiedAt ? new Date(metadata.verifiedAt) : null,
+        failureCode: metadata.failureCode,
+      },
+    });
+    await platform.platformAdminCommand.update({ where: { id: queued.id }, data: { status: "succeeded", resultRef: metadata.id, finishedAt: new Date(), errorCode: null } });
+    return { ok: true, processed: true, commandId: queued.id, resultRef: metadata.id, productionRestoreApplied: false };
+  } catch (error) {
+    const code = safeCliError(error);
+    await platform.platformAdminCommand.update({ where: { id: queued.id }, data: { status: "failed", errorCode: code, finishedAt: new Date() } });
+    return { ok: false, processed: true, commandId: queued.id, code };
   }
 }
 

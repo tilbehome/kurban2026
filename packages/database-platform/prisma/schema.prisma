@@ -13,6 +13,7 @@ model Organization {
   slug            String           @unique
   displayName     String
   status          String
+  version         Int              @default(0)
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   tenants         TenantInstance[]
@@ -20,6 +21,8 @@ model Organization {
   auditLogs       PlatformAuditLog[]
   emergencyStops  EmergencyStop[]
   supportSessions PlatformSupportSession[]
+  lifecycleEvents OrganizationLifecycleEvent[]
+  adminInvitations TenantAdminInvitation[]
 }
 
 model TenantInstance {
@@ -40,6 +43,8 @@ model TenantInstance {
   customDomains      TenantCustomDomain[]
   supportSessions    PlatformSupportSession[]
   auditLogs          PlatformAuditLog[]
+  backupRecords      PlatformTenantBackup[]
+  adminInvitations   TenantAdminInvitation[]
 
   @@index([organizationId])
 }
@@ -64,9 +69,12 @@ model PlatformPlan {
   updatedAt    DateTime               @updatedAt
   modules      PlatformPlanModule[]
   licenses     PlatformLicense[]
+  scheduledChanges PlatformLicenseChange[]
   maxUsers     Int?
   maxDevices   Int?
   maxStorageMb Int?
+  maxAnimals   Int?
+  maxSeasons   Int?
 }
 
 model PlatformModule {
@@ -102,11 +110,15 @@ model PlatformLicense {
   maxUsers       Int?
   maxDevices     Int?
   maxStorageMb   Int?
+  maxAnimals     Int?
+  maxSeasons     Int?
+  version        Int                          @default(0)
   createdAt      DateTime                     @default(now())
   updatedAt      DateTime                     @updatedAt
   organization   Organization                 @relation(fields: [organizationId], references: [id])
   plan           PlatformPlan                 @relation(fields: [planId], references: [id])
   entitlements   PlatformLicenseEntitlement[]
+  changes        PlatformLicenseChange[]
 
   @@index([organizationId])
   @@index([planId])
@@ -128,6 +140,12 @@ model PlatformUser {
   email       String             @unique
   displayName String
   status      String
+  passwordHash String?
+  failedLoginCount Int                @default(0)
+  lockedUntil DateTime?
+  lastLoginAt DateTime?
+  mfaRequired Boolean                 @default(true)
+  authVersion Int                     @default(0)
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   roles       PlatformUserRole[]
@@ -139,12 +157,19 @@ model PlatformUser {
   emergencyStops EmergencyStop[]
   supportTicketLinks PlatformSupportTicketLink[]
   requestedSupportSessions PlatformSupportSession[] @relation("SupportRequester")
+  revokedSupportSessions PlatformSupportSession[] @relation("SupportRevoker")
+  commandJobs PlatformAdminCommand[]
+  lifecycleEvents OrganizationLifecycleEvent[]
+  licenseChanges PlatformLicenseChange[]
+  adminInvitations TenantAdminInvitation[]
 }
 
 model PlatformRole {
   id          String             @id
   key         String             @unique
   displayName String
+  status      String             @default("active")
+  permissions Json               @default("[]")
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   users       PlatformUserRole[]
@@ -189,6 +214,9 @@ model TenantCustomDomain {
   status           String
   dnsVerified      Boolean  @default(false)
   tlsReady         Boolean  @default(false)
+  isPrimary        Boolean  @default(false)
+  verifiedAt       DateTime?
+  failureCode      String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   tenantInstance   TenantInstance @relation(fields: [tenantInstanceId], references: [id])
@@ -208,16 +236,21 @@ model PlatformSupportSession {
   scopes           Json
   startsAt         DateTime
   expiresAt        DateTime
+  endedAt          DateTime?
+  revokedByUserId  String?
+  revocationReason String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   organization     Organization @relation(fields: [organizationId], references: [id])
   tenantInstance   TenantInstance @relation(fields: [tenantInstanceId], references: [id])
   platformUser     PlatformUser @relation("SupportRequester", fields: [platformUserId], references: [id])
+  revokedByUser    PlatformUser? @relation("SupportRevoker", fields: [revokedByUserId], references: [id])
 
   @@index([organizationId])
   @@index([tenantInstanceId])
   @@index([platformUserId])
   @@index([expiresAt])
+  @@index([revokedByUserId])
 }
 
 model PlatformMfaEnrollment {
@@ -228,6 +261,8 @@ model PlatformMfaEnrollment {
   createdAt   DateTime @default(now())
   activatedAt DateTime?
   revokedAt   DateTime?
+  secretCiphertext String?
+  secretKeyVersion String?
   user        PlatformUser @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -256,6 +291,10 @@ model PlatformSession {
   lastSeenAt DateTime
   expiresAt  DateTime
   revokedAt  DateTime?
+  tokenHash  String?  @unique
+  authVersion Int     @default(0)
+  rotatedAt  DateTime?
+  ipHash     String?
   user       PlatformUser @relation(fields: [userId], references: [id])
   device     PlatformDevice @relation(fields: [deviceId], references: [id])
 
@@ -348,4 +387,109 @@ model PlatformSupportTicketLink {
 
   @@index([supportSessionId])
   @@index([linkedByUserId])
+}
+
+model PlatformAdminCommand {
+  id                String   @id
+  idempotencyKey    String   @unique
+  type              String
+  status            String
+  organizationId    String?
+  tenantInstanceId  String?
+  requestedByUserId String
+  requestId         String
+  traceId           String
+  approvalReason    String
+  payload           Json
+  attempts          Int      @default(0)
+  version           Int      @default(0)
+  errorCode         String?
+  resultRef         String?
+  createdAt         DateTime @default(now())
+  startedAt         DateTime?
+  finishedAt        DateTime?
+  updatedAt         DateTime @updatedAt
+  requestedByUser   PlatformUser @relation(fields: [requestedByUserId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([organizationId])
+  @@index([tenantInstanceId])
+  @@index([requestedByUserId])
+}
+
+model OrganizationLifecycleEvent {
+  id               String   @id
+  organizationId   String
+  fromStatus       String
+  toStatus         String
+  reason           String
+  impactSummary    String
+  approvedByUserId String
+  requestId        String
+  occurredAt       DateTime @default(now())
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  approvedByUser   PlatformUser @relation(fields: [approvedByUserId], references: [id])
+
+  @@index([organizationId, occurredAt])
+}
+
+model TenantAdminInvitation {
+  id               String   @id
+  organizationId   String
+  tenantInstanceId String
+  email            String
+  displayName      String
+  roleKey          String
+  status           String
+  tokenHash        String?
+  expiresAt        DateTime?
+  invitedByUserId  String
+  createdAt        DateTime @default(now())
+  acceptedAt       DateTime?
+  revokedAt        DateTime?
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  tenantInstance   TenantInstance @relation(fields: [tenantInstanceId], references: [id])
+  invitedByUser    PlatformUser @relation(fields: [invitedByUserId], references: [id])
+
+  @@unique([tenantInstanceId, email])
+  @@index([organizationId])
+  @@index([invitedByUserId])
+}
+
+model PlatformTenantBackup {
+  id                 String   @id
+  tenantInstanceId   String
+  databaseRefId      String
+  createdAt          DateTime
+  migrationVersion   String
+  checksumSha256     String?
+  sizeBytes          BigInt?
+  status             String
+  verificationStatus String
+  verifiedAt         DateTime?
+  failureCode        String?
+  updatedAt          DateTime @updatedAt
+  tenantInstance     TenantInstance @relation(fields: [tenantInstanceId], references: [id])
+
+  @@index([tenantInstanceId, createdAt])
+  @@index([status])
+}
+
+model PlatformLicenseChange {
+  id                String   @id
+  licenseId         String
+  targetPlanId      String
+  effectiveAt       DateTime
+  reason            String
+  status            String
+  requestedByUserId String
+  expectedVersion   Int
+  createdAt         DateTime @default(now())
+  appliedAt         DateTime?
+  license           PlatformLicense @relation(fields: [licenseId], references: [id])
+  targetPlan        PlatformPlan @relation(fields: [targetPlanId], references: [id])
+  requestedByUser   PlatformUser @relation(fields: [requestedByUserId], references: [id])
+
+  @@index([licenseId, effectiveAt])
+  @@index([status])
 }

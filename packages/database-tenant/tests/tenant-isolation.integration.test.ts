@@ -8,8 +8,8 @@ import { afterAll, describe, expect, test } from "vitest";
 import {
   createPlatformPrismaClient,
   PrismaOrganizationRepository,
-  PrismaPlatformUserRepository,
   PrismaProvisioningJobRepository,
+  PrismaTenantAdminInvitationRepository,
   PrismaTenantDatabaseRefRepository,
   PrismaTenantInstanceRepository,
 } from "@tilbecore/database-platform";
@@ -85,7 +85,7 @@ describePostgres("iki firma gerçek PostgreSQL izolasyonu", () => {
       organizationRepository: new PrismaOrganizationRepository(platform),
       tenantDatabaseRefRepository: new PrismaTenantDatabaseRefRepository(platform),
       tenantInstanceRepository: new PrismaTenantInstanceRepository(platform),
-      platformUserRepository: new PrismaPlatformUserRepository(platform),
+      tenantAdminInvitationRepository: new PrismaTenantAdminInvitationRepository(platform),
       provisioningJobRepository: new PrismaProvisioningJobRepository(platform),
       tenantDatabaseProvisioner: new PostgresTenantDatabaseProvisioner({
         adminDatabaseUrl: tenantAdminUrl,

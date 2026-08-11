@@ -2,7 +2,6 @@ import type {
   Organization,
   OrganizationRepository,
   PlatformUser,
-  PlatformUserRepository,
   TenantDatabaseRefRecord,
   TenantDatabaseRefRepository,
   TenantInstance,
@@ -39,6 +38,13 @@ export interface TenantAdminInviteDraft {
   roleKey: "firm_admin";
 }
 
+export interface TenantAdminInvitationRepository {
+  ensureInvitation(input: TenantAdminInviteDraft & {
+    id: string;
+    invitedByUserId: PlatformUser["id"];
+  }): Promise<void>;
+}
+
 export interface TenantDatabaseOperationInput {
   provisioningJobId: ProvisioningJobRecord["id"];
   tenantInstanceId: TenantInstance["id"];
@@ -67,7 +73,7 @@ export interface ProvisionTenantDependencies {
   organizationRepository: OrganizationRepository;
   tenantDatabaseRefRepository: TenantDatabaseRefRepository;
   tenantInstanceRepository: TenantInstanceRepository;
-  platformUserRepository: PlatformUserRepository;
+  tenantAdminInvitationRepository: TenantAdminInvitationRepository;
   provisioningJobRepository: ProvisioningJobRepository;
   tenantDatabaseProvisioner: TenantDatabaseProvisioner;
   now?: () => string;
@@ -143,7 +149,12 @@ export async function provisionTenant(
     });
 
     await runStep("platform.admin_invite.prepare", async () => {
-      await ensurePlatformUser(dependencies.platformUserRepository, command.adminUser);
+      const invite = createAdminInvite(command, tenant);
+      await dependencies.tenantAdminInvitationRepository.ensureInvitation({
+        ...invite,
+        id: `tenant_admin_invite_${tenant.id}`,
+        invitedByUserId: command.actorUserId,
+      });
     });
 
     job = await dependencies.provisioningJobRepository.update({
@@ -413,30 +424,6 @@ async function ensureTenantRegistered(
     ) return raced;
     throw new TenantProvisioningError(safeOrFallback(error, "PROVISIONING_TENANT_CONFLICT"));
   }
-}
-
-async function ensurePlatformUser(
-  repository: PlatformUserRepository,
-  expected: PlatformUser,
-): Promise<PlatformUser> {
-  const byId = await repository.findUserById(expected.id);
-  const byEmail = await repository.findUserByEmail(expected.email);
-  const existing = byId ?? byEmail;
-  if (!existing) {
-    try {
-      return await repository.createUser(expected);
-    } catch (error) {
-      const raced = await repository.findUserById(expected.id) ?? await repository.findUserByEmail(expected.email);
-      if (raced && raced.id === expected.id && raced.email.toLowerCase() === expected.email.toLowerCase()) {
-        return raced;
-      }
-      throw new TenantProvisioningError(safeOrFallback(error, "PROVISIONING_ADMIN_USER_CONFLICT"));
-    }
-  }
-  if (existing.id !== expected.id || existing.email.toLowerCase() !== expected.email.toLowerCase()) {
-    throw new TenantProvisioningError("PROVISIONING_ADMIN_USER_CONFLICT");
-  }
-  return existing;
 }
 
 async function completedResult(

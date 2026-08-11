@@ -55,7 +55,7 @@ Zayıf taraflar:
 - Finansal tutarlar `Float`; kuruş/decimal veya ledger temeli yok.
 - Platform/firma ayrımı yok.
 - Firma başına ayrı PostgreSQL kararına uygun tenant/veritabanı yönlendirme yok.
-- Platform Süper Admin ayrı kimlik alanı olarak yok.
+- Platform Süper Admin ayrı kimlik, session/cookie, rol/izin ve audit alanıyla `apps/platform-admin` içinde uygulanmıştır; passkey/WebAuthn, canlı DNS/TLS/deployment ve tam platform operasyon sertleştirmesi henüz tamamlanmamıştır.
 - API route dosyalarında iş kuralları büyümüş durumda; örnekler: `app/api/tahsilat/odeme/route.ts` 398 satır, `app/api/saha-satis/route.ts` 309 satır, `app/api/tv/kurban-asama/route.ts` 196 satır.
 - Marka/firma kimliği karışık: `public/manifest.json`, `shared/components/sidebar/SidebarHeader.tsx`, `app/api/tahsilat/dekont/[id]/route.ts`, seed dosyaları.
 - Çoklu dil/RTL temeli yok.

@@ -1,0 +1,3 @@
+import { AdminShell, JsonPanel, PageHead } from "../../src/components";import { pageActor } from "../../src/page-auth";import { platformRepository } from "../../src/platform-server";
+export const dynamic="force-dynamic";
+export default async function AuditPage(){await pageActor("platform.audit.read");const rows=await platformRepository().listAuditEvents();return <AdminShell><PageHead title="Audit ve Platform Olay Merkezi" description="Kullanıcı, işlem, tenant, request/trace ve güvenli sonuç kodları. Tenant operasyon verisi içermez."/><div className="stack">{rows.map((row,index)=><article className="card" key={String(row.id??index)}><JsonPanel value={row}/></article>)}</div></AdminShell>}

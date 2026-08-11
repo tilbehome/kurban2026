@@ -145,6 +145,55 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@20.19.41)(happy-dom@20.9.0)(jiti@2.7.0)(lightningcss@1.32.0)(msw@2.14.6(@types/node@20.19.41)(typescript@5.9.3))(terser@5.48.0)(tsx@4.22.3)
 
+  apps/platform-admin:
+    dependencies:
+      '@tilbecore/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@tilbecore/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@tilbecore/database-platform':
+        specifier: workspace:*
+        version: link:../../packages/database-platform
+      '@tilbecore/platform':
+        specifier: workspace:*
+        version: link:../../packages/platform
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
+      next:
+        specifier: 16.2.6
+        version: 16.2.6(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: 19.2.4
+        version: 19.2.4
+      react-dom:
+        specifier: 19.2.4
+        version: 19.2.4(react@19.2.4)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/bcrypt':
+        specifier: ^6.0.0
+        version: 6.0.0
+      '@types/node':
+        specifier: ^20
+        version: 20.19.41
+      '@types/react':
+        specifier: ^19
+        version: 19.2.15
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.2.3(@types/react@19.2.15)
+      tsx:
+        specifier: ^4.22.3
+        version: 4.22.3
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
   apps/provisioning-cli:
     dependencies:
       '@tilbecore/database-platform':
