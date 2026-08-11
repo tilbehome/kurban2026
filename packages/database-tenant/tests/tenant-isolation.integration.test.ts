@@ -14,6 +14,10 @@ import {
   PrismaTenantInstanceRepository,
 } from "@tilbecore/database-platform";
 import {
+  PrismaTenantRequestAuditPort,
+  PrismaTenantRuntimeRegistry,
+} from "@tilbecore/tenant-web-runtime";
+import {
   PostgresTenantDatabaseProvisioner,
   PrismaTenantConnectionFactory,
   TenantDatabaseLocator,
@@ -29,15 +33,20 @@ import {
 } from "@tilbecore/provisioning";
 import {
   TenantAwareConnectionPool,
+  TenantRequestRuntime,
   assertTenantOperationAccess,
   resolveTenantRuntimeContext,
   safeTenantRuntimeFailure,
   type TenantRegistry,
+  type TenantPoolEvent,
+  type TenantPoolMetric,
+  type TenantUserSessionIdentity,
 } from "@tilbecore/tenant-runtime";
 import { createTilbeCoreDomainConfig } from "@tilbecore/config";
 import type {
   OrganizationId,
   PlatformTenantDescriptor,
+  SupportSessionId,
   TenantDatabaseRefId,
   TenantInstanceId,
   TenantSlug,
@@ -55,6 +64,7 @@ if (shouldRun && (!platformUrl || !tenantAdminUrl)) {
 const describePostgres = platformUrl && tenantAdminUrl ? describe : describe.skip;
 const suffix = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 const createdRefs: TenantDatabaseRefId[] = [];
+const temporaryRoots: string[] = [];
 let pool: TenantAwareConnectionPool<TenantPrismaClient> | undefined;
 
 describePostgres("iki firma gerçek PostgreSQL izolasyonu", () => {
@@ -101,21 +111,31 @@ describePostgres("iki firma gerçek PostgreSQL izolasyonu", () => {
     const contextA = await resolveTenantRuntimeContext(config, registry, {
       hostHeader: `${commandA.tenant.slug}.${config.baseDomain}`,
       requestId: `runtime_a_${suffix}`,
+      traceId: `trace_runtime_a_${suffix}`,
       session: {
+        kind: "tenant",
+        organizationId: commandA.organization.id,
         tenantInstanceId: commandA.tenant.id,
         databaseRefId: commandA.databaseRef.id,
+        sessionId: `session_a_${suffix}`,
         userId: `user_a_${suffix}`,
         roleIds: ["firm_admin"],
+        permissions: ["customer.read"],
       },
     });
     const contextB = await resolveTenantRuntimeContext(config, registry, {
       hostHeader: `${commandB.tenant.slug}.${config.baseDomain}`,
       requestId: `runtime_b_${suffix}`,
+      traceId: `trace_runtime_b_${suffix}`,
       session: {
+        kind: "tenant",
+        organizationId: commandB.organization.id,
         tenantInstanceId: commandB.tenant.id,
         databaseRefId: commandB.databaseRef.id,
+        sessionId: `session_b_${suffix}`,
         userId: `user_b_${suffix}`,
         roleIds: ["firm_admin"],
+        permissions: ["customer.read"],
       },
     });
 
@@ -146,12 +166,18 @@ describePostgres("iki firma gerçek PostgreSQL izolasyonu", () => {
     await expect(resolveTenantRuntimeContext(config, registry, {
       hostHeader: `${commandA.tenant.slug}.${config.baseDomain}`,
       requestId: `wrong_session_${suffix}`,
+      traceId: `trace_wrong_session_${suffix}`,
       session: {
+        kind: "tenant",
+        organizationId: commandB.organization.id,
         tenantInstanceId: commandB.tenant.id,
         databaseRefId: commandB.databaseRef.id,
+        sessionId: `session_wrong_${suffix}`,
+        userId: `user_wrong_${suffix}`,
         roleIds: [],
+        permissions: [],
       },
-    })).rejects.toThrow("TENANT_SESSION_MISMATCH");
+    })).rejects.toThrow(/TENANT_SESSION_(ORGANIZATION_)?MISMATCH/);
     await expect(resolveTenantRuntimeContext(config, registry, {
       hostHeader: `console.${config.baseDomain}`,
       requestId: `reserved_host_${suffix}`,
@@ -180,6 +206,134 @@ describePostgres("iki firma gerçek PostgreSQL izolasyonu", () => {
     leaseA.release();
     leaseB.release();
     await pool.shutdown();
+
+    await platform.tenantCustomDomain.create({
+      data: {
+        id: `domain_${suffix}`,
+        tenantInstanceId: commandA.tenant.id,
+        hostname: `firma-a-${suffix.replace(/_/g, "-")}.example.test`,
+        status: "ACTIVE",
+        dnsVerified: true,
+        tlsReady: true,
+      },
+    });
+    const registryFromPlatform = new PrismaTenantRuntimeRegistry(platform);
+    const requestAudit = new PrismaTenantRequestAuditPort(platform);
+    const poolEvents: TenantPoolEvent[] = [];
+    const poolMetrics: TenantPoolMetric[] = [];
+    pool = new TenantAwareConnectionPool(
+      new PrismaTenantConnectionFactory(new TenantDatabaseLocator(tenantAdminUrl), 30_000),
+      1_000,
+      Date.now,
+      {
+        emit(event) { poolEvents.push(event); },
+        recordMetric(metric) { poolMetrics.push(metric); },
+      },
+    );
+    const requestRuntime = new TenantRequestRuntime(
+      config,
+      registryFromPlatform,
+      pool,
+      registryFromPlatform,
+      requestAudit,
+      () => "2026-08-11T10:00:00.000Z",
+    );
+    const requestFor = (command: ProvisionTenantCommand, label: string) => ({
+      hostHeader: `${command.tenant.slug}.${config.baseDomain}`,
+      requestId: `web_request_${label}_${suffix}`,
+      traceId: `web_trace_${label}_${suffix}`,
+      requestedScope: "customer.read",
+      session: tenantSessionFor(command, label),
+    });
+    const [webA, webB] = await Promise.all([
+      requestRuntime.execute(requestFor(commandA, "a"), async ({ context, client }) => ({
+        context,
+        customer: await client.customer.findUnique({ where: { id: sharedCustomerId } }),
+      })),
+      requestRuntime.execute(requestFor(commandB, "b"), async ({ context, client }) => ({
+        context,
+        customer: await client.customer.findUnique({ where: { id: sharedCustomerId } }),
+      })),
+    ]);
+    expect(webA.customer?.displayName).toBe("Yalnız Firma A");
+    expect(webB.customer?.displayName).toBe("Yalnız Firma B");
+    expect(webA.context.tenantId).toBe(commandA.tenant.id);
+    expect(webB.context.tenantId).toBe(commandB.tenant.id);
+    expect(JSON.stringify([webA.context, webB.context])).not.toMatch(/postgresql:\/\/|password|connectionString/i);
+    expect(poolEvents.filter((event) => event.name === "tenant.pool.create")).toHaveLength(2);
+    expect(poolMetrics.filter((metric) => metric.name === "tenant.pool.created")).toHaveLength(2);
+    const customDomainResult = await requestRuntime.execute({
+      ...requestFor(commandA, "custom_domain"),
+      hostHeader: `firma-a-${suffix.replace(/_/g, "-")}.example.test`,
+    }, async ({ client }) => client.customer.findUnique({ where: { id: sharedCustomerId } }));
+    expect(customDomainResult?.displayName).toBe("Yalnız Firma A");
+    await platform.tenantInstance.update({
+      where: { id: commandB.tenant.id },
+      data: { provisioningStatus: "suspended" },
+    });
+    await expect(requestRuntime.execute(requestFor(commandB, "suspended"), async () => null))
+      .rejects.toThrow("TENANT_NOT_ACTIVE");
+    await platform.tenantInstance.update({
+      where: { id: commandB.tenant.id },
+      data: { provisioningStatus: "active" },
+    });
+
+    await expect(requestRuntime.execute({
+      ...requestFor(commandA, "cross"),
+      session: tenantSessionFor(commandB, "cross"),
+    }, async () => null)).rejects.toThrow(/TENANT_SESSION_(ORGANIZATION_)?MISMATCH/);
+    await expect(requestRuntime.execute({
+      ...requestFor(commandA, "wrong_ref"),
+      session: { ...tenantSessionFor(commandA, "wrong_ref"), databaseRefId: commandB.databaseRef.id },
+    }, async () => null)).rejects.toThrow("TENANT_SESSION_DATABASE_REF_MISMATCH");
+    await expect(requestRuntime.execute({
+      ...requestFor(commandA, "reserved"),
+      hostHeader: `console.${config.baseDomain}`,
+    }, async () => null)).rejects.toThrow("TENANT_HOST_REQUIRED");
+    await expect(requestRuntime.execute({
+      ...requestFor(commandA, "unknown"),
+      hostHeader: "unknown.example.test",
+    }, async () => null)).rejects.toThrow("UNKNOWN_HOST");
+    const platformSession = {
+      kind: "platform" as const,
+      sessionId: `platform_session_${suffix}`,
+      userId: actorId,
+      roleIds: ["platform_admin"],
+      permissions: ["tenant.support"],
+    };
+    await expect(requestRuntime.execute({
+      ...requestFor(commandA, "platform_denied"),
+      session: platformSession,
+    }, async () => null)).rejects.toThrow("SUPPORT_SESSION_REQUIRED");
+
+    const supportSessionId = `support_${suffix}` as SupportSessionId;
+    await platform.platformSupportSession.create({
+      data: {
+        id: supportSessionId,
+        organizationId: commandA.organization.id,
+        tenantInstanceId: commandA.tenant.id,
+        platformUserId: actorId,
+        approvedByUserId: `tenant_approver_${suffix}`,
+        reason: "Firma onaylı entegrasyon testi",
+        status: "active",
+        scopes: ["customer.read"],
+        startsAt: new Date("2026-08-11T09:00:00.000Z"),
+        expiresAt: new Date("2026-08-11T11:00:00.000Z"),
+      },
+    });
+    const supportResult = await requestRuntime.execute({
+      ...requestFor(commandA, "support"),
+      session: { ...platformSession, supportSessionId },
+    }, async ({ context, client }) => ({
+      context,
+      customer: await client.customer.findUnique({ where: { id: sharedCustomerId } }),
+    }));
+    expect(supportResult.customer?.displayName).toBe("Yalnız Firma A");
+    expect(supportResult.context.supportSession?.id).toBe(supportSessionId);
+    expect(await platform.platformAuditLog.count({
+      where: { supportSessionId, action: "tenant.support.access", result: "success" },
+    })).toBe(1);
+    await requestRuntime.shutdown();
 
     await dependencies.tenantDatabaseProvisioner.applyMigrations({
       provisioningJobId: resultA.job.id,
@@ -215,6 +369,60 @@ describePostgres("iki firma gerçek PostgreSQL izolasyonu", () => {
       `request_cli_rollback_denied_${suffix}`,
     ], platformUrl, tenantAdminUrl)).rejects.toThrow();
     await rm(tempRoot, { recursive: true, force: true });
+
+    const backupRoot = await mkdtemp(path.join(os.tmpdir(), "tilbecore-tenant-backup-"));
+    temporaryRoots.push(backupRoot);
+    const backupCreate = await runTenantOpsCli([
+      "tenant", "backup", "create",
+      "--tenant-id", commandA.tenant.id,
+      "--request-id", `backup_create_${suffix}`,
+    ], platformUrl, tenantAdminUrl, backupRoot);
+    const backupOutput = JSON.parse(backupCreate.stdout) as { backupId: string; status: string };
+    expect(backupOutput.status).toBe("completed");
+    expect(backupCreate.stdout).not.toContain(tenantAdminUrl);
+    expect(backupCreate.stdout).not.toContain(tenantDatabaseNameForRef(commandA.databaseRef.id));
+    const backupStatus = await runTenantOpsCli([
+      "tenant", "backup", "status",
+      "--tenant-id", commandA.tenant.id,
+      "--backup-id", backupOutput.backupId,
+    ], platformUrl, tenantAdminUrl, backupRoot);
+    expect(JSON.parse(backupStatus.stdout)).toMatchObject({ status: "completed" });
+    const backupVerify = await runTenantOpsCli([
+      "tenant", "backup", "verify",
+      "--tenant-id", commandA.tenant.id,
+      "--backup-id", backupOutput.backupId,
+      "--request-id", `backup_verify_${suffix}`,
+    ], platformUrl, tenantAdminUrl, backupRoot);
+    expect(JSON.parse(backupVerify.stdout)).toMatchObject({ status: "verified", verificationStatus: "verified" });
+    const restorePlan = await runTenantOpsCli([
+      "tenant", "restore", "plan",
+      "--tenant-id", commandA.tenant.id,
+      "--backup-id", backupOutput.backupId,
+      "--request-id", `restore_plan_${suffix}`,
+    ], platformUrl, tenantAdminUrl, backupRoot);
+    expect(JSON.parse(restorePlan.stdout)).toMatchObject({
+      destructiveRestoreEnabled: false,
+      explicitApprovalRequired: true,
+    });
+    const restoreVerify = await runTenantOpsCli([
+      "tenant", "restore", "verify",
+      "--tenant-id", commandA.tenant.id,
+      "--backup-id", backupOutput.backupId,
+      "--request-id", `restore_verify_${suffix}`,
+    ], platformUrl, tenantAdminUrl, backupRoot);
+    expect(JSON.parse(restoreVerify.stdout)).toMatchObject({
+      verificationStatus: "verified",
+      productionRestoreApplied: false,
+    });
+    await expect(runTenantOpsCli([
+      "tenant", "backup", "status",
+      "--tenant-id", commandB.tenant.id,
+      "--backup-id", backupOutput.backupId,
+    ], platformUrl, tenantAdminUrl, backupRoot)).rejects.toThrow();
+    const verificationDatabases = await platform.$queryRawUnsafe<Array<{ count: bigint }>>(
+      "SELECT count(*)::bigint AS count FROM pg_database WHERE datname LIKE 'tc_verify_%'",
+    );
+    expect(Number(verificationDatabases[0]?.count ?? 0)).toBe(0);
 
     const rollbackCommand = commandFor("rollback", actorId);
     createdRefs.push(rollbackCommand.databaseRef.id);
@@ -281,6 +489,9 @@ afterAll(async () => {
     await admin.$executeRawUnsafe(`DROP DATABASE IF EXISTS ${quotePostgresIdentifier(databaseName)}`).catch(() => undefined);
   }
   await admin.$disconnect().catch(() => undefined);
+  for (const temporaryRoot of temporaryRoots) {
+    await rm(temporaryRoot, { recursive: true, force: true }).catch(() => undefined);
+  }
 });
 
 function commandFor(label: "a" | "b" | "cli" | "rollback", actorUserId: PlatformUserId): ProvisionTenantCommand {
@@ -317,6 +528,7 @@ function commandFor(label: "a" | "b" | "cli" | "rollback", actorUserId: Platform
 function descriptorFor(command: ProvisionTenantCommand): PlatformTenantDescriptor {
   return {
     organizationId: command.organization.id,
+    organizationStatus: "active",
     tenantInstanceId: command.tenant.id,
     slug: command.tenant.slug,
     displayName: command.tenant.displayName,
@@ -325,6 +537,7 @@ function descriptorFor(command: ProvisionTenantCommand): PlatformTenantDescripto
     runtimeStatus: "healthy",
     releaseChannel: "stable",
     databaseRef: command.databaseRef,
+    databaseRefStatus: "active",
     moduleEntitlements: [],
     limits: {},
   };
@@ -339,6 +552,19 @@ function cliInput(command: ProvisionTenantCommand) {
       displayName: command.adminUser.displayName,
       status: command.adminUser.status,
     },
+  };
+}
+
+function tenantSessionFor(command: ProvisionTenantCommand, label: string): TenantUserSessionIdentity {
+  return {
+    kind: "tenant",
+    organizationId: command.organization.id,
+    tenantInstanceId: command.tenant.id,
+    databaseRefId: command.databaseRef.id,
+    sessionId: `tenant_session_${label}_${suffix}`,
+    userId: `tenant_user_${label}_${suffix}`,
+    roleIds: ["firm_admin"],
+    permissions: ["customer.read"],
   };
 }
 
@@ -359,6 +585,31 @@ function runCli(
         TENANT_DATABASE_ADMIN_URL: tenantDatabaseAdminUrl,
       },
       timeout: 120_000,
+      windowsHide: true,
+      maxBuffer: 2 * 1024 * 1024,
+    },
+  );
+}
+
+function runTenantOpsCli(
+  args: readonly string[],
+  platformDatabaseUrl: string,
+  tenantDatabaseAdminUrl: string,
+  backupRoot: string,
+) {
+  const invocation = pnpmInvocation();
+  return execFileAsync(
+    invocation.command,
+    [...invocation.prefix, "tenant:ops", ...args],
+    {
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        PLATFORM_DATABASE_URL: platformDatabaseUrl,
+        TENANT_DATABASE_ADMIN_URL: tenantDatabaseAdminUrl,
+        TENANT_BACKUP_ROOT: backupRoot,
+      },
+      timeout: 180_000,
       windowsHide: true,
       maxBuffer: 2 * 1024 * 1024,
     },

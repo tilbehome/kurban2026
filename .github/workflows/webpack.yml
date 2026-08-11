@@ -97,7 +97,7 @@ jobs:
         env:
           RUN_PLATFORM_POSTGRES_TESTS: "1"
 
-      - name: Two-tenant PostgreSQL isolation tests
+      - name: Two-tenant web, pool and backup/restore isolation tests
         run: pnpm test:tenant-isolation
         env:
           RUN_TENANT_ISOLATION_TESTS: "1"

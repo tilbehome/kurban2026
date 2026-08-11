@@ -824,7 +824,7 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 #### Faz 2C — Firma başına ayrı PostgreSQL ve tenant yönlendirme
 
-**Mevcut durum:** Uygulandı — genel doğrulama bekliyor. `@tilbecore/database-tenant` gerçek PostgreSQL DB create/exists, migration deploy/doğrulama, ownership marker ve güvenli rollback adapterini içerir. `@tilbecore/provisioning` her adımı platform DB’ye kaydeder; aynı tenant isteğini idempotent yönetir ve kesilen işi güvenli adımdan sürdürür. `@tilbecore/tenant-runtime` tenant+DB ref sahipliğini fail-closed doğrulayan ayrı Prisma pool’ları, idle kapatma ve shutdown temizliği sağlar. `apps/provisioning-cli` kontrollü `dry-run/create/status/resume/rollback` komutlarını sunar. İki fiziksel tenant DB ve aynı kayıt ID’leriyle izolasyon testi CI kapısına bağlanmıştır.
+**Mevcut durum:** Kod kapsamı uygulandı — genel doğrulama ve canlı altyapı kanıtı bekliyor. `@tilbecore/database-tenant` gerçek PostgreSQL DB create/exists, migration deploy/doğrulama, ownership marker, güvenli rollback ve firma bazlı dump/geçici restore doğrulama adapterlerini içerir. `@tilbecore/provisioning` her adımı platform DB’ye kaydeder; aynı tenant isteğini idempotent yönetir ve kesilen işi güvenli adımdan sürdürür. `@tilbecore/tenant-runtime` host/session/ref eşleşmesinden request-local context üretir; tenant+DB ref sahipliğini fail-closed doğrulayan ayrı Prisma pool’ları, eşzamanlı reuse, event/metric, idle kapatma ve shutdown temizliği sağlar. `@tilbecore/tenant-web-runtime`, Platform DB tenant/custom-domain/SupportSession metadata’sını bu runtime’a bağlar. `apps/provisioning-cli` provisioning; `apps/tenant-ops-cli` backup/restore doğrulama komutlarını kontrollü biçimde sunar. İki fiziksel tenant DB, aynı kayıt ID’leri, eşzamanlı web request’leri ve gerçek `pg_dump`/`pg_restore` ile izolasyon testi CI kapısına bağlanmıştır.
 
 - Güvenli tenant resolution
 - Firma DB connection registry
@@ -835,9 +835,9 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 - yönetilen PostgreSQL kurulumlarında WAL/PITR değerlendirmesi
 - bağlantı havuzu ve kapasite sınırları
 
-Bu pakette kapanan maddeler: güvenli tenant resolution sözleşmesinin gerçek pool’a bağlanması, firma DB oluşturma/varlık kontrolü, firma bazlı migration, idempotent ve devam ettirilebilir provisioning, sahiplik kanıtlı rollback, tenant-aware pool yaşam döngüsü, kontrollü CLI ve iki firma PostgreSQL izolasyon otomasyonu.
+Kodla kapanan maddeler: güvenli tenant resolution sözleşmesinin gerçek pool’a bağlanması, firma DB oluşturma/varlık kontrolü, firma bazlı migration, idempotent ve devam ettirilebilir provisioning, sahiplik kanıtlı rollback, request-local tenant context, host-session-ref fail-closed bağı, süreli/kapsamlı/onaylı SupportSession, tenant-aware pool yaşam döngüsü ve event/metric portu, kontrollü provisioning/tenant ops CLI’ları, repo dışı firma yedeği, checksum ve geçici restore doğrulaması ile iki firma PostgreSQL web/backup izolasyon otomasyonu.
 
-Faz 2C’de kalan maddeler: mevcut tenant-web API’lerinin yeni runtime/pool üzerinden çalıştırılması, firma bazlı backup/restore izolasyon otomasyonu, yönetilen PostgreSQL WAL/PITR değerlendirmesi, pool kapasite/metric politikası ve canlı DNS/TLS/deployment. Süper Admin provisioning ekranı Faz 2B’nin sonraki büyük paketidir.
+Canlı altyapıya veya sonraki modül taşımalarına kalan maddeler: legacy Next.js API’lerinin iş modülü fazlarında yeni request runtime’a geçirilmesi; gerçek OpenTelemetry sağlayıcısı, pool kapasite eşikleri ve alarm bağlama; yönetilen PostgreSQL’de WAL arşivleme/PITR ayarı ile ölçülmüş RPO/RTO; production restore yetki/onay yürütmesi; canlı DNS/TLS/deployment. WAL/PITR kararı ve eksik canlı kanıtlar ADR-0003’te tutulur. Süper Admin provisioning ekranı Faz 2B’nin sonraki büyük paketidir.
 
 #### Faz 2D — Firma çekirdek şeması
 

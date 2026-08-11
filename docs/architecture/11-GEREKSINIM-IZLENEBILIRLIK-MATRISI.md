@@ -142,7 +142,9 @@ Bu turda eklenen gereksinimler planlandı durumundadır; uygulama kodu başlatı
 
 ### Faz 2A platform–tenant sınır checkpoint'i
 
-`REQ-048..REQ-050`, `REQ-059`, `REQ-062`, `REQ-066`, `PRO-012`, `PRO-020`, `PRO-021`, `PRO-027` ve `PRO-029` için platform–tenant veri sınırı kararı `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md` belgesine bağlıdır. Tenant izolasyon test planı `10-TEST-KALITE-VE-KABUL-PLANI.md` içinde tutulur. Bu checkpoint Faz 2A’da sözleşme ve test planı kanıtıdır; PostgreSQL kurulumu, tenant routing ve Süper Admin uygulaması Faz 2B/2C kapsamındadır.
+`REQ-048..REQ-050`, `REQ-059`, `REQ-062`, `REQ-066`, `PRO-012`, `PRO-020`, `PRO-021`, `PRO-027` ve `PRO-029` için platform–tenant veri sınırı kararı `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md` belgesine bağlıdır. Yedek, restore doğrulama ve WAL/PITR kararı `docs/adr/ADR-0003-TENANT-YEDEK-WAL-PITR-VE-RESTORE-DOGRULAMA.md`; tenant izolasyon test planı `10-TEST-KALITE-VE-KABUL-PLANI.md` içinde tutulur. Faz 2C kod kanıtı request-local tenant runtime, auditli SupportSession, gözlemlenebilir ayrı pool ve iki firma gerçek dump/geçici restore izolasyonunu kapsar. Canlı WAL/PITR ayarı/ölçümü, production restore onayı, DNS/TLS/deployment ve Süper Admin UI tamamlanmış sayılmaz.
+
+Faz 2C kanıt eşlemesi: `PRO-020` için platform `0005` migration’ı ve SupportSession auditli request testi; `PRO-021`/`REQ-046` için `PostgresTenantBackupService`, tenant ops CLI, checksum ve geçici restore testi; `PRO-022` için sağlayıcıdan bağımsız pool event/metric portu uygulanmıştır. `PRO-029` için bağlayıcı değerlendirme kararı yazılmış, canlı sağlayıcı yapılandırması ve ölçülmüş RPO/RTO kanıtı sonraya bırakılmıştır.
 
 ## 68 iş akışı modeli
 

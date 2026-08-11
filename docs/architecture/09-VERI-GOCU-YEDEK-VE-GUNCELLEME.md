@@ -6,9 +6,13 @@ Mevcut yerel veriler geliştirme/test verisi kabul edilmiştir. Buna rağmen dö
 
 ## Mevcut yedek kanıtı
 
-- `backups/` klasörü var.
-- `shared/lib/backup.ts` ve `app/api/yedek/*` route’ları mevcut.
+- Legacy SQLite akışında `shared/lib/backup.ts` ve `app/api/yedek/*` route’ları mevcuttur; bunlar PostgreSQL tenant yedek standardının yerine geçmez.
+- `packages/database-tenant/src/postgres-tenant-backup.ts`, doğrulanmış `TenantDatabaseRef` üzerinden repo dışı storage’a PostgreSQL custom-format yedek alır; migration sürümü, SHA-256, boyut ve durum metadata’sı üretir.
+- `apps/tenant-ops-cli`, backup create/status/verify ile destructive olmayan restore plan/verify komutlarını sağlar.
+- Restore doğrulaması geçici PostgreSQL DB’sinde tenant/ref marker, migration ve şema kontrolü yapar. Production DB’ye otomatik restore uygulanmaz.
 - `scripts/migrate-vekalet-files.mjs` dry-run varsayılanlı P0 scriptidir.
+
+Bağlayıcı yedek, WAL/PITR ve restore kararı: `docs/adr/ADR-0003-TENANT-YEDEK-WAL-PITR-VE-RESTORE-DOGRULAMA.md`.
 
 ## PostgreSQL geçiş planı
 
@@ -22,6 +26,8 @@ Mevcut yerel veriler geliştirme/test verisi kabul edilmiştir. Buna rağmen dö
 8. Uygulama sadece doğrulanmış connection referansıyla başlar.
 9. Excel/CSV içe aktarma merkezi aynı dry-run, satır hata raporu ve geri alma ilkelerini kullanır; gerçek import canlı veriye doğrudan yazmadan önce rapor üretir (`PRO-003`).
 10. Yönetilen PostgreSQL kullanılan kurulumlarda WAL/PITR kabiliyeti, RPO/RTO hedefi ve restore provası değerlendirilir (`PRO-029`).
+
+Faz 2C’de firma bazlı dump ve geçici restore doğrulaması uygulanmıştır. Canlı sağlayıcı/topoloji belirlenmediği için WAL arşivleme ve PITR ayarları uygulanmamış; RPO/RTO değeri ilan edilmemiştir. Sağlayıcı, şifreli WAL hedefi, retention, base backup, recovery target, alarm ve ölçülmüş restore kanıtı canlı altyapı paketinde tamamlanır.
 
 ## Güncelleme modeli
 

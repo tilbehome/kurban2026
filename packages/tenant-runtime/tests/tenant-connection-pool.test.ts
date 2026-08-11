@@ -84,6 +84,7 @@ describe("tenant-aware connection pool", () => {
         organizationId: "org_a" as never,
         tenantInstanceId,
         reason: "Test",
+        approvedByUserId: "approver_1" as never,
         startsAt: "2026-08-10T09:00:00.000Z",
         expiresAt: "2026-08-10T11:00:00.000Z",
         scopes: ["customer.read"],
@@ -106,7 +107,9 @@ function contextFor(label: string, databaseRefId: string): TenantRuntimeContext 
     slug: `tenant-${label}` as never,
     databaseRefId: databaseRefId as TenantDatabaseRefId,
     deploymentMode: "managed",
+    normalizedHost: `tenant-${label}.tilbecore.test`,
     requestId: `request_${label}`,
+    traceId: `trace_${label}`,
   };
 }
 

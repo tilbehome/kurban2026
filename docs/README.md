@@ -27,8 +27,9 @@ Bu dizin, güncel mimari belgeleri tarihsel çalışma kayıtlarından ayırır.
 
 - [ADR-0001 — Profesyonel SaaS Domain, URL, Origin ve Tenant Host Çözümleme Standardı](adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md)
 - [ADR-0002 — Platform–Tenant Veri Sınırı ve Erişim Standardı](adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md)
+- [ADR-0003 — Tenant Yedek, WAL/PITR ve Restore Doğrulama Standardı](adr/ADR-0003-TENANT-YEDEK-WAL-PITR-VE-RESTORE-DOGRULAMA.md)
 
-Faz 2C PostgreSQL provisioning, tenant-aware runtime ve iki firma izolasyon uygulama kanıtları ADR-0002, [test ve kabul planı](architecture/10-TEST-KALITE-VE-KABUL-PLANI.md) ve [uygulama takip defterinde](architecture/KURBAN2026-UYGULAMA-TAKIP.md) birlikte izlenir.
+Faz 2C PostgreSQL provisioning, tenant request runtime, pool gözlemlenebilirliği ve firma bazlı backup/restore uygulama kanıtları ADR-0002, ADR-0003, [test ve kabul planı](architecture/10-TEST-KALITE-VE-KABUL-PLANI.md) ve [uygulama takip defterinde](architecture/KURBAN2026-UYGULAMA-TAKIP.md) birlikte izlenir.
 
 ## Belge durumları
 

@@ -171,6 +171,7 @@ export function assertLicenseDateRange(license: PlatformLicense): void {
 export function assertTenantDatabaseRefSafe(databaseRef: TenantDatabaseRef): TenantDatabaseRef {
   return assertPlatformTenantDescriptorSafe({
     organizationId: "org_check" as OrganizationId,
+    organizationStatus: "active",
     tenantInstanceId: "tenant_check" as TenantInstanceId,
     slug: "tenant-check" as TenantSlug,
     displayName: "Tenant check",
@@ -179,6 +180,7 @@ export function assertTenantDatabaseRefSafe(databaseRef: TenantDatabaseRef): Ten
     runtimeStatus: "unknown",
     releaseChannel: "pilot",
     databaseRef,
+    databaseRefStatus: "active",
     moduleEntitlements: [],
     limits: {},
   }).databaseRef;

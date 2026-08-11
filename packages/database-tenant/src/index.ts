@@ -15,3 +15,4 @@ export function assertTenantDatabaseTarget(target: TenantDatabaseMigrationTarget
 }
 
 export * from "./postgres-tenant-database";
+export * from "./postgres-tenant-backup";

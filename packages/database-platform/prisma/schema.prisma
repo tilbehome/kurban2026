@@ -19,6 +19,7 @@ model Organization {
   licenses        PlatformLicense[]
   auditLogs       PlatformAuditLog[]
   emergencyStops  EmergencyStop[]
+  supportSessions PlatformSupportSession[]
 }
 
 model TenantInstance {
@@ -36,6 +37,9 @@ model TenantInstance {
   databaseRef        TenantDatabaseRef  @relation(fields: [databaseRefId], references: [id])
   healthSnapshots    TenantHealthSnapshot[]
   emergencyStops     EmergencyStop[]
+  customDomains      TenantCustomDomain[]
+  supportSessions    PlatformSupportSession[]
+  auditLogs          PlatformAuditLog[]
 
   @@index([organizationId])
 }
@@ -134,6 +138,7 @@ model PlatformUser {
   provisioningJobs PlatformProvisioningJob[]
   emergencyStops EmergencyStop[]
   supportTicketLinks PlatformSupportTicketLink[]
+  requestedSupportSessions PlatformSupportSession[] @relation("SupportRequester")
 }
 
 model PlatformRole {
@@ -157,6 +162,7 @@ model PlatformUserRole {
 model PlatformAuditLog {
   id             String        @id
   organizationId String?
+  tenantInstanceId String?
   actorUserId    String?
   action         String
   targetType     String
@@ -167,11 +173,51 @@ model PlatformAuditLog {
   metadata       Json?
   occurredAt     DateTime      @default(now())
   organization   Organization? @relation(fields: [organizationId], references: [id])
+  tenantInstance TenantInstance? @relation(fields: [tenantInstanceId], references: [id])
   actorUser      PlatformUser? @relation(fields: [actorUserId], references: [id])
 
   @@index([organizationId])
+  @@index([tenantInstanceId])
   @@index([actorUserId])
   @@index([requestId])
+}
+
+model TenantCustomDomain {
+  id               String   @id
+  tenantInstanceId String
+  hostname         String   @unique
+  status           String
+  dnsVerified      Boolean  @default(false)
+  tlsReady         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  tenantInstance   TenantInstance @relation(fields: [tenantInstanceId], references: [id])
+
+  @@index([tenantInstanceId])
+}
+
+model PlatformSupportSession {
+  id               String   @id
+  organizationId   String
+  tenantInstanceId String
+  platformUserId   String
+  /// Opaque tenant user identity; this must not resolve through PlatformUser.
+  approvedByUserId String
+  reason           String
+  status           String
+  scopes           Json
+  startsAt         DateTime
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  tenantInstance   TenantInstance @relation(fields: [tenantInstanceId], references: [id])
+  platformUser     PlatformUser @relation("SupportRequester", fields: [platformUserId], references: [id])
+
+  @@index([organizationId])
+  @@index([tenantInstanceId])
+  @@index([platformUserId])
+  @@index([expiresAt])
 }
 
 model PlatformMfaEnrollment {

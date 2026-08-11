@@ -65,6 +65,7 @@ fixtures/
 | `apps/public-display` | TV ve PII içermeyen tokenlı müşteri takip ekranı | Public read-model ve rate-limit sözleşmeleri hazır olduğunda |
 | `apps/worker` | Zamanlanmış işler, migration orchestration, yedek, lisans kontrolü | Tenant DB ve job ihtiyaçları gerçek use-case ile doğduğunda |
 | `apps/provisioning-cli` | Firma DB oluşturma, migration, durum, devam ve sahiplik kanıtlı geri alma komutları | Faz 2C’de gerçek composition root ve testli CLI olarak oluşturuldu |
+| `apps/tenant-ops-cli` | Tenant/ref doğrulamalı backup create/status/verify ve destructive olmayan restore plan/verify komutları | Faz 2C’de gerçek PostgreSQL araçları ve izolasyon testiyle oluşturuldu |
 | `apps/integration-gateway` | WhatsApp Business, SMS, e-fatura, POS gibi dış entegrasyon sınırı | Entegrasyonlar gerçek sözleşme ve güvenlik modeliyle açıldığında |
 | `apps/print-agent` | Yerel yazıcı, etiket, A4 belge, offline print köprüsü | Yerel kurulumlarda browser baskısı yetmediğinde |
 | `apps/sync-agent` | Yerel/bulut senkron, lisans heartbeat, health reporting | Offline-first senkron gereksinimi netleştiğinde |
@@ -77,6 +78,7 @@ fixtures/
 | `packages/platform` | Firma, lisans, deployment, support domain/use-case | Tenant operasyon verisi |
 | `packages/database-platform` | Platform Prisma/SQL migration ve repository adapter | Firma operasyon tabloları |
 | `packages/database-tenant` | Firma operasyon DB migration, PostgreSQL admin adapteri ve tenant Prisma connection factory | Platform kullanıcı/secret UI |
+| `packages/tenant-web-runtime` | Platform tenant/custom-domain/SupportSession metadata adapteri ile doğrulanmış tenant request composition root’u | İş modülü route’u, platform private importu, global mutable tenant state veya secret |
 | `packages/provisioning` | Firma kurulum/provisioning application use-case'i; kalıcı adım durumu, idempotency, resume, DB create/migrate/verify, platform kayıt ve rollback sırası | UI, gerçek secret veya tenant operasyon verisi |
 | `packages/identity-platform` | Platform auth, MFA, platform session ve izinler | Firma içi rol varsayımı |
 | `packages/identity-tenant` | Firma kullanıcı, rol, izin, destek oturumu adapter’ı | Platform admin ayrıcalığı |

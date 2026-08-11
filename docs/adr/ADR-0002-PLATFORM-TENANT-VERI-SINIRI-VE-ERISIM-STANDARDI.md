@@ -8,7 +8,7 @@ Durum: Kabul edildi
 
 TilbeCore – Kurban Takip tek kod tabanlı, çok firmalı ve modüler monolit bir üründür. Platform yönetimi ile firma operasyonu aynı ürün ailesinde yer alsa da veri sahipliği, oturum, yetki, audit ve veritabanı sınırları karıştırılamaz.
 
-Bu ADR, Faz 2A kapanış paketinde bağlayıcı mimari karar olarak yazılmıştır. Faz 2C uygulama paketi bu kararı gerçek PostgreSQL provisioning adapteri, devam ettirilebilir iş kaydı, tenant-aware connection pool, kontrollü CLI ve iki firma izolasyon entegrasyon testiyle uygulamaya bağlamıştır. DNS, TLS, canlı deployment ve Süper Admin ekranı bu ADR güncellemesinin kapsamı değildir.
+Bu ADR, Faz 2A kapanış paketinde bağlayıcı mimari karar olarak yazılmıştır. Faz 2C uygulama paketleri bu kararı gerçek PostgreSQL provisioning adapteri, devam ettirilebilir iş kaydı, tenant-aware request runtime ve connection pool, kontrollü CLI’lar, platform metadata bridge’i ve iki firma izolasyon entegrasyon testiyle uygulamaya bağlamıştır. DNS, TLS, canlı deployment ve Süper Admin ekranı bu ADR güncellemesinin kapsamı değildir.
 
 ## Karar
 
@@ -83,6 +83,8 @@ Firma operasyon verisine platform tarafından erişim yalnız süreli, gerekçel
 - iptal ve kapanış kaydı,
 - platform ve tenant audit korelasyonu.
 
+Onaylayan firma kullanıcısının kimliği Platform DB’de yalnız opaque onay metadata’sıdır; `PlatformUser` ilişkisi veya platform yetkisi üretmez. Destek işlemini yapan platform kullanıcısı ayrı `platformUserId` ile izlenir.
+
 `SupportSession` yoksa veya süresi/kapsamı uygun değilse operasyon verisi erişimi fail-closed reddedilir.
 
 ## Audit sorumlulukları
@@ -122,13 +124,15 @@ Reddedilen istekler güvenli hata kodu ve requestId döndürür; DB secret, conn
 
 - `packages/database-tenant`: gerçek DB create/exists/migrate/verify/rollback adapteri ve tenant Prisma connection factory. Migration öncesi sahiplik kanıtı PostgreSQL DB metadata'sında, migration sonrası ikinci kanıt tenant içindeki `TenantProvisioningMarker` tablosunda tutulur; böylece Prisma boş şema şartı bozulmaz.
 - `packages/provisioning`: adım durumları, idempotency fingerprint’i, güvenli resume ve yalnız aynı işin oluşturduğu kayıt edilmemiş DB için rollback kuralı.
-- `packages/database-platform`: `0004_resumable_tenant_provisioning` migration’ı ve provisioning job repository adapteri.
-- `packages/tenant-runtime`: tenant+opaque DB ref anahtarlı pool, referans sahipliği kontrolü, idle kapatma ve shutdown temizliği.
+- `packages/database-platform`: `0004_resumable_tenant_provisioning` ve `0005_tenant_request_runtime_metadata` migration’ları; provisioning job, custom domain, SupportSession ve platform audit metadata’sı.
+- `packages/tenant-runtime`: doğrulanmış host/session’dan tipli request context üreten runtime; tenant+opaque DB ref anahtarlı pool, eşzamanlı reuse, referans sahipliği kontrolü, idle kapatma, shutdown temizliği ve sağlayıcıdan bağımsız event/metric portu.
+- `packages/tenant-web-runtime`: Platform DB’deki tenant, custom domain ve SupportSession metadata’sını public package sınırlarından request runtime’a bağlayan Prisma adapteri; platform support erişimini güvenli metadata ile auditler.
 - `apps/provisioning-cli`: `dry-run`, `create`, `status`, `resume` ve `rollback` komutları.
-- `packages/database-tenant/tests/tenant-isolation.integration.test.ts`: iki fiziksel tenant DB, aynı kayıt ID’leri, host/session/ref reddi, SupportSession sınırı, secret redaction ve tenant-bağımsız rollback kanıtı.
+- `apps/tenant-ops-cli`: tenant/ref doğrulamalı backup create/status/verify ve destructive olmayan restore plan/verify komutları.
+- `packages/database-tenant/tests/tenant-isolation.integration.test.ts`: iki fiziksel tenant DB, aynı kayıt ID’leri, eşzamanlı web request izolasyonu, host/session/ref reddi, SupportSession sınırı ve audit’i, pool metrikleri, gerçek dump/geçici restore doğrulaması, secret redaction ve tenant-bağımsız rollback kanıtı.
 - `tests/architecture-boundaries.test.ts`: platform DB ile tenant DB altyapısının private import veya doğrudan join bağımlılığı kurmaması.
 
-Bu kanıtlar tenant provisioning çekirdeğini uygular. Mevcut tenant-web route’larının bu runtime üzerinden çalıştırılması, firma bazlı backup/restore provası, WAL/PITR değerlendirmesi, canlı DNS/TLS/deployment ve Süper Admin UI hâlâ ayrı paketlerdir.
+Bu kanıtlar tenant provisioning ve doğrulanmış tenant-web request composition çekirdeğini uygular. Mevcut legacy Next.js route’larının toplu olarak yeni runtime’a taşınması sonraki iş modülü fazlarında yapılır. Canlı WAL/PITR yapılandırması ve ölçümü, DNS/TLS/deployment, production restore yetkilendirmesi ve Süper Admin UI hâlâ tamamlanmamıştır. Backup/restore kararı ADR-0003’te bağlayıcıdır.
 
 ## PlatformUser firma sınırı
 
@@ -139,8 +143,8 @@ Platform kullanıcısı doğrudan `organizationId` alanıyla tenant operasyon ye
 - Platform ve tenant veri sınırı Faz 2A’da yazılı sözleşme haline gelmiştir.
 - Faz 2B Platform DB ve Süper Admin uygulaması bu ADR’ye göre tasarlanır.
 - Faz 2C tenant DB provisioning, tenant-aware pool ve iki firma PostgreSQL izolasyon otomasyonunu bu ADR’ye göre uygular.
-- Canlı tenant-web route bağlama ve fiziksel uygulama taşıması bu paketle yapılmaz.
+- Yeni tenant-web composition bridge’i çalışır; mevcut legacy Next.js route’larının fiziksel taşıması bu paketle yapılmaz.
 
 ## Geri dönüş
 
-Kod geri dönüşü ilgili Faz 2C commit’inin revert edilmesiyle yapılır. Platform `0004` ve tenant `0003` migration’ları uygulanmış ortamlarda şema geri alma doğrudan destructive SQL ile yapılmaz; test ortamı yeniden kurulur, kalıcı ortamda snapshot/restore veya ileri düzeltme migration’ı kullanılır. Provisioning rollback yalnız PostgreSQL DB metadata sahiplik kanıtı aynı provisioning işini doğrulayan ve platform tenant kaydı tamamlanmamış DB’yi düşürebilir. DNS, deployment ve secret state bu paket tarafından değiştirilmez.
+Kod geri dönüşü ilgili Faz 2C commit’inin revert edilmesiyle yapılır. Platform `0004`/`0005` ve tenant `0003` migration’ları uygulanmış ortamlarda şema geri alma doğrudan destructive SQL ile yapılmaz; test ortamı yeniden kurulur, kalıcı ortamda snapshot/restore veya ileri düzeltme migration’ı kullanılır. Provisioning rollback yalnız PostgreSQL DB metadata sahiplik kanıtı aynı provisioning işini doğrulayan ve platform tenant kaydı tamamlanmamış DB’yi düşürebilir. DNS, deployment ve secret state bu paket tarafından değiştirilmez.

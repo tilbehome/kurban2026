@@ -43,6 +43,7 @@ const platformMigrationChain = [
   "0002_platform_baseline_hardening",
   "0003_platform_control_plane_metadata",
   "0004_resumable_tenant_provisioning",
+  "0005_tenant_request_runtime_metadata",
 ] as const;
 
 describePostgres("platform PostgreSQL migration zinciri", () => {
@@ -56,7 +57,7 @@ describePostgres("platform PostgreSQL migration zinciri", () => {
     await expectNoDrift(url);
     const secondOutput = runMigrateDeploy(url, createMigrationFixture(platformMigrationChain));
     expect(secondOutput).toContain("No pending migrations to apply");
-  }, 15_000);
+  }, 30_000);
 
   test("0001 sonrası örnek kayıtlar varken güncel migration zinciri uygulanır ve PlatformUser ile Organization silinmez", async () => {
     const schema = await createSchema("seeded_upgrade");
@@ -110,7 +111,7 @@ describePostgres("platform PostgreSQL migration zinciri", () => {
     await db.$disconnect();
     fs.rmSync(oneMigration.root, { recursive: true, force: true });
     fs.rmSync(currentMigrations.root, { recursive: true, force: true });
-  }, 15_000);
+  }, 30_000);
 
   test("check constraint, foreign key ve unique kuralları gerçek PostgreSQL üzerinde reddeder", async () => {
     const schema = await createSchema("constraints");
@@ -176,7 +177,7 @@ describePostgres("platform PostgreSQL migration zinciri", () => {
     ).rejects.toThrow();
 
     await db.$disconnect();
-  });
+  }, 30_000);
 });
 
 describePostgres("platform repository gerçek PostgreSQL integration", () => {

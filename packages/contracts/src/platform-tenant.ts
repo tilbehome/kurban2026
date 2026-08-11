@@ -62,6 +62,7 @@ export interface TenantBackupSummary {
 
 export interface PlatformTenantDescriptor {
   organizationId: OrganizationId;
+  organizationStatus: "draft" | "active" | "suspended" | "closed";
   tenantInstanceId: TenantInstanceId;
   slug: TenantSlug;
   displayName: string;
@@ -71,6 +72,7 @@ export interface PlatformTenantDescriptor {
   releaseChannel: ReleaseChannel;
   currentVersion?: string;
   databaseRef: TenantDatabaseRef;
+  databaseRefStatus: "active" | "suspended" | "removed";
   moduleEntitlements: TenantModuleEntitlement[];
   limits: TenantOperationalLimits;
   backupSummary?: TenantBackupSummary;
@@ -89,8 +91,33 @@ export interface TenantRuntimeContext {
   slug: TenantSlug;
   databaseRefId: TenantDatabaseRefId;
   deploymentMode: TenantDeploymentMode;
+  normalizedHost: string;
   requestId: string;
+  traceId: string;
   actor?: TenantRuntimeActor;
+}
+
+export interface TenantRequestSupportContext {
+  id: SupportSessionId;
+  reason: string;
+  scopes: string[];
+  startsAt: string;
+  expiresAt: string;
+}
+
+export interface TenantRequestContext {
+  organizationId: OrganizationId;
+  tenantId: TenantInstanceId;
+  normalizedHost: string;
+  tenantDatabaseRefId: TenantDatabaseRefId;
+  userId: UserId;
+  sessionId: string;
+  actorKind: "tenant" | "platform";
+  roleIds: string[];
+  permissions: string[];
+  supportSession?: TenantRequestSupportContext;
+  requestId: string;
+  traceId: string;
 }
 
 export type TenantOperationDataClass =

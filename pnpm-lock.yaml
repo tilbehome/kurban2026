@@ -160,6 +160,18 @@ importers:
         specifier: workspace:*
         version: link:../../packages/provisioning
 
+  apps/tenant-ops-cli:
+    dependencies:
+      '@tilbecore/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@tilbecore/database-platform':
+        specifier: workspace:*
+        version: link:../../packages/database-platform
+      '@tilbecore/database-tenant':
+        specifier: workspace:*
+        version: link:../../packages/database-tenant
+
   packages/config:
     dependencies:
       '@tilbecore/contracts':
@@ -185,6 +197,9 @@ importers:
       '@tilbecore/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@tilbecore/operations':
+        specifier: workspace:*
+        version: link:../operations
       '@tilbecore/provisioning':
         specifier: workspace:*
         version: link:../provisioning
@@ -204,6 +219,9 @@ importers:
       '@tilbecore/platform':
         specifier: workspace:*
         version: link:../platform
+      '@tilbecore/tenant-web-runtime':
+        specifier: workspace:*
+        version: link:../tenant-web-runtime
 
   packages/operations:
     dependencies:
@@ -240,6 +258,18 @@ importers:
       '@tilbecore/contracts':
         specifier: workspace:*
         version: link:../contracts
+
+  packages/tenant-web-runtime:
+    dependencies:
+      '@tilbecore/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@tilbecore/database-platform':
+        specifier: workspace:*
+        version: link:../database-platform
+      '@tilbecore/tenant-runtime':
+        specifier: workspace:*
+        version: link:../tenant-runtime
 
 packages:
 

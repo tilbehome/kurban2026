@@ -16,6 +16,14 @@ export type PlatformPrismaClientLike = Pick<
   | "platformRole"
   | "platformUserRole"
   | "platformProvisioningJob"
+  | "tenantCustomDomain"
+  | "platformSupportSession"
+  | "platformAuditLog"
+>;
+
+export type PlatformTenantRuntimePrismaClientLike = Pick<
+  PrismaClient,
+  "tenantInstance" | "tenantCustomDomain" | "platformSupportSession" | "platformAuditLog"
 >;
 
 export type PlatformProvisioningPrismaClientLike = Pick<
@@ -52,3 +60,12 @@ export type PlatformUserWithRolesRow = Prisma.PlatformUserGetPayload<{
   include: { roles: { include: { role: true } } };
 }>;
 export type PlatformProvisioningJobRow = Prisma.PlatformProvisioningJobGetPayload<object>;
+export type TenantRuntimeDescriptorRow = Prisma.TenantInstanceGetPayload<{
+  include: { databaseRef: true; organization: true; healthSnapshots: true };
+}>;
+export type TenantCustomDomainRow = Prisma.TenantCustomDomainGetPayload<{
+  include: { tenantInstance: true };
+}>;
+export type PlatformSupportSessionRow = Prisma.PlatformSupportSessionGetPayload<{
+  include: { tenantInstance: true };
+}>;

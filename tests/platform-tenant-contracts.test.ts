@@ -7,6 +7,7 @@ import {
 
 const descriptor: PlatformTenantDescriptor = {
   organizationId: "org_1" as PlatformTenantDescriptor["organizationId"],
+  organizationStatus: "active",
   tenantInstanceId: "tenant_1" as PlatformTenantDescriptor["tenantInstanceId"],
   slug: "ada-bereket" as PlatformTenantDescriptor["slug"],
   displayName: "Ada Bereket",
@@ -19,6 +20,7 @@ const descriptor: PlatformTenantDescriptor = {
     engine: "postgresql",
     managed: false,
   },
+  databaseRefStatus: "active",
   moduleEntitlements: [{ moduleId: "kurban", enabled: true }],
   limits: { maxUsers: 20, maxDevices: 50 },
 };

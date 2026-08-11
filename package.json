@@ -25,6 +25,7 @@
     "test:platform-postgres": "vitest run packages/database-platform/tests/platform-postgres.integration.test.ts",
     "test:tenant-isolation": "vitest run packages/database-tenant/tests/tenant-isolation.integration.test.ts",
     "provisioning:cli": "tsx apps/provisioning-cli/src/cli.ts",
+    "tenant:ops": "tsx apps/tenant-ops-cli/src/cli.ts",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
   },

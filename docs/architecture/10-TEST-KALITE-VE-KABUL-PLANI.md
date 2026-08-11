@@ -57,7 +57,7 @@ Toplam: 84 test.
 
 Birinci karar kaynağı: `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`.
 
-Bu plan Faz 2A kapanışında dokümante edilmiştir. Faz 2C paketi gerçek PostgreSQL provisioning, tenant-aware pool ve iki firma izolasyon otomasyonunu eklemiştir; canlı tenant-web route bağlama ile backup/restore provası sonraki paketlerde tamamlanır.
+Bu plan Faz 2A kapanışında dokümante edilmiştir. Faz 2C paketleri gerçek PostgreSQL provisioning, doğrulanmış tenant request runtime, tenant-aware pool ve iki firma backup/restore izolasyon otomasyonunu eklemiştir. Legacy Next.js route’larının yeni runtime’a modül bazlı taşınması sonraki iş fazlarında sürer.
 
 | Senaryo | Amaç | Test tipi | Kabul kanıtı | Planlanan faz |
 |---|---|---|---|---|
@@ -76,11 +76,11 @@ Bu plan tamamlanmadan Platform DB, tenant routing veya firma başına PostgreSQL
 
 ### Faz 2C otomasyon kanıtı
 
-`packages/database-tenant/tests/tenant-isolation.integration.test.ts` CI’daki PostgreSQL 16 tenant servisi üzerinde iki ayrı organization ve iki ayrı fiziksel tenant DB oluşturur. Aynı season/customer ID’lerinin firma verisini karıştırmadığını; yanlış host, session ve `TenantDatabaseRef` değerlerinin reddedildiğini; iki tenant’ın aynı Prisma client/pool’u paylaşmadığını; `SupportSession` olmadan platform erişiminin kapalı olduğunu; güvenli hata payload’ında connection string, parola veya fiziksel DB adının bulunmadığını ve üçüncü test DB’sinin rollback’inin diğer iki DB’ye dokunmadığını doğrular.
+`packages/database-tenant/tests/tenant-isolation.integration.test.ts` CI’daki PostgreSQL 16 tenant servisi üzerinde iki ayrı organization ve iki ayrı fiziksel tenant DB oluşturur. Aynı season/customer ID’lerinin firma verisini karıştırmadığını; eşzamanlı A/B web request context ve Prisma client’larının ayrıldığını; custom domain ile pasif/bilinmeyen/reserved host davranışını; yanlış session ve `TenantDatabaseRef` reddini; `SupportSession` olmadan platform erişiminin kapalı, geçerli süre/kapsam/onayla sınırlı ve auditli olduğunu doğrular. Aynı test gerçek `pg_dump`, status, checksum, iki ayrı geçici `pg_restore` doğrulaması, çapraz tenant yedek reddi, production restore’un kapalı kalması, secret redaction ve geçici DB/dizin temizliğini de kanıtlar.
 
-`packages/tenant-runtime/tests/tenant-connection-pool.test.ts` eşzamanlı pool reuse, tenantlar arası ref sahipliği, idle kapatma ve shutdown davranışını hedefli olarak doğrular. `packages/database-tenant/tests/postgres-tenant-database.test.ts` identifier/SQL injection sınırını; `packages/provisioning/tests/tenant-provisioning.test.ts` idempotency, adım durumu, resume ve platform kaydı sonrası rollback yasağını doğrular.
+`packages/tenant-runtime/tests/tenant-request-runtime.test.ts` request-local context, session/permission guard, public tracking ayrımı ve SupportSession davranışını; `packages/tenant-runtime/tests/tenant-connection-pool.test.ts` eşzamanlı pool reuse, tenantlar arası ref sahipliği, event/metric, idle kapatma ve shutdown davranışını doğrular. `packages/operations/src/tests/backup-restore.test.ts` tenant/ref bağı ile destructive olmayan restore planını; `apps/tenant-ops-cli/tests/input.test.ts` komut/secret/SQL argüman sınırını; `packages/database-tenant/tests/postgres-tenant-database.test.ts` identifier/SQL injection sınırını; `packages/provisioning/tests/tenant-provisioning.test.ts` idempotency, adım durumu, resume ve platform kaydı sonrası rollback yasağını doğrular.
 
-Henüz tamamlanmayan kabul kanıtları: firma bazlı backup/restore izolasyon provası, WAL/PITR kanıtı, tenant-web route/E2E bağlama, canlı custom-domain/DNS/TLS ve genel Kurban Günü Provası.
+Henüz tamamlanmayan kabul kanıtları: canlı sağlayıcıda WAL/PITR ayarı ve ölçülmüş RPO/RTO, legacy route’ların modül bazlı tenant runtime’a taşınması ve geniş browser E2E, canlı custom-domain/DNS/TLS/deployment, production restore onay akışı ve genel Kurban Günü Provası.
 
 ## Lint warning durumu
 

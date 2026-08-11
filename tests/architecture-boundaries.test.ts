@@ -35,14 +35,14 @@ function importLines(files: string[]): ImportLine[] {
   return files.flatMap((file) => {
     const absolutePath = join(repoRoot, file);
     if (!statSync(absolutePath).isFile()) return [];
-
-    return readFileSync(absolutePath, "utf8")
-      .split(/\r?\n/)
-      .map((line) => ({ file: file.split(sep).join("/"), line: line.trim() }))
-      .filter(({ line }) =>
-        /^(import|export)\s+.*\s+from\s+["']/.test(line) ||
-        /^import\s+["']/.test(line),
-      );
+    const content = readFileSync(absolutePath, "utf8");
+    const statements = content.match(
+      /(?:^|\n)\s*(?:(?:import|export)\s+(?:type\s+)?[\s\S]*?\s+from\s+["'][^"']+["']|import\s+["'][^"']+["'])\s*;?/g,
+    ) ?? [];
+    return statements.map((line) => ({
+      file: file.split(sep).join("/"),
+      line: line.replace(/\s+/g, " ").trim(),
+    }));
   });
 }
 
@@ -197,6 +197,18 @@ describe("Faz 2A mimari bağımlılık sınırları", () => {
     expect(violations(tenantFiles, [
       /from\s+["']@tilbecore\/database-platform(\/|["'])/,
       /from\s+["'](\.\.\/)+database-platform(\/|["'])/,
+    ])).toEqual([]);
+  });
+
+  it("tenant-web runtime platform ve tenant sınırlarını yalnız public portlarla birleştirir", () => {
+    const files = listTrackedSourceFiles("packages/tenant-web-runtime");
+
+    expect(files.length).toBeGreaterThan(0);
+    expect(violations(files, [
+      /from\s+["']@tilbecore\/[^"']+\/src(\/|["'])/,
+      /from\s+["'](\.\.\/)+database-(platform|tenant)(\/|["'])/,
+      /from\s+["']next(\/|["'])/,
+      /from\s+["']react["']/,
     ])).toEqual([]);
   });
 

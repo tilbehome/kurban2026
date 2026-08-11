@@ -1,0 +1,12 @@
+{
+  "name": "@tilbecore/tenant-ops-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "dependencies": {
+    "@tilbecore/contracts": "workspace:*",
+    "@tilbecore/database-platform": "workspace:*",
+    "@tilbecore/database-tenant": "workspace:*"
+  }
+}

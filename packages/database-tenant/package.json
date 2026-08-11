@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@tilbecore/contracts": "workspace:*",
+    "@tilbecore/operations": "workspace:*",
     "@tilbecore/provisioning": "workspace:*",
     "@tilbecore/tenant-core": "workspace:*",
     "@tilbecore/tenant-runtime": "workspace:*"
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@tilbecore/config": "workspace:*",
     "@tilbecore/database-platform": "workspace:*",
-    "@tilbecore/platform": "workspace:*"
+    "@tilbecore/platform": "workspace:*",
+    "@tilbecore/tenant-web-runtime": "workspace:*"
   }
 }
