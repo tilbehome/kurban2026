@@ -30,7 +30,7 @@ Her istasyonda tek aktif iş, büyük hayvan/hisse kimliği, `Tamamla`, `Beklet`
 
 | İstasyon | Girdi | Başarı çıktısı | Kritik engel |
 |---|---|---|---|
-| Hazırlık | Sıra, hayvan, yedi hisse | `READY` | Uygunsuz hayvan/eksik vekâlet |
+| Hazırlık | Sıra, hayvan, tam yedi hisse kaydı | `READY` | Uygunsuz hayvan, eksik vekâlet veya açık işletme hissesi kararı |
 | Kesim | Doğrulanmış hayvan | Zaman/ekipli kesim olayı | Yanlış hayvan/çift başlatma |
 | Parçalama | Karkas kimliği | Yedi hisseye izlenebilir dağıtım | Kaynak kimlik kaybı |
 | Tartım | Parça/hisse | Sabit hassasiyetli kayıt | Tekrar/manuel giriş gerekçesi |
@@ -60,7 +60,7 @@ Kesim/tartım/paket/teslim saf sözleşme ve modelleri `IMPLEMENTED_PENDING_VERI
 - Yanlış hayvan/hisse taraması ve çift işlem negatif testleri.
 - Yedi hisse kaynak/paket mutabakatı.
 - Offline/online geçiş ve idempotency senaryosu.
-- 5–20 cihaz yük/prova kanıtı.
+- Firma ve tesis için onaylanan eşzamanlı kullanıcı/cihaz kapasitesinde ölçülmüş yük ve tam operasyon provası; kapasite girdisi onaylanmadan sayısal hedef verilmez.
 - Telefon, tablet, masaüstü kontrol merkezi ve PII’siz TV kabulü.
 - Teslim tekrar kullanımı ve hayvan kapanış engeli.
 

@@ -34,7 +34,7 @@ Kod sözleşmesindeki karşılıklar `preparation`, `sales`, `slaughter`, `deliv
 1. Tenant operasyon ve finans kayıtları `seasonId` taşır.
 2. Sezon geçişi server-side yetki, önkoşul, gerekçe, actor, zaman ve audit üretir.
 3. `SALES` açılmadan fiyat, hisse ve satış hazırlıkları doğrulanır.
-4. `SLAUGHTER` öncesinde hayvan uygunluğu, yedi hisse, vekâlet ve görev/cihaz hazırlık engelleri görünürdür.
+4. `SLAUGHTER` öncesinde hayvan uygunluğu, tam yedi hisse, gerçek kişilere satılan hisselerin vekâleti, satılmamış işletme hissesi kararı ve görev/cihaz hazırlık engelleri görünürdür.
 5. `ARCHIVED` öncesinde açık borç, açık kasa farkı, teslim edilmemiş hisse/paket ve açık istisna raporlanır.
 6. Kapanış kayıt silmez; yazmayı kilitler ve doğrulanmış arşiv/yedek bağı üretir.
 

@@ -18,7 +18,8 @@ Firma/tenant aktif
 → tedarikçi ve alış faturası
 → hayvan kabulü, küpe, sağlık ve uygunluk
 → yedi hisse envanteri
-→ müşteri, satış ve kapora
+→ müşteri ve süreli rezervasyon
+→ pozitif kaporayla kesin satış ve alacak
 → tahsilat ve vekâlet
 → kesime hazırlık ve sıra
 → kesim
@@ -36,8 +37,8 @@ Zincir doğrusal bir “durum” alanından ibaret değildir. Satış, finans, v
 | Kapı | Zorunlu doğrulama | Başarısızlık davranışı |
 |---|---|---|
 | Sezonu satışa aç | Firma/tenant aktif, sezon hazırlığı, fiyat/hisse ayarları | Geçiş bloke, hazırlık bulgusu |
-| Satışı kesinleştir | Uygun hayvan, boş hisse, müşteri, fiyat snapshot | Atomik rollback |
-| Kesimi başlat | Uygun hayvan, yedi hisse, geçerli vekâlet | İstisna kuyruğu; sessiz override yok |
+| Satışı kesinleştir | Uygun hayvan, boş/rezerve hisse, müşteri, fiyat snapshot ve pozitif kapora | Satış/alacak/tahsilat birlikte atomik rollback |
+| Kesimi başlat | Uygun hayvan, tam yedi hisse, gerçek kişilere satılan hisselerde geçerli vekâlet, açık işletme hissesi kararı | İstisna kuyruğu; sahte müşteri/vekâlet veya sessiz override yok |
 | Paketi tamamla | Kaynak tartım ve hisse/paket mutabakatı | Paket bloke, sorun kaydı |
 | Teslimi kapat | Doğru hisse/paket, tek kullanımlık kanıt, borç politikası | Tekrar/yanlış teslim reddi |
 | Sezonu arşivle | Açık borç/kasa/paket/teslim/istisna mutabakatı | Kapanış bloke |

@@ -28,7 +28,7 @@ related_requirements: [REQ-001, REQ-008, REQ-015, REQ-028, PRO-001, PRO-005]
 
 **Başlık:** fotoğraf varsa güvenli varlık, küpe, kurban no, operasyon sırası, uygunluk, padok/konum ve kesim aşaması.
 
-**Özet:** tedarikçi/alış maliyeti, canlı/karkas tartım, yedi hisse doluluk, tahsilat/vekâlet/paket/teslim sayıları. Kârlılık yalnız mutabık ledger ve gerçek maliyet varsa gösterilir.
+**Özet:** tedarikçi/alış maliyeti, canlı/karkas tartım, tam yedi hissenin işletme envanteri/rezervasyon/kesin satış ayrımı, tahsilat/vekâlet/paket/teslim sayıları. Kârlılık yalnız mutabık ledger ve gerçek maliyet varsa gösterilir; işletme envanteri sahte gelir sayılmaz.
 
 **Sekmeler:** genel; tedarik/maliyet; tartım; sağlık/uygunluk; 7 hisse; kesim; paket/teslim; belge/not; timeline/audit.
 
@@ -50,15 +50,15 @@ related_requirements: [REQ-001, REQ-008, REQ-015, REQ-028, PRO-001, PRO-005]
 
 ## Hisse 360
 
-**Başlık:** hayvan/küpe, hisse sıra no, aktif müşteri, durum ve teslim hazırlığı.
+**Başlık:** hayvan/küpe, `1..7` hisse sıra no, sahiplik türü (`işletme envanteri`, `rezervasyon`, `kesin satış`), varsa gerçek müşteri, durum ve teslim hazırlığı.
 
-**Özet:** liste fiyatı, indirim, anlaşma bedeli snapshot’ı, tahsilat/kalan, vekâlet, paket sayısı/kilo ve teslim.
+**Özet:** rezervasyon süresi veya kesin satışta liste fiyatı, indirim, anlaşma bedeli snapshot’ı, pozitif kapora, tahsilat/kalan, vekâlet, paket sayısı/kilo ve teslim. Rezervasyon ve işletme envanterinde alacak/gelir gösterilmez.
 
 **Sekmeler:** satış/fiyat; müşteri/ödeyen; ödeme/ledger; vekâlet/belge; kesim; paket/tartım; teslim; transfer/iptal; timeline/audit.
 
-**Hızlı eylemler:** rezervasyon, satış, tahsilat, transfer, iptal talebi, belge, teslim hazırlığı. Ödemeli iptal veya teslim reversal doğrudan buton değil, etki önizlemeli sihirbazdır.
+**Hızlı eylemler:** rezervasyon oluştur/uzat/bırak, pozitif kaporayla satışı kesinleştir, tahsilat, transfer, iptal talebi, belge, teslim hazırlığı. İşletme envanterinde müşteri/vekâlet eylemi satıştan önce açılmaz. Ödemeli iptal veya teslim reversal doğrudan buton değil, etki önizlemeli sihirbazdır.
 
-**Durum:** PostgreSQL model/saf sözleşme `IMPLEMENTED_PENDING_VERIFICATION`; birleşik Hisse 360 UI `PLANNED`.
+**Durum:** PostgreSQL modelde rezervasyon/satış alanları vardır; ancak kapora şartı, tam yedi kaydın zorunluluğu ve işletme envanteri ayrımı tamamlanmadığı için domain davranışı `IMPLEMENTING`; birleşik Hisse 360 UI `PLANNED`.
 
 ## Kasa 360
 

@@ -33,6 +33,8 @@ Eski belge fiziksel silinmez. Token iptal edilir, durum `LOST` veya `REVOKED` ol
 
 Kesim istasyonu hayvan/hisse ve QR amacını doğrular. Yedi geçerli vekâlet yoksa normal geçiş bloke edilir. Yetkili istisna ancak belgelenmiş politika, gerekçe ve audit ile mümkündür; bu istisnanın dinî/hukuki kararı yazılım tarafından uydurulmaz.
 
+İşletme envanterindeki satılmamış hisse için sahte müşteri veya vekâlet oluşturulmaz. Sonradan gerçek kişiye satılırsa normal vekâlet akışı çalışır. Satılmamış hissenin kesim öncesi dinî uygunluk çözümü açık karar gerektirir ve karar verilene kadar hazırlık engeli olarak kalır.
+
 ## Uygulama durumu
 
 Tenant core belge/QR sözleşmesi ve legacy korumalı dosya okuma `IMPLEMENTED_PENDING_VERIFICATION`/`IMPLEMENTING`; çoklu veren/kanal, gerçek sürümlü belge, iki aşamalı QR ve baskı E2E’si `PLANNED` durumundadır. Legacy yükleme eski kaydı fiziksel silebildiğinden hedef sözleşmeyle tam uyumlu sayılmaz.

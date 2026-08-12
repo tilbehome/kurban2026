@@ -16,7 +16,8 @@ Vekâlet hisse bazlı dinî operasyon kaydıdır. Belge; onay metni/politika sü
 
 ## Değişmez kurallar
 
-- Her hisse kesimden önce geçerli vekâlet durumuna sahip olmalıdır.
+- Kesime gerçek kişi adına girecek her hisse kesimden önce geçerli vekâlet durumuna sahip olmalıdır.
+- İşletme envanterindeki satılmamış hisse için sahte müşteri veya vekâlet üretilmez. Gerçek kişiye satış yapılırsa vekâlet normal satış sonrası akıştan alınır.
 - Vekâlet veren ile hissedar farklı olabilir.
 - Tek kanıt birden çok hisseye bağlanabilir; her bağ ayrı izlenir.
 - Yüz yüze sözlü, telefon ve WhatsApp ses kaydı yöntemleri belgelenmiştir; ses/görüntü saklama, hukuk ve açık rıza kararı olmadan genişletilmez.
@@ -46,6 +47,7 @@ Kayıp belge yeni versiyona yönlendirir; eski kayıt korunur. `SIGNED` dışın
 ## Kabul ölçütleri
 
 - Yedi geçerli vekâleti olmayan hayvan normal kesim geçişine başlayamaz.
+- Satılmamış işletme hissesinin kesim öncesi dinî uygunluk çözümü bağlayıcı mimaride açık karar gerektirir; bu karar verilmeden sistem sahte vekâlet üretmez ve hazırlık engelini gizlemez.
 - Yetkisiz kullanıcı belgeyi ID değiştirerek okuyamaz.
 - Fiziksel storage anahtarı API, log veya audit export’unda görünmez.
 - İptal edilmiş veya süresi geçmiş QR tekrar kullanılamaz.

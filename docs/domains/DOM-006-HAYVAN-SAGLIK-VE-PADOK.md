@@ -17,12 +17,13 @@ Hayvan yalnız büyükbaş kapsamındadır. Küpe kalıcı kimliktir; kurban num
 ## Değişmez kurallar
 
 1. Küpe sezon/firma kapsamında benzersiz olmalı; değişiklik ayrı düzeltme ve audit ister.
-2. Hayvan tam yedi hisse kapasitesine sahiptir; yedi üstü aktif hisse yasaktır.
+2. Her büyükbaş hayvan için `1..7` sıra numaralı tam yedi hisse kaydı bulunur; eksik veya sekiz ve üzeri hisse kartı geçersizdir.
 3. Tartım geçmişe eklenir; mevcut değer sessizce ezilmez.
 4. Uygun olmayan hayvan satılamaz.
 5. Uygunsuzluk satılmış hisseleri otomatik başka hayvana taşımaz.
 6. Kurban numarası kimliği, operasyon sırası planlamayı temsil eder; sıra değişikliği geçmiş üretir.
 7. Hayvan ancak yedi hissenin teslim durumu tamamlandığında kapanabilir.
+8. Satılmamış hisse işletme envanteridir; bu durum müşteri, satış, gelir, alacak veya vekâlet kaydı üretmez.
 
 ## Önerilen durumlar
 

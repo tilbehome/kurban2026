@@ -22,7 +22,7 @@ related_requirements: [REQ-007, REQ-008, REQ-043, REQ-046, PRO-030, PRO-031, PRO
 
 ## Kurban Günü’ne geçiş
 
-Hayvan/yedi hisse, ödeme politikası, vekâlet, sıra, personel/istasyon, cihaz ve sarf kontrolleri raporlanır. Kritik açık engeller çözülmeden `SLAUGHTER` durumuna geçilmez.
+Hayvan/tam yedi hisse, rezervasyon/kapora politikası, vekâlet, satılmamış işletme hissesi, sıra, personel/istasyon, cihaz ve sarf kontrolleri raporlanır. Satılmamış işletme hissesi için sahte kişi veya vekâlet üretilmez; kesim öncesi açık karar dâhil kritik engeller çözülmeden `SLAUGHTER` durumuna geçilmez.
 
 ## Kapanış
 

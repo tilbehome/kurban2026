@@ -28,7 +28,7 @@ Her aktif durumdan `EXCEPTION` açılabilir; `EXCEPTION` yalnız kontrollü olar
 ## Önkoşullar
 
 - Hayvan uygun ve doğru tenant/sezondadır.
-- Yedi hisse ve gerekli vekâletler tamamdır.
+- Tam yedi hisse kaydı vardır; kesin satılan gerçek kişi hisselerinin gerekli vekâletleri tamamdır. Satılmamış işletme hissesi varsa açık karar/blokaj görünürdür; sahte müşteri veya vekâletle kapatılamaz.
 - Kesim sırası ve hayvan kimliği taramayla doğrulanır.
 - Yetkili kullanıcı/cihaz/istasyon atanmıştır.
 - Açık finans veya belge blokajı firma politikasına göre görünür; override gerekçe ve yetki ister.

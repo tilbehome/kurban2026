@@ -24,6 +24,7 @@ Hedef mimaride cari, kasa, banka/POS ve raporların tek doğru kaynağı çift t
 6. Finansal hareket silinmez; ters kayıt, iade veya mahsup kullanılır.
 7. Kasa oturumu açılış, fiziksel sayım, beklenen/sayılan fark, devir ve kapanış taşır.
 8. Kapalı sezona/döneme doğrudan posting yapılmaz.
+9. Kaporasız rezervasyon ve işletme envanterindeki satılmamış hisse satış, gelir veya müşteri alacağı ledger kaydı üretmez.
 
 ## Gerçek uygulama durumu
 
