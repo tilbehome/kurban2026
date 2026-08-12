@@ -65,7 +65,7 @@ export function tenantAuthorizationActor(session: AuthOturum, request: Request):
   const context = tenantUseCaseContext(session, { request, readOnly: true });
   if (!context.organizationMembershipId || !context.actorIdentityId) throw new Error("ORGANIZATION_MEMBERSHIP_REQUIRED");
   return {
-    subject: { kind: "ORGANIZATION_USER", id: context.actorIdentityId, organizationMembershipId: context.organizationMembershipId, sessionId: context.sessionId },
+    subject: { kind: context.identityKind ?? "ORGANIZATION_USER", id: context.actorIdentityId, organizationMembershipId: context.organizationMembershipId, sessionId: context.sessionId },
     context: {
       tenantInstanceId: context.tenantInstanceId,
       organizationId: context.organizationId,
@@ -166,7 +166,7 @@ export function tenantConfiguredActiveSeasonId(): string | undefined {
 
 export function tenantUseCaseContext(
   session: AuthOturum,
-  options: { request?: Request; payload?: unknown; idempotencyKey?: string; readOnly?: boolean } = {},
+  options: { request?: Request; payload?: unknown; idempotencyKey?: string; readOnly?: boolean; approval?: TenantUseCaseContext["approval"] } = {},
 ): TenantUseCaseContext {
   const tenantInstanceId = process.env.TENANT_INSTANCE_ID?.trim();
   if (!tenantInstanceId) throw new Error("TENANT_INSTANCE_ID_REQUIRED");
@@ -188,6 +188,7 @@ export function tenantUseCaseContext(
     mfaLevel: session.mfaLevel,
     lastReauthenticatedAt: session.lastReauthenticatedAt,
     authorizationMode: tenantAuthorizationMode(),
+    approval: options.approval,
     permissions: permissionsForRole(session.rol),
     requestId,
     idempotencyKey,

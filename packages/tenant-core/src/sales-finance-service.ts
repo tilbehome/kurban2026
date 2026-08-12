@@ -113,6 +113,7 @@ export class TenantSalesFinanceService {
           trustedDevice: context.trustedDevice ?? false,
           network: context.network,
           mfaLevel: context.mfaLevel ?? 0,
+          approval: context.approval,
           requestId: context.requestId,
         },
         lastReauthenticatedAt: context.lastReauthenticatedAt,

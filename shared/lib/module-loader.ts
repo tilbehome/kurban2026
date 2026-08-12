@@ -35,10 +35,35 @@ export function authorizationManifestBul(moduleId: string): ModuleAuthorizationM
   return authorizationManifestleri().find((manifest) => manifest.moduleId === moduleId);
 }
 
+function listeEnv(anahtar: string): Set<string> | null {
+  const ham = process.env[anahtar]?.trim();
+  if (!ham) return null;
+  return new Set(ham.split(",").map((item) => item.trim()).filter(Boolean));
+}
+
+function runtimeAcikMi(modul: ModuleConfig, moduller: readonly ModuleConfig[] = tumModuller): boolean {
+  const enabledModules = listeEnv("TENANT_ENABLED_MODULES");
+  if (enabledModules && !enabledModules.has(modul.id)) return false;
+
+  const kural = modul.sozlesme?.runtimeKurali;
+  if (!kural) return true;
+
+  const enabledFlags = listeEnv("TENANT_FEATURE_FLAGS");
+  const entitlements = listeEnv("TENANT_ENTITLEMENTS");
+  if (kural.featureFlag && enabledFlags && !enabledFlags.has(kural.featureFlag)) return false;
+  if (kural.entitlement && entitlements && !entitlements.has(kural.entitlement)) return false;
+
+  return (modul.bagimliliklar ?? []).every((id) => {
+    const bagimli = moduller.find((aday) => aday.id === id);
+    return Boolean(bagimli?.aktif && runtimeAcikMi(bagimli, moduller));
+  });
+}
+
 /** Aktif olan ve verilen role görünür modüller, sira'ya göre sıralı. */
 export function aktifModuller(rol?: Rol): ModuleConfig[] {
   return tumModuller
     .filter((m) => m.aktif)
+    .filter((m) => runtimeAcikMi(m))
     .filter((m) => !rol || m.izinler.includes(rol))
     .sort((a, b) => a.sira - b.sira);
 }
@@ -65,7 +90,7 @@ export async function modulleriYukle(): Promise<void> {
   if (lifecycleCalisti) return;
   lifecycleCalisti = true;
   for (const m of tumModuller) {
-    if (m.aktif && m.onYukle) {
+    if (m.aktif && runtimeAcikMi(m) && m.onYukle) {
       try {
         await m.onYukle();
       } catch (e) {
@@ -89,7 +114,7 @@ export function rotaEslesmesi(yol: string): RotaEslesme | null {
   const normalize = yol.replace(/\/$/, "") || "/";
 
   for (const modul of tumModuller) {
-    if (!modul.aktif) continue;
+    if (!modul.aktif || !runtimeAcikMi(modul)) continue;
 
     for (const sayfa of modul.sayfalar) {
       const eslesen = rotaEslestir(sayfa.yol, normalize);

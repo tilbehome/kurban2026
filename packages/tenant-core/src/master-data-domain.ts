@@ -33,6 +33,12 @@ export interface TenantUseCaseContext {
   mfaLevel?: number;
   lastReauthenticatedAt?: string;
   authorizationMode?: "database" | "legacy_bridge";
+  approval?: {
+    requestId: string;
+    approved: boolean;
+    approvalCount: number;
+    distinctApproverCount: number;
+  };
   permissions: readonly string[];
   requestId: string;
   idempotencyKey: string;

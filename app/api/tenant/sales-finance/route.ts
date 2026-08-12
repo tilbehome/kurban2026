@@ -23,6 +23,13 @@ const allocationSchema = z.object({
   amount: z.string().regex(/^\d+(\.\d{1,4})?$/),
 });
 
+const approvalSchema = z.object({
+  requestId: z.string().min(8),
+  approved: z.boolean(),
+  approvalCount: z.number().int().min(1),
+  distinctApproverCount: z.number().int().min(1),
+});
+
 const requestSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("list-shares"), seasonId: z.string().min(3) }),
   z.object({
@@ -35,6 +42,7 @@ const requestSchema = z.discriminatedUnion("action", [
     validFrom: z.string().datetime().optional(),
     validUntil: z.string().datetime().optional(),
     changeReason: z.string().trim().min(3).max(500),
+    approval: approvalSchema.optional(),
     items: z.array(z.object({
       id: z.string().min(3),
       shareGroup: z.string().trim().min(1).max(80),
@@ -51,8 +59,9 @@ const requestSchema = z.discriminatedUnion("action", [
     customerId: z.string().min(3),
     reservedUntil: z.string().datetime(),
     reason: z.string().trim().max(500).optional(),
+    approval: approvalSchema.optional(),
   }),
-  z.object({ action: z.literal("expire-reservations"), seasonId: z.string().min(3), now: z.string().datetime(), limit: z.number().int().positive().max(500).optional() }),
+  z.object({ action: z.literal("expire-reservations"), seasonId: z.string().min(3), now: z.string().datetime(), limit: z.number().int().positive().max(500).optional(), approval: approvalSchema.optional() }),
   z.object({
     action: z.literal("confirm-sale"),
     id: z.string().min(3),
@@ -67,6 +76,7 @@ const requestSchema = z.discriminatedUnion("action", [
       receiptNo: z.string().trim().min(1).max(80),
       methodSplits: z.array(methodSplitSchema).min(1),
     }),
+    approval: approvalSchema.optional(),
   }),
   z.object({
     action: z.literal("record-receipt"),
@@ -79,9 +89,10 @@ const requestSchema = z.discriminatedUnion("action", [
     methodSplits: z.array(methodSplitSchema).min(1),
     allocations: z.array(allocationSchema).min(1),
     occurredAt: z.string().datetime(),
+    approval: approvalSchema.optional(),
   }),
-  z.object({ action: z.literal("cancel-sale"), saleId: z.string().min(3), seasonId: z.string().min(3), reason: z.string().trim().min(3).max(500) }),
-  z.object({ action: z.literal("transfer-share"), id: z.string().min(3), seasonId: z.string().min(3), sourceShareId: z.string().min(3), targetShareId: z.string().min(3), toCustomerId: z.string().min(3), reason: z.string().trim().min(3).max(500) }),
+  z.object({ action: z.literal("cancel-sale"), saleId: z.string().min(3), seasonId: z.string().min(3), reason: z.string().trim().min(3).max(500), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("transfer-share"), id: z.string().min(3), seasonId: z.string().min(3), sourceShareId: z.string().min(3), targetShareId: z.string().min(3), toCustomerId: z.string().min(3), reason: z.string().trim().min(3).max(500), approval: approvalSchema.optional() }),
 ]);
 
 export async function POST(request: Request) {
@@ -99,7 +110,7 @@ export async function POST(request: Request) {
 
   try {
     const service = tenantSalesFinanceService();
-    const context = tenantUseCaseContext(session, { request, payload: body, readOnly: body.action === "list-shares" });
+    const context = tenantUseCaseContext(session, { request, payload: body, readOnly: body.action === "list-shares", approval: "approval" in body ? body.approval : undefined });
     switch (body.action) {
       case "list-shares":
         return NextResponse.json({ ok: true, items: await service.listShareAvailability(context, body.seasonId) });

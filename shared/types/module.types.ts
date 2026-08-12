@@ -56,6 +56,31 @@ export interface ModulOlay {
   dinle?: string[];
 }
 
+export type ModulYuzeyi = "desktop" | "mobile" | "tablet";
+export type OfflineSinifi = "none" | "read_only" | "queued_write" | "conflict_aware";
+
+export interface ModulRuntimeKurali {
+  featureFlag?: string;
+  entitlement?: string;
+  aktivasyonKosullari?: string[];
+  devreDisiBirakmaKosullari?: string[];
+}
+
+export interface ModulSozlesme {
+  yuzeyler?: ModulYuzeyi[];
+  ayarSemasi?: Record<string, unknown>;
+  featureFlagler?: string[];
+  entitlementlar?: string[];
+  auditOlaylari?: string[];
+  domainOlaylari?: string[];
+  raporKatkilari?: string[];
+  dashboardKatkilari?: string[];
+  offlineSinifi?: OfflineSinifi;
+  migrationBilgisi?: string;
+  veriSaklamaBilgisi?: string;
+  runtimeKurali?: ModulRuntimeKurali;
+}
+
 export interface ModuleConfig {
   id: string;
   ad: string;
@@ -74,6 +99,7 @@ export interface ModuleConfig {
   api?: ModulAPI[];
   widgets?: ModulWidget[];
   olaylar?: ModulOlay;
+  sozlesme?: ModulSozlesme;
   /** Tenant PostgreSQL veri tabanına kaydedilen sürümlü izin ve rol şablonu sözleşmesi. */
   authorizationManifest?: import("@tilbecore/tenant-core").ModuleAuthorizationManifest;
   /** Modül sidebar'da hiç gösterilmesin (örn. _core) */
@@ -90,7 +116,7 @@ export interface AuthOturum {
   adSoyad: string;
   rol: Rol;
   girisTarihi: string;
-  identityKind?: "ORGANIZATION_USER";
+  identityKind?: "PLATFORM_USER" | "ORGANIZATION_USER" | "CUSTOMER" | "SERVICE_ACCOUNT" | "DEVICE_IDENTITY" | "EXTERNAL_USER";
   organizationUserId?: string;
   organizationMembershipId?: string;
   tenantSessionId?: string;
