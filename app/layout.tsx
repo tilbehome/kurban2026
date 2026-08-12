@@ -12,17 +12,17 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Ada Bereket Hayvancılık · Kurban 2026",
-    template: "%s · Ada Bereket",
+    default: "TilbeCore – Kurban Takip",
+    template: "%s · TilbeCore",
   },
   description:
-    "Ada Bereket Hayvancılık — Kurban Bayramı 2026 müşteri, kesim, tahsilat ve operasyon takibi. Güvenilir Hizmet, Bereketli Kazanç.",
-  applicationName: "Ada Bereket Kurban",
+    "TilbeCore – Kurban Takip: müşteri, satış, finans, kesim, teslimat ve saha operasyonları için profesyonel çok firmalı ürün.",
+  applicationName: "TilbeCore – Kurban Takip",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Ada Bereket",
+    title: "Kurban Takip",
   },
   icons: {
     icon: [

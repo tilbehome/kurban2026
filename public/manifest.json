@@ -1,7 +1,7 @@
 {
-  "name": "Ada Bereket Hayvancılık · Kurban 2026",
-  "short_name": "Ada Bereket",
-  "description": "Ada Bereket Hayvancılık — Kurban Bayramı 2026 müşteri, kesim, tahsilat ve operasyon takibi. Güvenilir Hizmet, Bereketli Kazanç.",
+  "name": "TilbeCore – Kurban Takip",
+  "short_name": "Kurban Takip",
+  "description": "Kurban Bayramı müşteri, kesim, tahsilat ve uçtan uca operasyon takibi.",
   "start_url": "/?pwa=1",
   "scope": "/",
   "display": "standalone",
@@ -32,16 +32,30 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
+      "name": "Operasyon Merkezi",
+      "short_name": "Operasyon",
+      "description": "Vekâlet, kesim, tartım, paketleme ve teslimat",
+      "url": "/operasyon?pwa=1",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Saha Görevleri",
+      "short_name": "Saha",
+      "description": "Mobil görev akışı ve güvenli senkronizasyon",
+      "url": "/operasyon?pwa=field",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
       "name": "TV Ekranı",
       "short_name": "TV",
-      "description": "Canlı kesim takibi",
+      "description": "PII içermeyen canlı kesim takibi",
       "url": "/tv?pwa=1",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Müşteri Takip",
       "short_name": "Takip",
-      "description": "Kurbanımı takip et",
+      "description": "Minimum operasyon bilgisiyle kurban takibi",
       "url": "/tv/m?pwa=1",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }

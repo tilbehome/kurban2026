@@ -22,7 +22,7 @@ export type DeviceAdapterId = Brand<string, "DeviceAdapterId">;
 
 export type ProxyDocumentStatus = "draft" | "signed" | "revoked" | "lost";
 export type QrPurpose = "proxyDocument" | "slaughterCheck" | "package" | "delivery" | "customerTracking";
-export type SlaughterStatus = "waiting" | "ready" | "slaughtering" | "weighing" | "packing" | "ready_for_delivery" | "delivered" | "exception";
+export type SlaughterStatus = "waiting" | "ready" | "slaughtering" | "skinning" | "cutting" | "weighing" | "packing" | "ready_for_delivery" | "delivered" | "exception";
 export type DeliveryStatus = "pending" | "delivered" | "reversed";
 export type OfflineQueueStatus = "queued" | "syncing" | "synced" | "conflict" | "failed";
 export type DeviceAdapterKind = "scale" | "barcode_reader" | "qr_reader" | "label_printer" | "thermal_printer" | "tv_display";
@@ -110,7 +110,9 @@ export interface DeviceAdapterContract {
 const SLAUGHTER_TRANSITIONS: Record<SlaughterStatus, readonly SlaughterStatus[]> = {
   waiting: ["ready", "exception"],
   ready: ["slaughtering", "exception"],
-  slaughtering: ["weighing", "exception"],
+  slaughtering: ["skinning", "exception"],
+  skinning: ["cutting", "exception"],
+  cutting: ["weighing", "exception"],
   weighing: ["packing", "exception"],
   packing: ["ready_for_delivery", "exception"],
   ready_for_delivery: ["delivered", "exception"],

@@ -266,6 +266,14 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         aciklama: "Operasyon sırasını yönet, aşama başlat/bitir",
       },
       {
+        id: "kurban-operasyon-merkezi",
+        ad: "Operasyon Merkezi",
+        ikon: Scissors,
+        rota: "/operasyon",
+        izin: "tv.kontrol",
+        aciklama: "Vekâlet, QR, kesim, tartım, paketleme ve teslimat komuta merkezi",
+      },
+      {
         id: "personel-paneli",
         ad: "Personel Saha Paneli",
         ikon: Smartphone,

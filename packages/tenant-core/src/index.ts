@@ -7,6 +7,8 @@ export * from "./master-data-domain";
 export * from "./master-data-service";
 export * from "./sales-finance-domain";
 export * from "./sales-finance-service";
+export * from "./operations-service";
 export * from "./authorization-domain";
 export * from "./authorization-service";
 export * from "./module-authorization";
+export * from "./operations-authorization";

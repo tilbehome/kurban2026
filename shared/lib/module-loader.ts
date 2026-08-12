@@ -6,12 +6,13 @@
  */
 
 import type { ModuleConfig, Rol } from "@/shared/types/module.types";
-import { IDENTITY_AUTHORIZATION_MANIFEST, type ModuleAuthorizationManifest } from "@tilbecore/tenant-core";
+import { TENANT_MODULE_AUTHORIZATION_MANIFESTS, FAZ_7_10_AUTHORIZATION_MANIFESTS, type ModuleAuthorizationManifest } from "@tilbecore/tenant-core";
 
 import { coreModule } from "@/modules/_core/module.config";
 import { musterilerModule } from "@/modules/musteriler/module.config";
 import { hayvanlarModule } from "@/modules/hayvanlar/module.config";
 import { tahsilatModule } from "@/modules/tahsilat/module.config";
+import { operationsModule } from "@/modules/operations/module.config";
 import { kasaModule } from "@/modules/kasa/module.config";
 import { raporlarModule } from "@/modules/raporlar/module.config";
 import { besiModule } from "@/modules/besi/module.config";
@@ -21,6 +22,7 @@ export const tumModuller: ModuleConfig[] = [
   musterilerModule,
   hayvanlarModule,
   tahsilatModule,
+  operationsModule,
   kasaModule,
   raporlarModule,
   besiModule,
@@ -28,11 +30,15 @@ export const tumModuller: ModuleConfig[] = [
 
 /** Görsel olarak kapalı modüller dahil, tenant'a kaydedilebilir yetki sözleşmeleri. */
 export function authorizationManifestleri(): readonly ModuleAuthorizationManifest[] {
-  return [IDENTITY_AUTHORIZATION_MANIFEST, ...tumModuller.flatMap((modul) => modul.authorizationManifest ? [modul.authorizationManifest] : [])];
+  return [...TENANT_MODULE_AUTHORIZATION_MANIFESTS, ...FAZ_7_10_AUTHORIZATION_MANIFESTS, ...tumModuller.flatMap((modul) => modul.authorizationManifest ? [modul.authorizationManifest] : [])]
+    .filter((manifest, index, manifests) => manifests.findIndex((aday) => aday.moduleId === manifest.moduleId && aday.version === manifest.version) === index);
 }
 
 export function authorizationManifestBul(moduleId: string): ModuleAuthorizationManifest | undefined {
-  return authorizationManifestleri().find((manifest) => manifest.moduleId === moduleId);
+  return authorizationManifestleri()
+    .filter((manifest) => manifest.moduleId === moduleId)
+    .sort((a, b) => b.version.localeCompare(a.version, undefined, { numeric: true }))
+    [0];
 }
 
 function listeEnv(anahtar: string): Set<string> | null {

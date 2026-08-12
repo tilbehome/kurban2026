@@ -42,6 +42,34 @@ export type HataKodu =
   | "SHARE_SEQUENCE_OUT_OF_RANGE"
   | "FILE_INVALID_PROXY_PATH"
   | "FILE_PROXY_NOT_FOUND"
+  | "TENANT_OPERATIONS_FAILED"
+  | "PROTECTED_DOCUMENT_STORAGE_REQUIRED"
+  | "PROXY_SHARE_COUNT_INVALID"
+  | "PROXY_SHARE_SCOPE_INVALID"
+  | "QR_TOKEN_NOT_FOUND"
+  | "QR_TOKEN_REVOKED"
+  | "QR_TOKEN_EXPIRED"
+  | "SLAUGHTER_SHARE_CARD_INVALID"
+  | "SLAUGHTER_REQUIRES_SEVEN_SHARES"
+  | "SLAUGHTER_REQUIRES_SEVEN_VALID_PROXY_DOCUMENTS"
+  | "RELIGIOUS_ELIGIBILITY_OPEN_DECISION_REQUIRED"
+  | "ANIMAL_QURBAN_ELIGIBILITY_BLOCKED"
+  | "SLAUGHTER_JOB_NOT_FOUND"
+  | "SLAUGHTER_TRANSITION_NOT_ALLOWED"
+  | "WEIGHT_PRECISION_INVALID"
+  | "PACKAGE_WEIGHT_PRECISION_INVALID"
+  | "WEIGHING_ANIMAL_SCOPE_INVALID"
+  | "PACKAGE_SHARE_SCOPE_INVALID"
+  | "DELIVERY_SHARE_SCOPE_INVALID"
+  | "DELIVERY_CUSTOMER_MISMATCH"
+  | "DELIVERY_REQUIRES_SOLD_SHARE"
+  | "DELIVERY_REQUIRES_READY_PACKAGE"
+  | "SHARE_ALREADY_DELIVERED"
+  | "DELIVERY_NOT_FOUND"
+  | "DELIVERY_NOT_REVERSIBLE"
+  | "OFFLINE_QUEUE_SECRET_FORBIDDEN"
+  | "CRITICAL_OPERATION_OFFLINE_FORBIDDEN"
+  | "IDEMPOTENCY_CONFLICT"
   | "INTERNAL_UNEXPECTED"
   | "INTERNAL_SALE_FAILED";
 
@@ -169,6 +197,34 @@ export const HATA_KATALOGU = {
     httpStatus: 404,
     kullaniciyaGosterilebilir: true,
   },
+  TENANT_OPERATIONS_FAILED: { kod: "TENANT_OPERATIONS_FAILED", mesajAnahtari: "error.internal.operationCouldNotComplete", httpStatus: 500, kullaniciyaGosterilebilir: true },
+  PROTECTED_DOCUMENT_STORAGE_REQUIRED: { kod: "PROTECTED_DOCUMENT_STORAGE_REQUIRED", mesajAnahtari: "error.operations.protectedDocumentStorageRequired", httpStatus: 400, kullaniciyaGosterilebilir: true },
+  PROXY_SHARE_COUNT_INVALID: { kod: "PROXY_SHARE_COUNT_INVALID", mesajAnahtari: "error.operations.proxyShareCountInvalid", httpStatus: 400, kullaniciyaGosterilebilir: true },
+  PROXY_SHARE_SCOPE_INVALID: { kod: "PROXY_SHARE_SCOPE_INVALID", mesajAnahtari: "error.operations.proxyShareScopeInvalid", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  QR_TOKEN_NOT_FOUND: { kod: "QR_TOKEN_NOT_FOUND", mesajAnahtari: "error.operations.qrTokenInvalid", httpStatus: 404, kullaniciyaGosterilebilir: true },
+  QR_TOKEN_REVOKED: { kod: "QR_TOKEN_REVOKED", mesajAnahtari: "error.operations.qrTokenInvalid", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  QR_TOKEN_EXPIRED: { kod: "QR_TOKEN_EXPIRED", mesajAnahtari: "error.operations.qrTokenExpired", httpStatus: 410, kullaniciyaGosterilebilir: true },
+  SLAUGHTER_SHARE_CARD_INVALID: { kod: "SLAUGHTER_SHARE_CARD_INVALID", mesajAnahtari: "error.operations.slaughterShareCardInvalid", httpStatus: 404, kullaniciyaGosterilebilir: true },
+  SLAUGHTER_REQUIRES_SEVEN_SHARES: { kod: "SLAUGHTER_REQUIRES_SEVEN_SHARES", mesajAnahtari: "error.operations.slaughterRequiresSevenShares", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  SLAUGHTER_REQUIRES_SEVEN_VALID_PROXY_DOCUMENTS: { kod: "SLAUGHTER_REQUIRES_SEVEN_VALID_PROXY_DOCUMENTS", mesajAnahtari: "error.operations.slaughterRequiresSevenProxyDocuments", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  RELIGIOUS_ELIGIBILITY_OPEN_DECISION_REQUIRED: { kod: "RELIGIOUS_ELIGIBILITY_OPEN_DECISION_REQUIRED", mesajAnahtari: "error.operations.religiousEligibilityOpenDecisionRequired", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  ANIMAL_QURBAN_ELIGIBILITY_BLOCKED: { kod: "ANIMAL_QURBAN_ELIGIBILITY_BLOCKED", mesajAnahtari: "error.operations.animalQurbanEligibilityBlocked", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  SLAUGHTER_JOB_NOT_FOUND: { kod: "SLAUGHTER_JOB_NOT_FOUND", mesajAnahtari: "error.operations.slaughterJobNotFound", httpStatus: 404, kullaniciyaGosterilebilir: true },
+  SLAUGHTER_TRANSITION_NOT_ALLOWED: { kod: "SLAUGHTER_TRANSITION_NOT_ALLOWED", mesajAnahtari: "error.operations.slaughterTransitionNotAllowed", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  WEIGHT_PRECISION_INVALID: { kod: "WEIGHT_PRECISION_INVALID", mesajAnahtari: "error.operations.weightPrecisionInvalid", httpStatus: 400, kullaniciyaGosterilebilir: true },
+  PACKAGE_WEIGHT_PRECISION_INVALID: { kod: "PACKAGE_WEIGHT_PRECISION_INVALID", mesajAnahtari: "error.operations.weightPrecisionInvalid", httpStatus: 400, kullaniciyaGosterilebilir: true },
+  WEIGHING_ANIMAL_SCOPE_INVALID: { kod: "WEIGHING_ANIMAL_SCOPE_INVALID", mesajAnahtari: "error.operations.weighingAnimalScopeInvalid", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  PACKAGE_SHARE_SCOPE_INVALID: { kod: "PACKAGE_SHARE_SCOPE_INVALID", mesajAnahtari: "error.operations.packageShareScopeInvalid", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  DELIVERY_SHARE_SCOPE_INVALID: { kod: "DELIVERY_SHARE_SCOPE_INVALID", mesajAnahtari: "error.operations.deliveryShareScopeInvalid", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  DELIVERY_CUSTOMER_MISMATCH: { kod: "DELIVERY_CUSTOMER_MISMATCH", mesajAnahtari: "error.operations.deliveryCustomerMismatch", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  DELIVERY_REQUIRES_SOLD_SHARE: { kod: "DELIVERY_REQUIRES_SOLD_SHARE", mesajAnahtari: "error.operations.deliveryRequiresSoldShare", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  DELIVERY_REQUIRES_READY_PACKAGE: { kod: "DELIVERY_REQUIRES_READY_PACKAGE", mesajAnahtari: "error.operations.deliveryRequiresReadyPackage", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  SHARE_ALREADY_DELIVERED: { kod: "SHARE_ALREADY_DELIVERED", mesajAnahtari: "error.operations.shareAlreadyDelivered", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  DELIVERY_NOT_FOUND: { kod: "DELIVERY_NOT_FOUND", mesajAnahtari: "error.operations.deliveryNotFound", httpStatus: 404, kullaniciyaGosterilebilir: true },
+  DELIVERY_NOT_REVERSIBLE: { kod: "DELIVERY_NOT_REVERSIBLE", mesajAnahtari: "error.operations.deliveryNotReversible", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  OFFLINE_QUEUE_SECRET_FORBIDDEN: { kod: "OFFLINE_QUEUE_SECRET_FORBIDDEN", mesajAnahtari: "error.operations.offlineSecretForbidden", httpStatus: 400, kullaniciyaGosterilebilir: true },
+  CRITICAL_OPERATION_OFFLINE_FORBIDDEN: { kod: "CRITICAL_OPERATION_OFFLINE_FORBIDDEN", mesajAnahtari: "error.operations.criticalOperationOfflineForbidden", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  IDEMPOTENCY_CONFLICT: { kod: "IDEMPOTENCY_CONFLICT", mesajAnahtari: "error.idempotency.conflict", httpStatus: 409, kullaniciyaGosterilebilir: true },
   INTERNAL_UNEXPECTED: {
     kod: "INTERNAL_UNEXPECTED",
     mesajAnahtari: "error.internal.generic",
