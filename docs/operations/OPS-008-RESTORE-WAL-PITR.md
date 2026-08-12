@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-008
 title: Restore, WAL ve PITR Runbook'u
-status: REVIEW
+status: PLANNED
 owner: Data-Operations
+source_role: operations_policy_or_playbook
 reviewers: [Operations, Security, Finance, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: CANLI_PITR_TOPOLOJISI_SECIMINDE
 version: 0.1
 source_of_truth: false

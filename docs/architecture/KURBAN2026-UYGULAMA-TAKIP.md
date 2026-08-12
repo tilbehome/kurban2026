@@ -111,7 +111,7 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Import grafiği ve taşıma matrisi | Uygulandı | `docs/architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`. |
 | Profesyonel domain/origin sözleşmesi | Uygulandı | `packages/config`, `packages/contracts`, `tests/saas-domain-config.test.ts`, ADR-0001. |
 | Platform–tenant veri sınırı ADR’si | Uygulandı | `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`. |
-| Tenant izolasyon test planı | Uygulandı | `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md`. |
+| Tenant izolasyon test planı | Uygulandı | `docs/testing/TST-001-MASTER-TEST-PLANI.md`; eski architecture yolu `ARC-010 / SUPERSEDED` uyumluluk yönlendirmesidir. |
 | Faz 2A kapanış değerlendirmesi | Uygulandı | Faz 2A yalnız davranış değiştirmeyen sözleşme/plan/matris/test planı kapsamına göre kapanır; DB, tenant routing ve app taşıma sonraki fazlara bırakıldı. |
 
 ### Profesyonel ürün ve operasyon önerileri uyumlandırması

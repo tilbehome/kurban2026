@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-RB-004
 title: Kasa Farkı Runbook'u
-status: REVIEW
+status: PLANNED
 owner: Finance-Operations
+source_role: incident_runbook
 reviewers: [Tenant-Owner, Security, QA]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: ILK_KASA_KAPANIS_PROVASINDA
 version: 0.1
 source_of_truth: false

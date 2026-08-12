@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-003
 title: SLI, SLO, Alarm ve Hata Bütçesi Standardı
-status: REVIEW
+status: PLANNED
 owner: Reliability
+source_role: reliability_policy_or_playbook
 reviewers: [Operations, Product, Security, QA]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: STAGING_BASELINE_SONRASI
 version: 0.1
 source_of_truth: false

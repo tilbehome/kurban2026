@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-002
 title: OpenTelemetry Gözlemlenebilirlik Standardı
-status: REVIEW
+status: PLANNED
 owner: Operations
+source_role: operations_policy_or_playbook
 reviewers: [Security, Privacy, Architecture, QA]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: OTEL_COLLECTOR_UYGULAMASINDA
 version: 0.1
 source_of_truth: false

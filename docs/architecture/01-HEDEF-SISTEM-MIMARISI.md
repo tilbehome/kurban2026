@@ -2,7 +2,7 @@
 
 ```yaml
 id: ARC-001
-status: APPROVED
+status: PLANNED
 owner: Architecture
 source_role: target_system_architecture
 source_of_truth: true

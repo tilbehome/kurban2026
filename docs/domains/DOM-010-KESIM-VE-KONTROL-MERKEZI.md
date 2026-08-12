@@ -1,10 +1,12 @@
 ---
 id: DOM-010
 title: Kesim ve Kontrol Merkezi Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Slaughter-Operations
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-012, REQ-014, REQ-029, REQ-035, REQ-036, PRO-001, PRO-006, PRO-032, PRO-034]
 ---
 
@@ -37,9 +39,9 @@ Her aktif durumdan `EXCEPTION` açılabilir; `EXCEPTION` yalnız kontrollü olar
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| Saf kesim geçiş koruması ve PostgreSQL `SlaughterJob` | `IMPLEMENTED_PENDING_VERIFICATION` | `operation-flow.ts`, tenant şeması ve `0002_tenant_operation_flow`. |
+| Saf kesim geçiş koruması ve PostgreSQL `SlaughterJob` | `IMPLEMENTED_UNVERIFIED` | `operation-flow.ts`, tenant şeması ve `0002_tenant_operation_flow`. |
 | Legacy TV kontrol, sıra ve aşama API’leri | `IMPLEMENTING` | `/tv/kontrol`, `/api/tv/*`; string durumlar ve legacy SQLite kullanıyor. |
-| Operasyon istisna kuyruğu sözleşmesi | `IMPLEMENTED_PENDING_VERIFICATION` | `packages/operations/src/dashboard-contracts.ts`; gerçek bağlı kontrol merkezi UI/read model yok. |
+| Operasyon istisna kuyruğu sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `packages/operations/src/dashboard-contracts.ts`; gerçek bağlı kontrol merkezi UI/read model yok. |
 | Kesim Günü gerçek komuta merkezi, cihaz sağlığı ve vardiya devri | `PLANNED` | Bazı kesim sayfaları placeholder; uçtan uca runtime/E2E yok. |
 | Kısıtlı/offline/read-only modların istasyon uygulaması | `PLANNED` | Tenant runtime read-only politikası platform düzeyinde var; saha UX/sync tamam değil. |
 

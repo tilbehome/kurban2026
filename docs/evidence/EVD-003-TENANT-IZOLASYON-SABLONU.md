@@ -3,11 +3,13 @@
 ```yaml
 id: EVD-003
 title: Tenant İzolasyonu Kanıt Şablonu
-status: REVIEW
+status: PLANNED
 owner: QA-and-Security
+source_role: evidence_record_or_template
 reviewers: [Platform, Data-Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: TENANT_TEST_PLANI_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

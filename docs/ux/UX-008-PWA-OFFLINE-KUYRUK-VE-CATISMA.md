@@ -1,10 +1,12 @@
 ---
 id: UX-008
 title: PWA, Offline Kuyruk ve Çatışma UX Standardı
-status: REVIEW
+status: PLANNED
 owner: UX-and-Frontend
+source_role: ux_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-044, REQ-045, PRO-033, PRO-034, PRO-035]
 ---
 
@@ -59,7 +61,7 @@ Aktif görev veya bekleyen kuyruk varken service worker zorla yenilenmez. Yeni s
 ## Gerçek uygulama durumu
 
 - PWA manifest/service worker güncelleme ve push parçaları: `IMPLEMENTING`.
-- Tenant `OfflineQueueItem`, unique idempotency ve secret guard: `IMPLEMENTED_PENDING_VERIFICATION`.
+- Tenant `OfflineQueueItem`, unique idempotency ve secret guard: `IMPLEMENTED_UNVERIFIED`.
 - IndexedDB local store, beyaz liste, sync engine, conflict UI ve offline E2E: `PLANNED`.
 
 ## Kabul ölçütleri

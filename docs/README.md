@@ -2,7 +2,7 @@
 
 ```yaml
 id: GOV-002
-status: REVIEW
+status: VERIFIED
 owner: Product-and-Architecture
 source_role: canonical_document_index
 source_of_truth: true
@@ -10,75 +10,74 @@ last_reviewed: 2026-08-12
 verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
 ```
 
-Bu dosya aktif çekirdek belgelerin tek giriş noktasıdır. Dosyanın listede bulunması, içindeki bütün hedeflerin kodlandığı anlamına gelmez. Gerçek durum; belge durumu, ilgili kanıt kaydı ve doğrulanan commit birlikte okunarak belirlenir.
+Bu dosya aktif belge sisteminin tek giriş noktasıdır. Bir belgenin listelenmesi, içindeki hedeflerin kodlandığı veya kabul testlerinin çalıştırıldığı anlamına gelmez. Gerçek durum; belge durumu, kaynak kod/migration/test kanıtı ve doğrulanan commit birlikte okunarak belirlenir.
 
-## Okuma sırası
+## Öncelikli okuma sırası
 
 1. [Dokümantasyon politikası](governance/GOV-001-DOKUMANTASYON-POLITIKASI.md)
 2. [Kaynak önceliği ve kanıt standardı](governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md)
-3. [Ürün vizyonu, kapsam ve başarı](product/PRD-001-URUN-VIZYONU-KAPSAM-VE-BASARI.md)
-4. [Birleşik ana mimari ve yol haritası](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md)
-5. [Mevcut durum analizi](architecture/00-MEVCUT-DURUM-ANALIZI.md)
-6. [Faz 2B doğrulanmış durum ve kapsam sınırı](architecture/16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md)
-7. [Uygulama takip defteri](architecture/KURBAN2026-UYGULAMA-TAKIP.md)
+3. [Markdown envanteri ve tasnif kararları](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md)
+4. [Ürün vizyonu, kapsam ve başarı](product/PRD-001-URUN-VIZYONU-KAPSAM-VE-BASARI.md)
+5. [Birleşik ana mimari ve Faz 1–12 yol haritası](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md)
+6. [Mevcut durum analizi](architecture/00-MEVCUT-DURUM-ANALIZI.md)
+7. [Gereksinim izlenebilirlik matrisi](architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md)
+8. [Yeni bağlayıcı ana test planı](testing/TST-001-MASTER-TEST-PLANI.md)
+9. [Uygulama takip defteri](architecture/KURBAN2026-UYGULAMA-TAKIP.md)
 
-## Yönetişim ve ürün kaynakları
+Eski test planı yolu [ARC-010 uyumluluk yönlendirmesi](architecture/10-TEST-KALITE-VE-KABUL-PLANI.md) olarak korunur; test ve kabul konusunda kaynak gerçek `docs/testing/TST-001-MASTER-TEST-PLANI.md` belgesidir.
 
-| ID | Belge | Durum | Sahip | Kaynak rolü |
-|---|---|---|---|---|
-| GOV-001 | [Dokümantasyon politikası](governance/GOV-001-DOKUMANTASYON-POLITIKASI.md) | `REVIEW` | Product-and-Architecture | Belge yaşam döngüsü için ana kaynak |
-| GOV-003 | [Kaynak önceliği ve kanıt standardı](governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) | `APPROVED` | Product-and-Architecture | Çelişki ve tamamlanma dili için ana kaynak |
-| GOV-011 | [Belge dönüşüm kaydı](governance/GOV-011-BELGE-DONUSUM-KAYDI.md) | `REVIEW` | Architecture | Kaynak paket dönüşümünün ana kaydı |
-| PRD-001 | [Ürün vizyonu, kapsam ve başarı](product/PRD-001-URUN-VIZYONU-KAPSAM-VE-BASARI.md) | `REVIEW` | Product | Ürün sınırı için ana kaynak |
-| PRD-005 | [Firma, lisans ve sezon yaşam döngüsü](product/PRD-005-FIRMA-LISANS-VE-SEZON-YASAM-DONGUSU.md) | `REVIEW` | Product-and-Platform | Yaşam döngüsü hedeflerinin ana kaynağı |
+## Belge sistemi
 
-## Mimari ve izlenebilirlik belgeleri
+Eksiksiz dosya bazlı liste, metadata, sahiplik, güncellik, aynı konu kaynağı ve tasnif kararı [GOV-012 Markdown envanterinde](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md) bulunur.
 
-| ID | Belge | Durum | Kaynak rolü |
-|---|---|---|---|
-| ARC-000 | [Mevcut durum analizi](architecture/00-MEVCUT-DURUM-ANALIZI.md) | `VERIFIED` | Doğrulanmış repo fotoğrafı |
-| ARC-001 | [Hedef sistem mimarisi](architecture/01-HEDEF-SISTEM-MIMARISI.md) | `APPROVED` | Hedef sistem sınırı |
-| ARC-002 | [Modüler monolit ve domain sınırları](architecture/02-MODULER-MONOLIT-VE-DOMAIN-SINIRLARI.md) | `APPROVED` | Bağımlılık yönü ve modül sınırı |
-| ARC-003 | [Çoklu firma ve veritabanı mimarisi](architecture/03-COKLU-FIRMA-VE-VERITABANI-MIMARISI.md) | `IMPLEMENTED_PENDING_VERIFICATION` | Tenant veri mimarisi |
-| ARC-004 | [Platform Süper Admin ve Firma Admin](architecture/04-PLATFORM-SUPER-ADMIN-VE-FIRMA-ADMIN.md) | `IMPLEMENTED_PENDING_VERIFICATION` | Control-plane ve kimlik ayrımı |
-| ARC-005 | [Kimlik, yetki ve destek erişimi](architecture/05-KIMLIK-YETKI-VE-DESTEK-ERISIMI.md) | `IMPLEMENTING` | IAM hedefleri ve mevcut boşluklar |
-| ARC-006 | [Finans ve ledger mimarisi](architecture/06-FINANS-VE-LEDGER-MIMARISI.md) | `IMPLEMENTING` | Finans hedef mimarisi |
-| ARC-007 | [UTF-8, çoklu dil ve RTL](architecture/07-UTF8-COKLU-DIL-VE-RTL.md) | `IMPLEMENTING` | Yerelleştirme standardı |
-| ARC-008 | [Tasarım sistemi, mobil ve PWA](architecture/08-TASARIM-SISTEMI-VE-MOBIL-PWA.md) | `IMPLEMENTING` | UX/PWA mimari özeti |
-| ARC-009 | [Veri göçü, yedek ve güncelleme](architecture/09-VERI-GOCU-YEDEK-VE-GUNCELLEME.md) | `IMPLEMENTED_PENDING_VERIFICATION` | Migration ve geri dönüş mimarisi |
-| TST-001 | [Test, kalite ve kabul planı](architecture/10-TEST-KALITE-VE-KABUL-PLANI.md) | `IMPLEMENTING` | Çekirdek kalite kapıları |
-| REQ-003 | [Gereksinim izlenebilirlik matrisi](architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md) | `IMPLEMENTING` | Gereksinim–kanıt ilişkisi |
-| GOV-007 | [Fazlar, riskler ve geri dönüş](architecture/12-FAZLAR-RISKLER-VE-GERI-DONUS.md) | `IMPLEMENTING` | Faz/risk/rollback özeti |
-| ARC-013 | [Hedef dizin ve modül standardı](architecture/13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md) | `APPROVED` | Monorepo hedefi |
-| INV-001 | [Program tam kapsam envanteri](architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md) | `IMPLEMENTING` | Ürün/kod kapsam envanteri |
-| ARC-015 | [Faz 2A import grafiği ve taşıma matrisi](architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md) | `VERIFIED` | Faz 2A kapanış kaydı |
-| ARC-016 | [Faz 2B doğrulanmış durum ve kapsam sınırı](architecture/16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) | `VERIFIED` | `74915b6` kanıt özeti |
-| RMP-001 | [Birleşik ana mimari ve yol haritası](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md) | `APPROVED` | Faz 1–12 bağlayıcı ana yol haritası |
-| TRK-001 | [Uygulama takip defteri](architecture/KURBAN2026-UYGULAMA-TAKIP.md) | `IMPLEMENTING` | Commit/test/CI ilerleme defteri |
+| Alan | Dizin | Ana kaynak / erişim |
+|---|---|---|
+| Kök yönetişim | repo kökü | [AGENTS.md](../AGENTS.md), [README.md](../README.md) |
+| Mimari ve izlenebilirlik | `docs/architecture` | [RMP-001](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), [REQ-003](architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md), [TRK-001](architecture/KURBAN2026-UYGULAMA-TAKIP.md) |
+| Mimari kararlar | `docs/adr` | [ADR-0001](adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md), [ADR-0002](adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md), [ADR-0003](adr/ADR-0003-TENANT-YEDEK-WAL-PITR-VE-RESTORE-DOGRULAMA.md) |
+| Yönetişim | `docs/governance` | [GOV-001](governance/GOV-001-DOKUMANTASYON-POLITIKASI.md), [GOV-003](governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md), [GOV-011](governance/GOV-011-BELGE-DONUSUM-KAYDI.md), [GOV-012](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md) |
+| Ürün | `docs/product` | [PRD-001](product/PRD-001-URUN-VIZYONU-KAPSAM-VE-BASARI.md), [PRD-005](product/PRD-005-FIRMA-LISANS-VE-SEZON-YASAM-DONGUSU.md) |
+| Domain ve iş akışı | `docs/domains`, `docs/workflows` | [DOM-007](domains/DOM-007-HISSE-SATIS-TRANSFER-VE-IPTAL.md), [WFL-001](workflows/WFL-001-UCDAN-UCA-KURBAN-OPERASYONU.md); diğerlerinin tamamı GOV-012’de |
+| Persona, UX, erişilebilirlik ve dil | `docs/personas`, `docs/ux`, `docs/accessibility`, `docs/i18n` | [PER-001](personas/PER-001-ROL-BAZLI-PERSONALAR.md), [A11Y-001](accessibility/A11Y-001-WCAG-22-AA-KABUL-PLANI.md), [I18N-001](i18n/I18N-001-TR-EN-AR-VE-RTL.md) |
+| Güvenlik ve gizlilik | `docs/security`, `docs/privacy` | [SEC-001](security/SEC-001-GUVENLIK-MIMARISI-VE-TEHDIT-MODELI.md), [PRV-001](privacy/PRV-001-KVKK-VE-GIZLILIK-TASARIMI.md) |
+| Test ve kanıt | `docs/testing`, `docs/evidence` | [TST-001](testing/TST-001-MASTER-TEST-PLANI.md), [kanıt şablonları](evidence/README.md) |
+| Altyapı ve işletim | `docs/infrastructure`, `docs/operations`, `docs/reliability`, `docs/runbooks` | [INF-001](infrastructure/INF-001-ORTAM-DEPLOYMENT-VE-YAPILANDIRMA.md), [OPS-001](operations/OPS-001-CANLI-ISLETIM-EL-KITABI.md), [runbook dizini GOV-012’de](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md) |
+| Release, eğitim ve destek | `docs/releases`, `docs/training` | [REL-004](releases/REL-004-RELEASE-GO-NO-GO-VE-ROLLOUT.md), [TRN-006](training/TRN-006-ROL-BAZLI-EGITIM-VE-PROVA.md), [SUP-002](training/SUP-002-DESTEK-VE-SUPPORTSESSION-PROSEDURU.md) |
+| Tarihsel kayıt | `docs/archive` | Yalnız [GOV-012 envanterindeki](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md) `ARCHIVED` kayıtlar; aktif karar kaynağı değildir |
 
-## Mimari karar kayıtları
+## Bağlayıcı iş kuralı düzeltmeleri
 
-| ID | Belge | Durum | Kaynak rolü |
-|---|---|---|---|
-| ADR-0001 | [Domain, URL, origin ve tenant host standardı](adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md) | `APPROVED` | Domain/origin kararı; canlı DNS/TLS kanıtı değildir |
-| ADR-0002 | [Platform–tenant veri sınırı](adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md) | `IMPLEMENTED_PENDING_VERIFICATION` | Platform/tenant veri sınırı kararı |
-| ADR-0003 | [Tenant yedek, WAL/PITR ve restore doğrulama](adr/ADR-0003-TENANT-YEDEK-WAL-PITR-VE-RESTORE-DOGRULAMA.md) | `IMPLEMENTED_PENDING_VERIFICATION` | Yedek/restore kararı; canlı PITR bekliyor |
+- Kaporasız kayıt kesin satış veya alacak değildir.
+- Her pozitif tahsilat kaporadır.
+- Bir büyükbaş hayvan tam yedi hissedir.
+- Satılmamış hisse işletme envanteridir; sahte müşteri, sahte vekâlet, gelir veya alacak üretilmez.
+- Dinî uygunluk hakkında kaynaklarda çözülmemiş konu kesin hüküm gibi yazılmaz.
 
-## Durum sözlüğü
+Bu özet ayrıntılı domain kurallarının yerine geçmez; bağlayıcı ayrıntılar [DOM-007](domains/DOM-007-HISSE-SATIS-TRANSFER-VE-IPTAL.md), [DOM-008](domains/DOM-008-TAHSILAT-KASA-VE-MUTABAKAT.md) ve ilgili iş akışı belgelerindedir.
+
+## Durum standardı
 
 | Durum | Anlam |
 |---|---|
-| `DRAFT` | Taslak; bağlayıcı değil |
-| `REVIEW` | İncelemede; henüz kabul edilmedi |
-| `APPROVED` | Karar olarak kabul edildi; kodlandığı anlamına gelmez |
-| `IMPLEMENTING` | Kapsamın bir bölümü uygulanıyor |
-| `IMPLEMENTED_PENDING_VERIFICATION` | Kod/migration var; bütün genel kabul kanıtları tamamlanmadı |
-| `VERIFIED` | Belgenin açıkça belirttiği commit ve doğrulama kapsamı kanıtlandı |
-| `SUPERSEDED` | Yerine geçen kaynak gösterilerek geçersiz kılındı |
+| `VERIFIED` | Belgede belirtilen kapsam, commit ve kanıt gerçekten doğrulandı |
+| `IMPLEMENTED_UNVERIFIED` | Kod veya migration mevcut; bütün kabul/genel doğrulama kanıtı eksik |
+| `IMPLEMENTING` | Kapsamın yalnız bir bölümü uygulanmış |
+| `PLANNED` | Henüz uygulanmamış hedef veya kabul edilmiş karar |
+| `NOT_RUN` | İlgili test veya kanıt çalıştırılmamış |
+| `SUPERSEDED` | Daha yeni bağlayıcı belgeyle değiştirilmiş |
 | `ARCHIVED` | Yalnız tarihsel kayıt |
 
-## Kanıt sınırı
+## Kanıt sınırı ve çalıştırılmamış kabuller
 
-Son doğrulanmış kod referansı `74915b6f3f1f8d53116b760b6a6be9797111efa5` commitidir. Bu commit için [TilbeCore CI koşusu](https://github.com/tilbehome/kurban2026/actions/runs/31571606803) başarılıdır. Başarılı CI; canlı deployment, fiziksel cihaz kabulü, production restore, gerçek müşteri verisi veya genel Kurban Günü provası kanıtı değildir.
+Son doğrulanmış kod referansı `74915b6f3f1f8d53116b760b6a6be9797111efa5` commitidir. [CI koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803) yalnız koşuda gerçekten yer alan kontroller için kanıttır.
 
-Arşivdeki belgeler güncel karar kaynağı değildir. Bir arşiv belgesi yalnız aktif bir belgede açıkça tarihsel kanıt olarak bağlandığında kullanılır.
+Aşağıdakiler bu entegrasyonda `NOT_RUN` durumundadır ve doğrulanmış gösterilemez:
+
+- fiziksel HTTPS ortamında passkey/WebAuthn kabulü;
+- Playwright ve axe uçtan uca kabul paketi;
+- gerçek fiziksel cihaz kabulü;
+- yük/soak ve çevrimdışı cihaz senaryoları;
+- yönetilen PostgreSQL WAL/PITR denemesi;
+- production restore ve genel Kurban Günü provası.
+
+Arşiv belgeleri güncel karar kaynağı değildir. Bir arşiv belgesi ancak aktif belgede açıkça tarihsel kanıt olarak bağlandığında kullanılabilir.

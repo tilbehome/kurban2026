@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-007
 title: Yedekleme Politikası
-status: REVIEW
+status: PLANNED
 owner: Operations
+source_role: operations_policy_or_playbook
 reviewers: [Data-Operations, Security, Privacy]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: CANLI_BACKUP_SAGLAYICI_SECIMINDE
 version: 0.1
 source_of_truth: false

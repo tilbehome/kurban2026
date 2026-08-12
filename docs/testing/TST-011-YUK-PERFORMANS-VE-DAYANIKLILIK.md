@@ -3,11 +3,13 @@
 ```yaml
 id: TST-011
 title: Yük, Performans ve Dayanıklılık Test Planı
-status: REVIEW
+status: PLANNED
 owner: QA
+source_role: test_plan
 reviewers: [Operations, Architecture, Product, Security]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: STAGING_BASELINE_ONCESI
 version: 0.1
 source_of_truth: false

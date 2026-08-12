@@ -61,4 +61,4 @@ CI ayrıca UTF-8, Platform/Tenant Prisma validate ve generate, iki migration app
 
 ## Durum kullanımı
 
-Başka belgeler Faz 2B ayrıntısını çoğaltmaz; bu belgeye bağlanır. Takip tablosunda `IMPLEMENTED_PENDING_VERIFICATION`, bu rapordaki açık genel/canlı kapılar kapanıncaya kadar korunur.
+Başka belgeler Faz 2B ayrıntısını çoğaltmaz; bu belgeye bağlanır. Takip tablosunda `IMPLEMENTED_UNVERIFIED`, bu rapordaki açık genel/canlı kapılar kapanıncaya kadar korunur.

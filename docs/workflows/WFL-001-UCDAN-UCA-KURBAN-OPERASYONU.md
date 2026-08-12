@@ -1,10 +1,12 @@
 ---
 id: WFL-001
 title: Uçtan Uca Kurban Operasyon Haritası
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Operations
+source_role: business_workflow_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-001, REQ-068, PRO-001, PRO-032]
 ---
 
@@ -56,8 +58,8 @@ Zincir doğrusal bir “durum” alanından ibaret değildir. Satış, finans, v
 
 | Katman | Durum |
 |---|---|
-| Platform Admin ve tenant PostgreSQL/provisioning çekirdeği | `IMPLEMENTED_PENDING_VERIFICATION` |
-| Tenant domain modelleri ve saf kurallar | `IMPLEMENTED_PENDING_VERIFICATION` |
+| Platform Admin ve tenant PostgreSQL/provisioning çekirdeği | `IMPLEMENTED_UNVERIFIED` |
+| Tenant domain modelleri ve saf kurallar | `IMPLEMENTED_UNVERIFIED` |
 | Legacy müşteri/satış/tahsilat/kesim/teslim ekranları | `IMPLEMENTING`; yeni tenant runtime/ledger’a tam taşınmadı |
 | Tedarik faturası, sezon runtime, soğuk oda, yükleme, tam offline sync | `PLANNED` |
 

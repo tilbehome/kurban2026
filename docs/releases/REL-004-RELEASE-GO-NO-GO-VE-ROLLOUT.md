@@ -3,11 +3,13 @@
 ```yaml
 id: REL-004
 title: Release, Go/No-Go ve Kademeli Yayın Planı
-status: REVIEW
+status: PLANNED
 owner: Release
+source_role: release_policy_or_playbook
 reviewers: [Product, QA, Security, Operations, Data-Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_RELEASE_ADAYINDA
 version: 0.1
 source_of_truth: false

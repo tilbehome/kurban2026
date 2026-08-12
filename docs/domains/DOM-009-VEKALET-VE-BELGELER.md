@@ -1,10 +1,12 @@
 ---
 id: DOM-009
 title: Vekâlet ve Belgeler Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Religious-Operations
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-029, REQ-030, REQ-031, REQ-032, REQ-033, REQ-034, REQ-061]
 ---
 
@@ -29,8 +31,8 @@ Vekâlet hisse bazlı dinî operasyon kaydıdır. Belge; onay metni/politika sü
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| `ProxyDocument`, çoklu hisse bağı, sürüm ve korumalı storage guard | `IMPLEMENTED_PENDING_VERIFICATION` | `packages/tenant-core/src/operation-flow.ts`, PostgreSQL tenant şeması. |
-| Amaç bağlı, süreli/iptal edilebilir `QrToken` sözleşmesi | `IMPLEMENTED_PENDING_VERIFICATION` | Tenant core ve tenant şeması. |
+| `ProxyDocument`, çoklu hisse bağı, sürüm ve korumalı storage guard | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/operation-flow.ts`, PostgreSQL tenant şeması. |
+| Amaç bağlı, süreli/iptal edilebilir `QrToken` sözleşmesi | `IMPLEMENTED_UNVERIFIED` | Tenant core ve tenant şeması. |
 | Legacy korumalı dosya okuma ve yetki/audit | `IMPLEMENTING` | `/api/vekaletler/[id]`, `shared/lib/vekalet-dosya.ts`, ilgili testler. |
 | Legacy yükleme/yenileme | `IMPLEMENTING` | `/api/vekaletler`; mevcut kayıt fiziksel silinebildiği için hedef versiyonlama kuralını tam karşılamıyor. |
 | Çoklu veren, kanal/politika sürümü, A4 iki aşamalı QR runtime | `PLANNED` | Bağlı tam model/UI/E2E kanıtı yok. |

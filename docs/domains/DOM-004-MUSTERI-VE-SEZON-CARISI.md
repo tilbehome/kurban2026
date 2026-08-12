@@ -1,10 +1,12 @@
 ---
 id: DOM-004
 title: Müşteri ve Sezon Carisi Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Finance
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-025, PRO-004, PRO-005, PRO-009]
 ---
 
@@ -34,8 +36,8 @@ Müşteri 360 görünümü kimlik, iletişim, hisseler, satışlar, sezon ekstre
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| Telefon normalizasyonu ve sezon hesaplama sözleşmesi | `IMPLEMENTED_PENDING_VERIFICATION` | `packages/tenant-core/src/customer-account.ts`. |
-| PostgreSQL `Customer` ve sezon ilişkisi | `IMPLEMENTED_PENDING_VERIFICATION` | `packages/database-tenant/prisma/schema.prisma`. |
+| Telefon normalizasyonu ve sezon hesaplama sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/customer-account.ts`. |
+| PostgreSQL `Customer` ve sezon ilişkisi | `IMPLEMENTED_UNVERIFIED` | `packages/database-tenant/prisma/schema.prisma`. |
 | Legacy müşteri detayında hisse, tahsilat, vekâlet ve not görünümü | `IMPLEMENTING` | `app/musteriler/[id]/page.tsx`; SQLite ve legacy hesap mantığı kullanıyor. |
 | Sezonlar arası müşteri 360/cari | `PLANNED` | Legacy şemada sezon modeli yok. |
 | Mükerrer kayıt merkezi, KVKK talebi ve müşteri portalı | `PLANNED` | Sözleşme/gereksinim var; bağlı tam runtime yok. |

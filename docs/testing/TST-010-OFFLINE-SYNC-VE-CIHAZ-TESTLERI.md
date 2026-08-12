@@ -3,11 +3,13 @@
 ```yaml
 id: TST-010
 title: Offline, Sync ve Cihaz Test Planı
-status: REVIEW
+status: PLANNED
 owner: QA
+source_role: test_plan
 reviewers: [Domain, UX, Security, Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: OFFLINE_RUNTIME_UYGULANDIGINDA
 version: 0.1
 source_of_truth: false

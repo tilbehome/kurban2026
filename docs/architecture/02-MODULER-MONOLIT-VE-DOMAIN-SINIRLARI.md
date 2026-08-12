@@ -2,7 +2,7 @@
 
 ```yaml
 id: ARC-002
-status: APPROVED
+status: PLANNED
 owner: Architecture
 source_role: modular_monolith_dependency_policy
 source_of_truth: true

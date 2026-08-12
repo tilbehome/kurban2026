@@ -176,7 +176,7 @@ Test:
 | Platform/tenant TS sözleşmeleri var | Karşılandı | `PlatformTenantDescriptor`, `TenantRuntimeContext`, `TenantDatabaseRef`, `SupportSessionContract`. |
 | Profesyonel domain/origin sözleşmesi var | Karşılandı | `packages/config`, ADR-0001 ve `tests/saas-domain-config.test.ts`. |
 | Platform–tenant veri sınırı ADR’si var | Karşılandı | `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`. |
-| Tenant izolasyon test planı var | Karşılandı | `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md` tenant izolasyon test planı. |
+| Tenant izolasyon test planı var | Karşılandı | `docs/testing/TST-001-MASTER-TEST-PLANI.md` tenant izolasyon test planı; eski architecture yolu yalnız `ARC-010 / SUPERSEDED` yönlendirmesidir. |
 | Paket/app bağımlılık sınırları tanımlandı | Karşılandı | Bu belge ve `tests/architecture-boundaries.test.ts`. |
 | Yasak bağımlılıkları yakalayan test var | Karşılandı | `tests/architecture-boundaries.test.ts`. |
 | Mevcut import grafiği çıkarıldı | Karşılandı | Kök ve modül bazlı sayım tablosu. |

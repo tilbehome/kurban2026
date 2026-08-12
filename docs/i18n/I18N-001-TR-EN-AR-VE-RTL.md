@@ -1,10 +1,12 @@
 ---
 id: I18N-001
 title: TR, EN, AR Yerelleştirme ve RTL Rehberi
-status: REVIEW
+status: PLANNED
 owner: Localization-and-UX
+source_role: localization_rtl_standard
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-052, REQ-053, REQ-054, REQ-055, PRO-023, PRO-025]
 ---
 

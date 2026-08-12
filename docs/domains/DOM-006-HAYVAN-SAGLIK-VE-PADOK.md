@@ -1,10 +1,12 @@
 ---
 id: DOM-006
 title: Hayvan, Sağlık ve Padok Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Livestock
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-001, REQ-010, REQ-011, REQ-012, REQ-013, REQ-014]
 ---
 
@@ -38,8 +40,8 @@ DRAFT → ACCEPTED → OBSERVATION | ELIGIBLE → ON_SALE → SOLD_OUT
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| `Animal`, küpe, sabit hassasiyetli kilo ve satın alma tutarı | `IMPLEMENTED_PENDING_VERIFICATION` | Tenant core tipi ve PostgreSQL tenant şeması. |
-| Sezon+küpede unique kısıt | `IMPLEMENTED_PENDING_VERIFICATION` | `@@unique([seasonId, earTag])`. |
+| `Animal`, küpe, sabit hassasiyetli kilo ve satın alma tutarı | `IMPLEMENTED_UNVERIFIED` | Tenant core tipi ve PostgreSQL tenant şeması. |
+| Sezon+küpede unique kısıt | `IMPLEMENTED_UNVERIFIED` | `@@unique([seasonId, earTag])`. |
 | Legacy hayvan detay ve yedi hisse görünümü | `IMPLEMENTING` | `app/hayvanlar/[id]/page.tsx`; legacy SQLite modeline bağlı. |
 | Sağlık, uygunluk, padok ve tartım geçmişi | `PLANNED` | Ayrı aggregate/model ve bağlı UI yok. |
 | Hayvan 360 tam çalışma alanı | `PLANNED` | Mevcut detay sayfası tedarik/sağlık/timeline/kârlılık sözleşmesini karşılamıyor. |

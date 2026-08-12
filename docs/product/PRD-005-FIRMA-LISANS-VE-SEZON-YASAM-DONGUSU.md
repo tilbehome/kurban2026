@@ -2,7 +2,7 @@
 
 ```yaml
 id: PRD-005
-status: REVIEW
+status: PLANNED
 owner: Product-and-Platform
 source_role: organization_license_season_lifecycle_source
 source_of_truth: true

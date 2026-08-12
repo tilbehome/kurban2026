@@ -33,7 +33,8 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - `docs/architecture/07-UTF8-COKLU-DIL-VE-RTL.md`
 - `docs/architecture/08-TASARIM-SISTEMI-VE-MOBIL-PWA.md`
 - `docs/architecture/09-VERI-GOCU-YEDEK-VE-GUNCELLEME.md`
-- `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md`
+- `docs/testing/TST-001-MASTER-TEST-PLANI.md`
+- Tarihsel uyumluluk yolu: `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md` (`ARC-010`, `SUPERSEDED`)
 - `docs/architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md`
 - `docs/architecture/12-FAZLAR-RISKLER-VE-GERI-DONUS.md`
 - `docs/architecture/13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md`
@@ -193,7 +194,7 @@ UI/API → Application → Domain
 - Bu dosya mimari belgelerin tamamını tekrar etmez; onları bağlayıcı kaynak olarak gösterir.
 - Aktif her belge benzersiz `id`, `status`, `owner`, `source_role`, `source_of_truth`, `last_reviewed` ve doğrulama varsa tam `verified_against_commit` alanlarını taşır.
 - Belge durum dili ve kanıt standardının ana kaynağı `docs/governance/GOV-001-DOKUMANTASYON-POLITIKASI.md`; kaynak önceliğinin ana kaynağı `docs/governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md` dosyasıdır.
-- `APPROVED` kararın kabul edildiğini, `IMPLEMENTED_PENDING_VERIFICATION` kodun genel/canlı kabul beklediğini, `VERIFIED` ise yalnız belgede açıkça yazılan commit ve senaryo kapsamının doğrulandığını ifade eder.
+- `PLANNED` henüz uygulanmamış hedefi, `IMPLEMENTED_UNVERIFIED` kodun genel/canlı kabul beklediğini, `VERIFIED` ise yalnız belgede açıkça yazılan commit ve senaryo kapsamının doğrulandığını ifade eder.
 - Mükerrer kural elle çoğaltılmaz; tek ana belgeye bağlanır. Sorumluluğu taşınan eski belge önce `SUPERSEDED`, aktarım ve bağlantı doğrulamasından sonra `ARCHIVED` yapılır.
 - CI kanıtı değişmez commit SHA ve koşu bağlantısıyla tutulur. Başarılı CI tek başına canlı deployment, cihaz, restore, UAT veya Kurban Günü provası kanıtı sayılmaz.
 - `docs/README.md` aktif çekirdek belgelerin tek ana indeksidir; belge kimliği, durum, sahiplik ve kaynak rolü değiştiğinde aynı pakette güncellenir.

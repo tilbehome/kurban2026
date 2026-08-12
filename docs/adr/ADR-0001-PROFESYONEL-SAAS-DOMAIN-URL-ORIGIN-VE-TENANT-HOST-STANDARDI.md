@@ -2,7 +2,7 @@
 
 ```yaml
 id: ADR-0001
-status: APPROVED
+status: PLANNED
 owner: Architecture-and-Operations
 source_role: domain_origin_tenant_host_decision
 source_of_truth: true

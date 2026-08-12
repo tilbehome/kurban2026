@@ -3,11 +3,13 @@
 ```yaml
 id: TST-005
 title: Tenant İzolasyonu Test Planı
-status: REVIEW
+status: PLANNED
 owner: QA-and-Security
+source_role: test_plan
 reviewers: [Platform, Data-Operations, Privacy]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_TENANT_RUNTIME_VE_SUPPORTSESSION_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

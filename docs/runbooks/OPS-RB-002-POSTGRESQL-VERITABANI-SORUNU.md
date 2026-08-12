@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-RB-002
 title: PostgreSQL ve Veritabanı Sorunu Runbook'u
-status: REVIEW
+status: PLANNED
 owner: Data-Operations
+source_role: incident_runbook
 reviewers: [Operations, Security, Finance, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: ILK_DB_KESINTISI_PROVASINDA
 version: 0.1
 source_of_truth: false

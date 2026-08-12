@@ -1,10 +1,12 @@
 ---
 id: DOM-008
 title: Tahsilat, Kasa ve Mutabakat Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Finance
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-008, REQ-019, REQ-021, REQ-024, REQ-025, REQ-026, REQ-027, REQ-028, REQ-039, REQ-040]
 ---
 
@@ -30,8 +32,8 @@ Hedef mimaride cari, kasa, banka/POS ve raporların tek doğru kaynağı çift t
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| Decimal string, dağıtım toplamı ve reversal saf fonksiyonları | `IMPLEMENTED_PENDING_VERIFICATION` | `packages/tenant-core/src/finance-ledger.ts`. |
-| PostgreSQL `LedgerEntry` ve reversal bağı | `IMPLEMENTED_PENDING_VERIFICATION` | Tenant PostgreSQL şeması. |
+| Decimal string, dağıtım toplamı ve reversal saf fonksiyonları | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/finance-ledger.ts`. |
+| PostgreSQL `LedgerEntry` ve reversal bağı | `IMPLEMENTED_UNVERIFIED` | Tenant PostgreSQL şeması. |
 | Legacy karma tahsilat, idempotency ve kasa hareketleri | `IMPLEMENTING` | `/api/tahsilat/odeme`; SQLite `Float`, tam çift taraflı ledger değil. |
 | Legacy ödeme iptali | `IMPLEMENTING` | `/api/tahsilat/iptal/[id]`; transaction/audit var, hedef ledger reversal’a taşınmadı. |
 | Kasa 360, banka/POS settlement ve sıfır fark mutabakatı | `PLANNED` | `/kasa/banka-mutabakat` placeholder; ayrı kasa oturumu/settlement modeli yok. |

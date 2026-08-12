@@ -3,11 +3,13 @@
 ```yaml
 id: EVD-001
 title: CI ve Kalite Kapısı Kanıt Şablonu
-status: REVIEW
+status: PLANNED
 owner: QA
+source_role: evidence_record_or_template
 reviewers: [Engineering, Security, Release]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: CI_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

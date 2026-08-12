@@ -3,11 +3,13 @@
 ```yaml
 id: EVD-012
 title: Release Go/No-Go Kanıt Şablonu
-status: REVIEW
+status: PLANNED
 owner: Release
+source_role: evidence_record_or_template
 reviewers: [Product, QA, Security, Operations, Data-Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: RELEASE_KAPISI_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

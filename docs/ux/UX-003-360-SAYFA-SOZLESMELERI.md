@@ -1,10 +1,12 @@
 ---
 id: UX-003
 title: Hayvan, Müşteri, Hisse ve Kasa 360 Sayfa Sözleşmeleri
-status: REVIEW
+status: PLANNED
 owner: UX-and-Frontend
+source_role: ux_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-001, REQ-008, REQ-015, REQ-028, PRO-001, PRO-005]
 ---
 

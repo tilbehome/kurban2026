@@ -1,10 +1,12 @@
 ---
 id: WFL-006
 title: Kurban Günü Kesimden Teslime Akış
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Operations
+source_role: business_workflow_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-035, REQ-036, REQ-037, REQ-038, REQ-041, REQ-042, REQ-043, PRO-001, PRO-006, PRO-034, PRO-035]
 ---
 
@@ -53,7 +55,7 @@ Her istasyonda tek aktif iş, büyük hayvan/hisse kimliği, `Tamamla`, `Beklet`
 
 ## Uygulama durumu
 
-Kesim/tartım/paket/teslim saf sözleşme ve modelleri `IMPLEMENTED_PENDING_VERIFICATION`; legacy TV, tartım ve teslim ekranları `IMPLEMENTING`; parçalama, soğuk oda, yükleme, cihaz adapterleri ve gerçek offline sync `PLANNED` durumundadır.
+Kesim/tartım/paket/teslim saf sözleşme ve modelleri `IMPLEMENTED_UNVERIFIED`; legacy TV, tartım ve teslim ekranları `IMPLEMENTING`; parçalama, soğuk oda, yükleme, cihaz adapterleri ve gerçek offline sync `PLANNED` durumundadır.
 
 ## Kabul kanıtı
 

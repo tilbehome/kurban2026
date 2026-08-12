@@ -2,7 +2,7 @@
 
 ```yaml
 id: GOV-003
-status: APPROVED
+status: PLANNED
 owner: Product-and-Architecture
 source_role: source_precedence_and_evidence_source
 source_of_truth: true

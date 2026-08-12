@@ -3,11 +3,13 @@
 ```yaml
 id: EVD-010
 title: Kurban Günü Prova Kanıt Şablonu
-status: REVIEW
+status: PLANNED
 owner: Operations-and-QA
+source_role: evidence_record_or_template
 reviewers: [Product, Security, Finance, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_PROVA_ONCESI
 version: 0.1
 source_of_truth: false

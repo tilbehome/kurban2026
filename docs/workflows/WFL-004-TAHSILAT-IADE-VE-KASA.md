@@ -1,10 +1,12 @@
 ---
 id: WFL-004
 title: Tahsilat, İade ve Kasa Akışı
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Finance
+source_role: business_workflow_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-024, REQ-025, REQ-026, REQ-027, REQ-028, REQ-039, REQ-040]
 ---
 
@@ -39,7 +41,7 @@ Fark sıfırlanmak için uydurma hareket yazılmaz. Kapanışın iptali veya ger
 
 ## Uygulama durumu
 
-- Decimal dağıtım/reversal sözleşmeleri ve PostgreSQL ledger modeli: `IMPLEMENTED_PENDING_VERIFICATION`.
+- Decimal dağıtım/reversal sözleşmeleri ve PostgreSQL ledger modeli: `IMPLEMENTED_UNVERIFIED`.
 - Legacy karma ödeme/idempotency/kasa hareketi: `IMPLEMENTING`; `Float` ve legacy SQLite kullanır.
 - Kasa oturumu, banka/POS settlement, tam çift taraflı posting: `PLANNED`.
 

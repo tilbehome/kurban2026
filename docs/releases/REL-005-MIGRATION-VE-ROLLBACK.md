@@ -3,11 +3,13 @@
 ```yaml
 id: REL-005
 title: Migration, Rollback ve Roll-Forward Planı
-status: REVIEW
+status: PLANNED
 owner: Release
+source_role: release_policy_or_playbook
 reviewers: [Data-Operations, QA, Security, Finance]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_SCHEMA_VE_VERI_GOCUNDE
 version: 0.1
 source_of_truth: false

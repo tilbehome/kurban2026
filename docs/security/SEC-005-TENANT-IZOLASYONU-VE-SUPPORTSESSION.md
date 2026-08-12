@@ -3,11 +3,13 @@
 ```yaml
 id: SEC-005
 title: Tenant İzolasyonu ve SupportSession Güvenlik Standardı
-status: REVIEW
+status: PLANNED
 owner: Security
+source_role: security_standard
 reviewers: [Architecture, Platform, QA, Privacy]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_TENANT_RUNTIME_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

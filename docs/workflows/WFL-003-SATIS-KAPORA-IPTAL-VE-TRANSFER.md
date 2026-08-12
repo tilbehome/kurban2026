@@ -1,10 +1,12 @@
 ---
 id: WFL-003
 title: Satış, Kapora, İptal ve Transfer Akışı
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Sales
+source_role: business_workflow_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-023]
 ---
 
@@ -61,7 +63,7 @@ related_requirements: [REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ
 
 ## Kaynak ve uygulama durumu
 
-Bağlayıcı ana mimari §6.3 tam yedi hisseyi ve pozitif tutarın kapora sayılmasını; yeni nesil yol haritası YN-13/YN-14 rezervasyon–satış ayrımını ve işletmeye kalan açık sahipliği tanımlar. 2026-08-12 tarihli kullanıcı düzeltmesi kaporasız işlemin kesin satış/alacak olmamasını bağlayıcı kılar. Ana mimarideki ödemesiz satış/alacak ve kesim öncesi gerçek kişi atama ifadeleriyle oluşan fark açık mimari karar gerektirir.
+Bağlayıcı ana mimari §6.3 tam yedi hisseyi, her pozitif tahsilatın kapora olmasını, kaporasız kaydın rezervasyon kalmasını ve satılmamış hissenin işletme envanteri olarak açık tutulmasını tanımlar. Bu metin 2026-08-12 tarihli kullanıcı düzeltmesiyle uyumlandırılmıştır. Satılmamış işletme hissesinin kesim öncesi dinî uygunluk çözümü ise hâlâ açık mimari karar gerektirir.
 
 Yeni tenant core `confirmSale` komutu kapora almadan satış/ledger üretir; legacy saha satış da sıfır kaporayla müşteri atayıp borç açabilir. Bu davranışlar hedef kuralla uyumlu tamamlanmış sayılmaz ve `IMPLEMENTING` karar/kod farkıdır. Kalıcı rezervasyon süresi, işletme envanteri sahipliği, transfer aggregate’i, otomatik süre sonu ve tam iptal–iade orkestrasyonu `PLANNED` durumundadır.
 

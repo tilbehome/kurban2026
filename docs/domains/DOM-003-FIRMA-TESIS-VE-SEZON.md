@@ -1,10 +1,12 @@
 ---
 id: DOM-003
 title: Firma, Tesis ve Sezon Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Operations
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-007, REQ-008, REQ-043, PRO-030, PRO-031, PRO-032]
 ---
 
@@ -42,8 +44,8 @@ Kod sözleşmesindeki karşılıklar `preparation`, `sales`, `slaughter`, `deliv
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| `Season` tipi ve geçiş koruması | `IMPLEMENTED_PENDING_VERIFICATION` | `packages/tenant-core/src/tenant-domain.ts`; `assertSeasonTransition` mevcut. |
-| PostgreSQL `Season` modeli ve sezon ilişkileri | `IMPLEMENTED_PENDING_VERIFICATION` | `packages/database-tenant/prisma/schema.prisma`; migration zinciri mevcut. |
+| `Season` tipi ve geçiş koruması | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/tenant-domain.ts`; `assertSeasonTransition` mevcut. |
+| PostgreSQL `Season` modeli ve sezon ilişkileri | `IMPLEMENTED_UNVERIFIED` | `packages/database-tenant/prisma/schema.prisma`; migration zinciri mevcut. |
 | Legacy firma uygulamasında gerçek sezon seçimi/cari ayrımı | `PLANNED` | Kök SQLite şemasında `Season` modeli yok; `/musteriler/yeni-sezon` placeholder. |
 | Hazırlık skoru, prova ve kapanış sihirbazı | `PLANNED` | `packages/operations/src/simulation-readiness.ts` yalnız sözleşme/gate sağlar; bağlı runtime/UI kanıtı yok. |
 | Gelişmiş şube, tesis ve kapasite yönetimi | `PLANNED` | İlk canlı sonrası kapsam. |

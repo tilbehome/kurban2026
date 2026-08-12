@@ -2,7 +2,7 @@
 
 ```yaml
 id: ADR-0002
-status: IMPLEMENTED_PENDING_VERIFICATION
+status: IMPLEMENTED_UNVERIFIED
 owner: Architecture-and-Security
 source_role: platform_tenant_data_boundary_decision
 source_of_truth: true

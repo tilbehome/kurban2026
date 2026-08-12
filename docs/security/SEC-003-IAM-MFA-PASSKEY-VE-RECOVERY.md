@@ -3,11 +3,13 @@
 ```yaml
 id: SEC-003
 title: IAM, MFA/Passkey ve Hesap Kurtarma Politikası
-status: REVIEW
+status: PLANNED
 owner: Security
+source_role: security_standard
 reviewers: [Platform, Architecture, Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: FIZIKSEL_AUTHENTICATOR_KABULU_ONCESI
 version: 0.1
 source_of_truth: false
@@ -81,4 +83,4 @@ MFA/passkey devre dışı bırakma, yeni cihaz kaydı, recovery yenileme, bütü
 
 ## Kanıt gereksinimi
 
-Sonuçlar [genel kanıt şablonuna](../evidence/EVD-000-KANIT-KAYDI-SABLONU.md) işlenir. Tarayıcı/cihaz kabulü olmadan durum en fazla `IMPLEMENTED_PENDING_VERIFICATION` olabilir.
+Sonuçlar [genel kanıt şablonuna](../evidence/EVD-000-KANIT-KAYDI-SABLONU.md) işlenir. Tarayıcı/cihaz kabulü olmadan durum en fazla `IMPLEMENTED_UNVERIFIED` olabilir.

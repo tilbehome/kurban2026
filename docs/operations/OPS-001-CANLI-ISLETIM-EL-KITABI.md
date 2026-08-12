@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-001
 title: Canlı İşletim El Kitabı
-status: REVIEW
+status: PLANNED
 owner: Operations
+source_role: operations_policy_or_playbook
 reviewers: [Security, Data-Operations, Support, Product]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: ILK_CANLI_SEZON_ONCESI
 version: 0.1
 source_of_truth: false

@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-RB-003
 title: Yanlış Paket veya Hisse Runbook'u
-status: REVIEW
+status: PLANNED
 owner: Tenant-Operations
+source_role: incident_runbook
 reviewers: [Domain, Finance, Support, Security]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: ILK_PAKET_TESLIM_PROVASINDA
 version: 0.1
 source_of_truth: false

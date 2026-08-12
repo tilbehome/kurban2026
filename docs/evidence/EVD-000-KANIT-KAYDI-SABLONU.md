@@ -3,11 +3,13 @@
 ```yaml
 id: EVD-000
 title: Genel Kanıt Kaydı Şablonu
-status: REVIEW
+status: PLANNED
 owner: QA-and-Operations
+source_role: evidence_record_or_template
 reviewers: [Security, Release]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_KANIT_SISTEMI_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

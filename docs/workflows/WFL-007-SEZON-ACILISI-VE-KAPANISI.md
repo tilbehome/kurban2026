@@ -1,10 +1,12 @@
 ---
 id: WFL-007
 title: Sezon Açılışı ve Kapanışı Akışı
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Operations
+source_role: business_workflow_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-007, REQ-008, REQ-043, REQ-046, PRO-030, PRO-031, PRO-032]
 ---
 
@@ -41,7 +43,7 @@ Kapanış; açıklanamayan finans farkı, açık kasa oturumu, teslim edilmemiş
 
 ## Uygulama durumu
 
-Sezon state machine, PostgreSQL modeli ve prova gate sözleşmesi `IMPLEMENTED_PENDING_VERIFICATION`; legacy uygulamada sezon UI/runtime ve kapanış orkestrasyonu `PLANNED` durumundadır. Mevcut `/musteriler/yeni-sezon` placeholder’dır.
+Sezon state machine, PostgreSQL modeli ve prova gate sözleşmesi `IMPLEMENTED_UNVERIFIED`; legacy uygulamada sezon UI/runtime ve kapanış orkestrasyonu `PLANNED` durumundadır. Mevcut `/musteriler/yeni-sezon` placeholder’dır.
 
 ## Kabul kanıtı
 

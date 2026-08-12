@@ -3,11 +3,13 @@
 ```yaml
 id: SEC-001
 title: Güvenlik Mimarisi ve Tehdit Modeli
-status: REVIEW
+status: PLANNED
 owner: Security
+source_role: security_standard
 reviewers: [Architecture, Platform, Operations, Privacy]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: ILK_CANLI_ALTYAPI_KARARI_ONCESI
 version: 0.1
 source_of_truth: false

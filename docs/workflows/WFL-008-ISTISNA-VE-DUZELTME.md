@@ -1,10 +1,12 @@
 ---
 id: WFL-008
 title: İstisna ve Düzeltme Akışları
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Operations
+source_role: business_workflow_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-021, REQ-022, REQ-028, REQ-033, REQ-034, REQ-035, REQ-039, REQ-042, PRO-001, PRO-002, PRO-032]
 ---
 
@@ -42,7 +44,7 @@ Bulgu/engel → istisna kaydı → sorumlu atama → etki önizleme
 
 ## Uygulama durumu
 
-Saf satış/ledger/teslim reversal fonksiyonları ve istisna kuyruk sözleşmesi `IMPLEMENTED_PENDING_VERIFICATION`; birleşik onay kutusu, kalıcı exception aggregate’i ve bütün legacy route bağlantıları `PLANNED` durumundadır.
+Saf satış/ledger/teslim reversal fonksiyonları ve istisna kuyruk sözleşmesi `IMPLEMENTED_UNVERIFIED`; birleşik onay kutusu, kalıcı exception aggregate’i ve bütün legacy route bağlantıları `PLANNED` durumundadır.
 
 ## Kabul kanıtı
 

@@ -3,11 +3,13 @@
 ```yaml
 id: TST-008
 title: Playwright, axe ve Cihaz Kabul Planı
-status: REVIEW
+status: PLANNED
 owner: QA
+source_role: test_plan
 reviewers: [UX, Accessibility, Security, Product]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: PLAYWRIGHT_ALTYAPISI_EKLENDIGINDE
 version: 0.1
 source_of_truth: false

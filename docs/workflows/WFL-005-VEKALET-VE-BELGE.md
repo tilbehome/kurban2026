@@ -1,10 +1,12 @@
 ---
 id: WFL-005
 title: Vekâlet ve Belge Akışı
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Religious-Operations
+source_role: business_workflow_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-029, REQ-030, REQ-031, REQ-032, REQ-033, REQ-034, REQ-061]
 ---
 
@@ -37,7 +39,7 @@ Kesim istasyonu hayvan/hisse ve QR amacını doğrular. Yedi geçerli vekâlet y
 
 ## Uygulama durumu
 
-Tenant core belge/QR sözleşmesi ve legacy korumalı dosya okuma `IMPLEMENTED_PENDING_VERIFICATION`/`IMPLEMENTING`; çoklu veren/kanal, gerçek sürümlü belge, iki aşamalı QR ve baskı E2E’si `PLANNED` durumundadır. Legacy yükleme eski kaydı fiziksel silebildiğinden hedef sözleşmeyle tam uyumlu sayılmaz.
+Tenant core belge/QR sözleşmesi ve legacy korumalı dosya okuma `IMPLEMENTED_UNVERIFIED`/`IMPLEMENTING`; çoklu veren/kanal, gerçek sürümlü belge, iki aşamalı QR ve baskı E2E’si `PLANNED` durumundadır. Legacy yükleme eski kaydı fiziksel silebildiğinden hedef sözleşmeyle tam uyumlu sayılmaz.
 
 ## Kabul kanıtı
 

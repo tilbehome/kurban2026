@@ -2,7 +2,7 @@
 
 ```yaml
 id: ARC-013
-status: APPROVED
+status: PLANNED
 owner: Architecture
 source_role: target_repository_module_standard
 source_of_truth: true

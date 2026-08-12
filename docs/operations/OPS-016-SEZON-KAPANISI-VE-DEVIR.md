@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-016
 title: Sezon Kapanışı ve Devir Prosedürü
-status: REVIEW
+status: PLANNED
 owner: Tenant-Operations
+source_role: operations_policy_or_playbook
 reviewers: [Finance, Operations, Privacy, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_SEZON_KAPANISI_ONCESI
 version: 0.1
 source_of_truth: false

@@ -2,7 +2,7 @@
 
 ```yaml
 id: ADR-0003
-status: IMPLEMENTED_PENDING_VERIFICATION
+status: IMPLEMENTED_UNVERIFIED
 owner: Architecture-and-Operations
 source_role: tenant_backup_restore_pitr_decision
 source_of_truth: true

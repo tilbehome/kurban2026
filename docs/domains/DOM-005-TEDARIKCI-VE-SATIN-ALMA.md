@@ -1,10 +1,12 @@
 ---
 id: DOM-005
 title: Tedarikçi ve Satın Alma Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Procurement
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-009, REQ-010, REQ-014, PRO-003, PRO-004]
 ---
 
@@ -27,8 +29,8 @@ Bu domain tedarikçi kimliği, alış faturası, hayvan lotu/satırı, tedarikç
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| `Supplier` ve `registerSupplier` sözleşmesi | `IMPLEMENTED_PENDING_VERIFICATION` | `packages/tenant-core/src/tenant-domain.ts`, `tenant-commands.ts`. |
-| PostgreSQL `Supplier`–`Animal` ilişkisi | `IMPLEMENTED_PENDING_VERIFICATION` | Tenant şeması ve `0001_tenant_core_baseline`. |
+| `Supplier` ve `registerSupplier` sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/tenant-domain.ts`, `tenant-commands.ts`. |
+| PostgreSQL `Supplier`–`Animal` ilişkisi | `IMPLEMENTED_UNVERIFIED` | Tenant şeması ve `0001_tenant_core_baseline`. |
 | Tedarikçi/alış faturası aggregate’i ve tedarikçi ledger’ı | `PLANNED` | Tenant şemasında `PurchaseInvoice` ve tedarikçi borç modelleri yok. |
 | Legacy tedarik ekranı | `PLANNED` | `app/hayvanlar/tedarik/page.tsx` placeholder. |
 | PDF/Excel import ve maliyet dağıtımı | `PLANNED` | Runtime, dry-run ve mutabakat kanıtı yok. |

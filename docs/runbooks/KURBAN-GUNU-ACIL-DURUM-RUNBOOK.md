@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-010
 title: Kurban Günü Savaş Odası ve Acil Durum Runbook'u
-status: REVIEW
+status: PLANNED
 owner: Operations
+source_role: incident_runbook
 reviewers: [Product, Security, Data-Operations, Support, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_KURBAN_GUNU_PROVASI_ONCESI
 version: 0.2
 source_of_truth: false

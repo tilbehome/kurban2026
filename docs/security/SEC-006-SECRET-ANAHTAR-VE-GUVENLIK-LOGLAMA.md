@@ -3,11 +3,13 @@
 ```yaml
 id: SEC-006
 title: Secret, Anahtar ve Güvenlik Loglama Standardı
-status: REVIEW
+status: PLANNED
 owner: Security
+source_role: security_standard
 reviewers: [Platform, Operations, Privacy]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: SECRET_STORE_SECIMINDE
 version: 0.1
 source_of_truth: false

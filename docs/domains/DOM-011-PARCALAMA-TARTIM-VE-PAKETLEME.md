@@ -1,10 +1,12 @@
 ---
 id: DOM-011
 title: Parçalama, Tartım ve Paketleme Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Fulfillment
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-013, REQ-037, REQ-038, REQ-039, REQ-040, PRO-035]
 ---
 
@@ -29,8 +31,8 @@ Kaynak hayvan/karkastan hisse paketine kadar her tartım ve paket kimliği korun
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| `WeighingRecord`, `PackageRecord`, kilo tipi ve unique etiket | `IMPLEMENTED_PENDING_VERIFICATION` | Tenant core `operation-flow.ts` ve PostgreSQL şeması. |
-| Kilo farkı ledger adjustment sözleşmesi | `IMPLEMENTED_PENDING_VERIFICATION` | `createWeightDifferenceLedgerEntry`; tam formül/orchestrasyon yok. |
+| `WeighingRecord`, `PackageRecord`, kilo tipi ve unique etiket | `IMPLEMENTED_UNVERIFIED` | Tenant core `operation-flow.ts` ve PostgreSQL şeması. |
+| Kilo farkı ledger adjustment sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `createWeightDifferenceLedgerEntry`; tam formül/orchestrasyon yok. |
 | Legacy tartım ve paket API’leri | `IMPLEMENTING` | `/api/kesim/tartim-kaydet`, `/api/hisseler/[id]/paket`; toplamı eşit bölüyor, legacy `Float` kullanıyor. |
 | Parça türü/değer dengesi ve çoklu alt paket | `PLANNED` | Ayrı model/runtime yok; `/kesim/parcalama` ve `/kesim/paketleme` placeholder. |
 | Terazi/etiket yazıcı gerçek adapteri | `PLANNED` | `DeviceAdapterContract` var; fiziksel cihaz kabulü yok. |

@@ -1,111 +1,23 @@
-# 10 — Test, Kalite ve Kabul Planı
+# 10 — Test, Kalite ve Kabul Planı — Tarihsel Uyumluluk Kaydı
 
 ```yaml
-id: TST-001
-status: IMPLEMENTING
+id: ARC-010
+title: Test, Kalite ve Kabul Planı — Tarihsel Uyumluluk Kaydı
+status: SUPERSEDED
 owner: QA-and-Engineering
-source_role: core_test_quality_acceptance_plan
-source_of_truth: true
+source_role: historical_test_plan_compatibility_redirect
+source_of_truth: false
 last_reviewed: 2026-08-12
 verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+superseded_by: ../testing/TST-001-MASTER-TEST-PLANI.md
 ```
 
-## Mevcut test sınıflandırması
+Bu dosya eski bağlantıları kırmamak için korunur. Test stratejisi, kalite kapıları, tenant izolasyon matrisi ve kanıt dili için tek bağlayıcı kaynak [TST-001 Master Test Planı](../testing/TST-001-MASTER-TEST-PLANI.md) belgesidir.
 
-| Dosya | Tür | Kapsam |
-|---|---|---|
-| `shared/lib/para.test.ts` | Unit | Para parse/format/yuvarlama |
-| `shared/lib/tarih.test.ts` | Unit | Tarih/saat yardımcıları |
-| `modules/tahsilat/lib/dagitim.test.ts` | Unit | Tahsilat dağıtımı |
-| `tests/saha-satis-route.test.ts` | Mock route | Yetki, atomiklik, idempotency, hata sızdırmama |
-| `tests/toplu-atama-route.test.ts` | Mock route | Kısmi atama engeli |
-| `tests/hisse-iptal-route.test.ts` | Mock route | Ödemeli hisse boşaltma engeli |
-| `tests/vekalet-dosya.test.ts` | Unit/security | Path traversal ve dosya URL modeli |
+## Yerine geçen karar
 
-Bu tablo Faz 1 tarihsel çekirdek setini gösterir; güncel test envanterinin tamamı değildir. `74915b6` ağacında 33 test dosyası vardır. 12 Ağustos 2026 yerel doğrulamasında gerekli üç Prisma client üretildikten sonra `pnpm test` sonucu 31 dosyada 197 test geçti; PostgreSQL ortam değişkeni isteyen 2 dosyadaki 10 integration testi atlandı. Gerçek PostgreSQL sonuçları aşağıdaki CI kanıtıyla ayrı tutulur.
+Bu yol daha önce `TST-001` kimliğini taşıyordu. Uzmanlık belgelerinin `docs/testing` altında tekilleştirilmesiyle kimlik ve ana kaynak sorumluluğu yeni master plana taşındı. Eski belgede yalnız bulunan ve hâlâ geçerli Faz 1 test envanteri, mock sınırları, PRO kalite kapıları ve tenant izolasyon senaryoları yeni belgeye aktarıldı.
 
-## Son doğrulanmış CI kanıtı
+## Kanıt sınırı
 
-[TilbeCore CI / 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803), `74915b6f3f1f8d53116b760b6a6be9797111efa5` için `success` sonucuyla tamamlandı. PostgreSQL 16 platform/tenant servisleri üzerinde migration apply, platform integration, iki-tenant web/pool/backup izolasyonu; ardından typecheck, unit/route test, lint, root build, Platform Admin build, UTF-8 ve PWA artefakt kontrolleri geçti.
-
-Bu CI koşusu canlı DNS/TLS, fiziksel cihaz, production restore, browser E2E, ASVS/WCAG veya Kurban Günü provası değildir.
-
-## Mock testlerin kanıtlayamadıkları
-
-- Gerçek PostgreSQL transaction davranışı.
-- Gerçek unique constraint ve eşzamanlı istek yarışı.
-- Prisma connection pool/tenant routing.
-- Gerçek dosya izinleri ve Windows/Linux path farkları.
-- Browser/PWA davranışı.
-- PDF font/RTL çıktısı.
-- 5–20 cihaz LAN yükü.
-- Elektrik/ağ kesintisi ve restore provası.
-
-## Gerekli test katmanları
-
-- Unit: domain value object ve durum makineleri.
-- Application: use-case servisleri transaction mock/fake ile.
-- Integration: gerçek PostgreSQL test DB.
-- Concurrency: paralel satış/tahsilat/idempotency.
-- Security: yetki, dosya, tenant izolasyonu, rate-limit.
-- E2E: saha satış, tahsilat, kesim, teslim.
-- UI/component: mobil kart, RTL, yüksek stres ekranı.
-- PDF/Excel: font, encoding, belge snapshot.
-- Migration: dry-run, rollback, checksum.
-- Operasyon provası: 5–20 cihaz, LAN, internet kesintisi, yedekten dönüş.
-- Playwright E2E: masaüstü, mobil, locale ve RTL varyantları.
-- axe erişilebilirlik: kritik panel ve mobil ekranlarda otomatik kontrol.
-- WCAG 2.2 AA: klavye, focus, kontrast, label, hata mesajı ve ekran okuyucu kabul listesi.
-- OWASP ASVS Level 2: kimlik, oturum, yetki, dosya, hata, logging, tenant isolation ve destek erişimi.
-- OpenTelemetry doğrulaması: traceId/requestId/auditId korelasyonu, metric ve log redaction.
-- OpenFeature contract testi: firma/modül bazlı flag, rollout, kill switch ve audit.
-- WAL/PITR/restore provası: yönetilen PostgreSQL için kurtarma hedefleri ve kanıt.
-
-## Profesyonel PRO kalite kapıları
-
-| PRO aralığı | Test odağı | Kabul kanıtı |
-|---|---|---|
-| `PRO-001..PRO-011` | Firma paneli, mobil görev, onay, import, arama, KVKK, eğitim ve erişilebilirlik | Playwright masaüstü/mobil, axe, yetki/audit testleri |
-| `PRO-012..PRO-021` | Platform Süper Admin, provisioning, migration, kill switch, incident, export ve restore | Tenant isolation, backup/restore, security, platform audit |
-| `PRO-022..PRO-029` | Observability, E2E, erişilebilirlik, passkey/MFA, ASVS, feature flag, WAL/PITR | CI raporu, güvenlik kontrol listesi, trace/log/metric ve restore kanıtı |
-
-## Tenant izolasyon test planı
-
-Birinci karar kaynağı: `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`.
-
-Bu plan Faz 2A kapanışında dokümante edilmiştir. Faz 2C paketleri gerçek PostgreSQL provisioning, doğrulanmış tenant request runtime, tenant-aware pool ve iki firma backup/restore izolasyon otomasyonunu eklemiştir. Legacy Next.js route’larının yeni runtime’a modül bazlı taşınması sonraki iş fazlarında sürer.
-
-| Senaryo | Amaç | Test tipi | Kabul kanıtı | Planlanan faz |
-|---|---|---|---|---|
-| İki test firmasının ayrı DB kullanması | Her firmanın operasyon verisinin kendi tenant DB’sinde kaldığını kanıtlamak | PostgreSQL integration | Firma A ve Firma B aynı şema sürümünde ayrı bağlantı hedeflerine gider; çapraz sorgu yoktur | Faz 2C |
-| Aynı kayıt ID’lerinin firmalar arasında karışmaması | Aynı integer/UUID değerleri olsa bile tenant boundary’nin veri sızdırmadığını göstermek | Integration + repository test | Firma A’daki kayıt ID’si Firma B session’ı ile okunamaz/güncellenemez | Faz 2C |
-| Başka firmaya ait session/cookie reddi | Cookie veya session tenant kimliği resolved tenant ile uyuşmadığında fail-closed davranmak | Security route/E2E | Yanlış tenant cookie 401/403 güvenli hata döndürür; veri sızmaz | Faz 2B, Faz 2C |
-| Bilinmeyen ve reserved subdomain reddi | Tenant slug çözümlemesini güvenli yapmak | Contract + route test | Bilinmeyen veya reserved subdomain tenant context üretmez | Faz 2B |
-| Host header ve custom domain doğrulaması | Host spoofing ve doğrulanmamış custom domain riskini kapatmak | Security integration | Host header tenant kaydıyla eşleşmezse veya custom domain aktif değilse istek reddedilir | Faz 2B, Faz 2C |
-| Yanlış `TenantDatabaseRef` güvenli reddi | Opaque DB referansının başka firmaya veya platform DB’ye kaymasını önlemek | Contract + integration | Referans tenant kimliğiyle mutabık değilse bağlantı açılmaz; secret gösterilmez | Faz 2C |
-| `SupportSession` olmadan operasyon verisine erişememe | Süper Admin’in normal şartlarda firma verisini görememesini kanıtlamak | Security + authorization | SupportSession yokken müşteri/finans/vekalet/hisse/kesim/teslim verisi okunamaz | Faz 2B, Faz 2C |
-| Log/hata/API yanıtında DB secret sızmaması | Secret ve connection string değerlerinin dışarı çıkmasını engellemek | Log redaction + route test | Hata yanıtı yalnız güvenli kod/requestId içerir; loglarda DB secret yoktur | Faz 2A, Faz 2C, Faz 12 |
-| Tenant-aware connection pool ayrımı | Pool reuse nedeniyle yanlış DB’ye bağlanmayı engellemek | Integration + concurrency | Her tenant pool anahtarı tenant ve DB referansına bağlıdır; yanlış reuse fail-closed olur | Faz 2C |
-| Firma bazlı backup/restore izolasyonu | Bir firmanın restore işleminin başka firmayı etkilememesini kanıtlamak | Backup/restore prova | Restore yalnız hedef tenant DB’de çalışır; platform metadata ve diğer tenant DB’ler değişmez | Faz 2C, Faz 15 |
-
-Bu plan tamamlanmadan Platform DB, tenant routing veya firma başına PostgreSQL canlıya hazır sayılmaz.
-
-### Faz 2C otomasyon kanıtı
-
-`packages/database-tenant/tests/tenant-isolation.integration.test.ts` CI’daki PostgreSQL 16 tenant servisi üzerinde iki ayrı organization ve iki ayrı fiziksel tenant DB oluşturur. Aynı season/customer ID’lerinin firma verisini karıştırmadığını; eşzamanlı A/B web request context ve Prisma client’larının ayrıldığını; custom domain ile pasif/bilinmeyen/reserved host davranışını; yanlış session ve `TenantDatabaseRef` reddini; `SupportSession` olmadan platform erişiminin kapalı, geçerli süre/kapsam/onayla sınırlı ve auditli olduğunu doğrular. Aynı test gerçek `pg_dump`, status, checksum, iki ayrı geçici `pg_restore` doğrulaması, çapraz tenant yedek reddi, production restore’un kapalı kalması, secret redaction ve geçici DB/dizin temizliğini de kanıtlar.
-
-`packages/tenant-runtime/tests/tenant-request-runtime.test.ts` request-local context, session/permission guard, public tracking ayrımı ve SupportSession davranışını; `packages/tenant-runtime/tests/tenant-connection-pool.test.ts` eşzamanlı pool reuse, tenantlar arası ref sahipliği, event/metric, idle kapatma ve shutdown davranışını doğrular. `packages/operations/src/tests/backup-restore.test.ts` tenant/ref bağı ile destructive olmayan restore planını; `apps/tenant-ops-cli/tests/input.test.ts` komut/secret/SQL argüman sınırını; `packages/database-tenant/tests/postgres-tenant-database.test.ts` identifier/SQL injection sınırını; `packages/provisioning/tests/tenant-provisioning.test.ts` idempotency, adım durumu, resume ve platform kaydı sonrası rollback yasağını doğrular.
-
-Henüz tamamlanmayan kabul kanıtları: canlı sağlayıcıda WAL/PITR ayarı ve ölçülmüş RPO/RTO, legacy route’ların modül bazlı tenant runtime’a taşınması ve geniş browser E2E, canlı custom-domain/DNS/TLS/deployment, production restore onay akışı ve genel Kurban Günü Provası.
-
-## Lint warning durumu
-
-`0 hata, 38 warning` ifadesi tarihsel Faz 1 sonucudur. `74915b6` için güncel bağlayıcı kanıt, CI’daki `Lint` adımının başarılı olmasıdır; warning sayısı koşu kanıtından çıkarılmadığı için güncel sayı uydurulmaz.
-
-Kategoriler:
-
-- Düşük risk: kullanılmayan import/değişkenler.
-- Düşük risk: kullanılmayan `eslint-disable` yorumları.
-- Orta risk: sidebar ve placeholder alanlarının üretim menüsünde karmaşa oluşturması.
-
-P0 engelleyici güvenlik/doğruluk warning görülmedi; ancak Faz 1.1’de warning bütçesi sıfıra indirilmeli.
+Bu uyumluluk kaydı test sonucu değildir ve hiçbir özelliği doğrulanmış saydırmaz. Geçerli sonuçlar, commit ile eşleşen CI/yerel kanıt ve [evidence indeksi](../evidence/README.md) birlikte okunarak belirlenir.

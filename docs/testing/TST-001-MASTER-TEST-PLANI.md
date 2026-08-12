@@ -3,14 +3,16 @@
 ```yaml
 id: TST-001
 title: Master Test Planı
-status: REVIEW
+status: VERIFIED
 owner: QA
 reviewers: [Engineering, Security, Operations, Product]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
 next_review: HER_RELEASE_ADAYINDA
 version: 0.1
-source_of_truth: false
+source_role: master_test_quality_acceptance_plan
+source_of_truth: true
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
 related_requirements: [REQ-001, REQ-068, PRO-011, PRO-021, PRO-023, PRO-024, PRO-027, PRO-031]
 related_adrs: [ADR-0002, ADR-0003]
 related_modules: [all]
@@ -39,6 +41,56 @@ Bu plan gereksinim → risk → test → kanıt → release kararını tanımlar
 | Performance/resilience | Load, spike, soak, dependency failure | Baseline, bütçe ve bottleneck raporu |
 | Operational | Deploy, rollback, backup, restore, PITR, incident | Tatbikat ve imzalı kanıt |
 | UAT/simulation | Gerçek görev akışı | Rol sahibi sign-off; sentetik veri |
+
+## Doğrulanmış mevcut repo test envanteri
+
+| Test grubu | Kapsam | Kanıt durumu |
+|---|---|---|
+| `shared/lib/para.test.ts`, `shared/lib/tarih.test.ts` | Para ve tarih yardımcıları | CI 31571606803 kapsamında `pnpm test` geçti |
+| `modules/tahsilat/lib/dagitim.test.ts` | Tahsilat dağıtımı | CI kapsamında geçti |
+| `tests/saha-satis-route.test.ts` | Yetki, atomiklik, idempotency, güvenli hata | CI kapsamında geçti; mock route kanıtıdır |
+| `tests/toplu-atama-route.test.ts` | Kısmi atama engeli | CI kapsamında geçti; mock route kanıtıdır |
+| `tests/hisse-iptal-route.test.ts` | Ödemeli hisse iptal engeli | CI kapsamında geçti; mock route kanıtıdır |
+| `tests/vekalet-dosya.test.ts` | Path traversal ve dosya URL modeli | CI kapsamında geçti |
+| `packages/database-platform/tests/platform-postgres.integration.test.ts` | Platform migration, drift, constraint, repository ve transaction | CI PostgreSQL 16 adımında geçti |
+| `packages/database-tenant/tests/tenant-isolation.integration.test.ts` | İki fiziksel tenant DB, runtime/pool ve backup/restore izolasyonu | CI PostgreSQL 16 adımında geçti |
+
+`74915b6` ağacında 33 test dosyası vardır. CI dışı varsayılan `pnpm test` koşusunda ortam değişkeni isteyen iki integration dosyası atlanabilir; `exit 0` tek başına bu integration senaryolarının koştuğunu kanıtlamaz.
+
+## Mock testlerin kanıtlayamadıkları
+
+- Gerçek PostgreSQL transaction ve unique constraint davranışı.
+- Eşzamanlı istek yarışı ve gerçek connection pool yönlendirmesi.
+- Gerçek dosya izinleri ile Windows/Linux path farkları.
+- Browser/PWA, fiziksel passkey ve offline cihaz davranışı.
+- PDF fontu, Arapça/RTL çıktısı ve yazıcı uyumu.
+- 5–20 cihaz LAN yükü, spike/soak ve elektrik/ağ kesintisi.
+- Canlı WAL/PITR veya production restore provası.
+
+## Tenant izolasyon kabul matrisi
+
+Birinci karar kaynağı [ADR-0002](../adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md) belgesidir.
+
+| Senaryo | Kabul kanıtı | Durum |
+|---|---|---|
+| İki firmanın ayrı fiziksel DB kullanması | Firma A ve B ayrı bağlantı hedeflerine gider | `VERIFIED` — CI 31571606803 |
+| Aynı kayıt ID’lerinin karışmaması | Aynı ID diğer tenant session’ıyla okunamaz/yazılamaz | `VERIFIED` — CI 31571606803 |
+| Başka firmaya ait session/cookie | Host, session ve tenant eşleşmezse fail-closed | `VERIFIED` — CI 31571606803 kapsamı |
+| Bilinmeyen/reserved subdomain | Tenant context üretilmez | `VERIFIED` — test kapsamı |
+| Host header/custom domain | Yalnız doğrulanmış eşleşme kabul edilir | `VERIFIED` — test kapsamı; canlı DNS/TLS değildir |
+| Yanlış `TenantDatabaseRef` | Pool açılmaz, secret gösterilmez | `VERIFIED` — CI kapsamı |
+| SupportSession olmadan tenant verisi | Platform erişimi reddedilir | `VERIFIED` — CI kapsamı |
+| Log/hata/API secret sızıntısı | Güvenli hata kodu; connection secret yok | `VERIFIED` — test kapsamı |
+| Tenant-aware pool ayrımı | Pool anahtarı tenant ve DB ref’e bağlıdır | `VERIFIED` — CI kapsamı |
+| Firma bazlı backup/restore | Hedef dışındaki tenant DB değişmez | `VERIFIED` — CI test ortamı; production restore değildir |
+
+## Profesyonel gereksinim kalite kapıları
+
+| PRO aralığı | Test odağı | Zorunlu kabul kanıtı |
+|---|---|---|
+| `PRO-001..PRO-011` | Firma paneli, mobil görev, onay, import, arama, KVKK, eğitim ve erişilebilirlik | Playwright masaüstü/mobil, axe, yetki/audit; henüz `NOT_RUN` alanlar vardır |
+| `PRO-012..PRO-021` | Platform Admin, provisioning, migration, kill switch, incident, export ve restore | Tenant izolasyonu, backup/restore, security ve platform audit; yalnız CI’nın koştuğu bölüm `VERIFIED` |
+| `PRO-022..PRO-029` | Observability, E2E, erişilebilirlik, passkey/MFA, ASVS, feature flag, WAL/PITR | CI, trace/log/metric, browser ve restore kanıtları; fiziksel ve canlı kanıtlar `NOT_RUN` |
 
 ## Risk öncelikli kritik yollar
 

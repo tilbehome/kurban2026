@@ -2,7 +2,7 @@
 
 ```yaml
 id: PRD-001
-status: REVIEW
+status: PLANNED
 owner: Product
 source_role: product_scope_source
 source_of_truth: true

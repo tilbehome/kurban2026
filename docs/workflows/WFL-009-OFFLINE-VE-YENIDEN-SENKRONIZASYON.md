@@ -1,10 +1,12 @@
 ---
 id: WFL-009
 title: Offline ve Yeniden Senkronizasyon Akışı
-status: REVIEW
+status: PLANNED
 owner: UX-and-Operations
+source_role: business_workflow_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-044, REQ-045, PRO-033, PRO-034, PRO-035]
 ---
 
@@ -44,7 +46,7 @@ Foreground retry esastır; desteklenen Background Sync yardımcıdır. Sunucu te
 
 ## Uygulama durumu
 
-`OfflineQueueItem`, unique idempotency ve secret-safe payload guard `IMPLEMENTED_PENDING_VERIFICATION`; legacy PWA’da service worker/update/push parçaları vardır. Güvenli local store, beyaz liste, sync worker, conflict UI ve uzlaştırma raporu `PLANNED` durumundadır.
+`OfflineQueueItem`, unique idempotency ve secret-safe payload guard `IMPLEMENTED_UNVERIFIED`; legacy PWA’da service worker/update/push parçaları vardır. Güvenli local store, beyaz liste, sync worker, conflict UI ve uzlaştırma raporu `PLANNED` durumundadır.
 
 ## Kabul kanıtı
 

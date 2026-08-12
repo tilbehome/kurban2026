@@ -3,11 +3,13 @@
 ```yaml
 id: TST-004
 title: PostgreSQL Integration ve Migration Test Planı
-status: REVIEW
+status: PLANNED
 owner: QA
+source_role: test_plan
 reviewers: [Data, Security, Platform, Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_SCHEMA_VE_TENANT_RUNTIME_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

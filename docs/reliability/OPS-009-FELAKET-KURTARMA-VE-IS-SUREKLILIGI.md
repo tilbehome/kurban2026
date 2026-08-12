@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-009
 title: Felaket Kurtarma ve İş Sürekliliği Planı
-status: REVIEW
+status: PLANNED
 owner: Reliability
+source_role: reliability_policy_or_playbook
 reviewers: [Operations, Security, Data-Operations, Product, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: CANLI_TOPOLOJI_VE_RPO_RTO_ONAYINDA
 version: 0.1
 source_of_truth: false

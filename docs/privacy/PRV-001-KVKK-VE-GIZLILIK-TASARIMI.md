@@ -3,11 +3,13 @@
 ```yaml
 id: PRV-001
 title: KVKK ve Gizlilik Tasarımı
-status: REVIEW
+status: PLANNED
 owner: Privacy
+source_role: privacy_policy_or_playbook
 reviewers: [Legal, Security, Product, Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HUKUKI_ENVANTER_ONAYINDA
 version: 0.1
 source_of_truth: false

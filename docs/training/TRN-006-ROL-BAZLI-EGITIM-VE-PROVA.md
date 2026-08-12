@@ -3,11 +3,13 @@
 ```yaml
 id: TRN-006
 title: Rol Bazlı Eğitim ve Prova Planı
-status: REVIEW
+status: PLANNED
 owner: Training
+source_role: training_or_support_procedure
 reviewers: [Product, Tenant-Owner, Operations, QA]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_SEZON_HAZIRLIGINDA
 version: 0.1
 source_of_truth: false

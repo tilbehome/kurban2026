@@ -3,11 +3,13 @@
 ```yaml
 id: INF-006
 title: PostgreSQL İşletim Standardı
-status: REVIEW
+status: PLANNED
 owner: Data-Operations
+source_role: infrastructure_operating_standard
 reviewers: [Security, Architecture, QA]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: POSTGRESQL_SAGLAYICI_SECIMINDE
 version: 0.1
 source_of_truth: false

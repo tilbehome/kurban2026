@@ -3,11 +3,13 @@
 ```yaml
 id: TST-006
 title: Ledger ve Veri Bütünlüğü Test Planı
-status: REVIEW
+status: PLANNED
 owner: QA
+source_role: test_plan
 reviewers: [Finance, Domain, Data, Security]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_FINANS_VE_DURUM_MAKINESI_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

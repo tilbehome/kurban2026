@@ -3,11 +3,13 @@
 ```yaml
 id: PRV-004
 title: Veri Sahibi Talebi ve Saklama Playbook'u
-status: REVIEW
+status: PLANNED
 owner: Privacy
+source_role: privacy_policy_or_playbook
 reviewers: [Legal, Security, Support, Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HUKUKI_SURELER_ONAYLANDIGINDA
 version: 0.1
 source_of_truth: false

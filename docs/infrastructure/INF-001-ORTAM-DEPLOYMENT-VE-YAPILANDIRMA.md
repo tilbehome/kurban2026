@@ -3,11 +3,13 @@
 ```yaml
 id: INF-001
 title: Ortam, Deployment ve Yapılandırma Standardı
-status: REVIEW
+status: PLANNED
 owner: Operations
+source_role: infrastructure_operating_standard
 reviewers: [Architecture, Security, Release]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: CANLI_TOPOLOJI_SECIMINDE
 version: 0.1
 source_of_truth: false

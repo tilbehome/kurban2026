@@ -1,10 +1,12 @@
 ---
 id: A11Y-001
 title: WCAG 2.2 AA Kabul Planı
-status: REVIEW
+status: PLANNED
 owner: Accessibility-and-QA
+source_role: accessibility_acceptance_plan
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-044, REQ-045, REQ-054, REQ-055, PRO-011, PRO-023, PRO-024, PRO-025]
 ---
 

@@ -2,7 +2,7 @@
 
 ```yaml
 id: ARC-009
-status: IMPLEMENTED_PENDING_VERIFICATION
+status: IMPLEMENTED_UNVERIFIED
 owner: Architecture-and-Data
 source_role: migration_backup_update_architecture
 source_of_truth: true

@@ -3,11 +3,13 @@
 ```yaml
 id: SUP-002
 title: Destek Talebi ve SupportSession Prosedürü
-status: REVIEW
+status: PLANNED
 owner: Support
+source_role: training_or_support_procedure
 reviewers: [Security, Privacy, Platform, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: ILK_CANLI_DESTEK_PROVASINDA
 version: 0.1
 source_of_truth: false

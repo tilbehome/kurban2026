@@ -2,7 +2,7 @@
 
 ```yaml
 id: ARC-004
-status: IMPLEMENTED_PENDING_VERIFICATION
+status: IMPLEMENTED_UNVERIFIED
 owner: Architecture-and-Platform
 source_role: platform_control_plane_architecture
 source_of_truth: true

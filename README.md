@@ -785,7 +785,7 @@ Bağlayıcı kaynak sırası:
 2. [`docs/architecture/00-MEVCUT-DURUM-ANALIZI.md`](docs/architecture/00-MEVCUT-DURUM-ANALIZI.md)
 3. [`docs/architecture/01-HEDEF-SISTEM-MIMARISI.md`](docs/architecture/01-HEDEF-SISTEM-MIMARISI.md)
 4. [`docs/architecture/06-FINANS-VE-LEDGER-MIMARISI.md`](docs/architecture/06-FINANS-VE-LEDGER-MIMARISI.md)
-5. [`docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md`](docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md)
+5. [`docs/testing/TST-001-MASTER-TEST-PLANI.md`](docs/testing/TST-001-MASTER-TEST-PLANI.md)
 6. [`docs/architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md`](docs/architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md)
 7. [`docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md`](docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md)
 8. [`AGENTS.md`](AGENTS.md)

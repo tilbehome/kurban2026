@@ -1,9 +1,8 @@
-# TilbeCore – Kurban Takip
-## Birleşik Ana Mimari, Gelişmiş Dizin Yapısı ve Düzeltilmiş Yol Haritası
+# TilbeCore – Kurban Takip Birleşik Ana Mimari, Gelişmiş Dizin Yapısı ve Düzeltilmiş Yol Haritası
 
 ```yaml
 id: RMP-001
-status: APPROVED
+status: PLANNED
 owner: Product-and-Architecture
 source_role: binding_phase_1_12_architecture_roadmap
 source_of_truth: true
@@ -354,12 +353,15 @@ Bir adım başarısızsa hiçbir parça kalıcı olmaz.
 - Hisse kartı hayvandan bağımsız, sürümlü tarife tanımıdır.
 - 30–35, 35–40, 40–45 ve 45–50 kg ifadeleri vaat sınıfıdır; gerçek teslim kilosu değildir.
 - Liste fiyatı, indirim, net anlaşma bedeli, tahsilat ve kalan ayrı tutulur.
-- Müşteri kabul ettiğinde ödeme olmasa da satış ve alacak oluşur.
-- Herhangi bir pozitif tutar kapora sayılabilir.
-- Kapora son tarihine kadar kapora yoksa satış ters kayıtla iptal edilir ve hisse açılır.
+- Kaporasız müşteri kaydı yalnız süreli rezervasyondur; kesin satış, gelir veya alacak oluşturmaz.
+- Herhangi bir pozitif tahsilat kaporadır ve ancak bu anda fiyat snapshot'lı kesin satış ile alacak oluşur.
+- Kapora son tarihine kadar ödeme yoksa rezervasyon süre sonu olayıyla kapanır ve hisse işletme envanterine açılır; hiç oluşmamış satış için ters finans kaydı üretilmez.
 - Kaporalı/tamamlanmış satışın iptalini yönetici yapar; kesinti yoktur, tahsilat iade/mahsup edilir.
 - Transfer fiyat farkını cariye işler; eski sahiplik ve fiyat geçmişi korunur.
-- Yedinci hisse satılmazsa kesimden önce işletme sahibi/aileden gerçek kişi kurban niyeti ve vekâletiyle kaydedilir; sahte ticari gelir oluşturulmaz.
+- Satılmamış hisse işletme envanteridir; sahte müşteri, vekâlet, satış, gelir veya alacak üretilmez.
+- Satılmamış işletme hissesinin kesim öncesi dinî uygunluk çözümü henüz kesinleşmemiştir; açık karar verilene kadar hazırlık engeli/istisna olarak görünür.
+
+Yerine geçen karar: Önceki “ödemesiz kesin satış/alacak” ve “satılmayan hisseyi işletme sahibi/aileden gerçek kişiye atama” yaklaşımı, kullanıcının 12 Ağustos 2026 tarihli açık düzeltmesiyle geçersiz kılınmıştır. Gerekçe; rezervasyon ile finansal satışı ayırmak ve sahte kişi, vekâlet ya da finans hareketi üretmemektir. Ayrıntılı bağlayıcı domain kaynağı [DOM-007](../domains/DOM-007-HISSE-SATIS-TRANSFER-VE-IPTAL.md) belgesidir.
 
 ### 6.4 Tahsilat ve kasa
 

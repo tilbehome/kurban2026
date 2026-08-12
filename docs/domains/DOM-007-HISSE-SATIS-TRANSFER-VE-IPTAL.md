@@ -1,10 +1,12 @@
 ---
 id: DOM-007
 title: Hisse, Satış, Transfer ve İptal Domain Sözleşmesi
-status: REVIEW
+status: PLANNED
 owner: Domain-and-Sales
+source_role: domain_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-001, REQ-002, REQ-003, REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ-021, REQ-022, REQ-023]
 ---
 
@@ -44,7 +46,7 @@ Transfer bir `customerId` alanını sessizce değiştirmek değildir; ayrı `Sha
 - Bağlayıcı ana mimari §6.3, tam yedi hisseyi ve herhangi bir pozitif tutarın kapora olabileceğini tanımlar.
 - Yeni nesil yol haritası YN-13/YN-14 rezervasyon ile satışı ayırır; taslak/rezervasyon süresi ve işletmeye kalan açık sahipliği ister.
 - 2026-08-12 tarihli kullanıcı düzeltmesi, kaporasız işlemin kesin satış/alacak sayılmamasını ve satılmamış hissenin işletme envanteri olarak tutulmasını bağlayıcı kılar.
-- Ana mimari §6.3 içindeki “ödeme olmasa da satış ve alacak oluşur” ve kesim öncesi gerçek kişi/vekâlet atama ifadeleri bu kararla çelişmektedir. Belgeler bu farkı gizlemez: kaporasız kayıt rezervasyondur; sahte kişi veya vekâlet üretilmez. Satılmamış işletme hissesinin kesim öncesi nasıl dinî uygunluğa getirileceği mimari belgede açık karar gerektirir; karar verilene kadar normal kesim hazırlığında blokaj/istisna olarak gösterilir.
+- Ana mimari §6.3, 12 Ağustos 2026 tarihli kullanıcı düzeltmesiyle uyumlandırılmıştır: kaporasız kayıt rezervasyondur; sahte kişi veya vekâlet üretilmez. Satılmamış işletme hissesinin kesim öncesi nasıl dinî uygunluğa getirileceği açık karar gerektirir; karar verilene kadar normal kesim hazırlığında blokaj/istisna olarak gösterilir.
 
 ## Gerçek uygulama durumu
 
@@ -53,7 +55,7 @@ Transfer bir `customerId` alanını sessizce değiştirmek değildir; ayrı `Sha
 | En fazla yedi kapasite ve satılabilir hisse saf kuralları | `IMPLEMENTING` | `packages/tenant-core/src/tenant-domain.ts` sıra aralığını/tekrarı ve sekiz üstünü engelliyor; tam yedi kaydın varlığını zorunlu kılmıyor. |
 | Rezervasyon–kesin satış ayrımı ve kapora şartı | `IMPLEMENTING` | Tenant modelinde `reserved` vardır; ancak `confirmSale` kapora girdisi olmadan satış ve ledger üretir. Legacy saha satış da sıfır kaporayla müşteri atayıp borç açar. Bu, bağlayıcı doküman kararıyla kod farkıdır. |
 | İşletme envanteri sahipliği | `PLANNED` | Ayrı sahiplik/durum modeli ve sahte kişi/finans/vekâlet üretmeme doğrulamaları kodda tamamlanmış değildir. |
-| PostgreSQL share/sale modeli ve unique sıra/idempotency | `IMPLEMENTED_PENDING_VERIFICATION` | Tenant şeması `ShareCard`, `Share`, `Sale`, `SaleShare`. |
+| PostgreSQL share/sale modeli ve unique sıra/idempotency | `IMPLEMENTED_UNVERIFIED` | Tenant şeması `ShareCard`, `Share`, `Sale`, `SaleShare`. |
 | Legacy saha satış ve toplu atama atomik koruması | `IMPLEMENTING` | `/api/saha-satis`, `/api/hisseler/ata`, `/api/hisseler/toplu-ata`; yeni tenant DB’ye taşınmadı. |
 | Legacy transfer | `IMPLEMENTING` | `/api/hisseler/[id]/transfer` müşteri alanını güncelliyor; kalıcı transfer aggregate’i/fiyat etkisi yok. |
 | Tam iptal/iade/mahsup ve otomatik süre sonu | `PLANNED` | Tenant core reversal sözleşmesi var; bağlı uçtan uca runtime/worker yok. |

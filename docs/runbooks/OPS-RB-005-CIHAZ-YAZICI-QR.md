@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-RB-005
 title: Cihaz, Yazıcı ve QR Sorunu Runbook'u
-status: REVIEW
+status: PLANNED
 owner: Tenant-Operations
+source_role: incident_runbook
 reviewers: [Operations, UX, Security]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_CIHAZ_PROVASI_ONCESI
 version: 0.1
 source_of_truth: false

@@ -1,10 +1,12 @@
 ---
 id: UX-004
 title: Masaüstü, Tablet, Telefon, TV ve Kiosk Yerleşim Standardı
-status: REVIEW
+status: PLANNED
 owner: UX-and-Frontend
+source_role: ux_contract
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-036, REQ-044, REQ-045, PRO-005, PRO-011, PRO-035]
 ---
 

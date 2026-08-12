@@ -1,10 +1,12 @@
 ---
 id: PER-001
 title: Rol Bazlı Personalar
-status: REVIEW
+status: PLANNED
 owner: Product-and-UX
+source_role: role_persona_catalog
 source_of_truth: false
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 related_requirements: [REQ-050, REQ-059, REQ-060, PRO-001, PRO-005, PRO-006, PRO-008, PRO-020]
 ---
 
@@ -24,7 +26,7 @@ Bu personalar demografik tahmin içermez. Belgelenmiş görev, yetki, cihaz ve h
 
 **Başarı ölçütü:** tenantlar arası veri görmeden doğru firmaya doğru sürüm/lisans/işletim komutunu uygular; kritik işlemler yeniden doğrulama/ikinci onaydan geçer.
 
-**Kod durumu:** Ayrı Platform Admin uygulaması ve kontrol düzlemi `IMPLEMENTED_PENDING_VERIFICATION`; canlı DNS/TLS, fiziksel passkey kabulü ve production restore onayı tamamlanmamıştır.
+**Kod durumu:** Ayrı Platform Admin uygulaması ve kontrol düzlemi `IMPLEMENTED_UNVERIFIED`; canlı DNS/TLS, fiziksel passkey kabulü ve production restore onayı tamamlanmamıştır.
 
 ## 2. Firma Admin
 

@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-RB-006
 title: Salt-Okunur ve Acil Durdurma Runbook'u
-status: REVIEW
+status: PLANNED
 owner: Operations
+source_role: incident_runbook
 reviewers: [Security, Product, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_ACIL_DURDURMA_PROVASINDA
 version: 0.1
 source_of_truth: false

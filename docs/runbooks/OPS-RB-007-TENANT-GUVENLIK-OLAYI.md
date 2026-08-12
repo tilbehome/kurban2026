@@ -3,11 +3,13 @@
 ```yaml
 id: OPS-RB-007
 title: Tenant Güvenlik Olayı Runbook'u
-status: REVIEW
+status: PLANNED
 owner: Security
+source_role: incident_runbook
 reviewers: [Privacy, Operations, Legal, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: HER_GUVENLIK_TATBIKATINDA
 version: 0.1
 source_of_truth: false

@@ -2,7 +2,7 @@
 
 ```yaml
 id: ARC-003
-status: IMPLEMENTED_PENDING_VERIFICATION
+status: IMPLEMENTED_UNVERIFIED
 owner: Architecture-and-Data
 source_role: tenant_database_architecture
 source_of_truth: true

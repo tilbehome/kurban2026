@@ -3,11 +3,13 @@
 ```yaml
 id: EVD-005
 title: Backup, Restore ve PITR Kanıt Şablonu
-status: REVIEW
+status: PLANNED
 owner: Operations
+source_role: evidence_record_or_template
 reviewers: [Data-Operations, Security, Tenant-Owner]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: BACKUP_DR_STANDARDI_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false

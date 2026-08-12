@@ -3,11 +3,13 @@
 ```yaml
 id: EVD-004
 title: Finans ve Veri Bütünlüğü Kanıt Şablonu
-status: REVIEW
+status: PLANNED
 owner: Finance-and-QA
+source_role: evidence_record_or_template
 reviewers: [Domain, Data-Operations]
 effective_date: 2026-08-12
 last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
 next_review: FINANS_TEST_PLANI_DEGISIKLIGINDE
 version: 0.1
 source_of_truth: false
