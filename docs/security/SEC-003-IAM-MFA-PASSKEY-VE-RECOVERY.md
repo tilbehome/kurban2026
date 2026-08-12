@@ -21,7 +21,7 @@ superseded_by: null
 
 ## Mevcut kanıt sınırı
 
-`74915b6` içinde Platform Admin için parola + TOTP akışı, WebAuthn/passkey route ve servisleri, challenge tüketimi, hashlenmiş tek kullanımlık recovery kodu, cihaz/passkey/oturum iptali ve yeniden doğrulama kodu bulunur. Gerçek PostgreSQL test dosyası challenge ve recovery kodunun ikinci kez tüketilemediğini sınar. Bu çalışma kapsamında bağlı CI koşusu bulunmamıştır; fiziksel authenticator, gerçek HTTPS, çoklu tarayıcı ve kurtarma operasyonu doğrulanmış değildir.
+`74915b6f3f1f8d53116b760b6a6be9797111efa5` içinde Platform Admin için parola + TOTP akışı, WebAuthn/passkey route ve servisleri, challenge tüketimi, hashlenmiş tek kullanımlık recovery kodu, cihaz/passkey/oturum iptali ve yeniden doğrulama kodu bulunur. [TilbeCore CI koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803) bu commit için `completed/success` sonucuyla Platform PostgreSQL integration, unit/route, TypeScript, lint ve iki build kontrolünü çalıştırmıştır; PostgreSQL integration kapsamındaki challenge ve recovery kodu tek kullanım testi bu CI kanıtına dahildir. Fiziksel authenticator, gerçek HTTPS, çoklu tarayıcı ve gerçek hesap kurtarma operasyonu bu koşuda çalıştırılmamıştır ve doğrulama bekler.
 
 Firma kullanıcı IAM’i için hedef rol/policy kararları belgelenmiş, bütün tenant route’larında standart uygulama henüz kanıtlanmamıştır.
 

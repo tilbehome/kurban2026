@@ -23,7 +23,7 @@ superseded_by: null
 
 Amaç, istemci kimliği veya kayıt ID’si aynı olsa bile Tenant A verisinin Tenant B, platform kullanıcısı, yanlış pool veya yanlış backup hedefi üzerinden okunamadığını/değiştirilemediğini kanıtlamaktır.
 
-Repo entegrasyon testi iki fiziksel tenant DB, aynı kayıt ID’leri, host/session/ref, custom domain, ayrı pool, süre/kapsam/onay kontrollü `SupportSession`, dump/geçici restore ve çapraz backup reddini kapsayacak şekilde yazılmıştır. Legacy route’ların tümü yeni runtime’a taşınmadığından yalnız bu suite’in geçmesi bütün ürün yüzeylerini kanıtlamaz.
+Repo entegrasyon testi iki fiziksel tenant DB, aynı kayıt ID’leri, host/session/ref, custom domain, ayrı pool, süre/kapsam/onay kontrollü `SupportSession`, dump/geçici restore ve çapraz backup reddini kapsar. [TilbeCore CI koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803), `74915b6f3f1f8d53116b760b6a6be9797111efa5` commit’i için `Two-tenant web, pool and backup/restore isolation tests` adımını `success` sonucuyla tamamlamıştır. Legacy route’ların tümü yeni runtime’a taşınmadığından bu suite’in geçmesi bütün ürün yüzeylerini, production restore’u veya canlı tenant altyapısını kanıtlamaz.
 
 ## Kurulum
 

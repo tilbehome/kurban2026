@@ -26,6 +26,8 @@ superseded_by: null
 - Bu testler environment flag’leri yoksa atlanır; koşmuş sayılmaları için çıktı kanıtı gerekir.
 - Legacy Next.js route’larının tamamı tenant runtime’a taşınmış değildir; kapsama alınmayan route’lar ayrıca risk olarak tutulur.
 
+[TilbeCore CI koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803), `74915b6f3f1f8d53116b760b6a6be9797111efa5` commit’i için Platform/Tenant PostgreSQL migration apply ve Platform PostgreSQL integration adımlarını `success` sonucuyla çalıştırmıştır. Bu kanıt CI test ortamıyla sınırlıdır; production migration veya canlı restore kanıtı değildir.
+
 ## Test kurulumu
 
 - Ayrı platform PostgreSQL ve en az iki tenant PostgreSQL DB.

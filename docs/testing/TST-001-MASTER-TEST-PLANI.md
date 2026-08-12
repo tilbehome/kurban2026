@@ -23,7 +23,7 @@ superseded_by: null
 
 Bu plan gereksinim → risk → test → kanıt → release kararını tanımlar. Repo unit, route, mimari sınır ve koşullu gerçek PostgreSQL testleri içerir. Playwright, axe, gerçek cihaz, yük, offline sync, WAL/PITR ve tam Kurban Günü prova kanıtları henüz mevcut kabul edilmez.
 
-`74915b6` için commit’e bağlı GitHub Actions koşusu bulunmamıştır. Commit’in test kaynakları incelenebilir kanıttır; sonuç kanıtı ancak komut/ortam/çıktı ile kaydedilir.
+`74915b6f3f1f8d53116b760b6a6be9797111efa5` için [TilbeCore CI koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803) doğrulanmıştır: koşu `completed/success` durumundadır ve `headSha` bu tam commit SHA’sıyla eşleşir. Başarılı job; UTF-8, Platform/Tenant Prisma validate-generate, provisioning CLI dry-run, Platform/Tenant PostgreSQL migration apply, Platform PostgreSQL integration, iki-tenant web/pool/backup-restore izolasyonu, TypeScript, unit/route, lint, ana ve Platform Admin build, PWA artefakt ve Git diff kontrollerini çalıştırmıştır. Koşuda Playwright/axe, fiziksel HTTPS passkey, gerçek cihaz, yük/soak, offline cihaz veya WAL/PITR adımı yoktur; bunlar doğrulanmış sayılmaz.
 
 ## Test katmanları
 

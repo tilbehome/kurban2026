@@ -23,7 +23,7 @@ superseded_by: null
 
 Bu belge TilbeCore – Kurban Takip için güven sınırlarını, korunacak varlıkları, temel tehditleri ve release kapılarını tanımlar. OWASP ASVS Level 2 bir kabul hedefidir; sertifika veya bugün karşılandığı iddiası değildir.
 
-Repo incelemesinde Platform Admin kimliği, passkey/recovery modelleri, tenant çözümleme, `SupportSession`, bakım ve acil durdurma çekirdeği görülmüştür. `74915b6` bu alanlarda kod ve test tanımı sağlar; GitHub’da commit’e bağlı Actions sonucu bulunmadığından bunlar genel doğrulama veya canlı kanıtı sayılmaz.
+Repo incelemesinde Platform Admin kimliği, passkey/recovery modelleri, tenant çözümleme, `SupportSession`, bakım ve acil durdurma çekirdeği görülmüştür. `74915b6f3f1f8d53116b760b6a6be9797111efa5` için [TilbeCore CI koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803) `completed/success` sonucuyla bitmiştir. Koşu; UTF-8, Platform/Tenant Prisma validate-generate ve migration apply, Platform PostgreSQL integration, iki-tenant web/pool/backup-restore izolasyonu, TypeScript, unit/route, lint, ana ve Platform Admin build, PWA artefakt ve Git diff kontrollerini başarıyla çalıştırmıştır. Bu sonuç repository ve CI kapsamı kanıtıdır; canlı altyapı, fiziksel cihaz veya genel güvenlik kabulü değildir.
 
 ## Güven sınırları ve varlıklar
 
