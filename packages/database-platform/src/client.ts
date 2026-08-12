@@ -29,11 +29,18 @@ export type PlatformPrismaClientLike = Pick<
   | "platformLicenseChange"
   | "tenantHealthSnapshot"
   | "platformIncident"
+  | "platformIncidentTimelineEntry"
+  | "maintenanceWindow"
+  | "emergencyStop"
+  | "platformWebAuthnCredential"
+  | "platformAuthChallenge"
+  | "platformRecoveryCode"
+  | "organizationOperationJob"
 >;
 
 export type PlatformTenantRuntimePrismaClientLike = Pick<
   PrismaClient,
-  "tenantInstance" | "tenantCustomDomain" | "platformSupportSession" | "platformAuditLog"
+  "tenantInstance" | "tenantCustomDomain" | "platformSupportSession" | "platformAuditLog" | "emergencyStop" | "maintenanceWindow"
 >;
 
 export type PlatformProvisioningPrismaClientLike = Pick<

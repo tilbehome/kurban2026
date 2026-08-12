@@ -17,6 +17,14 @@ import { assertPlatformTenantDescriptorSafe } from "@tilbecore/contracts";
 export interface TenantRegistry {
   findBySlug(slug: TenantSlug): Promise<PlatformTenantDescriptor | null>;
   findCustomDomains(): Promise<readonly CustomDomainConfigEntry[]>;
+  findAccessPolicy?(organizationId: PlatformTenantDescriptor["organizationId"], tenantInstanceId: TenantInstanceId): Promise<TenantRuntimeAccessPolicy>;
+}
+
+export interface TenantRuntimeAccessPolicy {
+  organizationStatus: string;
+  mode: "normal" | "read_only" | "full_stop";
+  blockedScopes: readonly string[];
+  maintenanceMessage?: string;
 }
 
 export interface TenantUserSessionIdentity {

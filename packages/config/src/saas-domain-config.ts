@@ -72,6 +72,23 @@ export interface TilbeCoreDomainConfig {
   privateServices: readonly PrivateService[];
 }
 
+export interface PlatformWebAuthnConfig {
+  rpName: "TilbeCore Platform";
+  rpId: string;
+  allowedOrigins: readonly string[];
+  requiresHttps: boolean;
+}
+
+export function createPlatformWebAuthnConfig(environment: DeploymentEnvironment): PlatformWebAuthnConfig {
+  const config = createTilbeCoreDomainConfig(environment);
+  return {
+    rpName: "TilbeCore Platform",
+    rpId: config.baseDomain,
+    allowedOrigins: [config.systemOrigins.platform],
+    requiresHttps: true,
+  };
+}
+
 export interface HostResolution {
   kind: OriginKind;
   normalizedHost: string;

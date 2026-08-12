@@ -5,6 +5,7 @@ const NAV = [
   ["/", "Komuta Merkezi"], ["/organizations", "Firmalar"], ["/provisioning", "Provisioning"],
   ["/plans", "Plan ve Lisans"], ["/domains", "Domainler"], ["/backups", "Backup / Restore"],
   ["/support", "SupportSession"], ["/users", "Kullanıcılar"], ["/audit", "Audit ve Olaylar"],
+  ["/incidents", "Olaylar"], ["/maintenance", "Bakım ve Durdurma"], ["/security", "Güvenlik"],
 ] as const;
 
 export function AdminShell({ children }: { children: ReactNode }) {

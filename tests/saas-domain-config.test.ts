@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createTenantUrl,
   createTilbeCoreDomainConfig,
+  createPlatformWebAuthnConfig,
   customDomainCanBeActive,
   privateServiceUrl,
   resolveHost,
@@ -9,6 +10,10 @@ import {
 } from "@tilbecore/config";
 
 describe("TilbeCore SaaS domain ve origin sözleşmesi", () => {
+  it("platform passkey RP ve allowed origin değerlerini merkezi domain kararından üretir",()=>{
+    expect(createPlatformWebAuthnConfig("production")).toEqual({rpName:"TilbeCore Platform",rpId:"tilbecore.com",allowedOrigins:["https://console.tilbecore.com"],requiresHttps:true});
+    expect(createPlatformWebAuthnConfig("local").allowedOrigins).toEqual(["https://console.tilbecore.test"]);
+  });
   it("production platform ve tenant URL'lerini portsuz üretir", () => {
     const config = createTilbeCoreDomainConfig("production");
 

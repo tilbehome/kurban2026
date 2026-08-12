@@ -189,6 +189,17 @@ async function finalizeOnboarding(
         entitlements: { create: modules.map((module) => ({ moduleId: module.id, enabled: true })) },
       }, update: {},
     });
+    await tx.platformAdminCommand.upsert({
+      where: { idempotencyKey: `initial-backup:${command.tenant.id}` },
+      create: {
+        id: `initial_backup_${command.tenant.id}`, idempotencyKey: `initial-backup:${command.tenant.id}`,
+        type: "tenant.backup.create", status: "pending", organizationId: command.organization.id,
+        tenantInstanceId: command.tenant.id, requestedByUserId: actorUserId, requestId,
+        traceId: requestId, approvalReason: "Provisioning sonrası ilk doğrulanabilir tenant yedeği",
+        payload: { trigger: "provisioning_completion" },
+      },
+      update: {},
+    });
   });
 }
 

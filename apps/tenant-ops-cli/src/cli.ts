@@ -105,6 +105,12 @@ async function runQueuedTenantOperation(
         failureCode: metadata.failureCode,
       },
     });
+    if (queued.type === "tenant.backup.create" && metadata.status === "completed") {
+      await platform.tenantAdminInvitation.updateMany({
+        where: { tenantInstanceId: queued.tenantInstanceId, status: "prepared" },
+        data: { status: "ready" },
+      });
+    }
     await platform.platformAdminCommand.update({ where: { id: queued.id }, data: { status: "succeeded", resultRef: metadata.id, finishedAt: new Date(), errorCode: null } });
     return { ok: true, processed: true, commandId: queued.id, resultRef: metadata.id, productionRestoreApplied: false };
   } catch (error) {

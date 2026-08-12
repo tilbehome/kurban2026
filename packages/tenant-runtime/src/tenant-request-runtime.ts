@@ -86,6 +86,10 @@ export class TenantRequestRuntime<TClient> {
         resolved.context.tenantInstanceId,
         input.requestedScope,
       );
+      if (this.registry.findAccessPolicy) {
+        const policy = await this.registry.findAccessPolicy(resolved.context.organizationId, resolved.context.tenantInstanceId);
+        assertRuntimeOperationAllowed(policy, input.requestedScope);
+      }
       context = createRequestContext(input, resolved.context.organizationId, resolved.context.tenantInstanceId,
         resolved.normalizedHost, resolved.context.databaseRefId, supportSession);
       assertTenantRequestContextSafe(context);
@@ -188,6 +192,22 @@ export class TenantRequestRuntime<TClient> {
     } catch {
       throw new TenantRuntimeError("TENANT_REQUEST_AUDIT_FAILED");
     }
+  }
+}
+
+function assertRuntimeOperationAllowed(
+  policy: { organizationStatus: string; mode: "normal" | "read_only" | "full_stop"; blockedScopes: readonly string[] },
+  requestedScope: string,
+): void {
+  if (policy.organizationStatus !== "active") throw new TenantRuntimeError("TENANT_ORGANIZATION_NOT_ACTIVE");
+  if (policy.blockedScopes.some(scope => requestedScope === scope || requestedScope.startsWith(`${scope}.`))) {
+    throw new TenantRuntimeError("TENANT_MODULE_EMERGENCY_STOPPED");
+  }
+  if (policy.mode === "full_stop") throw new TenantRuntimeError("TENANT_EMERGENCY_STOP_ACTIVE");
+  const read = /(?:^|\.)(?:read|list|search|view|status)$/.test(requestedScope);
+  if (policy.mode === "read_only" && !read) {
+    const critical = /(?:^|\.)(?:finance|payment|sale|slaughter|delivery|cash|ledger)(?:\.|$)/.test(requestedScope);
+    throw new TenantRuntimeError(critical ? "TENANT_CRITICAL_WRITE_BLOCKED" : "TENANT_READ_ONLY_MODE");
   }
 }
 

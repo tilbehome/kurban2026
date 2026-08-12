@@ -108,6 +108,13 @@ describe("tenant request runtime", () => {
       .catch(safeTenantRequestFailure);
     expect(denied).toEqual({ code: "SUPPORT_SESSION_SCOPE_DENIED" });
   });
+
+  test("platform acil durdurma ve bakım politikasını request öncesinde uygular",async()=>{
+    const audits:TenantRequestAuditEvent[]=[];const pool=new TenantAwareConnectionPool<TestClient>({async create(binding){return{client:{tenantId:binding.tenantInstanceId},async dispose(){}}}},100);
+    const runtime=createRuntime([descriptor("a")],pool,audits,undefined,{organizationStatus:"active",mode:"read_only",blockedScopes:[]});
+    await expect(runtime.execute({...request("a"),requestedScope:"sale.write",session:{...session("a"),permissions:["sale.write"]}},async()=>null)).rejects.toThrow("TENANT_CRITICAL_WRITE_BLOCKED");
+    expect(audits.at(-1)).toMatchObject({result:"denied",failureCode:"TENANT_CRITICAL_WRITE_BLOCKED"});
+  });
 });
 
 function createRuntime(
@@ -115,12 +122,14 @@ function createRuntime(
   pool: TenantAwareConnectionPool<TestClient>,
   audits: TenantRequestAuditEvent[],
   support?: SupportSessionContract,
+  policy?: {organizationStatus:string;mode:"normal"|"read_only"|"full_stop";blockedScopes:readonly string[]},
 ) {
   return new TenantRequestRuntime(
     createTilbeCoreDomainConfig("local"),
     {
       async findBySlug(slug) { return descriptors.find((item) => item.slug === slug) ?? null; },
       async findCustomDomains() { return []; },
+      async findAccessPolicy(){return policy??{organizationStatus:"active",mode:"normal",blockedScopes:[]}},
     },
     pool,
     { async findById(id) { return support?.id === id ? support : null; } },

@@ -27,6 +27,16 @@ export const PLATFORM_PERMISSIONS = [
   "platform.user.read",
   "platform.user.manage",
   "platform.audit.read",
+  "platform.security.read",
+  "platform.security.manage",
+  "platform.incident.read",
+  "platform.incident.manage",
+  "platform.maintenance.read",
+  "platform.maintenance.manage",
+  "platform.emergency.manage",
+  "platform.organization.configuration.read",
+  "platform.organization.workflow.manage",
+  "platform.invitation.manage",
 ] as const;
 
 export type PlatformPermissionKey = (typeof PLATFORM_PERMISSIONS)[number];
@@ -47,6 +57,16 @@ export const PLATFORM_ROLE_PERMISSIONS: Readonly<Record<PlatformRoleKey, readonl
     "platform.backup.manage",
     "platform.support.read",
     "platform.audit.read",
+    "platform.security.read",
+    "platform.security.manage",
+    "platform.incident.read",
+    "platform.incident.manage",
+    "platform.maintenance.read",
+    "platform.maintenance.manage",
+    "platform.emergency.manage",
+    "platform.organization.configuration.read",
+    "platform.organization.workflow.manage",
+    "platform.invitation.manage",
   ],
   platform_support: [
     "platform.dashboard.read",
@@ -57,6 +77,10 @@ export const PLATFORM_ROLE_PERMISSIONS: Readonly<Record<PlatformRoleKey, readonl
     "platform.support.read",
     "platform.support.manage",
     "platform.audit.read",
+    "platform.security.read",
+    "platform.incident.read",
+    "platform.maintenance.read",
+    "platform.organization.configuration.read",
   ],
   platform_read_only: [
     "platform.dashboard.read",
@@ -68,6 +92,10 @@ export const PLATFORM_ROLE_PERMISSIONS: Readonly<Record<PlatformRoleKey, readonl
     "platform.support.read",
     "platform.user.read",
     "platform.audit.read",
+    "platform.security.read",
+    "platform.incident.read",
+    "platform.maintenance.read",
+    "platform.organization.configuration.read",
   ],
 };
 

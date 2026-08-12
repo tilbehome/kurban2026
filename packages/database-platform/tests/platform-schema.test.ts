@@ -11,12 +11,20 @@ const platformAdminMigration = readFileSync(
   join(__dirname, "../prisma/migrations/0006_platform_admin_operations/migration.sql"),
   "utf8",
 );
+const completionMigration=readFileSync(join(__dirname,"../prisma/migrations/0007_platform_control_plane_completion/migration.sql"),"utf8");
 
 describe("platform Prisma şeması", () => {
   it("yalnız PostgreSQL provider ve PLATFORM_DATABASE_URL kullanır", () => {
     expect(schema).toContain('provider = "postgresql"');
     expect(schema).toContain('env("PLATFORM_DATABASE_URL")');
     expect(schema).not.toContain('provider = "sqlite"');
+  });
+  it("passkey, recovery, olay, bakım ve kontrollü firma işleri ayrı güvenli modellerdir",()=>{
+    for(const model of["PlatformWebAuthnCredential","PlatformAuthChallenge","PlatformRecoveryCode","PlatformIncidentTimelineEntry","OrganizationOperationJob"])expect(schema).toMatch(new RegExp(`model\\s+${model}\\b`));
+    expect(completionMigration).toContain('"PlatformWebAuthnCredential_status_check"');
+    expect(completionMigration).toContain('"OrganizationOperationJob_type_check"');
+    expect(completionMigration).toContain('"EmergencyStop_mode_check"');
+    const recovery=schema.match(/model PlatformRecoveryCode \{[\s\S]*?\n\}/)?.[0]??"";expect(recovery).toContain("codeHash");expect(recovery).not.toMatch(/\bcode\s+String/);
   });
 
   it("tenant operasyon modellerini içermez", () => {

@@ -45,6 +45,26 @@ export class PrismaTenantRuntimeRegistry implements TenantRegistry, SupportSessi
     return rows.map((row) => mapCustomDomain(row as TenantCustomDomainRow));
   }
 
+  async findAccessPolicy(organizationId: OrganizationId, tenantInstanceId: TenantInstanceId) {
+    const now = new Date();
+    const [organization, stops, maintenance] = await Promise.all([
+      this.db.tenantInstance.findUnique({ where: { id: tenantInstanceId }, include: { organization: true } }),
+      this.db.emergencyStop.findMany({ where: { organizationId, status: "active", OR: [{ tenantInstanceId: null }, { tenantInstanceId }] } }),
+      this.db.maintenanceWindow.findMany({ where: { status: "active", plannedStartAt: { lte: now }, plannedEndAt: { gt: now } } }),
+    ]);
+    if (!organization || organization.organizationId !== organizationId) throw new Error("TENANT_POLICY_TARGET_MISMATCH");
+    const applicableMaintenance = maintenance.filter(item => Array.isArray(item.affectedTenantIds) && (item.affectedTenantIds.length === 0 || item.affectedTenantIds.includes(tenantInstanceId)));
+    const blockedScopes = stops.flatMap(stop => Array.isArray(stop.blockedScopes) ? stop.blockedScopes.filter((scope): scope is string => typeof scope === "string") : []);
+    const fullStop = stops.some(stop => stop.mode === "full_stop") || applicableMaintenance.some(item => item.mode === "full_stop");
+    const readOnly = stops.some(stop => stop.mode === "read_only") || applicableMaintenance.some(item => item.mode === "read_only");
+    return {
+      organizationStatus: organization.organization.status,
+      mode: fullStop ? "full_stop" as const : readOnly ? "read_only" as const : "normal" as const,
+      blockedScopes,
+      maintenanceMessage: applicableMaintenance[0]?.message,
+    };
+  }
+
   async findById(id: SupportSessionId): Promise<SupportSessionContract | null> {
     const row = await this.db.platformSupportSession.findUnique({
       where: { id },

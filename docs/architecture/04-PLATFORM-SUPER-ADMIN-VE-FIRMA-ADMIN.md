@@ -117,16 +117,31 @@ Gerçek sayfalar:
 | `/support` | Süreli, kapsamlı, gerekçeli SupportSession açma/sonlandırma |
 | `/users` | Platform kullanıcı 360°, rol/durum ve session iptali |
 | `/audit` | Secret-safe platform audit olayları |
+| `/security` | Passkey/recovery, cihaz, oturum ve kritik işlem yeniden doğrulaması |
+| `/incidents` | Olay açma, güncelleme, çözme ve auditli zaman çizelgesi |
+| `/maintenance` | Planlı bakım, read-only, tam ve modül bazlı acil durdurma |
 | `/unauthorized` | Geçerli oturumda application izni bulunmayan kullanıcı için güvenli durum |
+
+Yeni ince API yüzeyleri: `/api/auth/passkey/*`, `/api/auth/recovery`, `/api/security/passkeys/*`, `/api/security/recovery-codes`, `/api/security/reauthenticate`, `/api/security/devices/*`, `/api/security/sessions/revoke-all`, `/api/incidents/*`, `/api/maintenance/*`, `/api/emergency-stops`, `/api/organizations/[id]/operations`, `/api/organization-operations/[id]/*` ve `/api/organizations/[id]/admin-invitations`.
 
 Route mutasyonları ince adaptördür; yetki, idempotency, lifecycle, support süresi/kapsamı ve secret-safe payload kuralları `@tilbecore/platform` application/domain katmanındadır. Platform DB erişimi `@tilbecore/database-platform` adaptöründedir. Firma Admin hazırlığı artık PlatformUser oluşturmaz; platform metadata’sında tenant’a bağlı `TenantAdminInvitation` olarak tutulur.
 
-Bu kanıt tam Faz 2B kapanışı değildir. Tam WebAuthn/passkey, recovery, canlı DNS/TLS, production destructive restore, abonelik/faturalama, emergency-stop/incident/bakım davranışları ve genel E2E/güvenlik kabul dönemi sonraki bağlayıcı işlerde kalır.
+### Faz 2B kontrol düzlemi tamamlama kanıtı
+
+- `0007_platform_control_plane_completion` migration’ı passkey credential/challenge, hashlenmiş tek kullanımlık recovery code, incident timeline, bakım durumu, emergency-stop modu ve onaylı firma operasyon işlerini ekler. Platform DB’ye tenant müşteri, hayvan, hisse, satış veya finans verisi eklenmez.
+- WebAuthn RP ID ve allowed origin yalnız `packages/config` üzerinden üretilir. Kayıt ve doğrulama `@simplewebauthn/server` ile challenge tüketimi, user verification, origin ve RP doğrulamasına bağlıdır. Yerel gerçek cihaz kabulü HTTPS gerektirir; kod/unit/build kanıtı gerçek cihaz kabul kanıtı değildir.
+- `/security`, `/incidents` ve `/maintenance` sayfaları ile ilgili ince API adaptörleri gerçek Platform DB repository/use-case akışlarına bağlıdır. Passkey iptali, cihaz/oturum sonlandırma, recovery yenileme, olay zaman çizelgesi, planlı bakım, firma/modül durdurma ve read-only politikası uygulanır.
+- Tenant request runtime aktif Platform DB politikasını request öncesi çözer. `full_stop`, `read_only`, module scope engeli ve askıya alınmış firma fail-closed davranır; satış, finans, kesim ve teslimat yazıları sessizce devam etmez.
+- Firma 360° görünümü plan/lisans, entitlement, limit, domain, release/migration, backup ve health metadata’sı için beklenen-gerçek farkını gösterir; secret veya tenant operasyon kaydı göstermez.
+- Dondurma, yeniden etkinleştirme, kapatma ön kontrolü/talebi, export ve yönetim devri idempotent iş kaydıdır. Kritik işlemler son on dakikada yeniden doğrulama ister; kapatma, export ve devir farklı ikinci yetkili ister. Export içeriği Platform Admin’e dönmez ve tenant tarafı export üreticisi sonraki firma uygulaması paketine bağlıdır.
+- Provisioning tamamlandığında ilk backup işi idempotent kuyruğa alınır. Başarılı backup metadata’sından sonra hazırlanan Firma Admin daveti süreli ve yeniden gönderilebilirdir; token yalnız hashlenmiş saklanır ve merkezi tenant domain config’inden üretilen aktivasyon bağlantısı sadece oluşturma yanıtında bir kez gösterilir.
+
+Faz 2B uygulama kapsamı gerçek PostgreSQL migration/repository ve iki firma izolasyon testleriyle uygulanmıştır; genel doğrulama beklemektedir. Canlı DNS/TLS, deployment, production destructive restore, gerçek abonelik/faturalama, gerçek firma verisi, yerel HTTPS üzerinde fiziksel passkey cihaz kabulü ve genel Faz 2–12 E2E/güvenlik dönemi bu uygulama kanıtının parçası değildir.
 
 ### Yerel çalışma ve ilk kullanıcı
 
-Yerel hosts kaydında `127.0.0.1 console.tilbecore.test` bulunmalıdır. Platform DB migration’ı yetkili operatör tarafından uygulandıktan sonra gerekli environment değerleri terminal oturumuna verilir ve `pnpm platform-admin:dev` çalıştırılır. Adres `http://console.tilbecore.test:3100` olur.
+Yerel hosts kaydında `127.0.0.1 console.tilbecore.test` bulunmalıdır. Platform DB migration’ı yetkili operatör tarafından uygulandıktan sonra gerekli environment değerleri terminal oturumuna verilir ve `pnpm platform-admin:dev` çalıştırılır. Genel panel `http://console.tilbecore.test:3100` adresinde geliştirilebilir; WebAuthn cihaz kabulü için aynı doğrulanmış hostun güvenilir yerel sertifikalı HTTPS reverse proxy üzerinden sunulması gerekir. HTTP üzerinde passkey başarısı iddia edilmez.
 
-İlk kullanıcı otomatik oluşmaz. Boş PlatformUser tablosunda yalnız açık onayla `pnpm platform-admin:bootstrap` çalışır. Gerekli environment adları: `PLATFORM_DATABASE_URL`, `PLATFORM_BOOTSTRAP_CONFIRM=CREATE_FIRST_SUPER_ADMIN`, `PLATFORM_BOOTSTRAP_EMAIL`, `PLATFORM_BOOTSTRAP_DISPLAY_NAME`, en az 14 karakterli `PLATFORM_BOOTSTRAP_PASSWORD`, Base32 `PLATFORM_BOOTSTRAP_MFA_SECRET` ve 32 byte Base64 `PLATFORM_MFA_ENCRYPTION_KEY`. Production’da ayrıca `PLATFORM_BOOTSTRAP_PRODUCTION_ENABLED=true` açıkça verilmelidir. Parola, MFA secretı ve şifreleme anahtarı komut argümanına veya çıktıya yazılmaz.
+İlk kullanıcı otomatik oluşmaz. Boş PlatformUser tablosunda yalnız açık onayla `pnpm platform-admin:bootstrap` çalışır. Bootstrap için gerekli environment adları: `PLATFORM_DATABASE_URL`, `PLATFORM_BOOTSTRAP_CONFIRM=CREATE_FIRST_SUPER_ADMIN`, `PLATFORM_BOOTSTRAP_EMAIL`, `PLATFORM_BOOTSTRAP_DISPLAY_NAME`, en az 14 karakterli `PLATFORM_BOOTSTRAP_PASSWORD`, Base32 `PLATFORM_BOOTSTRAP_MFA_SECRET` ve 32 byte Base64 `PLATFORM_MFA_ENCRYPTION_KEY`. Recovery kodu üretme/giriş çalışma zamanında ayrıca en az 32 karakterli `PLATFORM_RECOVERY_CODE_PEPPER` gerekir. Production’da bootstrap için `PLATFORM_BOOTSTRAP_PRODUCTION_ENABLED=true` açıkça verilmelidir. Parola, MFA secretı, recovery pepper ve şifreleme anahtarı komut argümanına veya çıktıya yazılmaz.
 
 Async işler kontrollü süreç yöneticisi/operatör tarafından `pnpm provisioning:worker` ve `pnpm tenant:ops:worker` ile tek iş olarak yürütülebilir. Sürekli worker orchestration ve canlı deployment bu paketin kanıtı değildir.

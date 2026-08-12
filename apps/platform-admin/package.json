@@ -10,6 +10,7 @@
     "bootstrap": "tsx src/bootstrap.ts"
   },
   "dependencies": {
+    "@simplewebauthn/server": "^13.3.2",
     "@tilbecore/config": "workspace:*",
     "@tilbecore/contracts": "workspace:*",
     "@tilbecore/database-platform": "workspace:*",

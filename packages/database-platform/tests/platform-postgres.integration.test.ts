@@ -47,6 +47,7 @@ const platformMigrationChain = [
   "0004_resumable_tenant_provisioning",
   "0005_tenant_request_runtime_metadata",
   "0006_platform_admin_operations",
+  "0007_platform_control_plane_completion",
 ] as const;
 
 describePostgres("platform PostgreSQL migration zinciri", () => {
@@ -293,6 +294,16 @@ describePostgres("platform repository gerçek PostgreSQL integration", () => {
     const safeUsers = JSON.stringify(await repository.listPlatformUsers());
     expect(safeUsers).not.toContain("sensitive-password-hash");
     expect(safeUsers).not.toContain("sensitive-mfa-ciphertext");
+  });
+
+  test("passkey challenge ve recovery code yalnız bir kez tüketilir, hassas alanlar listeye sızmaz",async()=>{
+    const userId=`security_user_${schemaPrefix}` as PlatformUserId;await db.platformUser.create({data:{id:userId,email:`${userId}@example.test`,displayName:"Security User",status:"active"}});const repository=new PrismaPlatformAdminRepository(db);const now="2026-08-12T10:00:00.000Z";
+    await repository.createChallenge({id:`challenge_${schemaPrefix}`,userId,purpose:"passkey_registration",challenge:"opaque_challenge_value",expiresAt:"2026-08-12T10:05:00.000Z"});
+    await expect(repository.consumeChallenge({id:`challenge_${schemaPrefix}`,userId,purpose:"passkey_registration",occurredAt:now})).resolves.toMatchObject({challenge:"opaque_challenge_value"});
+    await expect(repository.consumeChallenge({id:`challenge_${schemaPrefix}`,userId,purpose:"passkey_registration",occurredAt:now})).resolves.toBeNull();
+    await repository.replaceRecoveryCodes({userId,batchId:`batch_${schemaPrefix}`,codes:[{id:`recovery_${schemaPrefix}`,hash:`${"a".repeat(64)}`}],occurredAt:now});
+    await expect(repository.consumeRecoveryCode({userId,hash:"a".repeat(64),occurredAt:now})).resolves.toBe(true);await expect(repository.consumeRecoveryCode({userId,hash:"a".repeat(64),occurredAt:now})).resolves.toBe(false);
+    const overview=JSON.stringify(await repository.listSecurityOverview(userId));expect(overview).not.toContain("opaque_challenge_value");expect(overview).not.toContain("a".repeat(64));
   });
 });
 

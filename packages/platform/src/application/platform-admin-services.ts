@@ -3,6 +3,7 @@ import type {
   MfaVerifier,
   PasswordVerifier,
   PlatformAdminRepository,
+  PlatformAuthUserRecord,
   PlatformAuthResult,
   PlatformListQuery,
   PlatformOrganizationDetail,
@@ -49,21 +50,27 @@ export async function authenticatePlatformUser(
     throw new Error("PLATFORM_AUTH_INVALID");
   }
 
+  const result = await createPlatformAuthenticatedSession(repository, user, input.occurredAt, input.userAgent);
+  await repository.markLoginSuccess(user.id, input.occurredAt);
+  await auditLogin(repository, user.id, input, "success", "LOGIN_SUCCEEDED");
+  return result;
+}
+
+export async function createPlatformAuthenticatedSession(
+  repository: PlatformAdminRepository,
+  user: PlatformAuthUserRecord,
+  occurredAt: string,
+  userAgent?: string,
+): Promise<PlatformAuthResult> {
   const permissions = resolveRolePermissions(user.roles);
-  if (permissions.length === 0) throw new Error("PLATFORM_ROLE_INACTIVE");
+  if (user.status !== "active" || permissions.length === 0) throw new Error("PLATFORM_ROLE_INACTIVE");
   const token = randomBytes(32).toString("base64url");
   const tokenHash = hashPlatformSessionToken(token);
   const session = {
-    id: randomUUID(),
-    userId: user.id,
-    tokenHash,
-    status: "active",
-    authVersion: user.authVersion,
-    expiresAt: new Date(now + SESSION_TTL_MS).toISOString(),
+    id: randomUUID(), userId: user.id, tokenHash, status: "active", authVersion: user.authVersion,
+    expiresAt: new Date(Date.parse(occurredAt) + SESSION_TTL_MS).toISOString(),
   };
-  await repository.createSession({ ...session, deviceId: randomUUID(), occurredAt: input.occurredAt, userAgent: input.userAgent });
-  await repository.markLoginSuccess(user.id, input.occurredAt);
-  await auditLogin(repository, user.id, input, "success", "LOGIN_SUCCEEDED");
+  await repository.createSession({ ...session, deviceId: randomUUID(), occurredAt, userAgent });
   return { actor: { userId: user.id, permissions, sessionId: session.id }, token, session };
 }
 
