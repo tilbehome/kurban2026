@@ -65,10 +65,10 @@ export function ManagementCommandCenter({ defaultSeasonId, permissions }: Props)
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  function post(title: string, body: Record<string, unknown>, key = `${title}:${Date.now()}`) {
+  function post(title: string, body: Record<string, unknown>, key = `${title}:${Date.now()}`, path = "/api/tenant/management-analytics") {
     startTransition(async () => {
       try {
-        const response = await fetch("/api/tenant/management-analytics", {
+        const response = await fetch(path, {
           method: "POST",
           headers: { "content-type": "application/json", "idempotency-key": key },
           body: JSON.stringify(body),
@@ -157,9 +157,12 @@ export function ManagementCommandCenter({ defaultSeasonId, permissions }: Props)
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button disabled={pending || !permissions.canReport} onClick={() => post("Rapor", { action: "report", reportKey, filters: { seasonId: seasonId || undefined, facilityId: facilityId || undefined } })}>Raporu getir</Button>
-                    <Button variant="secondary" disabled><Download className="mr-1 h-4 w-4" />CSV/XLSX/PDF: izin sözleşmesiyle</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canReport} onClick={() => post("Grafik verisi", { action: "report-builder", reportKey, filters: { seasonId: seasonId || undefined, facilityId: facilityId || undefined } })}>Grafik verisi oluştur</Button>
+                    <ExportButton reportKey={reportKey} seasonId={seasonId} facilityId={facilityId} format="csv" />
+                    <ExportButton reportKey={reportKey} seasonId={seasonId} facilityId={facilityId} format="xlsx" />
+                    <ExportButton reportKey={reportKey} seasonId={seasonId} facilityId={facilityId} format="pdf" />
                   </div>
-                  <Rule>Export route sözleşmesi döner; gerçek çıktı üretimi ayrıca permission ve tenant filtreleriyle yapılmalıdır.</Rule>
+                  <Rule>CSV/XLSX/PDF indirmeleri ayrı export permission ile server-side tenant filtresinden üretilir.</Rule>
                 </CommandCard>
               )}
 
@@ -183,6 +186,7 @@ export function ManagementCommandCenter({ defaultSeasonId, permissions }: Props)
                   <div className="grid gap-3 md:grid-cols-2">
                     {["Firma, tesis, bölüm, sezon", "Kullanıcı, üyelik, rol, izin, kapsam", "Oturum, cihaz, güvenilir cihaz", "Modül, entitlement, feature flag", "Bildirim ve görev yönetimi", "Veri kalitesi ve mükerrer kayıt", "KVKK, iletişim izni, saklama", "Eğitim ve sentetik demo modu"].map((item) => <div key={item} className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-sm">{item}</div>)}
                   </div>
+                  <Button disabled={pending || !permissions.canManageCompany} onClick={() => post("Sentetik demo dry-run", { scenario: "full-qurban-day", dryRun: true }, `demo:${Date.now()}`, "/api/tenant/demo-data")}>Sentetik demo paketi üret</Button>
                   <Rule>Demo/sentetik veri gerçek tenant production verisine karıştırılmaz; yönetim komutları ayrı API’lerle yürütülür.</Rule>
                 </CommandCard>
               )}
@@ -210,6 +214,19 @@ export function ManagementCommandCenter({ defaultSeasonId, permissions }: Props)
 
 function CommandCard({ title, icon: Icon, children }: { title: string; icon: ComponentType<{ className?: string }>; children: ReactNode }) {
   return <Card className="border-slate-800 bg-slate-950/80 text-slate-100"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Icon className="h-5 w-5 text-cyan-300" />{title}</CardTitle></CardHeader><CardContent className="space-y-4">{children}</CardContent></Card>;
+}
+
+function ExportButton({ reportKey, seasonId, facilityId, format }: { reportKey: string; seasonId: string; facilityId: string; format: "csv" | "xlsx" | "pdf" }) {
+  const params = new URLSearchParams({ reportKey, format });
+  if (seasonId) params.set("seasonId", seasonId);
+  if (facilityId) params.set("facilityId", facilityId);
+  return (
+    <Button asChild variant="secondary">
+      <a href={`/api/tenant/management-analytics/export?${params.toString()}`}>
+        <Download className="mr-1 h-4 w-4" />{format.toUpperCase()}
+      </a>
+    </Button>
+  );
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {

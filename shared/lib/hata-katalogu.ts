@@ -75,6 +75,7 @@ export type HataKodu =
   | "IDEMPOTENCY_CONFLICT"
   | "TENANT_MANAGEMENT_ANALYTICS_FAILED"
   | "SEARCH_QUERY_TOO_SHORT"
+  | "DEMO_DATA_PRODUCTION_FORBIDDEN"
   | "INTERNAL_UNEXPECTED"
   | "INTERNAL_SALE_FAILED";
 
@@ -235,6 +236,7 @@ export const HATA_KATALOGU = {
   IDEMPOTENCY_CONFLICT: { kod: "IDEMPOTENCY_CONFLICT", mesajAnahtari: "error.idempotency.conflict", httpStatus: 409, kullaniciyaGosterilebilir: true },
   TENANT_MANAGEMENT_ANALYTICS_FAILED: { kod: "TENANT_MANAGEMENT_ANALYTICS_FAILED", mesajAnahtari: "error.internal.managementAnalyticsCouldNotComplete", httpStatus: 500, kullaniciyaGosterilebilir: true },
   SEARCH_QUERY_TOO_SHORT: { kod: "SEARCH_QUERY_TOO_SHORT", mesajAnahtari: "error.management.searchQueryTooShort", httpStatus: 400, kullaniciyaGosterilebilir: true },
+  DEMO_DATA_PRODUCTION_FORBIDDEN: { kod: "DEMO_DATA_PRODUCTION_FORBIDDEN", mesajAnahtari: "error.demoData.productionForbidden", httpStatus: 403, kullaniciyaGosterilebilir: true },
   INTERNAL_UNEXPECTED: {
     kod: "INTERNAL_UNEXPECTED",
     mesajAnahtari: "error.internal.generic",

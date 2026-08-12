@@ -29,6 +29,14 @@ export interface ReportResult {
   exportContracts: Array<{ format: "csv" | "xlsx" | "pdf"; permission: ManagementPermission; route: string }>;
 }
 
+export interface ReportBuilderResult {
+  reportKey: string;
+  dimensions: string[];
+  measures: string[];
+  rows: Array<Record<string, string | number | null>>;
+  chart: { type: "bar" | "line" | "table"; x: string; series: Array<{ key: string; points: Array<{ label: string; value: number }> }> };
+}
+
 export interface SearchResult {
   provider: string;
   id: string;
@@ -57,6 +65,35 @@ export class TenantManagementAnalyticsService {
   async report(context: TenantUseCaseContext, input: { reportKey: string; filters: Record<string, string | undefined> }) {
     await this.authorize(context, "management.reporting.read.organization", { operationalPeriodId: input.filters.seasonId });
     return this.repository.report(input, commandMeta(context));
+  }
+
+  async exportReport(context: TenantUseCaseContext, input: { reportKey: string; filters: Record<string, string | undefined>; format: "csv" | "xlsx" | "pdf" }) {
+    await this.authorize(context, "management.reporting.export.organization", { operationalPeriodId: input.filters.seasonId });
+    return this.repository.report({ reportKey: input.reportKey, filters: input.filters }, commandMeta(context));
+  }
+
+  async reportBuilder(context: TenantUseCaseContext, input: { reportKey: string; filters: Record<string, string | undefined>; dimensions?: string[]; measures?: string[] }): Promise<ReportBuilderResult> {
+    await this.authorize(context, "management.reporting.read.organization", { operationalPeriodId: input.filters.seasonId });
+    const report = await this.repository.report({ reportKey: input.reportKey, filters: input.filters }, commandMeta(context));
+    const first = report.rows[0] ?? {};
+    const keys = Object.keys(first);
+    const dimensions = (input.dimensions?.length ? input.dimensions : keys.filter((key) => typeof first[key] === "string")).slice(0, 4);
+    const measures = (input.measures?.length ? input.measures : keys.filter((key) => isNumericLike(first[key]))).slice(0, 4);
+    const x = dimensions[0] ?? keys[0] ?? "row";
+    return {
+      reportKey: input.reportKey,
+      dimensions,
+      measures,
+      rows: report.rows,
+      chart: {
+        type: measures.length > 0 ? "bar" : "table",
+        x,
+        series: measures.map((measure) => ({
+          key: measure,
+          points: report.rows.slice(0, 100).map((row, index) => ({ label: String(row[x] ?? `#${index + 1}`), value: toNumber(row[measure]) })),
+        })),
+      },
+    };
   }
 
   async search(context: TenantUseCaseContext, input: { query: string; limit?: number }) {
@@ -110,4 +147,17 @@ export class TenantManagementAnalyticsError extends Error {
     super(code);
     this.name = "TenantManagementAnalyticsError";
   }
+}
+
+function isNumericLike(value: unknown): boolean {
+  return typeof value === "number" || (typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value)));
+}
+
+function toNumber(value: unknown): number {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
 }

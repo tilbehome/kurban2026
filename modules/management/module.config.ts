@@ -38,6 +38,10 @@ export const managementModule: ModuleConfig = {
       reportProviders: ["sales-occupancy", "operations-bottleneck", "delivery-cold-storage", "audit-exceptions"],
       exceptionSources: ["approval", "slaughter", "delivery", "finance", "proxy"],
       exportFormats: ["csv", "xlsx", "pdf"],
+      exportRoutes: ["/api/tenant/management-analytics/export"],
+      reportBuilder: { chartTypes: ["bar", "line", "table"], maxRows: 500 },
+      syntheticDemo: { route: "/api/tenant/demo-data", mode: "dry-run-only", productionWriteBlocked: true },
+      deviceSimulators: ["scale", "label_printer", "qr_reader"],
     },
   },
 };

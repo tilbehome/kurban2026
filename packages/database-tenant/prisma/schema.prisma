@@ -1276,24 +1276,24 @@ model WeighingRecord {
 }
 
 model PackageRecord {
-  id              String             @id
-  shareId         String
-  grossWeightKg   Decimal            @db.Decimal(12, 3)
-  labelNo         String
-  labelVersion    Int                @default(1)
-  reprintReason   String?
-  coldRoomId      String?
-  coldSectionId   String?
-  coldRackId      String?
-  locationStatus  String             @default("not_stored")
-  createdAt       DateTime           @default(now())
-  share           Share              @relation(fields: [shareId], references: [id])
-  components      PackageComponent[]
-  locations       PackageLocation[]
-  coldRoom        ColdStorageRoom?   @relation(fields: [coldRoomId], references: [id])
-  coldSection     ColdStorageSection? @relation(fields: [coldSectionId], references: [id])
-  coldRack        ColdStorageRack?   @relation(fields: [coldRackId], references: [id])
-  loadingItems    LoadingListItem[]
+  id             String              @id
+  shareId        String
+  grossWeightKg  Decimal             @db.Decimal(12, 3)
+  labelNo        String
+  labelVersion   Int                 @default(1)
+  reprintReason  String?
+  coldRoomId     String?
+  coldSectionId  String?
+  coldRackId     String?
+  locationStatus String              @default("not_stored")
+  createdAt      DateTime            @default(now())
+  share          Share               @relation(fields: [shareId], references: [id])
+  components     PackageComponent[]
+  locations      PackageLocation[]
+  coldRoom       ColdStorageRoom?    @relation(fields: [coldRoomId], references: [id])
+  coldSection    ColdStorageSection? @relation(fields: [coldSectionId], references: [id])
+  coldRack       ColdStorageRack?    @relation(fields: [coldRackId], references: [id])
+  loadingItems   LoadingListItem[]
 
   @@unique([labelNo])
   @@index([shareId])
@@ -1301,7 +1301,7 @@ model PackageRecord {
 }
 
 model DeliveryRecord {
-  id                 String           @id
+  id                 String          @id
   shareId            String
   customerId         String
   status             String
@@ -1313,9 +1313,9 @@ model DeliveryRecord {
   approvalRequestId  String?
   proofDocumentId    String?
   loadingListId      String?
-  share              Share            @relation(fields: [shareId], references: [id])
-  customer           Customer         @relation(fields: [customerId], references: [id])
-  loadingList        LoadingList?     @relation(fields: [loadingListId], references: [id])
+  share              Share           @relation(fields: [shareId], references: [id])
+  customer           Customer        @relation(fields: [customerId], references: [id])
+  loadingList        LoadingList?    @relation(fields: [loadingListId], references: [id])
   proofs             DeliveryProof[]
 
   @@index([shareId])
@@ -1337,29 +1337,29 @@ model PackageComponent {
 }
 
 model ColdStorageRoom {
-  id          String               @id
-  facilityId  String?
-  code        String
-  name        String
-  active      Boolean              @default(true)
-  createdAt   DateTime             @default(now())
-  updatedAt   DateTime             @updatedAt
-  sections    ColdStorageSection[]
-  racks       ColdStorageRack[]
-  packages    PackageRecord[]
-  locations   PackageLocation[]
+  id         String               @id
+  facilityId String?
+  code       String
+  name       String
+  active     Boolean              @default(true)
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  sections   ColdStorageSection[]
+  racks      ColdStorageRack[]
+  packages   PackageRecord[]
+  locations  PackageLocation[]
 
   @@unique([facilityId, code])
   @@index([facilityId, active])
 }
 
 model ColdStorageSection {
-  id        String             @id
+  id        String            @id
   roomId    String
   code      String
   name      String
-  active    Boolean            @default(true)
-  room      ColdStorageRoom    @relation(fields: [roomId], references: [id])
+  active    Boolean           @default(true)
+  room      ColdStorageRoom   @relation(fields: [roomId], references: [id])
   racks     ColdStorageRack[]
   packages  PackageRecord[]
   locations PackageLocation[]
@@ -1368,13 +1368,13 @@ model ColdStorageSection {
 }
 
 model ColdStorageRack {
-  id        String             @id
+  id        String              @id
   roomId    String
   sectionId String?
   code      String
   name      String?
-  active    Boolean            @default(true)
-  room      ColdStorageRoom    @relation(fields: [roomId], references: [id])
+  active    Boolean             @default(true)
+  room      ColdStorageRoom     @relation(fields: [roomId], references: [id])
   section   ColdStorageSection? @relation(fields: [sectionId], references: [id])
   packages  PackageRecord[]
   locations PackageLocation[]
@@ -1414,11 +1414,11 @@ model DeliveryProof {
 }
 
 model DeliveryVehicle {
-  id          String        @id
-  plateNo     String        @unique
-  displayName String
-  active      Boolean       @default(true)
-  tasks       VehicleTask[]
+  id           String        @id
+  plateNo      String        @unique
+  displayName  String
+  active       Boolean       @default(true)
+  tasks        VehicleTask[]
   loadingLists LoadingList[]
 }
 
@@ -1436,15 +1436,15 @@ model VehicleTask {
 }
 
 model LoadingList {
-  id          String            @id
-  seasonId    String
-  vehicleId   String?
-  status      String            @default("draft")
-  routeName   String?
-  createdAt   DateTime          @default(now())
-  vehicle     DeliveryVehicle?  @relation(fields: [vehicleId], references: [id])
-  items       LoadingListItem[]
-  deliveries  DeliveryRecord[]
+  id         String            @id
+  seasonId   String
+  vehicleId  String?
+  status     String            @default("draft")
+  routeName  String?
+  createdAt  DateTime          @default(now())
+  vehicle    DeliveryVehicle?  @relation(fields: [vehicleId], references: [id])
+  items      LoadingListItem[]
+  deliveries DeliveryRecord[]
 
   @@index([seasonId, status])
 }
@@ -1461,14 +1461,14 @@ model LoadingListItem {
 }
 
 model SavedDashboardView {
-  id                     String   @id
+  id                       String   @id
   organizationMembershipId String?
-  name                   String
-  scope                  String
-  filters                Json
-  layout                 Json
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  name                     String
+  scope                    String
+  filters                  Json
+  layout                   Json
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
 
   @@index([organizationMembershipId, scope])
 }

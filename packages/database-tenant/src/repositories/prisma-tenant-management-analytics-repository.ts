@@ -5,7 +5,7 @@ import {
   type ReportResult,
   type SearchResult,
 } from "@tilbecore/tenant-core";
-import type { Prisma, PrismaClient } from "../../generated/client";
+import { Prisma, type PrismaClient } from "../../generated/client";
 
 type MoneyRow = { value: Prisma.Decimal | string | number | null };
 type CountRow = { value: bigint | number | string | null };
@@ -19,7 +19,7 @@ export class PrismaTenantManagementAnalyticsRepository implements ManagementAnal
     const [salesCount, reservationsActive, occupancy, listPrice, discount, netSales, receiptTotal, packages, deliveries, coldStored, approvals, overdueApprovals, auditRecent, bottlenecks, exceptions] = await Promise.all([
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "Sale" ${seasonFilter}`),
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "ShareReservation" WHERE "status" = 'active' ${input.seasonId ? Prisma.sql`AND "seasonId" = ${input.seasonId}` : Prisma.empty}`),
-      this.db.$queryRaw<Array<{ sold: bigint; total: bigint }>>`SELECT COUNT(*) FILTER (WHERE s."status" = 'sold') AS sold, COUNT(*) AS total FROM "Share" s JOIN "ShareCard" sc ON sc."id" = s."shareCardId" ${shareFilter}`.then((rows) => rows[0] ?? { sold: 0n, total: 0n }),
+      this.db.$queryRaw<Array<{ sold: bigint | number; total: bigint | number }>>`SELECT COUNT(*) FILTER (WHERE s."status" = 'sold') AS sold, COUNT(*) AS total FROM "Share" s JOIN "ShareCard" sc ON sc."id" = s."shareCardId" ${shareFilter}`.then((rows) => rows[0] ?? { sold: 0, total: 0 }),
       money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("listPriceSnapshot"), 0) AS value FROM "Sale" ${seasonFilter}`),
       money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("discountAmount"), 0) AS value FROM "Sale" ${seasonFilter}`),
       money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("priceSnapshot"), 0) AS value FROM "Sale" ${seasonFilter}`),

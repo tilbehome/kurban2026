@@ -83,6 +83,7 @@ const TR: MesajSozlugu = {
   "error.idempotency.conflict": "Aynı idempotency anahtarı farklı içerikle kullanılamaz.",
   "error.internal.managementAnalyticsCouldNotComplete": "Yönetim ve analitik işlemi tamamlanamadı.",
   "error.management.searchQueryTooShort": "Arama için en az iki karakter girilmelidir.",
+  "error.demoData.productionForbidden": "Demo verisi production veya gerçek tenant ortamına yazılamaz.",
   "success.generic": "İşlem tamamlandı.",
 };
 

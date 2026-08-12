@@ -19,7 +19,9 @@ import {
 import type { Prisma, PrismaClient } from "../../generated/client";
 
 type Tx = Prisma.TransactionClient;
-type AnyTx = Tx & Record<string, any>;
+type ShareCardForSlaughter = Prisma.ShareCardGetPayload<{ include: { animal: true; shares: { include: { proxyDocumentShares: { include: { proxyDocument: true } } } } } }>;
+type ShareCardForDeliveryClose = Prisma.ShareCardGetPayload<{ include: { shares: { include: { deliveries: true } } } }>;
+type TvProjectionRow = Prisma.SlaughterJobGetPayload<{ include: { animal: { include: { qurbanAssignments: true } } } }>;
 
 export class PrismaTenantOperationsRepository implements OperationsRepository {
   constructor(private readonly db: PrismaClient) {}
@@ -95,8 +97,9 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       });
       if (!shareCard || shareCard.seasonId !== input.seasonId || shareCard.animalId !== input.animalId) throw new TenantOperationsError("SLAUGHTER_SHARE_CARD_INVALID");
       if (shareCard.shares.length !== 7) throw new TenantOperationsError("SLAUGHTER_REQUIRES_SEVEN_SHARES");
-      if (shareCard.shares.some((share: any) => share.status !== "sold")) throw new TenantOperationsError("RELIGIOUS_ELIGIBILITY_OPEN_DECISION_REQUIRED");
-      const missingProxy = shareCard.shares.some((share: any) => !share.proxyDocumentShares.some((link: any) => link.proxyDocument.status === "signed"));
+      const slaughterShareCard = shareCard as ShareCardForSlaughter;
+      if (slaughterShareCard.shares.some((share) => share.status !== "sold")) throw new TenantOperationsError("RELIGIOUS_ELIGIBILITY_OPEN_DECISION_REQUIRED");
+      const missingProxy = slaughterShareCard.shares.some((share) => !share.proxyDocumentShares.some((link) => link.proxyDocument.status === "signed"));
       if (missingProxy) throw new TenantOperationsError("SLAUGHTER_REQUIRES_SEVEN_VALID_PROXY_DOCUMENTS");
       if (shareCard.animal.qurbanEligibility !== "eligible") throw new TenantOperationsError("ANIMAL_QURBAN_ELIGIBILITY_BLOCKED");
       await tx.slaughterJob.create({ data: { id: input.id, seasonId: input.seasonId, animalId: input.animalId, shareCardId: input.shareCardId, status: "ready", queueNo: input.queueNo, assignedUserId: input.assignedUserId } });
@@ -203,7 +206,8 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       });
       if (!shareCard) throw new TenantOperationsError("SLAUGHTER_SHARE_CARD_INVALID");
       if (shareCard.shares.length !== 7) throw new TenantOperationsError("SLAUGHTER_REQUIRES_SEVEN_SHARES");
-      const allDelivered = shareCard.shares.every((share: any) => share.deliveries.some((delivery: any) => delivery.status === "delivered"));
+      const deliveryShareCard = shareCard as ShareCardForDeliveryClose;
+      const allDelivered = deliveryShareCard.shares.every((share) => share.deliveries.some((delivery) => delivery.status === "delivered"));
       if (!allDelivered) throw new TenantOperationsError("ANIMAL_CLOSE_REQUIRES_SEVEN_DELIVERIES");
       await tx.animal.update({ where: { id: input.animalId }, data: { status: "delivered" } });
       await evidence(tx, meta, "animal.delivery.closed", "Animal", input.animalId, { seasonId: input.seasonId, reason: input.reason });
@@ -226,7 +230,7 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       orderBy: [{ queueNo: "asc" }, { updatedAt: "asc" }],
       take: 80,
     });
-    return rows.map((row: any) => ({
+    return (rows as TvProjectionRow[]).map((row) => ({
       qurbanNo: row.animal.qurbanAssignments[0]?.qurbanNo ?? undefined,
       queueNo: row.queueNo ?? undefined,
       status: row.status,
@@ -235,7 +239,7 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
   }
 }
 
-async function command<TResult>(db: PrismaClient, scope: string, meta: CommandMeta, run: (tx: AnyTx) => Promise<TResult>): Promise<TResult> {
+async function command<TResult>(db: PrismaClient, scope: string, meta: CommandMeta, run: (tx: Tx) => Promise<TResult>): Promise<TResult> {
   return db.$transaction(async (tx) => {
     const existing = await tx.tenantIdempotencyRecord.findUnique({ where: { key: meta.idempotencyKey } });
     if (existing?.status === "completed" && existing.resultPayload) return existing.resultPayload as TResult;
@@ -245,13 +249,13 @@ async function command<TResult>(db: PrismaClient, scope: string, meta: CommandMe
       create: { key: meta.idempotencyKey, scope, actorUserId: meta.actorUserId, requestId: meta.requestId, requestHash: meta.requestHash },
       update: { requestId: meta.requestId },
     });
-    const result = await run(tx as AnyTx);
+    const result = await run(tx);
     await tx.tenantIdempotencyRecord.update({ where: { key: meta.idempotencyKey }, data: { status: "completed", completedAt: meta.occurredAt, resultPayload: json(result) } });
     return result;
   });
 }
 
-async function evidence(tx: AnyTx, meta: CommandMeta, action: string, targetType: string, targetId: string, metadata: Record<string, unknown>) {
+async function evidence(tx: Tx, meta: CommandMeta, action: string, targetType: string, targetId: string, metadata: Record<string, unknown>) {
   const payload = json({ targetType, targetId, requestId: meta.requestId, occurredAt: meta.occurredAt.toISOString(), ...metadata });
   await tx.tenantAuditLog.create({ data: { id: `audit_${randomUUID()}`, actorUserId: meta.actorUserId, action, targetType, targetId, requestId: meta.requestId, occurredAt: meta.occurredAt, metadata: json(metadata) } });
   await tx.tenantOutboxMessage.create({ data: { id: `outbox_${randomUUID()}`, topic: action, payload, status: "pending", idempotencyKey: meta.idempotencyKey } });
