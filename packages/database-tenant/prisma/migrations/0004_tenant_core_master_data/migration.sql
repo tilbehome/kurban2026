@@ -6,10 +6,6 @@ ALTER TABLE "Season"
   ADD COLUMN "year" INTEGER,
   ADD COLUMN "archivedAt" TIMESTAMP(3);
 
-ALTER TABLE "Season"
-  ADD CONSTRAINT "Season_status_check"
-  CHECK ("status" IN ('preparation', 'sales', 'slaughter', 'delivery', 'reconciliation', 'archived'));
-
 CREATE TABLE "BusinessProfile" (
   "id" TEXT NOT NULL,
   "legalName" TEXT NOT NULL,

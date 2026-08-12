@@ -24,7 +24,6 @@ CREATE INDEX "Share_reservedByCustomerId_idx" ON "Share"("reservedByCustomerId")
 CREATE INDEX "Share_reservationId_idx" ON "Share"("reservationId");
 CREATE INDEX "Share_status_reservedUntil_idx" ON "Share"("status", "reservedUntil");
 ALTER TABLE "Share" ADD CONSTRAINT "Share_sequence_range_check" CHECK ("sequenceNo" BETWEEN 1 AND 7);
-ALTER TABLE "Share" ADD CONSTRAINT "Share_status_check" CHECK ("status" IN ('available','reserved','sold','cancelled','delivered'));
 ALTER TABLE "Share" ADD CONSTRAINT "Share_reservedByCustomerId_fkey" FOREIGN KEY ("reservedByCustomerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "Sale" ADD COLUMN "payerCustomerId" TEXT;
@@ -39,6 +38,7 @@ ALTER TABLE "Sale" ADD COLUMN "cancelledAt" TIMESTAMP(3);
 ALTER TABLE "Sale" ADD COLUMN "transferredAt" TIMESTAMP(3);
 ALTER TABLE "Sale" ADD COLUMN "cancellationReason" TEXT;
 CREATE INDEX "Sale_payerCustomerId_idx" ON "Sale"("payerCustomerId");
+ALTER TABLE "Sale" DROP CONSTRAINT "Sale_status_check";
 ALTER TABLE "Sale" ADD CONSTRAINT "Sale_status_check" CHECK ("status" IN ('draft','confirmed','cancelled','reversed','transferred'));
 ALTER TABLE "Sale" ADD CONSTRAINT "Sale_positive_confirmed_deposit_check" CHECK ("status" <> 'confirmed' OR "downPaymentAmount" > 0);
 ALTER TABLE "Sale" ADD CONSTRAINT "Sale_payerCustomerId_fkey" FOREIGN KEY ("payerCustomerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE;
