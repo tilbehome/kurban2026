@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { generateInventoryContent, inventoryPath, readDocuments, validateRepository } from "../scripts/validate-docs.mjs";
+import { generateInventoryContent, githubSlug, inventoryPath, readDocuments, validateRepository } from "../scripts/validate-docs.mjs";
 
 const roots: string[] = [];
 
@@ -120,6 +120,25 @@ describe("dokümantasyon doğrulayıcı", () => {
     expect(validateRepository(root).errors).toEqual([]);
   });
 
+  it("GitHub Unicode anchor birleşim işaretlerini korur", () => {
+    expect(githubSlug("İ")).toBe("i\u0307");
+    expect(githubSlug("I İ ı i")).toBe("i-i\u0307-ı-i");
+  });
+
+  it("yüzde kodlu Unicode anchorı ve tekrarlanan başlık suffixini kabul eder", () => {
+    const root = fixture();
+    write(root, "docs/sample.md", `# İ\n\n${metadata("DOC-001")}\n\n[İlk](#i%CC%87)\n\n# İ\n\n[İkinci](#i%CC%87-1)\n`);
+    refreshInventory(root);
+    expect(validateRepository(root).errors).toEqual([]);
+  });
+
+  it("Unicode birleşim işareti eksik anchor hedefini reddeder", () => {
+    const root = fixture();
+    write(root, "docs/sample.md", `# İ\n\n${metadata("DOC-001")}\n\n[Yanlış](#i)\n`);
+    refreshInventory(root);
+    expect(validateRepository(root).errors).toContain("kırık anchor: docs/sample.md -> #i");
+  });
+
   it("locale-bağımsız anchor için yanlış Türkçe küçük harf hedefini reddeder", () => {
     const root = fixture();
     write(root, "docs/sample.md", `# Firma IAM\n\n${metadata("DOC-001")}\n\n[Yanlış](#firma-ıam)\n`);
@@ -136,6 +155,15 @@ describe("dokümantasyon doğrulayıcı", () => {
     expect(validateRepository(root).errors).toEqual([]);
     write(root, "docs/sample.md", readFileSync(join(root, "docs/sample.md"), "utf8").replace("existing(x).md", "missing(x).md"));
     expect(validateRepository(root).errors).toContain("kırık bağlantı: docs/sample.md -> missing(x).md");
+  });
+
+  it("dengesiz inline bağlantı adayını redakte edilmiş hatayla reddeder", () => {
+    const root = fixture();
+    write(root, "docs/sample.md", `# Örnek Başlık\n\n${metadata("DOC-001")}\n\n[Kırık](missing(x.md)\n`);
+    refreshInventory(root);
+    const errors = validateRepository(root).errors;
+    expect(errors).toContain("dengesiz inline bağlantı: docs/sample.md (1 aday; hedef gösterilmedi)");
+    expect(errors.join("\n")).not.toContain("missing(x.md");
   });
 
   it("geçerli inline ve reference-style bağlantıları korur", () => {

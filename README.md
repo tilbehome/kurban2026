@@ -39,7 +39,7 @@ verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
 - [Kesim günü operasyon merkezi](#kesim-günü-operasyon-merkezi)
 - [Mimari](#mimari)
 - [Teknoloji yığını](#teknoloji-yığını)
-- [İleri teknoloji hedefleri](#ileri-teknoloji-hedefleri)
+- [İleri teknoloji hedefleri](#i%CC%87leri-teknoloji-hedefleri)
 - [Veri ve finans bütünlüğü](#veri-ve-finans-bütünlüğü)
 - [PWA, çevrimdışı çalışma ve gerçek zaman](#pwa-çevrimdışı-çalışma-ve-gerçek-zaman)
 - [Güvenlik ve KVKK](#güvenlik-ve-kvkk)

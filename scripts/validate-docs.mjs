@@ -160,8 +160,9 @@ function markdownTargets(document, errors) {
     definitions.set(match[1].trim().toLowerCase(), match[2].replace(/^<|>$/g, ""));
   }
   const inline = inlineMarkdownTargets(content);
+  if (inline.malformedCount) errors.push(`dengesiz inline bağlantı: ${document.path} (${inline.malformedCount} aday; hedef gösterilmedi)`);
   const targets = inline.targets;
-  const characters = [...content];
+  const characters = content.split("");
   for (const [start, end] of inline.spans) characters.fill(" ", start, end);
   const withoutInline = characters.join("").replace(/^ {0,3}\[[^\]]+\]:.*$/gm, "");
   for (const match of withoutInline.matchAll(/!?\[([^\]]*)\]\[([^\]]*)\]/g)) {
@@ -176,6 +177,7 @@ function markdownTargets(document, errors) {
 function inlineMarkdownTargets(content) {
   const targets = [];
   const spans = [];
+  let malformedCount = 0;
   for (let start = 0; start < content.length; start += 1) {
     const labelStart = content[start] === "!" && content[start + 1] === "[" ? start + 1 : start;
     if (content[labelStart] !== "[") continue;
@@ -185,7 +187,7 @@ function inlineMarkdownTargets(content) {
     let target = "";
     if (content[cursor] === "<") {
       const close = content.indexOf(">", cursor + 1);
-      if (close < 0) continue;
+      if (close < 0) { malformedCount += 1; continue; }
       target = content.slice(cursor + 1, close);
       cursor = close + 1;
     } else {
@@ -208,17 +210,18 @@ function inlineMarkdownTargets(content) {
       else if (content[cursor] === ")") depth -= 1;
       cursor += 1;
     }
-    if (!target || depth !== 0) continue;
+    if (depth !== 0) { malformedCount += 1; continue; }
+    if (!target) continue;
     targets.push(target);
     spans.push([start, cursor]);
     start = cursor - 1;
   }
-  return { targets, spans };
+  return { targets, spans, malformedCount };
 }
 
 export function githubSlug(text) {
   return text.trim().toLowerCase().replace(/<[^>]+>/g, "")
-    .replace(/[`*_~]/g, "").replace(/[^\p{L}\p{N}\s_-]/gu, "").replace(/\s+/g, "-");
+    .replace(/[`*_~]/g, "").replace(/[^\p{L}\p{M}\p{N}\s_-]/gu, "").replace(/\s+/g, "-");
 }
 
 function anchorsFor(content) {
