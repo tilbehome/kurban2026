@@ -162,6 +162,15 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
 
   // 2) MÜŞTERİLER / CARİ — 9 alt
   {
+    id: "yonetim-analitik",
+    ad: "Yönetim & Analitik",
+    ikon: LayoutTemplate,
+    rota: "/yonetim",
+    izin: "raporlar.goruntule",
+    kisayol: "Ctrl+Shift+Y",
+  },
+
+  {
     id: "musteriler",
     ad: "Müşteriler / Cari",
     ikon: Users,

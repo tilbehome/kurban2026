@@ -10,6 +10,8 @@ import {
   type CreateSlaughterJobInput,
   type DeliveryCommandInput,
   type IssueQrTokenInput,
+  type CreateLoadingListInput,
+  type MovePackageInput,
   type OperationsRepository,
   type RecordWeighingInput,
   type SlaughterStatus,
@@ -130,7 +132,10 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       const share = await tx.share.findUnique({ where: { id: input.shareId }, include: { shareCard: true } });
       if (!share || share.shareCard.seasonId !== input.seasonId) throw new TenantOperationsError("PACKAGE_SHARE_SCOPE_INVALID");
       await tx.packageRecord.create({ data: { id: input.id, shareId: input.shareId, grossWeightKg: input.grossWeightKg, labelNo: input.labelNo } });
-      await evidence(tx, meta, "package.created", "PackageRecord", input.id, { seasonId: input.seasonId, shareId: input.shareId, labelNo: input.labelNo, reason: input.reason });
+      for (const component of input.components ?? []) {
+        await tx.$executeRaw`INSERT INTO "PackageComponent" ("id", "packageRecordId", "componentType", "weightKg", "estimatedValue", "createdAt") VALUES (${component.id}, ${input.id}, ${component.componentType}, ${component.weightKg}::decimal, ${component.estimatedValue ?? null}::decimal, ${meta.occurredAt})`;
+      }
+      await evidence(tx, meta, "package.created", "PackageRecord", input.id, { seasonId: input.seasonId, shareId: input.shareId, labelNo: input.labelNo, reason: input.reason, components: input.components ?? [] });
       return { id: input.id };
     });
   }
@@ -145,7 +150,13 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       const existing = await tx.deliveryRecord.findFirst({ where: { shareId: input.shareId, status: "delivered" } });
       if (existing) throw new TenantOperationsError("SHARE_ALREADY_DELIVERED");
       await tx.deliveryRecord.create({ data: { id: input.id, shareId: input.shareId, customerId: input.customerId, status: "delivered", deliveredAt: meta.occurredAt } });
-      await evidence(tx, meta, "delivery.recorded", "DeliveryRecord", input.id, { seasonId: input.seasonId, shareId: input.shareId, receiverName: input.receiverName });
+      if (input.receiverName || input.loadingListId || input.debtOverride) {
+        await tx.$executeRaw`UPDATE "DeliveryRecord" SET "receiverName" = ${input.receiverName ?? null}, "loadingListId" = ${input.loadingListId ?? null}, "debtOverrideReason" = ${input.debtOverride?.reason ?? null}, "approvalRequestId" = ${input.debtOverride?.approvalRequestId ?? null} WHERE "id" = ${input.id}`;
+      }
+      if (input.proof) {
+        await tx.$executeRaw`INSERT INTO "DeliveryProof" ("id", "deliveryRecordId", "proofType", "storageKey", "note", "capturedAt") VALUES (${input.proof.id}, ${input.id}, ${input.proof.proofType}, ${input.proof.storageKey ?? input.debtOverride?.storageKey ?? null}, ${input.proof.note ?? input.reason ?? null}, ${meta.occurredAt})`;
+      }
+      await evidence(tx, meta, "delivery.recorded", "DeliveryRecord", input.id, { seasonId: input.seasonId, shareId: input.shareId, receiverName: input.receiverName, loadingListId: input.loadingListId, debtOverride: Boolean(input.debtOverride) });
       return { id: input.id, status: "delivered" as const };
     });
   }
@@ -158,6 +169,45 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       await tx.deliveryRecord.update({ where: { id: input.id }, data: { status: "reversed", reversedAt: meta.occurredAt, reversalReason: input.reason } });
       await evidence(tx, meta, "delivery.reversed", "DeliveryRecord", input.id, { seasonId: input.seasonId, reason: input.reason });
       return { id: input.id, status: "reversed" as const };
+    });
+  }
+
+  movePackage(input: MovePackageInput, meta: CommandMeta) {
+    return command(this.db, "package.location.move", meta, async (tx) => {
+      const share = await tx.share.findFirst({ where: { packages: { some: { id: input.packageRecordId } }, shareCard: { seasonId: input.seasonId } }, select: { id: true } });
+      if (!share) throw new TenantOperationsError("PACKAGE_SHARE_SCOPE_INVALID");
+      await tx.$executeRaw`UPDATE "PackageLocation" SET "status" = 'removed', "removedAt" = ${meta.occurredAt} WHERE "packageRecordId" = ${input.packageRecordId} AND "status" = 'active'`;
+      await tx.$executeRaw`INSERT INTO "PackageLocation" ("id", "packageRecordId", "roomId", "sectionId", "rackId", "status", "placedAt", "reason") VALUES (${input.id}, ${input.packageRecordId}, ${input.roomId}, ${input.sectionId ?? null}, ${input.rackId ?? null}, 'active', ${meta.occurredAt}, ${input.reason})`;
+      await tx.$executeRaw`UPDATE "PackageRecord" SET "coldRoomId" = ${input.roomId}, "coldSectionId" = ${input.sectionId ?? null}, "coldRackId" = ${input.rackId ?? null}, "locationStatus" = 'stored' WHERE "id" = ${input.packageRecordId}`;
+      await evidence(tx, meta, "package.location.moved", "PackageRecord", input.packageRecordId, { seasonId: input.seasonId, roomId: input.roomId, sectionId: input.sectionId, rackId: input.rackId, reason: input.reason });
+      return { id: input.id };
+    });
+  }
+
+  createLoadingList(input: CreateLoadingListInput, meta: CommandMeta) {
+    return command(this.db, "loading.list.create", meta, async (tx) => {
+      await tx.$executeRaw`INSERT INTO "LoadingList" ("id", "seasonId", "vehicleId", "status", "routeName", "createdAt") VALUES (${input.id}, ${input.seasonId}, ${input.vehicleId ?? null}, 'draft', ${input.routeName ?? null}, ${meta.occurredAt})`;
+      for (const packageRecordId of input.packageRecordIds) {
+        await tx.$executeRaw`INSERT INTO "LoadingListItem" ("loadingListId", "packageRecordId", "status") VALUES (${input.id}, ${packageRecordId}, 'planned')`;
+      }
+      await evidence(tx, meta, "loading.list.created", "LoadingList", input.id, { seasonId: input.seasonId, vehicleId: input.vehicleId, packageCount: input.packageRecordIds.length });
+      return { id: input.id, itemCount: input.packageRecordIds.length };
+    });
+  }
+
+  closeAnimalIfDelivered(input: { seasonId: string; animalId: string; reason: string }, meta: CommandMeta) {
+    return command(this.db, "animal.delivery.close", meta, async (tx) => {
+      const shareCard = await tx.shareCard.findFirst({
+        where: { seasonId: input.seasonId, animalId: input.animalId, status: "active" },
+        include: { shares: { include: { deliveries: true } } },
+      });
+      if (!shareCard) throw new TenantOperationsError("SLAUGHTER_SHARE_CARD_INVALID");
+      if (shareCard.shares.length !== 7) throw new TenantOperationsError("SLAUGHTER_REQUIRES_SEVEN_SHARES");
+      const allDelivered = shareCard.shares.every((share: any) => share.deliveries.some((delivery: any) => delivery.status === "delivered"));
+      if (!allDelivered) throw new TenantOperationsError("ANIMAL_CLOSE_REQUIRES_SEVEN_DELIVERIES");
+      await tx.animal.update({ where: { id: input.animalId }, data: { status: "delivered" } });
+      await evidence(tx, meta, "animal.delivery.closed", "Animal", input.animalId, { seasonId: input.seasonId, reason: input.reason });
+      return { animalId: input.animalId, closed: true as const };
     });
   }
 

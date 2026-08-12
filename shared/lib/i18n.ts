@@ -75,9 +75,14 @@ const TR: MesajSozlugu = {
   "error.operations.shareAlreadyDelivered": "Bu hisse zaten teslim edilmiş.",
   "error.operations.deliveryNotFound": "Teslimat kaydı bulunamadı.",
   "error.operations.deliveryNotReversible": "Bu teslimat geri alınabilir durumda değil.",
+  "error.operations.deliveryDebtOverrideApprovalRequired": "Borçlu teslim override için onay kanıtı gerekir.",
+  "error.operations.loadingListEmpty": "Yükleme listesinde en az bir paket olmalıdır.",
+  "error.operations.animalCloseRequiresSevenDeliveries": "Hayvan kapanışı için yedi hissenin tamamı teslim edilmelidir.",
   "error.operations.offlineSecretForbidden": "Offline payload gizli bilgi içeremez.",
   "error.operations.criticalOperationOfflineForbidden": "Kritik operasyon bağlantı yokken başarılı gösterilemez.",
   "error.idempotency.conflict": "Aynı idempotency anahtarı farklı içerikle kullanılamaz.",
+  "error.internal.managementAnalyticsCouldNotComplete": "Yönetim ve analitik işlemi tamamlanamadı.",
+  "error.management.searchQueryTooShort": "Arama için en az iki karakter girilmelidir.",
   "success.generic": "İşlem tamamlandı.",
 };
 

@@ -116,6 +116,37 @@ export const DEVICES_AUTHORIZATION_MANIFEST: ModuleAuthorizationManifest = {
   ],
 };
 
+export const MANAGEMENT_AUTHORIZATION_MANIFEST: ModuleAuthorizationManifest = {
+  moduleId: "management",
+  version: "1.0.0",
+  displayName: "Yönetim, Raporlama ve Analitik",
+  permissions: [
+    { key: "management.dashboard.read.organization" as PermissionKey, description: "Kurumsal komuta merkezi ve dashboard sonuçlarını okur", riskLevel: "sensitive" },
+    { key: "management.dashboard.manage.organization" as PermissionKey, description: "Kaydedilmiş dashboard görünümü ve widget düzenini yönetir", riskLevel: "sensitive" },
+    { key: "management.reporting.read.organization" as PermissionKey, description: "Tenant rapor ve analitik sonuçlarını okur", riskLevel: "sensitive" },
+    { key: "management.reporting.export.organization" as PermissionKey, description: "Yetkili Excel/CSV/PDF dışa aktarma sözleşmesini kullanır", riskLevel: "critical" },
+    { key: "management.search.read.organization" as PermissionKey, description: "Evrensel arama sağlayıcılarından yetkili sonuçları okur", riskLevel: "sensitive" },
+    { key: "management.exception.manage.organization" as PermissionKey, description: "Merkezi istisna ve onay kutusunu yönetir", riskLevel: "critical" },
+    { key: "management.company.manage.organization" as PermissionKey, description: "Firma, tesis, modül, KVKK ve veri yönetim alanlarını yönetir", riskLevel: "critical" },
+  ],
+  defaultRoleTemplates: [
+    role("command-center-manager", "Kurumsal Komuta Merkezi Yöneticisi", "management_command", "MANAGER", [
+      "management.dashboard.read.organization",
+      "management.dashboard.manage.organization",
+      "management.reporting.read.organization",
+      "management.reporting.export.organization",
+      "management.search.read.organization",
+      "management.exception.manage.organization",
+      "management.company.manage.organization",
+    ] as PermissionKey[]),
+    role("reporting-analyst", "Raporlama Analisti", "reporting_analytics", "VIEWER", [
+      "management.dashboard.read.organization",
+      "management.reporting.read.organization",
+      "management.search.read.organization",
+    ] as PermissionKey[]),
+  ],
+};
+
 export const FAZ_7_10_AUTHORIZATION_MANIFESTS = [
   QURBAN_OPERATIONS_AUTHORIZATION_MANIFEST,
   OPERATIONS_AUTHORIZATION_MANIFEST,
@@ -124,4 +155,5 @@ export const FAZ_7_10_AUTHORIZATION_MANIFESTS = [
   FIELD_AUTHORIZATION_MANIFEST,
   PUBLIC_AUTHORIZATION_MANIFEST,
   DEVICES_AUTHORIZATION_MANIFEST,
+  MANAGEMENT_AUTHORIZATION_MANIFEST,
 ] as const;

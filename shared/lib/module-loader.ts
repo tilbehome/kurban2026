@@ -9,6 +9,7 @@ import type { ModuleConfig, Rol } from "@/shared/types/module.types";
 import { TENANT_MODULE_AUTHORIZATION_MANIFESTS, FAZ_7_10_AUTHORIZATION_MANIFESTS, type ModuleAuthorizationManifest } from "@tilbecore/tenant-core";
 
 import { coreModule } from "@/modules/_core/module.config";
+import { managementModule } from "@/modules/management/module.config";
 import { musterilerModule } from "@/modules/musteriler/module.config";
 import { hayvanlarModule } from "@/modules/hayvanlar/module.config";
 import { tahsilatModule } from "@/modules/tahsilat/module.config";
@@ -19,6 +20,7 @@ import { besiModule } from "@/modules/besi/module.config";
 
 export const tumModuller: ModuleConfig[] = [
   coreModule,
+  managementModule,
   musterilerModule,
   hayvanlarModule,
   tahsilatModule,

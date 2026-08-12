@@ -51,7 +51,14 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
   const [nextStatus, setNextStatus] = useState("slaughtering");
   const [weightKg, setWeightKg] = useState("0.000");
   const [labelNo, setLabelNo] = useState("");
+  const [packageRecordId, setPackageRecordId] = useState("");
+  const [componentText, setComponentText] = useState("bone_in:0.000\noffal:0.000");
+  const [coldRoomId, setColdRoomId] = useState("");
+  const [coldSectionId, setColdSectionId] = useState("");
+  const [coldRackId, setColdRackId] = useState("");
   const [deliveryId, setDeliveryId] = useState("");
+  const [loadingListId, setLoadingListId] = useState("");
+  const [packageRecordIds, setPackageRecordIds] = useState("");
   const [reason, setReason] = useState("");
   const [logs, setLogs] = useState<Array<{ id: string; title: string; ok: boolean; detail: string }>>([]);
 
@@ -179,8 +186,25 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                     <Field label="Hisse ID"><Input value={shareId} onChange={(e) => setShareId(e.target.value)} /></Field>
                     <Field label="Brüt kg"><Input value={weightKg} onChange={(e) => setWeightKg(e.target.value)} inputMode="decimal" /></Field>
                     <Field label="Etiket no"><Input value={labelNo} onChange={(e) => setLabelNo(e.target.value)} /></Field>
+                    <Field label="Paket ID"><Input value={packageRecordId} onChange={(e) => setPackageRecordId(e.target.value)} placeholder="package_..." /></Field>
+                    <Field label="SoÄŸuk oda ID"><Input value={coldRoomId} onChange={(e) => setColdRoomId(e.target.value)} placeholder="cold_room_..." /></Field>
+                    <Field label="BÃ¶lÃ¼m / raf"><Input value={`${coldSectionId}${coldRackId ? ` / ${coldRackId}` : ""}`} onChange={(e) => {
+                      const [section, rack] = e.target.value.split("/").map((item) => item.trim());
+                      setColdSectionId(section ?? "");
+                      setColdRackId(rack ?? "");
+                    }} placeholder="section_... / rack_..." /></Field>
                   </Grid>
-                  <Button disabled={pending || !permissions.canPackage} onClick={() => post("Paket oluştur", { action: "create-package", id: `package_${crypto.randomUUID()}`, seasonId, shareId, grossWeightKg: weightKg, labelNo: labelNo || `LBL-${Date.now()}`, reason })}>Paket/etiket oluştur</Button>
+                  <Field label="BileÅŸenler (tip:kg; bone_in, boneless, offal, other)">
+                    <Textarea value={componentText} onChange={(e) => setComponentText(e.target.value)} />
+                  </Field>
+                  <div className="flex flex-wrap gap-2">
+                    <Button disabled={pending || !permissions.canPackage} onClick={() => {
+                      const id = packageRecordId || `package_${crypto.randomUUID()}`;
+                      setPackageRecordId(id);
+                      post("Paket oluÅŸtur", { action: "create-package", id, seasonId, shareId, grossWeightKg: weightKg, labelNo: labelNo || `LBL-${Date.now()}`, reason, components: packageComponents(componentText) });
+                    }}>BileÅŸenli paket/etiket oluÅŸtur</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canPackage || !packageRecordId || !coldRoomId} onClick={() => post("SoÄŸuk odaya taÅŸÄ±", { action: "move-package", id: `move_${crypto.randomUUID()}`, seasonId, packageRecordId, roomId: coldRoomId, sectionId: coldSectionId || undefined, rackId: coldRackId || undefined, reason: reason || "SoÄŸuk oda konum gÃ¼ncellemesi" })}>SoÄŸuk oda/raf konumuna al</Button>
+                  </div>
                   <Rule>Kaynak hayvan → hisse → paket izi korunur; yeniden baskı gerekçesi audit’e gider.</Rule>
                 </OpCard>
               )}
@@ -189,12 +213,21 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                 <OpCard title="Teslimat ve geri alma olayı" icon={Truck}>
                   <Grid>
                     <Field label="Delivery ID"><Input value={deliveryId} onChange={(e) => setDeliveryId(e.target.value)} /></Field>
+                    <Field label="YÃ¼kleme listesi ID"><Input value={loadingListId} onChange={(e) => setLoadingListId(e.target.value)} placeholder="loading_..." /></Field>
+                    <Field label="Paket ID'leri"><Input value={packageRecordIds} onChange={(e) => setPackageRecordIds(e.target.value)} placeholder="package_1, package_2" /></Field>
+                    <Field label="Hayvan ID"><Input value={animalId} onChange={(e) => setAnimalId(e.target.value)} /></Field>
                     <Field label="Hisse ID"><Input value={shareId} onChange={(e) => setShareId(e.target.value)} /></Field>
                     <Field label="Müşteri ID"><Input value={customerId} onChange={(e) => setCustomerId(e.target.value)} /></Field>
                     <Field label="Teslim alan / gerekçe"><Input value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
                   </Grid>
                   <div className="flex flex-wrap gap-2">
-                    <Button disabled={pending || !permissions.canDeliver} onClick={() => post("Teslimat", { action: "record-delivery", id: deliveryId || `delivery_${crypto.randomUUID()}`, seasonId, shareId, customerId, receiverName: reason })}>Tek sefer teslim et</Button>
+                    <Button disabled={pending || !permissions.canDeliver || split(packageRecordIds).length === 0} onClick={() => {
+                      const id = loadingListId || `loading_${crypto.randomUUID()}`;
+                      setLoadingListId(id);
+                      post("YÃ¼kleme listesi", { action: "create-loading-list", id, seasonId, routeName: reason || "Teslimat aracÄ± gÃ¶revi", packageRecordIds: split(packageRecordIds) });
+                    }}>YÃ¼kleme listesi oluÅŸtur</Button>
+                    <Button disabled={pending || !permissions.canDeliver} onClick={() => post("Teslimat", { action: "record-delivery", id: deliveryId || `delivery_${crypto.randomUUID()}`, seasonId, shareId, customerId, receiverName: reason, loadingListId: loadingListId || undefined, proof: { id: `proof_${crypto.randomUUID()}`, proofType: "note", note: reason || "Teslim kanÄ±t notu" } })}>KanÄ±tlÄ± teslim et</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canDeliver || !animalId} onClick={() => post("HayvanÄ± kapat", { action: "close-animal", seasonId, animalId, reason: reason || "Yedi hisse teslim kontrolÃ¼ tamamlandÄ±" })}>7 teslim kontrolÃ¼yle hayvanÄ± kapat</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canDeliver || !deliveryId} onClick={() => post("Teslim geri alma", { action: "reverse-delivery", id: deliveryId, seasonId, reason: reason || "Teslimat düzeltme olayı" })}>Geri alma olayı oluştur</Button>
                   </div>
                   <Rule>Borçlu teslim override normal akış değildir; ApprovalPolicy ve gerekçe ister.</Rule>
@@ -273,4 +306,20 @@ function safeJson(value: string): Record<string, unknown> {
   } catch {
     return { note: value };
   }
+}
+
+function packageComponents(value: string): Array<{ id: string; componentType: "bone_in" | "boneless" | "offal" | "other"; weightKg: string }> {
+  const allowed = new Set(["bone_in", "boneless", "offal", "other"]);
+  return value
+    .split(/\n|,/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [rawType, rawWeight] = line.split(":").map((part) => part.trim());
+      const candidateType = rawType ?? "other";
+      const componentType = allowed.has(candidateType) ? candidateType as "bone_in" | "boneless" | "offal" | "other" : "other";
+      const weightKg = /^\d+(\.\d{1,3})?$/.test(rawWeight ?? "") ? rawWeight : "0.000";
+      return { id: `component_${crypto.randomUUID()}`, componentType, weightKg };
+    })
+    .filter((item) => item.weightKg !== "0.000");
 }

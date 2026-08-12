@@ -67,9 +67,14 @@ export type HataKodu =
   | "SHARE_ALREADY_DELIVERED"
   | "DELIVERY_NOT_FOUND"
   | "DELIVERY_NOT_REVERSIBLE"
+  | "DELIVERY_DEBT_OVERRIDE_APPROVAL_REQUIRED"
+  | "LOADING_LIST_EMPTY"
+  | "ANIMAL_CLOSE_REQUIRES_SEVEN_DELIVERIES"
   | "OFFLINE_QUEUE_SECRET_FORBIDDEN"
   | "CRITICAL_OPERATION_OFFLINE_FORBIDDEN"
   | "IDEMPOTENCY_CONFLICT"
+  | "TENANT_MANAGEMENT_ANALYTICS_FAILED"
+  | "SEARCH_QUERY_TOO_SHORT"
   | "INTERNAL_UNEXPECTED"
   | "INTERNAL_SALE_FAILED";
 
@@ -222,9 +227,14 @@ export const HATA_KATALOGU = {
   SHARE_ALREADY_DELIVERED: { kod: "SHARE_ALREADY_DELIVERED", mesajAnahtari: "error.operations.shareAlreadyDelivered", httpStatus: 409, kullaniciyaGosterilebilir: true },
   DELIVERY_NOT_FOUND: { kod: "DELIVERY_NOT_FOUND", mesajAnahtari: "error.operations.deliveryNotFound", httpStatus: 404, kullaniciyaGosterilebilir: true },
   DELIVERY_NOT_REVERSIBLE: { kod: "DELIVERY_NOT_REVERSIBLE", mesajAnahtari: "error.operations.deliveryNotReversible", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  DELIVERY_DEBT_OVERRIDE_APPROVAL_REQUIRED: { kod: "DELIVERY_DEBT_OVERRIDE_APPROVAL_REQUIRED", mesajAnahtari: "error.operations.deliveryDebtOverrideApprovalRequired", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  LOADING_LIST_EMPTY: { kod: "LOADING_LIST_EMPTY", mesajAnahtari: "error.operations.loadingListEmpty", httpStatus: 400, kullaniciyaGosterilebilir: true },
+  ANIMAL_CLOSE_REQUIRES_SEVEN_DELIVERIES: { kod: "ANIMAL_CLOSE_REQUIRES_SEVEN_DELIVERIES", mesajAnahtari: "error.operations.animalCloseRequiresSevenDeliveries", httpStatus: 409, kullaniciyaGosterilebilir: true },
   OFFLINE_QUEUE_SECRET_FORBIDDEN: { kod: "OFFLINE_QUEUE_SECRET_FORBIDDEN", mesajAnahtari: "error.operations.offlineSecretForbidden", httpStatus: 400, kullaniciyaGosterilebilir: true },
   CRITICAL_OPERATION_OFFLINE_FORBIDDEN: { kod: "CRITICAL_OPERATION_OFFLINE_FORBIDDEN", mesajAnahtari: "error.operations.criticalOperationOfflineForbidden", httpStatus: 409, kullaniciyaGosterilebilir: true },
   IDEMPOTENCY_CONFLICT: { kod: "IDEMPOTENCY_CONFLICT", mesajAnahtari: "error.idempotency.conflict", httpStatus: 409, kullaniciyaGosterilebilir: true },
+  TENANT_MANAGEMENT_ANALYTICS_FAILED: { kod: "TENANT_MANAGEMENT_ANALYTICS_FAILED", mesajAnahtari: "error.internal.managementAnalyticsCouldNotComplete", httpStatus: 500, kullaniciyaGosterilebilir: true },
+  SEARCH_QUERY_TOO_SHORT: { kod: "SEARCH_QUERY_TOO_SHORT", mesajAnahtari: "error.management.searchQueryTooShort", httpStatus: 400, kullaniciyaGosterilebilir: true },
   INTERNAL_UNEXPECTED: {
     kod: "INTERNAL_UNEXPECTED",
     mesajAnahtari: "error.internal.generic",

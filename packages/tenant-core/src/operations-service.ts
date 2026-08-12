@@ -76,6 +76,7 @@ export interface CreatePackageInput {
   grossWeightKg: string;
   labelNo: string;
   reason?: string;
+  components?: Array<{ id: string; componentType: "bone_in" | "boneless" | "offal" | "other"; weightKg: string; estimatedValue?: string }>;
 }
 
 export interface DeliveryCommandInput {
@@ -85,6 +86,27 @@ export interface DeliveryCommandInput {
   customerId: string;
   receiverName?: string;
   reason?: string;
+  proof?: { id: string; proofType: "signature" | "photo" | "voice" | "note"; storageKey?: string; note?: string };
+  loadingListId?: string;
+  debtOverride?: { approvalRequestId: string; reason: string; storageKey?: string };
+}
+
+export interface MovePackageInput {
+  id: string;
+  seasonId: string;
+  packageRecordId: string;
+  roomId: string;
+  sectionId?: string;
+  rackId?: string;
+  reason: string;
+}
+
+export interface CreateLoadingListInput {
+  id: string;
+  seasonId: string;
+  vehicleId?: string;
+  routeName?: string;
+  packageRecordIds: string[];
 }
 
 export interface OperationsRepository {
@@ -98,6 +120,9 @@ export interface OperationsRepository {
   createPackage(input: CreatePackageInput, meta: CommandMeta): Promise<{ id: string }>;
   recordDelivery(input: DeliveryCommandInput, meta: CommandMeta): Promise<{ id: string; status: DeliveryStatus }>;
   reverseDelivery(input: { id: string; seasonId: string; reason: string }, meta: CommandMeta): Promise<{ id: string; status: DeliveryStatus }>;
+  movePackage(input: MovePackageInput, meta: CommandMeta): Promise<{ id: string }>;
+  createLoadingList(input: CreateLoadingListInput, meta: CommandMeta): Promise<{ id: string; itemCount: number }>;
+  closeAnimalIfDelivered(input: { seasonId: string; animalId: string; reason: string }, meta: CommandMeta): Promise<{ animalId: string; closed: true }>;
   enqueueOffline(input: { id: string; operation: string; payload: Record<string, unknown> }, meta: CommandMeta): Promise<{ id: string }>;
   listTvProjection(seasonId: string): Promise<Array<{ qurbanNo?: string; queueNo?: number; status: string; updatedAt: string }>>;
 }
@@ -147,17 +172,38 @@ export class TenantOperationsService {
   async createPackage(context: TenantUseCaseContext, input: CreatePackageInput) {
     await this.authorize(context, "operations.packaging.manage.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "share", id: input.shareId } });
     if (!/^\d+(\.\d{1,3})?$/.test(input.grossWeightKg)) throw new TenantOperationsError("PACKAGE_WEIGHT_PRECISION_INVALID");
+    for (const component of input.components ?? []) {
+      if (!/^\d+(\.\d{1,3})?$/.test(component.weightKg)) throw new TenantOperationsError("PACKAGE_WEIGHT_PRECISION_INVALID");
+    }
     return this.repository.createPackage(input, commandMeta(context));
   }
 
   async recordDelivery(context: TenantUseCaseContext, input: DeliveryCommandInput) {
     await this.authorize(context, "logistics.delivery.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "share", id: input.shareId } });
+    if (input.debtOverride && !context.approval?.approved) throw new TenantOperationsError("DELIVERY_DEBT_OVERRIDE_APPROVAL_REQUIRED");
+    if (input.proof?.storageKey?.startsWith("public/")) throw new TenantOperationsError("PROTECTED_DOCUMENT_STORAGE_REQUIRED");
     return this.repository.recordDelivery(input, commandMeta(context));
   }
 
   async reverseDelivery(context: TenantUseCaseContext, input: { id: string; seasonId: string; reason: string }) {
     await this.authorize(context, "logistics.delivery.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "delivery", id: input.id } });
     return this.repository.reverseDelivery(input, commandMeta(context));
+  }
+
+  async movePackage(context: TenantUseCaseContext, input: MovePackageInput) {
+    await this.authorize(context, "inventory.cold_storage.manage.facility", { operationalPeriodId: input.seasonId, assignedRecord: { type: "package", id: input.packageRecordId } });
+    return this.repository.movePackage(input, commandMeta(context));
+  }
+
+  async createLoadingList(context: TenantUseCaseContext, input: CreateLoadingListInput) {
+    await this.authorize(context, "logistics.delivery.manage.operational_period", { operationalPeriodId: input.seasonId });
+    if (input.packageRecordIds.length < 1) throw new TenantOperationsError("LOADING_LIST_EMPTY");
+    return this.repository.createLoadingList(input, commandMeta(context));
+  }
+
+  async closeAnimalIfDelivered(context: TenantUseCaseContext, input: { seasonId: string; animalId: string; reason: string }) {
+    await this.authorize(context, "logistics.delivery.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "animal", id: input.animalId } });
+    return this.repository.closeAnimalIfDelivered(input, commandMeta(context));
   }
 
   async enqueueOffline(context: TenantUseCaseContext, input: { id: string; operation: string; payload: Record<string, unknown> }) {

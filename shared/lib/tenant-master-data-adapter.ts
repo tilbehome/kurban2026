@@ -4,7 +4,8 @@ import { PrismaTenantMasterDataRepository } from "@/packages/database-tenant/src
 import { PrismaTenantAuthorizationRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-authorization-repository";
 import { PrismaTenantSalesFinanceRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-sales-finance-repository";
 import { PrismaTenantOperationsRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-operations-repository";
-import { IDENTITY_AUTHORIZATION_MANIFEST, TenantAuthorizationService, TenantMasterDataService, TenantOperationsService, TenantSalesFinanceService, type AuthorizationActor, type TenantUseCaseContext } from "@/packages/tenant-core/src";
+import { PrismaTenantManagementAnalyticsRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-management-analytics-repository";
+import { IDENTITY_AUTHORIZATION_MANIFEST, TenantAuthorizationService, TenantManagementAnalyticsService, TenantMasterDataService, TenantOperationsService, TenantSalesFinanceService, type AuthorizationActor, type TenantUseCaseContext } from "@/packages/tenant-core/src";
 import type { AuthOturum } from "@/shared/types/module.types";
 import type { TenantInstanceId, UserId } from "@tilbecore/contracts";
 
@@ -17,6 +18,7 @@ declare global {
 let service: TenantMasterDataService | undefined;
 let salesFinanceService: TenantSalesFinanceService | undefined;
 let operationsService: TenantOperationsService | undefined;
+let managementAnalyticsService: TenantManagementAnalyticsService | undefined;
 let authorizationService: TenantAuthorizationService | undefined;
 
 function tenantClient(): TenantPrismaClient {
@@ -64,6 +66,15 @@ export function tenantOperationsService(): TenantOperationsService {
     operationsService = new TenantOperationsService(new PrismaTenantOperationsRepository(client), tenantAuthorizationService());
   }
   return operationsService;
+}
+
+export function tenantManagementAnalyticsService(): TenantManagementAnalyticsService {
+  if (masterDataMode() !== "postgres") throw new Error("TENANT_MANAGEMENT_ANALYTICS_POSTGRES_NOT_ENABLED");
+  if (!managementAnalyticsService) {
+    const client = tenantClient();
+    managementAnalyticsService = new TenantManagementAnalyticsService(new PrismaTenantManagementAnalyticsRepository(client), tenantAuthorizationService());
+  }
+  return managementAnalyticsService;
 }
 
 export function tenantAuthorizationService(): TenantAuthorizationService {
@@ -223,8 +234,11 @@ function permissionsForRole(role: AuthOturum["rol"]): readonly string[] {
     "operations.weighing.record.assigned_record", "operations.packaging.manage.assigned_record", "inventory.cold_storage.manage.facility",
     "logistics.delivery.manage.operational_period", "field.pwa.sync.assigned_record", "public.tv.read.organization",
     "public.tracking.read.assigned_record", "devices.adapters.manage.organization",
+    "management.dashboard.read.organization", "management.dashboard.manage.organization", "management.reporting.read.organization",
+    "management.reporting.export.organization", "management.search.read.organization", "management.exception.manage.organization",
+    "management.company.manage.organization",
   ];
-  if (role === "izleyici") return ["kurban.season.read.organization", "kurban.customer.read.organization", "kurban.supplier.read.organization", "kurban.animal.read.organization", "kurban.share.read.operational_period", "kurban.finance.ledger.read.organization", "public.tv.read.organization", "public.tracking.read.assigned_record"];
+  if (role === "izleyici") return ["kurban.season.read.organization", "kurban.customer.read.organization", "kurban.supplier.read.organization", "kurban.animal.read.organization", "kurban.share.read.operational_period", "kurban.finance.ledger.read.organization", "public.tv.read.organization", "public.tracking.read.assigned_record", "management.dashboard.read.organization", "management.reporting.read.organization", "management.search.read.organization"];
   return [];
 }
 
