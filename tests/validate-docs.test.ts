@@ -125,6 +125,20 @@ describe("dokümantasyon doğrulayıcı", () => {
     expect(githubSlug("I İ ı i")).toBe("i-i\u0307-ı-i");
   });
 
+  it("GitHub slug noktalama sonrası kalan her boşluğu ayrı tireye çevirir", () => {
+    expect(githubSlug("C++ & A/B?")).toBe("c--ab");
+    expect(githubSlug("A   B")).toBe("a---b");
+  });
+
+  it("GitHub çoklu tire anchorını kabul edip sıkıştırılmış hedefi reddeder", () => {
+    const root = fixture();
+    write(root, "docs/sample.md", `# C++ & A/B?\n\n${metadata("DOC-001")}\n\n[Doğru](#c--ab)\n`);
+    refreshInventory(root);
+    expect(validateRepository(root).errors).toEqual([]);
+    write(root, "docs/sample.md", readFileSync(join(root, "docs/sample.md"), "utf8").replace("#c--ab", "#c-ab"));
+    expect(validateRepository(root).errors).toContain("kırık anchor: docs/sample.md -> #c-ab");
+  });
+
   it("yüzde kodlu Unicode anchorı ve tekrarlanan başlık suffixini kabul eder", () => {
     const root = fixture();
     write(root, "docs/sample.md", `# İ\n\n${metadata("DOC-001")}\n\n[İlk](#i%CC%87)\n\n# İ\n\n[İkinci](#i%CC%87-1)\n`);
@@ -164,6 +178,23 @@ describe("dokümantasyon doğrulayıcı", () => {
     const errors = validateRepository(root).errors;
     expect(errors).toContain("dengesiz inline bağlantı: docs/sample.md (1 aday; hedef gösterilmedi)");
     expect(errors.join("\n")).not.toContain("missing(x.md");
+  });
+
+  it("dengesiz görsel bağlantısını tek ve redakte edilmiş aday olarak sayar", () => {
+    const root = fixture();
+    write(root, "docs/sample.md", `# Örnek Başlık\n\n${metadata("DOC-001")}\n\n![Kırık](missing(x.md)\n`);
+    refreshInventory(root);
+    const errors = validateRepository(root).errors;
+    expect(errors).toContain("dengesiz inline bağlantı: docs/sample.md (1 aday; hedef gösterilmedi)");
+    expect(errors.join("\n")).not.toContain("missing(x.md");
+  });
+
+  it("normal görsel ve inline bağlantıları korur", () => {
+    const root = fixture();
+    write(root, "docs/image.png", "fixture image");
+    write(root, "docs/sample.md", `# Örnek Başlık\n\n${metadata("DOC-001")}\n\n![Görsel](image.png)\n\n[Inline](README.md)\n`);
+    refreshInventory(root);
+    expect(validateRepository(root).errors).toEqual([]);
   });
 
   it("geçerli inline ve reference-style bağlantıları korur", () => {

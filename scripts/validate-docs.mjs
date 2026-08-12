@@ -179,6 +179,7 @@ function inlineMarkdownTargets(content) {
   const spans = [];
   let malformedCount = 0;
   for (let start = 0; start < content.length; start += 1) {
+    if (content[start] === "[" && content[start - 1] === "!") continue;
     const labelStart = content[start] === "!" && content[start + 1] === "[" ? start + 1 : start;
     if (content[labelStart] !== "[") continue;
     const labelEnd = content.indexOf("](", labelStart + 1);
@@ -221,7 +222,7 @@ function inlineMarkdownTargets(content) {
 
 export function githubSlug(text) {
   return text.trim().toLowerCase().replace(/<[^>]+>/g, "")
-    .replace(/[`*_~]/g, "").replace(/[^\p{L}\p{M}\p{N}\s_-]/gu, "").replace(/\s+/g, "-");
+    .replace(/[`*_~]/g, "").replace(/[^\p{L}\p{M}\p{N}\s_-]/gu, "").replace(/\s/g, "-");
 }
 
 function anchorsFor(content) {
