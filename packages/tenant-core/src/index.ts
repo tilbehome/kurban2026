@@ -3,3 +3,8 @@ export * from "./finance-ledger";
 export * from "./operation-flow";
 export * from "./tenant-domain";
 export * from "./tenant-commands";
+export * from "./master-data-domain";
+export * from "./master-data-service";
+export * from "./authorization-domain";
+export * from "./authorization-service";
+export * from "./module-authorization";

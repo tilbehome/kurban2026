@@ -65,7 +65,7 @@ related_requirements: [REQ-015, REQ-016, REQ-017, REQ-018, REQ-019, REQ-020, REQ
 
 Bağlayıcı ana mimari §6.3 tam yedi hisseyi, her pozitif tahsilatın kapora olmasını, kaporasız kaydın rezervasyon kalmasını ve satılmamış hissenin işletme envanteri olarak açık tutulmasını tanımlar. Bu metin 2026-08-12 tarihli kullanıcı düzeltmesiyle uyumlandırılmıştır. Satılmamış işletme hissesinin kesim öncesi dinî uygunluk çözümü ise hâlâ açık mimari karar gerektirir.
 
-Yeni tenant core `confirmSale` komutu kapora almadan satış/ledger üretir; legacy saha satış da sıfır kaporayla müşteri atayıp borç açabilir. Bu davranışlar hedef kuralla uyumlu tamamlanmış sayılmaz ve `IMPLEMENTING` karar/kod farkıdır. Kalıcı rezervasyon süresi, işletme envanteri sahipliği, transfer aggregate’i, otomatik süre sonu ve tam iptal–iade orkestrasyonu `PLANNED` durumundadır.
+Tenant core `confirmSale` artık pozitif kapora olmadan satış/ledger üretmez; süre sonu rezervasyonu satış reversal'ı üretmeden işletme envanterine döndüren domain komutu da eklendi. Legacy saha satışın sıfır kaporayla müşteri atayabilen davranışı henüz taşınmadığı için uçtan uca durum `IMPLEMENTING` kalır. Kalıcı rezervasyon worker'ı, transfer aggregate'i ve tam iptal–iade orkestrasyonu `PLANNED` durumundadır.
 
 ## Kabul kanıtı
 

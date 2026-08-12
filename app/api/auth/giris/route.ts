@@ -6,6 +6,7 @@ import { getOturum } from "@/shared/lib/session";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { rateLimitKontrol, rateLimitSifirla } from "@/shared/lib/rate-limit";
 import type { Rol } from "@/shared/types/module.types";
+import { bindLegacyOrganizationSession } from "@/shared/lib/tenant-master-data-adapter";
 
 // Brute-force koruması: aynı IP'den 5 dakikada en çok 5 deneme.
 const LOGIN_MAX_DENEME = 5;
@@ -90,12 +91,20 @@ export async function POST(req: Request) {
   });
 
   const session = await getOturum();
+  let organizationSession = {};
+  try {
+    organizationSession = await bindLegacyOrganizationSession({ legacyUserId: kullanici.id, displayName: kullanici.adSoyad, legacyRole: kullanici.rol as Rol }) ?? {};
+  } catch {
+    await auditLog({ eylem: "giris-yetki-uyeligi-yok", kullaniciId: kullanici.id, ip });
+    return NextResponse.json({ basarili: false, hata: "Firma üyeliği etkin değil." }, { status: 403 });
+  }
   session.oturum = {
     kullaniciId: kullanici.id,
     kullaniciAdi: kullanici.kullaniciAdi,
     adSoyad: kullanici.adSoyad,
     rol: kullanici.rol as Rol,
     girisTarihi: new Date().toISOString(),
+    ...organizationSession,
   };
   await session.save();
 

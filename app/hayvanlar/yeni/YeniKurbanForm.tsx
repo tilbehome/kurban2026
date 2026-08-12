@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-export function YeniKurbanForm() {
+export function YeniKurbanForm({ tenantPostgres = false }: { tenantPostgres?: boolean }) {
   const router = useRouter();
   const [bekleniyor, startTransition] = useTransition();
   const [veri, setVeri] = useState({
@@ -19,6 +19,8 @@ export function YeniKurbanForm() {
     satisBedeli: "",
     notlar: "",
     hisseGrubu: "",
+    alisBedeli: "",
+    canliAgirlik: "",
   });
 
   function alanGuncelle<K extends keyof typeof veri>(k: K, v: string) {
@@ -38,13 +40,15 @@ export function YeniKurbanForm() {
             kesimSaati: veri.kesimSaati.trim() || undefined,
             hisseSayisi: Number.parseInt(veri.hisseSayisi, 10) || 7,
             satisBedeli: Number.parseFloat(veri.satisBedeli) || 0,
+            alisBedeli: veri.alisBedeli.trim().replace(",", ".") || undefined,
+            canliAgirlik: veri.canliAgirlik.trim().replace(",", ".") || undefined,
             notlar: veri.notlar.trim() || undefined,
             hisseGrubu: veri.hisseGrubu || null,
           }),
         });
         const sonuc = (await yanit.json()) as {
           basarili: boolean;
-          id?: number;
+          id?: string | number;
           hata?: string;
         };
         if (!yanit.ok || !sonuc.basarili) {
@@ -94,9 +98,11 @@ export function YeniKurbanForm() {
             inputMode="numeric"
             min={1}
             max={7}
+            disabled={tenantPostgres}
             value={veri.hisseSayisi}
             onChange={(e) => alanGuncelle("hisseSayisi", e.target.value)}
           />
+          {tenantPostgres ? <p className="text-muted-foreground text-xs">Büyükbaş hayvan için tam yedi işletme hissesi otomatik oluşturulur.</p> : null}
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="kesimSaati">Kesim Saati (planlı)</Label>
@@ -130,20 +136,22 @@ export function YeniKurbanForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="satisBedeli">Toplam Satış Bedeli (₺)</Label>
+        <Label htmlFor={tenantPostgres ? "alisBedeli" : "satisBedeli"}>{tenantPostgres ? "Gerçek Alış Bedeli (₺)" : "Toplam Satış Bedeli (₺)"}</Label>
         <Input
-          id="satisBedeli"
+          id={tenantPostgres ? "alisBedeli" : "satisBedeli"}
           type="number"
           inputMode="decimal"
           min={0}
-          step={1}
-          value={veri.satisBedeli}
-          onChange={(e) => alanGuncelle("satisBedeli", e.target.value)}
+          step={tenantPostgres ? "0.0001" : 1}
+          value={tenantPostgres ? veri.alisBedeli : veri.satisBedeli}
+          onChange={(e) => alanGuncelle(tenantPostgres ? "alisBedeli" : "satisBedeli", e.target.value)}
         />
         <p className="text-muted-foreground text-xs">
-          7 hisseye bölünüp her hisseye eşit dağıtılır.
+          {tenantPostgres ? "Para Numeric(18,4) hassasiyetinde ve satış fiyatından ayrı saklanır." : "7 hisseye bölünüp her hisseye eşit dağıtılır."}
         </p>
       </div>
+
+      {tenantPostgres ? <div className="flex flex-col gap-2"><Label htmlFor="canliAgirlik">İlk Canlı Ağırlık (kg)</Label><Input id="canliAgirlik" type="number" inputMode="decimal" min={0} step="0.001" value={veri.canliAgirlik} onChange={(e) => alanGuncelle("canliAgirlik", e.target.value)} /><p className="text-muted-foreground text-xs">AnimalWeight geçmişine sabit 3 hane hassasiyetle eklenir.</p></div> : null}
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="notlar">Notlar</Label>

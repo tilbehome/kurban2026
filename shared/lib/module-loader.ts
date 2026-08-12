@@ -6,6 +6,7 @@
  */
 
 import type { ModuleConfig, Rol } from "@/shared/types/module.types";
+import { IDENTITY_AUTHORIZATION_MANIFEST, type ModuleAuthorizationManifest } from "@tilbecore/tenant-core";
 
 import { coreModule } from "@/modules/_core/module.config";
 import { musterilerModule } from "@/modules/musteriler/module.config";
@@ -13,6 +14,7 @@ import { hayvanlarModule } from "@/modules/hayvanlar/module.config";
 import { tahsilatModule } from "@/modules/tahsilat/module.config";
 import { kasaModule } from "@/modules/kasa/module.config";
 import { raporlarModule } from "@/modules/raporlar/module.config";
+import { besiModule } from "@/modules/besi/module.config";
 
 export const tumModuller: ModuleConfig[] = [
   coreModule,
@@ -21,7 +23,17 @@ export const tumModuller: ModuleConfig[] = [
   tahsilatModule,
   kasaModule,
   raporlarModule,
+  besiModule,
 ];
+
+/** Görsel olarak kapalı modüller dahil, tenant'a kaydedilebilir yetki sözleşmeleri. */
+export function authorizationManifestleri(): readonly ModuleAuthorizationManifest[] {
+  return [IDENTITY_AUTHORIZATION_MANIFEST, ...tumModuller.flatMap((modul) => modul.authorizationManifest ? [modul.authorizationManifest] : [])];
+}
+
+export function authorizationManifestBul(moduleId: string): ModuleAuthorizationManifest | undefined {
+  return authorizationManifestleri().find((manifest) => manifest.moduleId === moduleId);
+}
 
 /** Aktif olan ve verilen role görünür modüller, sira'ya göre sıralı. */
 export function aktifModuller(rol?: Rol): ModuleConfig[] {

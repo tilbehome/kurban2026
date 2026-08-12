@@ -43,7 +43,7 @@ Kapanış; açıklanamayan finans farkı, açık kasa oturumu, teslim edilmemiş
 
 ## Uygulama durumu
 
-Sezon state machine, PostgreSQL modeli ve prova gate sözleşmesi `IMPLEMENTED_UNVERIFIED`; legacy uygulamada sezon UI/runtime ve kapanış orkestrasyonu `PLANNED` durumundadır. Mevcut `/musteriler/yeni-sezon` placeholder’dır.
+Sıralı sezon state machine, PostgreSQL modeli, tenant yazma kapıları ve adaptif `/musteriler/yeni-sezon` çalışma alanı `IMPLEMENTED_UNVERIFIED` durumundadır. Kapanış prova gate'leri, finans mutabakat orkestrasyonu ve genel test/kabul turu sonraki pakettedir.
 
 ## Kabul kanıtı
 

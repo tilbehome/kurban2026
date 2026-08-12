@@ -12,6 +12,8 @@ import { MusteriHero } from "@/modules/musteriler/components/MusteriHero";
 import { MusteriDetayClient } from "@/modules/musteriler/components/MusteriDetayClient";
 import { vekaletDosyaApiUrl } from "@/shared/lib/vekalet-dosya";
 import type { MusteriTabId } from "@/modules/musteriler/types";
+import { masterDataMode, tenantMasterDataService, tenantUseCaseContext } from "@/shared/lib/tenant-master-data-adapter";
+import { TenantCustomerDetailView } from "@/modules/tenant-master-data/components/TenantCustomerDetail";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +35,12 @@ export default async function MusteriDetayPage({ params }: PageProps) {
         </div>
       </AppShell>
     );
+  }
+
+  if (masterDataMode() === "postgres") {
+    const customer = await tenantMasterDataService().getCustomer(tenantUseCaseContext(oturum, { readOnly: true }), id);
+    if (!customer) notFound();
+    return <TenantCustomerDetailView customer={customer} />;
   }
 
   // Tek query — tüm tab'lara veri sağlar

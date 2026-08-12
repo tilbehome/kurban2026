@@ -46,6 +46,8 @@ Kod sözleşmesindeki karşılıklar `preparation`, `sales`, `slaughter`, `deliv
 |---|---|---|
 | `Season` tipi ve geçiş koruması | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/tenant-domain.ts`; `assertSeasonTransition` mevcut. |
 | PostgreSQL `Season` modeli ve sezon ilişkileri | `IMPLEMENTED_UNVERIFIED` | `packages/database-tenant/prisma/schema.prisma`; migration zinciri mevcut. |
+| `BusinessProfile`, `Location`, `Setting` ve sıralı sezon use-case'leri | `IMPLEMENTED_UNVERIFIED` | Tenant şeması `0004`, `master-data-service` ve atomik Prisma repository; audit/idempotency/outbox aynı transaction'a bağlıdır. |
+| Adaptif sezon çalışma alanı | `IMPLEMENTED_UNVERIFIED` | `/musteriler/yeni-sezon`; legacy/postgres feature flag geri dönüşü korunur. Test ve genel kabul bu pakette çalıştırılmadı. |
 | Legacy firma uygulamasında gerçek sezon seçimi/cari ayrımı | `PLANNED` | Kök SQLite şemasında `Season` modeli yok; `/musteriler/yeni-sezon` placeholder. |
 | Hazırlık skoru, prova ve kapanış sihirbazı | `PLANNED` | `packages/operations/src/simulation-readiness.ts` yalnız sözleşme/gate sağlar; bağlı runtime/UI kanıtı yok. |
 | Gelişmiş şube, tesis ve kapasite yönetimi | `PLANNED` | İlk canlı sonrası kapsam. |

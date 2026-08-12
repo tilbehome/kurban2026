@@ -1,6 +1,8 @@
 import type { ModuleConfig } from "@/shared/types/module.types";
+import { KURBAN_AUTHORIZATION_MANIFEST } from "@tilbecore/tenant-core";
 
 export const hayvanlarModule: ModuleConfig = {
+  authorizationManifest: KURBAN_AUTHORIZATION_MANIFEST,
   id: "hayvanlar",
   ad: "Hayvanlar",
   aciklama: "Kurban ve hisse yönetimi",

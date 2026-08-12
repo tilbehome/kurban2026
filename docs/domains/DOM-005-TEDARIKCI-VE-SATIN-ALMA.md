@@ -31,8 +31,9 @@ Bu domain tedarikçi kimliği, alış faturası, hayvan lotu/satırı, tedarikç
 |---|---|---|
 | `Supplier` ve `registerSupplier` sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/tenant-domain.ts`, `tenant-commands.ts`. |
 | PostgreSQL `Supplier`–`Animal` ilişkisi | `IMPLEMENTED_UNVERIFIED` | Tenant şeması ve `0001_tenant_core_baseline`. |
-| Tedarikçi/alış faturası aggregate’i ve tedarikçi ledger’ı | `PLANNED` | Tenant şemasında `PurchaseInvoice` ve tedarikçi borç modelleri yok. |
-| Legacy tedarik ekranı | `PLANNED` | `app/hayvanlar/tedarik/page.tsx` placeholder. |
+| Tedarikçi/alış faturası aggregate’i ve sezon tedarikçi carisi | `IMPLEMENTED_UNVERIFIED` | `SupplierAccount`, `PurchaseInvoice/Line`, `SupplierPayment`, atomik gerçek hayvan maliyeti ve outbox/audit repository'si. |
+| Gider belgesi ve çift kayıt koruması | `IMPLEMENTED_UNVERIFIED` | `ExpenseDocument(sourceType, sourceRef)` unique kısıtı ve idempotent use-case. |
+| Adaptif tedarik ekranı | `IMPLEMENTED_UNVERIFIED` | `app/hayvanlar/tedarik/page.tsx`; tedarikçi, tek satırlı alış+hayvan, ödeme ve gider komutları. Test edilmedi. |
 | PDF/Excel import ve maliyet dağıtımı | `PLANNED` | Runtime, dry-run ve mutabakat kanıtı yok. |
 
 ## Planlanan aggregate’ler

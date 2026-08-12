@@ -42,7 +42,8 @@ DRAFT → ACCEPTED → OBSERVATION | ELIGIBLE → ON_SALE → SOLD_OUT
 |---|---|---|
 | `Animal`, küpe, sabit hassasiyetli kilo ve satın alma tutarı | `IMPLEMENTED_UNVERIFIED` | Tenant core tipi ve PostgreSQL tenant şeması. |
 | Sezon+küpede unique kısıt | `IMPLEMENTED_UNVERIFIED` | `@@unique([seasonId, earTag])`. |
-| Legacy hayvan detay ve yedi hisse görünümü | `IMPLEMENTING` | `app/hayvanlar/[id]/page.tsx`; legacy SQLite modeline bağlı. |
+| Hayvan oluşturma, yedi işletme hissesi, kilo/sağlık/sıra geçmişi | `IMPLEMENTED_UNVERIFIED` | Tenant `0004`, master-data repository ve `/hayvanlar/[id]` tenant çalışma alanı; dinî uygunluk varsayılanı `undecided`. |
+| Legacy hayvan detay ve yedi hisse görünümü | `IMPLEMENTING` | Feature flag kapalıyken legacy SQLite modeline bağlı geri dönüş yolu korunur. |
 | Sağlık, uygunluk, padok ve tartım geçmişi | `PLANNED` | Ayrı aggregate/model ve bağlı UI yok. |
 | Hayvan 360 tam çalışma alanı | `PLANNED` | Mevcut detay sayfası tedarik/sağlık/timeline/kârlılık sözleşmesini karşılamıyor. |
 

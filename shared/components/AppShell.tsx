@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { Beef } from "lucide-react";
+import { CalendarRange, Search, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { Sidebar } from "./sidebar/Sidebar";
 import { MobileSidebar } from "./sidebar/MobileSidebar";
 import { SwGuncellemeUyarisi } from "./SwGuncellemeUyarisi";
@@ -34,6 +36,15 @@ export async function AppShell({ children }: AppShellProps) {
       </div>
 
       <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="hidden h-12 shrink-0 items-center justify-between border-b bg-background/95 px-5 backdrop-blur lg:flex">
+          <nav className="flex items-center gap-1" aria-label="Üst komut alanı">
+            <Link href="/musteriler/ara" className="flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"><Search size={15} /> Ara <kbd className="rounded border bg-muted px-1.5 py-0.5 text-[10px]">Ctrl K</kbd></Link>
+            <Link href="/musteriler/yeni" className="flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"><UserPlus size={15} /> Yeni müşteri</Link>
+            <Link href="/musteriler/yeni-sezon" className="flex min-h-9 items-center gap-2 rounded-lg px-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"><CalendarRange size={15} /> Sezon</Link>
+          </nav>
+          <span className="text-xs text-muted-foreground">{oturum.adSoyad} · {oturum.rol}</span>
+        </header>
+
         {/* Mobile top bar — sadece <lg ekranlarda */}
         <header className="border-sidebar-border bg-sidebar flex h-14 shrink-0 items-center gap-3 border-b px-3 lg:hidden">
           <MobileSidebar

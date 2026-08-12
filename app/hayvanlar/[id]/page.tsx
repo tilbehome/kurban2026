@@ -10,6 +10,9 @@ import { formatPara, topla, yuvarla } from "@/shared/lib/para";
 import { ArrowLeft } from "lucide-react";
 import { HissedarAtamaModal } from "@/modules/hayvanlar/components/hissedar-atama/HissedarAtamaModal";
 import { HissedarCikarDialog } from "@/modules/hayvanlar/components/hissedar-atama/HissedarCikarDialog";
+import { aktifOturum } from "@/shared/lib/session";
+import { masterDataMode, tenantMasterDataService, tenantUseCaseContext } from "@/shared/lib/tenant-master-data-adapter";
+import { TenantAnimalDetailView } from "@/modules/tenant-master-data/components/TenantAnimalDetail";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +23,14 @@ interface PageProps {
 export default async function KurbanDetayPage({ params }: PageProps) {
   const { id } = await params;
   if (!id) notFound();
+
+  if (masterDataMode() === "postgres") {
+    const session = await aktifOturum();
+    if (!session) notFound();
+    const animal = await tenantMasterDataService().getAnimal(tenantUseCaseContext(session, { readOnly: true }), id);
+    if (!animal) notFound();
+    return <TenantAnimalDetailView animal={animal} />;
+  }
 
   const kurban = await kurbanDetayi(id);
   if (!kurban) notFound();

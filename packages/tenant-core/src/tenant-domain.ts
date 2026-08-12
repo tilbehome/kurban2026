@@ -121,9 +121,9 @@ export interface TenantOutboxMessage extends TenantEntity {
 }
 
 const SEASON_TRANSITIONS: Record<SeasonStatus, readonly SeasonStatus[]> = {
-  preparation: ["sales", "archived"],
-  sales: ["slaughter", "reconciliation"],
-  slaughter: ["delivery", "reconciliation"],
+  preparation: ["sales"],
+  sales: ["slaughter"],
+  slaughter: ["delivery"],
   delivery: ["reconciliation"],
   reconciliation: ["archived"],
   archived: [],

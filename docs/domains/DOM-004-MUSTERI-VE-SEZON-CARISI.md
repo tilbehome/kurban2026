@@ -38,8 +38,9 @@ Müşteri 360 görünümü kimlik, iletişim, hisseler, satışlar, sezon ekstre
 |---|---|---|
 | Telefon normalizasyonu ve sezon hesaplama sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/customer-account.ts`. |
 | PostgreSQL `Customer` ve sezon ilişkisi | `IMPLEMENTED_UNVERIFIED` | `packages/database-tenant/prisma/schema.prisma`. |
-| Legacy müşteri detayında hisse, tahsilat, vekâlet ve not görünümü | `IMPLEMENTING` | `app/musteriler/[id]/page.tsx`; SQLite ve legacy hesap mantığı kullanıyor. |
-| Sezonlar arası müşteri 360/cari | `PLANNED` | Legacy şemada sezon modeli yok. |
+| `CustomerPhone`, `CustomerAddress`, normalize arama ve mükerrer uyarısı | `IMPLEMENTED_UNVERIFIED` | Tenant migration `0004`, master-data use-case/repository ve müşteri API adapter'ı; ortak telefon unique değildir ve otomatik merge yoktur. |
+| Legacy müşteri detayında hisse, tahsilat, vekâlet ve not görünümü | `IMPLEMENTING` | `app/musteriler/[id]/page.tsx`; feature flag kapalıyken SQLite uyumluluğu sürer. |
+| Sezonlar arası müşteri 360/cari | `IMPLEMENTED_UNVERIFIED` | `CustomerSeasonAccount`, tenant müşteri liste/detay ekranı ve sezon geçmişi. Finans posting entegrasyonunun genişletilmesi sonraki finans paketindedir. |
 | Mükerrer kayıt merkezi, KVKK talebi ve müşteri portalı | `PLANNED` | Sözleşme/gereksinim var; bağlı tam runtime yok. |
 
 ## Komut, sorgu ve olaylar

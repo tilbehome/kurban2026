@@ -4,6 +4,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { izinKontrol } from "@/shared/lib/izinler";
+import { masterDataMode, tenantActiveSeasonId, tenantMasterDataService, tenantUseCaseContext } from "@/shared/lib/tenant-master-data-adapter";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -25,12 +26,19 @@ const PatchBody = z.object({
   etiketler: z.string().trim().max(500).nullable().optional(),
 });
 
-export async function GET(_req: Request, { params }: RouteParams) {
+export async function GET(req: Request, { params }: RouteParams) {
   const oturum = await aktifOturum();
   if (!oturum || !izinKontrol(oturum, "musteriler.goruntule")) {
     return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 403 });
   }
   const { id } = await params;
+
+  if (masterDataMode() === "postgres") {
+    const customer = await tenantMasterDataService().getCustomer(tenantUseCaseContext(oturum, { request: req, readOnly: true }), id);
+    if (!customer) return NextResponse.json({ basarili: false, hata: "Müşteri bulunamadı" }, { status: 404 });
+    const primaryAddress = customer.addresses.find((item) => item.isPrimary);
+    return NextResponse.json({ basarili: true, veri: { id: customer.id, adSoyad: customer.displayName, telefon: customer.phones.find((item) => item.isPrimary)?.phone ?? null, tcKimlik: customer.identityNumber ?? null, adres: primaryAddress ? [primaryAddress.addressLine, primaryAddress.district, primaryAddress.city].filter(Boolean).join(", ") : null, notlar: customer.notes ?? null, etiketler: null, createdAt: customer.createdAt, updatedAt: customer.createdAt } });
+  }
 
   const musteri = await prisma.musteri.findFirst({
     where: { id, silindiMi: false },
@@ -73,6 +81,14 @@ export async function PATCH(req: Request, { params }: RouteParams) {
   } catch (e) {
     const m = e instanceof z.ZodError ? e.issues[0]?.message : "Geçersiz veri";
     return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
+  }
+
+  if (masterDataMode() === "postgres") {
+    const result = await tenantMasterDataService().updateCustomer(
+      tenantUseCaseContext(oturum, { request: req, payload: veri }), tenantActiveSeasonId(), id,
+      { displayName: veri.adSoyad, phone: veri.telefon, identityNumber: veri.tcKimlik, address: veri.adres, notes: veri.notlar },
+    );
+    return NextResponse.json({ basarili: true, veri: { id: result.id }, mukerrerUyarisi: result.duplicateWarning });
   }
 
   const mevcut = await prisma.musteri.findFirst({
@@ -161,6 +177,11 @@ export async function DELETE(req: Request, { params }: RouteParams) {
     return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 403 });
   }
   const { id } = await params;
+
+  if (masterDataMode() === "postgres") {
+    await tenantMasterDataService().deactivateCustomer(tenantUseCaseContext(oturum, { request: req, payload: { id } }), tenantActiveSeasonId(), id);
+    return NextResponse.json({ basarili: true, pasiflestirildi: true });
+  }
 
   const musteri = await prisma.musteri.findFirst({
     where: { id, silindiMi: false },

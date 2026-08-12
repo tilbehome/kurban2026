@@ -6,6 +6,13 @@ import { izinKontrol } from "@/shared/lib/izinler";
 import { yayinla } from "@/shared/lib/events";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { musterileriListele } from "@/modules/musteriler/lib/musteri.service";
+import { randomUUID } from "node:crypto";
+import {
+  masterDataMode,
+  tenantActiveSeasonId,
+  tenantMasterDataService,
+  tenantUseCaseContext,
+} from "@/shared/lib/tenant-master-data-adapter";
 
 const MusteriSchema = z.object({
   adSoyad: z.string().trim().min(2, "Ad soyad en az 2 karakter"),
@@ -55,6 +62,27 @@ export async function GET(req: Request) {
   const arama = url.searchParams.get("arama") ?? undefined;
   const limit = Number.parseInt(url.searchParams.get("limit") ?? "50", 10);
 
+  if (masterDataMode() === "postgres") {
+    const sonuc = await tenantMasterDataService().searchCustomers(
+      tenantUseCaseContext(oturum, { request: req, readOnly: true }),
+      { query: arama, seasonId: url.searchParams.get("seasonId") ?? tenantActiveSeasonId(), limit },
+    );
+    return NextResponse.json({
+      liste: sonuc.items.map((m) => ({
+        id: m.id,
+        adSoyad: m.displayName,
+        telefon: m.phone ?? null,
+        hisseSayisi: m.shareCount,
+        toplamBedel: Number(m.seasonAccount?.debitTotal ?? 0),
+        toplamOdenen: Number(m.seasonAccount?.creditTotal ?? 0),
+        kalan: Number(m.seasonAccount?.balance ?? 0),
+        kayitTarihi: m.createdAt,
+      })),
+      toplam: sonuc.total,
+      kaynak: "tenant-postgresql",
+    });
+  }
+
   const { liste, toplam } = await musterileriListele({
     arama,
     durum: "hepsi",
@@ -82,6 +110,28 @@ export async function POST(req: Request) {
   } catch (e) {
     const m = e instanceof z.ZodError ? e.issues[0]?.message : "Geçersiz veri";
     return NextResponse.json({ basarili: false, hata: m }, { status: 400 });
+  }
+
+  if (masterDataMode() === "postgres") {
+    const id = `customer_${randomUUID()}`;
+    const sonuc = await tenantMasterDataService().createCustomer(
+      tenantUseCaseContext(oturum, { request: req, payload: veri }),
+      tenantActiveSeasonId(),
+      {
+        id,
+        displayName: veri.adSoyad,
+        phone: veri.telefon ?? undefined,
+        identityNumber: veri.tcKimlik ?? undefined,
+        address: veri.adres ? { addressLine: veri.adres, label: "Ana adres" } : undefined,
+        notes: veri.notlar ?? undefined,
+      },
+    );
+    return NextResponse.json({
+      basarili: true,
+      id: sonuc.id,
+      mukerrerUyarisi: sonuc.duplicateWarning,
+      kaynak: "tenant-postgresql",
+    });
   }
 
   const yeni = await prisma.musteri.create({
