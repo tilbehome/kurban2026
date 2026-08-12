@@ -1,3 +1,13 @@
+---
+id: ARCH-A3451BC07B58
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # CLAUDE.md — Adabereket Hayvancılık Geliştirme Kuralları
 
 > 10 Ağustos 2026 uyum notu: Bu belge tarihsel Claude çalışma notudur. Güncel bağlayıcı kök talimat `AGENTS.md`, birinci mimari kaynak ise `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Adabereket’e özel marka/kişi/veri örnekleri ürün geneli kural sayılmaz.

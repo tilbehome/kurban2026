@@ -1,3 +1,13 @@
+---
+id: ARCH-A9F5276C479D
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🎯 SPRINT-7 — KURBAN BAZLI OPERASYON REFACTOR
 
 **Bayrama 2 gün** (27 Mayıs 2026). Sistemin **kalbi** olan kesim operasyonu mantığı yanlış kurulmuş — şu an hisse bazlı görünüyor, doğrusu kurban (DANA) bazlı olmalı. Bu prompt'la:

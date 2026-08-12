@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { getOturum } from "@/shared/lib/session";
+import { revokeTenantUserSession } from "@/shared/lib/tenant-master-data-adapter";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 
 export async function POST(req: Request) {
   const session = await getOturum();
   const oturum = session.oturum;
+  await revokeTenantUserSession(oturum?.tenantSessionId).catch(() => undefined);
   if (oturum) {
     await auditLog({
       eylem: "cikis",

@@ -1,5 +1,15 @@
 # 02 — Modüler Monolit ve Domain Sınırları
 
+```yaml
+id: ARC-002
+status: PLANNED
+owner: Architecture
+source_role: modular_monolith_dependency_policy
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Strateji
 
 Mevcut Next.js uygulaması çöpe atılmayacak. Hedef, route dosyalarındaki iş kurallarını kontrollü şekilde domain/application servislerine taşımaktır.
@@ -29,7 +39,7 @@ Domain/application sorumluluğu:
 | Müşteri/cari | `Musteri`, müşteri API ve modülleri | Müşteri kimliği, mükerrer uyarı, sezon geçmişi |
 | Tedarik/alım/gider | `app/hayvanlar/tedarik`, `app/kasa/gider` | Tedarikçi, alış faturası, gider defteri |
 | Hayvan | `Kurban` | Hayvan kartı, küpe, uygunluk, tartım geçmişi |
-| Hisse kartı/envanter | `Hisse` | Bağımsız hisse kartı, stok, transfer, yedinci hisse istisnası |
+| Hisse kartı/envanter | `Hisse` | Bağımsız hisse kartı, rezervasyon, kesin satış, transfer ve satılmamış işletme envanteri |
 | Satış/kapora | `/api/saha-satis`, `/api/hisseler/*` | Satış emri, fiyat snapshot, borçlandırma |
 | Finansal defter | `Odeme`, `KasaHareketi` | Tek ledger, kasa/banka/POS alt defterleri |
 | Vekâlet/belge | `Vekalet`, `/api/vekaletler` | Dosya güvenliği, belge snapshot, QR doğrulama |

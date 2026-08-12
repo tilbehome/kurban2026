@@ -162,6 +162,15 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
 
   // 2) MÜŞTERİLER / CARİ — 9 alt
   {
+    id: "yonetim-analitik",
+    ad: "Yönetim & Analitik",
+    ikon: LayoutTemplate,
+    rota: "/yonetim",
+    izin: "raporlar.goruntule",
+    kisayol: "Ctrl+Shift+Y",
+  },
+
+  {
     id: "musteriler",
     ad: "Müşteriler / Cari",
     ikon: Users,
@@ -264,6 +273,14 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         rota: "/tv/kontrol",
         izin: "tv.kontrol",
         aciklama: "Operasyon sırasını yönet, aşama başlat/bitir",
+      },
+      {
+        id: "kurban-operasyon-merkezi",
+        ad: "Operasyon Merkezi",
+        ikon: Scissors,
+        rota: "/operasyon",
+        izin: "tv.kontrol",
+        aciklama: "Vekâlet, QR, kesim, tartım, paketleme ve teslimat komuta merkezi",
       },
       {
         id: "personel-paneli",
@@ -369,6 +386,13 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         izin: "tahsilat.olustur",
       },
       {
+        id: "satis-finans-calisma-alani",
+        ad: "Satış Finans Paneli",
+        ikon: LayoutTemplate,
+        rota: "/tahsilat/calisma-alani",
+        izin: "tahsilat.olustur",
+      },
+      {
         id: "tum-tahsilatlar",
         ad: "Tüm Tahsilatlar",
         ikon: List,
@@ -393,9 +417,7 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         id: "iadeler",
         ad: "İadeler",
         ikon: RotateCcw,
-        rota: "/tahsilat/iadeler",
-        placeholder: true,
-        faz: "sonrasi",
+        rota: "/tahsilat/calisma-alani",
         izin: "tahsilat.olustur",
         aciklama:
           "Müşteriye geri ödeme işlemleri. Tam izlenebilirlik + onay akışı.",
@@ -426,9 +448,7 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         id: "indirim",
         ad: "İndirim & Mahsup",
         ikon: Percent,
-        rota: "/tahsilat/indirim",
-        placeholder: true,
-        faz: "sonrasi",
+        rota: "/tahsilat/calisma-alani",
         izin: "tahsilat.olustur",
         aciklama:
           "Müşteri bakiyesinden indirim, kupon, kredi mahsubu (Kurban360 esinli).",
@@ -442,16 +462,14 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         id: "iptal",
         ad: "İptal İşlemleri",
         ikon: XCircle,
-        rota: "/tahsilat/iptal",
+        rota: "/tahsilat/calisma-alani",
         izin: "tahsilat.olustur",
       },
       {
         id: "fiyat-yonetimi",
         ad: "Fiyat Yönetimi",
         ikon: TagsIcon,
-        rota: "/tahsilat/fiyat",
-        placeholder: true,
-        faz: "sonrasi",
+        rota: "/tahsilat/calisma-alani",
         izin: "tahsilat.olustur",
         aciklama:
           "Hisse fiyatlarını toplu güncelle, kategori bazlı fiyatlama.",
@@ -465,9 +483,7 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         id: "toplu-tahsilat",
         ad: "Toplu Tahsilat",
         ikon: Send,
-        rota: "/tahsilat/toplu",
-        placeholder: true,
-        faz: "sonrasi",
+        rota: "/tahsilat/calisma-alani",
         izin: "tahsilat.olustur",
         aciklama:
           "Birden çok müşteriye tek seferde tahsilat (kurumsal ödeme).",
@@ -533,9 +549,7 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         id: "gelir-gider",
         ad: "Gelir-Gider Analiz",
         ikon: TrendingUp,
-        rota: "/kasa/gelir-gider",
-        placeholder: true,
-        faz: "sonrasi",
+        rota: "/tahsilat/calisma-alani",
         izin: "kasa.goruntule",
         aciklama:
           "Gelir-gider grafiği, kategori bazlı analiz, dönemsel karşılaştırma.",
@@ -549,16 +563,14 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         id: "gun-acilis-kapanis",
         ad: "Gün Açılış / Kapanış",
         ikon: Sunrise,
-        rota: "/kasa/acilis",
+        rota: "/tahsilat/calisma-alani",
         izin: "kasa.acilis",
       },
       {
         id: "banka-mutabakat",
         ad: "Banka Mutabakat",
         ikon: RefreshCw,
-        rota: "/kasa/banka-mutabakat",
-        placeholder: true,
-        faz: "sonrasi",
+        rota: "/tahsilat/calisma-alani",
         izin: "kasa.goruntule",
         aciklama:
           "Banka ekstresi import, otomatik eşleşme (bank reconciliation).",
@@ -572,9 +584,7 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         id: "karlilik",
         ad: "Karlılık Analizi",
         ikon: LineChart,
-        rota: "/kasa/karlilik",
-        placeholder: true,
-        faz: "sonrasi",
+        rota: "/tahsilat/calisma-alani",
         izin: "kasa.goruntule",
         aciklama:
           "Hisse başı kâr/zarar analizi (inecta cost-per-head esinli).",
@@ -1108,8 +1118,6 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
         ad: "Roller & İzinler",
         ikon: ShieldCheck,
         rota: "/ayarlar/roller",
-        placeholder: true,
-        faz: "sonrasi",
         izin: "ayarlar.degistir",
         aciklama: "Özel rol oluşturma, izin matrisi düzenleme.",
         ozellikler: [

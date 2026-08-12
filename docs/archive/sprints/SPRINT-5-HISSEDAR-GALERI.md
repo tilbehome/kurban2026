@@ -1,3 +1,13 @@
+---
+id: ARCH-CEC04B81A1E8
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 5 — Hissedar Atama Akışı + Hayvanlar Galerisi Geliştirme
 
 > 10 Ağustos 2026 uyum notu: Bu belge tarihsel sprint taslağıdır. Yeni ana belgeye göre sistem yalnız büyükbaş kurban içindir; küçükbaş örnekleri uygulanacak kapsam değildir.

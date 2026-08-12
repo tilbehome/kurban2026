@@ -4,6 +4,8 @@
 
 import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
+import { aktifOturum } from "@/shared/lib/session";
+import { masterDataMode, tenantActiveSeasonId, tenantMasterDataService, tenantUseCaseContext } from "@/shared/lib/tenant-master-data-adapter";
 
 export interface KurbanHissedar {
   hisseNo: number;
@@ -33,6 +35,23 @@ export interface KurbanOzet {
 }
 
 export async function kurbanlariListele(): Promise<KurbanOzet[]> {
+  if (masterDataMode() === "postgres") {
+    const oturum = await aktifOturum();
+    if (!oturum) return [];
+    const rows = await tenantMasterDataService().listAnimals(tenantUseCaseContext(oturum, { readOnly: true }), tenantActiveSeasonId());
+    return rows.map((row, index) => {
+      const kesimSirasi = row.queueNo ?? index + 1;
+      return {
+        id: row.id, kesimSirasi, kupeNo: row.earTag, kesimSaati: null,
+        canliAgirlik: row.liveWeightKg ? Number(row.liveWeightKg) : null,
+        hisseGrubu: null, hisseSayisi: 7, bosHisseSayisi: 7,
+        satisBedeli: 0, toplamOdenen: 0, kalan: 0,
+        durum: row.status, kesimDurumu: row.status, ilerlemeYuzde: 0,
+        hissedarlar: Array.from({ length: 7 }, (_, shareIndex) => ({ hisseNo: shareIndex + 1, musteriId: null, adSoyad: null, telefon: null })),
+        aramaIndeks: `#${kesimSirasi} ${row.earTag} ${row.supplierName ?? ""}`.toLocaleUpperCase("tr-TR"),
+      };
+    }).sort((a, b) => a.kesimSirasi - b.kesimSirasi);
+  }
   const kurbanlar = await prisma.kurban.findMany({
     where: { silindiMi: false },
     orderBy: { kesimSirasi: "asc" },

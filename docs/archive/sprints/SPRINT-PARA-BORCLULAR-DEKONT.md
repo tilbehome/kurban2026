@@ -1,3 +1,13 @@
+---
+id: ARCH-187F7CACAAC9
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT — Para Format + Borçlular + Kurumsal Dekont
 
 **Sırayla 3 ayrı commit yapacaksın. Her commit bağımsız — biri çökerse diğerleri etkilenmez.**

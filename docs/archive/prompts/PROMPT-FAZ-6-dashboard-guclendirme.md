@@ -1,3 +1,13 @@
+---
+id: ARCH-931595429F77
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT-FAZ-6: DASHBOARD GÜÇLENDİRME
 
 > **Claude Code'a ver. Otonom modda çalıştır. Her adımda commit at.**

@@ -1,3 +1,13 @@
+---
+id: ARCH-A5700133FCF3
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🚨 SPRINT-P0 — 3 KRİTİK BAYRAM HAZIRLIK DÜZELTMESİ
 
 **Kaynak:** ChatGPT bağımsız audit raporu (25 May 2026)

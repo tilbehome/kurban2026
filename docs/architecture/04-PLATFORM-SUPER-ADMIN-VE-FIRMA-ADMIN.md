@@ -1,6 +1,16 @@
 # 04 — Platform Süper Admin ve Firma Admin
 
-Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir.
+```yaml
+id: ARC-004
+status: IMPLEMENTED_UNVERIFIED
+owner: Architecture-and-Platform
+source_role: platform_control_plane_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
+İlgili bağlayıcı hedefler [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), kaynak çelişkilerinin çözümü [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) içindedir.
 
 ## Ayrım ilkesi
 
@@ -98,6 +108,8 @@ Destek oturumu alanları:
 - erişim sonrası kapanış ve firma görünür özet
 
 ## Faz 2B uygulama kanıtı ve route envanteri
+
+Bu bölümün kanıt özeti ve kapsam sınırı [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) belgesindedir. Aşağıdaki envanter uygulanan yüzeyleri açıklar; canlıya hazır olma beyanı değildir.
 
 `apps/platform-admin` ayrı Next.js uygulaması olarak oluşturulmuştur. Host sınırı merkezi domain config üzerinden ortam başına yalnız `console.tilbecore.com`, `console.staging.tilbecore.com` veya `console.tilbecore.test` kabul eder. Uygulamanın tenant private paketlerine ve tenant Prisma istemcisine bağımlılığı mimari testle yasaktır.
 

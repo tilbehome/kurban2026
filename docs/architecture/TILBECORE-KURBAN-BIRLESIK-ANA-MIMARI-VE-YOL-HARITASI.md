@@ -1,7 +1,17 @@
-# TilbeCore – Kurban Takip
-## Birleşik Ana Mimari, Gelişmiş Dizin Yapısı ve Düzeltilmiş Yol Haritası
+# TilbeCore – Kurban Takip Birleşik Ana Mimari, Gelişmiş Dizin Yapısı ve Düzeltilmiş Yol Haritası
+
+```yaml
+id: RMP-001
+status: PLANNED
+owner: Product-and-Architecture
+source_role: binding_phase_1_12_architecture_roadmap
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
 
 **Belge tarihi:** 10 Ağustos 2026
+**Son kanıt incelemesi:** 12 Ağustos 2026, `74915b6f3f1f8d53116b760b6a6be9797111efa5`
 **Belge durumu:** Bağlayıcı ana mimari ve yol haritası
 **Ürün adı:** TilbeCore – Kurban Takip
 **Kısa ad:** TilbeCore Kurban
@@ -31,13 +41,7 @@ Bu belge yazılırken erişilebilen kayıtlar arasında eski ürün/tasarım bri
 
 ## 2. Karar önceliği ve değişiklik kuralı
 
-Çelişkili iki kayıt bulunduğunda aşağıdaki sıra uygulanır:
-
-1. Kullanıcının daha sonra açıkça kabul ettiği karar.
-2. Tarihli ve sürümlü ana mimari/karar belgesi.
-3. Doğrulanmış kaynak kod ve test kanıtı.
-4. Eski tasarım briefi veya fikir listesi.
-5. Yardımcı öneri ve varsayım.
+Kaynak önceliği ve normatif hedef ile mevcut uygulama kanıtının nasıl ayrılacağı [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) belgesinin tek sorumluluğudur. Bu yol haritası Faz 1–12 hedef sırası ve çıkış kriterlerinin sahibidir; ayrı bir kaynak önceliği sırası üretmez.
 
 Yeni karar eski kararı tamamen silmez. Karar günlüğünde:
 
@@ -343,12 +347,15 @@ Bir adım başarısızsa hiçbir parça kalıcı olmaz.
 - Hisse kartı hayvandan bağımsız, sürümlü tarife tanımıdır.
 - 30–35, 35–40, 40–45 ve 45–50 kg ifadeleri vaat sınıfıdır; gerçek teslim kilosu değildir.
 - Liste fiyatı, indirim, net anlaşma bedeli, tahsilat ve kalan ayrı tutulur.
-- Müşteri kabul ettiğinde ödeme olmasa da satış ve alacak oluşur.
-- Herhangi bir pozitif tutar kapora sayılabilir.
-- Kapora son tarihine kadar kapora yoksa satış ters kayıtla iptal edilir ve hisse açılır.
+- Kaporasız müşteri kaydı yalnız süreli rezervasyondur; kesin satış, gelir veya alacak oluşturmaz.
+- Herhangi bir pozitif tahsilat kaporadır ve ancak bu anda fiyat snapshot'lı kesin satış ile alacak oluşur.
+- Kapora son tarihine kadar ödeme yoksa rezervasyon süre sonu olayıyla kapanır ve hisse işletme envanterine açılır; hiç oluşmamış satış için ters finans kaydı üretilmez.
 - Kaporalı/tamamlanmış satışın iptalini yönetici yapar; kesinti yoktur, tahsilat iade/mahsup edilir.
 - Transfer fiyat farkını cariye işler; eski sahiplik ve fiyat geçmişi korunur.
-- Yedinci hisse satılmazsa kesimden önce işletme sahibi/aileden gerçek kişi kurban niyeti ve vekâletiyle kaydedilir; sahte ticari gelir oluşturulmaz.
+- Satılmamış hisse işletme envanteridir; sahte müşteri, vekâlet, satış, gelir veya alacak üretilmez.
+- Satılmamış işletme hissesinin kesim öncesi dinî uygunluk çözümü henüz kesinleşmemiştir; açık karar verilene kadar hazırlık engeli/istisna olarak görünür.
+
+Yerine geçen karar: Önceki “ödemesiz kesin satış/alacak” ve “satılmayan hisseyi işletme sahibi/aileden gerçek kişiye atama” yaklaşımı, kullanıcının 12 Ağustos 2026 tarihli açık düzeltmesiyle geçersiz kılınmıştır. Gerekçe; rezervasyon ile finansal satışı ayırmak ve sahte kişi, vekâlet ya da finans hareketi üretmemektir. Ayrıntılı bağlayıcı domain kaynağı [DOM-007](../domains/DOM-007-HISSE-SATIS-TRANSFER-VE-IPTAL.md) belgesidir.
 
 ### 6.4 Tahsilat ve kasa
 
@@ -646,16 +653,20 @@ domains/share-sales/
 
 Mevcut `app`, `components`, `modules`, `shared`, `prisma` yapısı tek seferde taşınmaz.
 
+Repo bugün geçiş monoreposudur: gerçek `apps/*` ve `packages/*` bulunur; legacy tenant uygulaması hâlâ kök dizinleri ve kök Prisma tüketicilerini kullanır. `tenant-web`, `field-pwa`, `public-display` ve sürekli ayrı worker fiziksel geçişleri tamamlanmış değildir. Ana belgedeki `field-pwa`, `worker`, `domains/*` adları hedef tercihtir; alternatif adlarla çatışma kabul edilmiş ADR olmadan fiziksel taşıma veya yeniden adlandırmayla çözülmez.
+
 Geçiş sırası:
 
 1. Mimari bağımlılık envanteri ve import grafiği çıkarılır.
-2. Workspace ve boş hedef paketler davranış değiştirmeden oluşturulur.
+2. Workspace sözleşmesi kurulur; boş hedef paket veya `.gitkeep` iskeleti oluşturulmaz.
 3. Mevcut uygulama geçici olarak `apps/tenant-web` rolünü sürdürür.
 4. Önce ortak güvenlik/API/i18n/test paketleri ayrılır.
 5. Sonra yeni geliştirilen domainler hedef yapıda doğar.
 6. Eski modüller testlerle ve küçük partiler hâlinde taşınır.
 7. Her taşıma sonrası lint, typecheck, test, build ve smoke test çalışır.
 8. Eski klasör yalnız bütün importlar ve davranış kanıtlandıktan sonra kaldırılır.
+
+Dizin taşıması ile davranış değişikliği aynı committe birleştirilmez. `DIR-001` kapanış sırası ve kanıtları [ARC-015](15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md), açık ad kararı `DEC-001` içinde tutulur.
 
 ---
 
@@ -804,6 +815,8 @@ Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçe
 
 #### Faz 2B — Platform Control Plane ve Süper Admin MVP
 
+**Doğrulanmış durum (12 Ağustos 2026):** Kodlandı ve `74915b6` CI kapsamındaki PostgreSQL/migration/test/build kapılarında doğrulandı; canlı/genel kabul bekliyor. Ayrıntılı tek kanıt özeti [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) belgesidir.
+
 **Mevcut durum:** Uygulandı — genel doğrulama bekliyor. Platform PostgreSQL `0001..0007`, ayrı `apps/platform-admin`, parola+TOTP, WebAuthn/passkey ve hashlenmiş tek kullanımlık recovery, DB session/device, dört platform rolü, güvenli bootstrap, komuta merkezi, firma 360°, provisioning, plan/lisans, domain, backup, SupportSession, kullanıcı/audit, incident/bakım/acil durdurma, yapılandırma farkı ve onaylı firma operasyon iş akışları gerçek Platform DB adaptörlerine bağlanmıştır. Tenant runtime aktif firma, bakım, read-only, tam durdurma ve modül scope politikasını request öncesi fail-closed uygular. Provisioning sonrası ilk backup işi kuyruğa alınır; backup metadata’sı oluşmadan ilk Firma Admin için tek kullanımlık aktivasyon bağlantısı verilemez. Gerçek PostgreSQL migration/repository ve iki firma izolasyon testleri paket sonunda geçmiştir; canlı altyapı ile Faz 2–12 genel kabul dönemi bu durumun dışında kalır.
 
 - Platform PostgreSQL
@@ -896,12 +909,13 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 - Evrensel hisse/QR araması
 - Rezervasyon ve süre
 - Liste/indirim/net fiyat snapshot’ı
-- Satış + opsiyonel kapora tek transaction
-- Kapora son tarihi ve otomatik ters kayıt
+- Kaporasız süreli rezervasyon; satış, gelir, alacak, ledger veya vekâlet üretmeme
+- Herhangi bir pozitif kaporada fiyat snapshot’lı kesin satış, alacak ve tahsilatın tek transaction’da oluşması
+- Kapora son tarihinde ödemesiz rezervasyonun süre sonu olayıyla kapanması ve hissenin işletme envanterine açılması; oluşmamış satış için finansal ters kayıt üretmeme
 - İptal, transfer, sağlık kaynaklı taşıma
-- İşletme sahibi yedinci hisse
+- Satılmamış hissenin sahte kişi/finans/vekâlet üretmeden işletme envanterinde kalması; kesim öncesi dinî uygunluk çözümünün açık karar olarak izlenmesi
 
-**Çıkış:** Eşzamanlı iki satıştan yalnız biri başarılı olur; satış ve finans yarım kalmaz.
+**Çıkış:** Eşzamanlı iki satıştan yalnız biri başarılı olur; sıfır kapora kesin satışı reddeder; kaporasız rezervasyon finans/vekâlet üretmeden süre sonunda açılır; pozitif kaporalı satış ve finans yarım kalmaz.
 
 ### Faz 6 — Ledger, tahsilat ve kasa
 
@@ -1141,6 +1155,21 @@ Faz 2 başlamadan önce verilecek zorunlu kanıtlar:
 ---
 
 ## 15. Son bağlayıcı özet
+
+### 15.1 Yeni nesil YN aktivasyon kapısı
+
+`YN-00..YN-26` bu Faz 1–12 programı kapanmadan etkin değildir. Hazırlık kaynağı bulunması, backlog veya placeholder yüzeyi uygulama başlangıcı sayılmaz.
+
+| Geçiş | Zorunlu kapı | Kanıt | Durum |
+|---|---|---|---|
+| Faz 1–12 → YN karar dondurma | Tüm faz çıkışları; açık P0/P1 yok; migration/restore, tenant izolasyonu, finans mutabakatı, cihaz/E2E ve Kurban Günü provası | REQ/TST/EVD/release zinciri ve kullanıcı onayı | `PLANNED` |
+| YN-00 → YN-01..YN-06 temel | Gerçek durum, kapsam, isimler ve karar kaydı donduruldu | Kabul edilmiş ADR/karar ve baseline envanteri | `PLANNED` |
+| YN-01..YN-06 → YN-07..YN-16 platform/domain | Dizin, modül, domain, ledger, tasarım sistemi ve 360 sözleşmeleri doğrulandı | Mimari sınır, migration ve sözleşme testleri | `PLANNED` |
+| YN-07..YN-16 → YN-17..YN-25 operasyon | Firma aktivasyonu ve ticari/operasyon çekirdekleri kabul edildi | Tenant/finans/iş akışı EVD’leri | `PLANNED` |
+| YN-25 → YN-26 | Tam ekran envanteri ve placeholder temizliği geçti | Menü/route/cihaz kabul matrisi | `PLANNED` |
+| YN-26 → release | İkinci genel doğrulama ve tam Kurban Günü provası | Değişmez commit, EVD ve go/no-go | `PLANNED` |
+
+Kapı istisnası [GOV-013](../governance/GOV-013-TESLIM-IZLENEBILIRLIK-VE-GITHUB-HEDEFI.md) uyarınca kimlikli, süreli, risk sahibi ve onaylı olmadıkça geçerli değildir. YN fazlarının ayrıntılı kapsamı salt-okunur kaynak pakette `PLANNED` girdi olarak tutulur; bu belge onları uygulandı saymaz.
 
 - Ürün yalnız tek çiftlik için geçici program değil, çok firmalı TilbeCore Kurban platformudur.
 - Çok firma çekirdeği Faz 2’de, iş domainlerinden önce kurulacaktır.

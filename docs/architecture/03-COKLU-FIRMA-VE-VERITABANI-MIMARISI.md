@@ -1,5 +1,15 @@
 # 03 — Çoklu Firma ve Veritabanı Mimarisi
 
+```yaml
+id: ARC-003
+status: IMPLEMENTED_UNVERIFIED
+owner: Architecture-and-Data
+source_role: tenant_database_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Kesin karar
 
 Tek kod tabanı kullanılacak; platform için ayrı PostgreSQL, her firmanın operasyon verisi için kendisine ait ayrı PostgreSQL veritabanı bulunacaktır. Firma özel kod kopyaları oluşturulmayacaktır.

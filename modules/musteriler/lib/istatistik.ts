@@ -5,6 +5,8 @@
 
 import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
+import { aktifOturum } from "@/shared/lib/session";
+import { masterDataMode, tenantActiveSeasonId, tenantMasterDataService, tenantUseCaseContext } from "@/shared/lib/tenant-master-data-adapter";
 
 export interface MusteriIstatistik {
   toplam: number;
@@ -20,6 +22,26 @@ export interface MusteriIstatistik {
 }
 
 export async function musteriIstatistik(): Promise<MusteriIstatistik> {
+  if (masterDataMode() === "postgres") {
+    const oturum = await aktifOturum();
+    if (!oturum) return { toplam: 0, odendi: 0, kismi: 0, borclu: 0, hissesiz: 0, toplamBedel: 0, toplamOdenmis: 0, toplamKalan: 0, tahsilatYuzdesi: 0, telefonsuz: 0 };
+    const sonuc = await tenantMasterDataService().searchCustomers(tenantUseCaseContext(oturum, { readOnly: true }), { seasonId: tenantActiveSeasonId(), limit: 200 });
+    const accounts = sonuc.items.map((m) => ({ phone: m.phone, shareCount: m.shareCount, debit: Number(m.seasonAccount?.debitTotal ?? 0), credit: Number(m.seasonAccount?.creditTotal ?? 0), balance: Number(m.seasonAccount?.balance ?? 0) }));
+    const toplamBedel = accounts.reduce((sum, item) => sum + item.debit, 0);
+    const toplamOdenmis = accounts.reduce((sum, item) => sum + item.credit, 0);
+    return {
+      toplam: sonuc.total,
+      odendi: accounts.filter((item) => item.debit > 0 && item.balance <= 0).length,
+      kismi: accounts.filter((item) => item.balance > 0 && item.credit > 0).length,
+      borclu: accounts.filter((item) => item.balance > 0 && item.credit === 0).length,
+      hissesiz: accounts.filter((item) => item.shareCount === 0).length,
+      toplamBedel,
+      toplamOdenmis,
+      toplamKalan: accounts.reduce((sum, item) => sum + item.balance, 0),
+      tahsilatYuzdesi: toplamBedel > 0 ? Math.round((toplamOdenmis / toplamBedel) * 100) : 0,
+      telefonsuz: accounts.filter((item) => !item.phone).length,
+    };
+  }
   const musteriler = await prisma.musteri.findMany({
     where: { silindiMi: false },
     include: {

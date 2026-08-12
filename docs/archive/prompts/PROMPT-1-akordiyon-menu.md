@@ -1,3 +1,13 @@
+---
+id: ARCH-07B078A5CEEA
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT 1: AKORDİYON MENÜ + 35 ALT SAYFA
 
 > Bu prompt'u Claude Code'a tek seferde yapıştır.

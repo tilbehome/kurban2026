@@ -1,3 +1,13 @@
+---
+id: ARCH-124312323204
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🔍 GERÇEK VERİ DENETİMİ RAPORU
 
 **Tarih:** 26 Mayıs 2026

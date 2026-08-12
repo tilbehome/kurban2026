@@ -1,10 +1,21 @@
 # 05 — Kimlik, Yetki ve Destek Erişimi
 
+```yaml
+id: ARC-005
+status: IMPLEMENTING
+owner: Architecture-and-Security
+source_role: identity_authorization_support_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Mevcut durum
 
 - `prisma/schema.prisma` içinde `Kullanici.rol` string: `"admin" | "kasiyer" | "izleyici"` yorumuyla sınırlı.
 - `gorev` alanı TV/personel kullanımına genişletilmiş.
 - P0 ile bazı API yetki kontrolleri eklendi; yine de tüm route’lar standardize edilmiş değildir.
+- Ayrı PlatformUser kimliği, session/cookie, parola+TOTP, passkey/recovery, cihaz/oturum iptali ve yeniden doğrulama `apps/platform-admin` ile uygulanmıştır. Fiziksel passkey cihaz kabulü ve bütün legacy tenant route yetki standardizasyonu tamamlanmış değildir; kanıt sınırı [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) belgesindedir.
 
 ## Hedef rol matrisi
 

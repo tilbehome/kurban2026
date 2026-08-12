@@ -1,3 +1,13 @@
+---
+id: ARCH-9700C2E8EB23
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🔧 SPRINT-FIX-KESIM-LISTESI — A4 düzen ve görsel düzeltme
 
 **Problem:** Yeni eklenen `/raporlar/kesim-listesi` sayfasında 3 sorun var:

@@ -1,3 +1,13 @@
+---
+id: ARCH-1EA688F903E6
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 💰 SPRINT-10 — KASA TESLİM RAPORU (A4 YAZDIRMA)
 
 **Amaç:** Bayram günü Burhan Bey muhasebe başında oturacak. Gün sonu **tüm tahsilatları, ödeme yöntemlerini, kasa hareketlerini, dekontları** tek bir A4 raporda yazdırıp muhasebe arkadaşına teslim edecek.

@@ -1,3 +1,13 @@
+---
+id: ARCH-DB033F82962C
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 15 — KURBAN DOSYASI (Her Dana İçin Tam Dökme Rapor)
 
 **Hedef:** Her kurban için tek sayfalık eksiksiz dosya. Tüm işlemler, ön kapora, tahsilatlar, hissedarlar, vekalet, yöntemler, tarihler, dekontlar, notlar — hiçbir şey eksik kalmaz.

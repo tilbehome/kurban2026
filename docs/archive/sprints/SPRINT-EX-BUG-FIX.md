@@ -1,3 +1,13 @@
+---
+id: ARCH-BE7661E340ED
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT EX — Bug Fix (Bayram Öncesi Kritik Düzeltmeler)
 
 **Tahmini süre**: 2-3 saat

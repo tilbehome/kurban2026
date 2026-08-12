@@ -1,79 +1,73 @@
 # 00 — Mevcut Durum Analizi
 
-## Kaynak doğrulama
+```yaml
+id: ARC-000
+status: VERIFIED
+owner: Architecture
+source_role: verified_repository_snapshot
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
 
-| Kaynak | Durum | Kanıt |
-|---|---|---|
-| Bağlayıcı ana mimari | Okundu / mevcut | `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`, 2026-08-10 |
-| Eski ana yol haritası | Tarihsel kaynak | `docs/archive/legacy/KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`, 2026-08-07 |
-| P0 takip defteri | Okundu / mevcut | `docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md` |
-| Mimari belge | Okundu / tarihsel | `docs/archive/legacy/MIMARI.md` |
-| Veri yüzey audit | Okundu / tarihsel | `docs/archive/legacy/DATABASE_FACE_AUDIT.md` |
-| README | Okundu / mevcut | `README.md` |
-| Prisma şeması | Okundu / mevcut | `prisma/schema.prisma` |
-| Testler | Okundu / mevcut | `shared/lib/*.test.ts`, `modules/tahsilat/lib/dagitim.test.ts`, `tests/*.test.ts` |
-| Faz 1 kapanış commit’i | Okundu / mevcut | `a6720378123f01fb4e19db3fd782a910f18c0acf` |
-| Repo yapısı | Taranmış | `app`, `modules`, `shared`, `components`, `scripts`, `public` |
+## Doğrulama tabanı
 
-Yeni ana mimari, eski yol haritasındaki kesinleşen iş kurallarını korur; çok firma veri izolasyonu, Platform Süper Admin, Platform PostgreSQL ve firma başına ayrı PostgreSQL kararlarını Faz 2 çekirdeğine alır. Eski “SaaS sonra” yaklaşımı yalnız self-service üyelik, otomatik abonelik/faturalama, gelişmiş çok şube ve ticari SaaS özellikleri için geçerlidir.
+Bu fotoğraf doğrudan `74915b6f3f1f8d53116b760b6a6be9797111efa5` ağacından çıkarıldı. Commit, inceleme anında `agent/docs-core`, `main` ve `origin/main` referanslarının ortak HEAD değeriydi. [GitHub Actions koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803) `success` sonucuyla tamamlandı.
 
-## Repo ölçeği
+Kaynak paketindeki yeni nesil planlar mevcut kod kanıtı sayılmadı. Arşiv belgeleri yalnız tarihsel bağlam olarak kullanıldı.
 
-| Alan | Gözlem |
+## Tekrarlanabilir repo envanteri
+
+| Alan | Değer |
 |---|---:|
 | `app` dosyaları | 227 |
-| App Router sayfaları | 126 |
-| API route dosyaları | 74 |
-| `modules` dosyaları | 166 |
-| Test dosyaları | 7 |
-| Test sayısı | 84 |
+| `apps` dosyaları | 80 |
+| `modules` dosyaları | 170 |
+| `packages` dosyaları | 90 |
+| TypeScript/TSX dosyaları | 624 |
+| `page.tsx` dosyaları | 142 |
+| `route.ts` dosyaları | 105 |
+| Test dosyaları | 33 |
+| Workspace app/package manifestleri | 13 |
+| Legacy SQLite Prisma modelleri | 18 |
+| Platform PostgreSQL modelleri | 33 |
+| Tenant PostgreSQL modelleri | 21 |
+| Platform migration dizinleri | 7 |
+| Tenant migration dizinleri | 3 |
 
-## Mevcut teknoloji
+Sayaçlar `rg --files`, `Get-ChildItem` ve Prisma şemalarında `rg '^model '` ile üretildi. Bunlar ürün tamamlanma ölçütü değil, yalnız commit fotoğrafıdır.
 
-- Next.js 16.2.6, React 19, TypeScript.
-- Prisma 6.19.3.
-- Veri kaynağı hâlâ SQLite: `prisma/schema.prisma` içinde `datasource db { provider = "sqlite" }`.
-- LAN kullanımı destekleniyor: `package.json` içinde `dev` ve `start` `--hostname 0.0.0.0`.
-- PWA var: `next-pwa`, `public/manifest.json`, `public/sw-version.json`.
-- Auth/session iron-session ile dosya içi yardımcılar üzerinden yürüyor.
+## Doğrulanmış çalışma yapısı
 
-## Mevcut mimari puanı
+- Kök uygulama legacy Next.js/SQLite yüzeyini koruyor.
+- Workspace altında `apps/platform-admin`, `apps/provisioning-cli` ve `apps/tenant-ops-cli` bulunuyor.
+- On paket bulunuyor: `config`, `contracts`, `database-platform`, `database-tenant`, `operations`, `platform`, `provisioning`, `tenant-core`, `tenant-runtime`, `tenant-web-runtime`.
+- Platform DB PostgreSQL şeması `0001..0007`; tenant DB PostgreSQL şeması `0001..0003` migration zincirine sahip.
+- Legacy root `prisma/schema.prisma` SQLite ve `Float` para alanlarını hâlâ taşıyor. Mevcut legacy route’lar bütünüyle yeni tenant runtime/Decimal ledger modeline taşınmış değil.
+- CI PostgreSQL 16 platform ve tenant servisleriyle migration apply, platform integration, iki tenant izolasyonu/backup doğrulaması, typecheck, unit/route test, lint, iki build ve UTF-8 kapılarını çalıştırıyor.
 
-Genel puan: 6.2 / 10.
+## Faz durumu
 
-Güçlü taraflar:
+| Alan | Doğrulanmış durum |
+|---|---|
+| Faz 1 | Eski takip kaydında tamamlandı; bu belgede yeniden kabul yapılmadı |
+| Faz 2A | Mimari sözleşme/import grafiği çıkış şartları karşılandı |
+| Faz 2B | Kodlandı ve `74915b6` CI kapsamındaki senaryolarda doğrulandı; genel/canlı kabul bekliyor |
+| Faz 2C | Önemli tenant DB, runtime, pool, provisioning ve backup parçaları kodlandı; genel/canlı kabul bekliyor |
+| Faz 2D–12 | Bazı sözleşme ve başlangıç modelleri var; uçtan uca ürün tamamlanmadı |
 
-- Local-first ve LAN odaklı kurulum zaten düşünülmüş.
-- App Router yapısı ve modül klasörleri var.
-- P0 ile hisse atama, saha satış, vekâlet dosya erişimi ve kritik yetkiler sertleşti.
-- Audit modeli var.
-- TV/personel/müşteri takip ekranları gerçek operasyon akışına yaklaşmış.
-- Test altyapısı çalışıyor ve 84 test geçiyor.
+Faz 2B ayrıntısı ve kanıt sınırı [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) belgesindedir.
 
-Zayıf taraflar:
+## Açık teknik boşluklar
 
-- Finansal tutarlar `Float`; kuruş/decimal veya ledger temeli yok.
-- Platform/firma ayrımı yok.
-- Firma başına ayrı PostgreSQL kararına uygun tenant/veritabanı yönlendirme yok.
-- Platform Süper Admin ayrı kimlik, session/cookie, rol/izin ve audit alanıyla `apps/platform-admin` içinde uygulanmıştır; passkey/WebAuthn, canlı DNS/TLS/deployment ve tam platform operasyon sertleştirmesi henüz tamamlanmamıştır.
-- API route dosyalarında iş kuralları büyümüş durumda; örnekler: `app/api/tahsilat/odeme/route.ts` 398 satır, `app/api/saha-satis/route.ts` 309 satır, `app/api/tv/kurban-asama/route.ts` 196 satır.
-- Marka/firma kimliği karışık: `public/manifest.json`, `shared/components/sidebar/SidebarHeader.tsx`, `app/api/tahsilat/dekont/[id]/route.ts`, seed dosyaları.
-- Çoklu dil/RTL temeli yok.
-- Çok sayıda placeholder veya sonraki faz ekranı menüde görünür durumda.
+- Legacy SQLite iş akışlarının yeni tenant PostgreSQL runtime’a aşamalı taşınması.
+- Legacy finansal `Float` alanlarının doğrulanmış Decimal/Numeric ledger akışına göçü.
+- Canlı DNS/TLS/reverse proxy ve deployment kanıtı.
+- Fiziksel WebAuthn authenticator kabulü.
+- Production restore onayı, WAL/PITR ve ölçülmüş RPO/RTO.
+- Browser E2E, erişilebilirlik, RTL, yük ve tam Kurban Günü provası.
+- Placeholder ve eski menü/yüzeylerin üretim kapsamı kararı.
 
-## P0 geri dönüş noktası
+## Kanıtsız sayılanlar
 
-- Faz 1 kapanış commit’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
-- Eski `e47bbe5` referansı tarihsel P0 ara noktasıdır; geçerli Faz 1 kapanış kanıtı değildir.
-- Faz 2A workspace/sözleşme/sınır paketi başladı; tamamlandı olarak kabul edilmez. `b536078` yalnız erken saha satış modüler pilotudur; gerçek Faz 2A kanıtları `15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`, `packages/contracts` ve mimari sınır testleriyle izlenir.
-
-## İlk önemli teknik kanıtlar
-
-- `prisma/schema.prisma`: `Kurban.satisBedeli`, `Hisse.hisseFiyati`, `Odeme.nakit/havale/kart/toplamTutar`, `KasaHareketi.tutar` alanları `Float`.
-- `prisma/schema.prisma`: platform/firma/tenant modeli yok.
-- `prisma/schema.prisma`: `Kullanici.rol` string ve firma operasyon kullanıcısı ile platform kullanıcısı ayrımı yok.
-- `public/manifest.json`: Ada Bereket adı ve `#DE0B1E` marka rengi sabit.
-- `shared/components/sidebar/SidebarHeader.tsx`: Ada Bereket adı/logo sabit.
-- `app/api/tahsilat/dekont/[id]/route.ts`: Ada Bereket fallback firma adı, logo ve TilbeCore footer aynı belge üretim alanında.
-- `shared/lib/audit.ts`: UTF-8/mojibake taramasında bozuk Türkçe yorum örneği yakalandı; uygulama koduna bu analiz görevinde dokunulmadı.
-- `shared/lib/sidebar-config.ts`: AI, ROI, GPS, entegrasyon ve personel alt modülleri gibi çekirdek dışı veya placeholder alanlar menüde bulunuyor.
+Kaynak dosya, route, model veya ekran varlığı tek başına özellik tamamlanması değildir. Bu nedenle repo boyutu, migration dosyasının varlığı ve unit testler `canlıya hazır` ifadesi için kullanılmaz.

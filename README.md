@@ -1,5 +1,15 @@
 # TilbeCore – Kurban Takip
 
+```yaml
+id: GOV-ROOT-002
+status: IMPLEMENTING
+owner: Product-and-Architecture
+source_role: repository_entrypoint_and_product_overview
+source_of_truth: false
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 > Büyükbaş kurban işletmeleri için hayvan tedarikinden sezon kapanışına kadar satış, finans ve kesim operasyonunu tek zincirde yöneten; mobil saha kullanımı, yerel ağ dayanıklılığı ve çok firma veri izolasyonu hedefli profesyonel yönetim platformu.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.6-000000?logo=nextdotjs)](https://nextjs.org/)
@@ -29,7 +39,7 @@
 - [Kesim günü operasyon merkezi](#kesim-günü-operasyon-merkezi)
 - [Mimari](#mimari)
 - [Teknoloji yığını](#teknoloji-yığını)
-- [İleri teknoloji hedefleri](#ileri-teknoloji-hedefleri)
+- [İleri teknoloji hedefleri](#i%CC%87leri-teknoloji-hedefleri)
 - [Veri ve finans bütünlüğü](#veri-ve-finans-bütünlüğü)
 - [PWA, çevrimdışı çalışma ve gerçek zaman](#pwa-çevrimdışı-çalışma-ve-gerçek-zaman)
 - [Güvenlik ve KVKK](#güvenlik-ve-kvkk)
@@ -189,9 +199,9 @@ Her ana kart, ilgili kayda ait yalnızca bilgiyi göstermemeli; o kayıtla yapı
 - Mevcut müşteri seçme veya uyarıya rağmen yeni kişi oluşturma
 - Bir müşteriye birden fazla hisse satışı
 - Liste fiyatı, indirim, hizmet bedeli, vade farkı ve net satışın ayrı izlenmesi
-- Kapora ile kesinleştirme; son tarihte kaporasız satışın kontrollü iptali
+- Pozitif kapora ile kesin satış; kaporasız rezervasyonun son tarihte süre sonu olayıyla kapanması ve hissenin işletme envanterine açılması
 - Hisse transferi ve eski sahiplik/fiyat geçmişinin korunması
-- Satılmayan yedinci hisse için gerçek kişi, niyet ve vekâlet kaydı
+- Satılmayan hisselerin sahte müşteri, satış, gelir, alacak veya vekâlet üretmeden işletme envanterinde kalması; kesim öncesi dinî uygunluk çözümünün açık karar olarak izlenmesi
 
 ### 4. Tedarikçi, alış ve hayvan kabulü
 
@@ -653,6 +663,9 @@ pnpm start                       # Production sunucusu, 0.0.0.0
 pnpm lint                        # ESLint
 pnpm exec tsc --noEmit           # TypeScript kontrolü
 pnpm check:utf8                  # Bozuk Türkçe/UTF-8 taraması
+pnpm validate:docs               # Salt-okunur metadata/envanter/link/secret kalite kapısı
+pnpm validate:docs:write         # GOV-012 envanterini açıkça yeniden üretir
+pnpm test:docs                   # Validator yanlış-başarı fixture testleri
 pnpm test                        # Vitest
 pnpm test:watch                  # Vitest watch
 pnpm test:platform-postgres      # Gerçek PostgreSQL entegrasyon testi
@@ -779,16 +792,7 @@ kurban2026/
 
 ## Belgeleme
 
-Bağlayıcı kaynak sırası:
-
-1. [`docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`](docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md)
-2. [`docs/architecture/00-MEVCUT-DURUM-ANALIZI.md`](docs/architecture/00-MEVCUT-DURUM-ANALIZI.md)
-3. [`docs/architecture/01-HEDEF-SISTEM-MIMARISI.md`](docs/architecture/01-HEDEF-SISTEM-MIMARISI.md)
-4. [`docs/architecture/06-FINANS-VE-LEDGER-MIMARISI.md`](docs/architecture/06-FINANS-VE-LEDGER-MIMARISI.md)
-5. [`docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md`](docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md)
-6. [`docs/architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md`](docs/architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md)
-7. [`docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md`](docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md)
-8. [`AGENTS.md`](AGENTS.md)
+Kaynak önceliği ve çelişki çözümünün tek ana kaynağı [`GOV-003`](docs/governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) belgesidir. Bu README aktif depo girişidir; normatif iş kuralı veya mimari karar kaynağı değildir. Aktif çekirdek belge yolları [`docs/README.md`](docs/README.md) indeksinden açılır.
 
 Teknik referanslar:
 

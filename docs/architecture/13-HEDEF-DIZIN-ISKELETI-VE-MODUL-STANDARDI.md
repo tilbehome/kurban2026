@@ -1,8 +1,22 @@
 # 13 — Hedef Dizin İskeleti ve Modül Standardı
 
+```yaml
+id: ARC-013
+status: PLANNED
+owner: Architecture
+source_role: target_repository_module_standard
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Bu belge fiziksel klasör taşıma talimatı değildir. Hedef yapıyı tarif eder; boş ve göstermelik kurumsal dizinler şimdi oluşturulmayacaktır. Yeni klasörler yalnız gerçek çalışan kod taşındığında veya yeni paket fiilen kullanılmaya başladığında açılacaktır.
 
-Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu dosyadaki eski sıra veya adlandırma ana belgeyle çelişirse ana belge uygulanır.
+Repo hâlâ geçiş monoreposudur: yeni `apps/*` ve `packages/*` vardır; legacy tenant uygulaması kök `app`, `modules`, `shared`, `components` ve `prisma` yapılarına bağlıdır. `tenant-web`, `field-pwa`, `public-display` ve ayrı sürekli worker fiziksel geçişleri tamamlanmış değildir. Kök legacy Prisma tüketicileri taşınmadan bu dizinler kaldırılamaz.
+
+Adlandırma için ana belgedeki `field-pwa`, `worker` ve `domains/*` yönü hedef tercihidir; `tenant-mobile`, `jobs-worker` ve `modules` karşılıkları kabul edilmiş ADR olmadan sessizce yeniden adlandırılmaz. Konu `DEC-001` olarak açıktır; karar çıkana kadar fiziksel taşıma yoktur.
+
+Bu dizin standardının ilgili bağlayıcı mimari bağlamı [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md)’dir. Kaynaklar arasında çelişki varsa karar yalnız [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile verilir.
 
 ## Kesin karar
 
@@ -19,9 +33,9 @@ Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesi
 apps/
   platform-admin/
   tenant-web/
-  tenant-mobile/
+  field-pwa/                 # hedef tercih; tenant-mobile adı DEC-001 açık kararıdır
   public-display/
-  worker/
+  worker/                    # hedef tercih; jobs-worker adı DEC-001 açık kararıdır
   provisioning-cli/
   integration-gateway/   # gelecek
   print-agent/           # gelecek
@@ -61,7 +75,7 @@ fixtures/
 |---|---|---|
 | `apps/tenant-web` | Firma operasyon uygulaması: müşteri, hayvan, hisse, tahsilat, kesim, teslimat | Faz 2A taşıma matrisi ve import sınırları onaylandıktan sonra |
 | `apps/platform-admin` | TilbeCore platform paneli, firma/lisans/deployment/support yönetimi | Faz 2B Platform DB ve platform kimliği tasarımı hazır olduğunda |
-| `apps/tenant-mobile` | Role özel mobil saha PWA ekranları | Firma auth/izin ve saha görev sözleşmeleri netleştiğinde |
+| `apps/field-pwa` (önceki taslak adı `tenant-mobile`) | Role özel mobil saha PWA ekranları | `DEC-001` ad kararı ve firma auth/izin/saha görev sözleşmeleri netleştiğinde |
 | `apps/public-display` | TV ve PII içermeyen tokenlı müşteri takip ekranı | Public read-model ve rate-limit sözleşmeleri hazır olduğunda |
 | `apps/worker` | Zamanlanmış işler, migration orchestration, yedek, lisans kontrolü | Tenant DB ve job ihtiyaçları gerçek use-case ile doğduğunda |
 | `apps/provisioning-cli` | Firma DB oluşturma, migration, durum, devam ve sahiplik kanıtlı geri alma komutları | Faz 2C’de gerçek composition root ve testli CLI olarak oluşturuldu |

@@ -6,6 +6,8 @@
 import { prisma } from "@/shared/lib/prisma";
 import { topla, yuvarla } from "@/shared/lib/para";
 import { alfabeHarfi } from "./avatar";
+import { aktifOturum } from "@/shared/lib/session";
+import { masterDataMode, tenantActiveSeasonId, tenantMasterDataService, tenantUseCaseContext } from "@/shared/lib/tenant-master-data-adapter";
 
 export interface MusteriOzet {
   id: string;
@@ -40,6 +42,33 @@ export interface ListeSonucu {
 export async function musterileriListele(
   filtreler: ListeFiltreleri = {},
 ): Promise<ListeSonucu> {
+  if (masterDataMode() === "postgres") {
+    const oturum = await aktifOturum();
+    if (!oturum) return { liste: [], toplam: 0, doluHarfler: new Set() };
+    const sonuc = await tenantMasterDataService().searchCustomers(
+      tenantUseCaseContext(oturum, { payload: filtreler, readOnly: true }),
+      { query: filtreler.arama, seasonId: tenantActiveSeasonId(), limit: filtreler.limit, offset: filtreler.offset },
+    );
+    const mapped: MusteriOzet[] = sonuc.items.map((m) => {
+      const toplamBedel = Number(m.seasonAccount?.debitTotal ?? 0);
+      const toplamOdenen = Number(m.seasonAccount?.creditTotal ?? 0);
+      const kalan = Number(m.seasonAccount?.balance ?? 0);
+      return {
+        id: m.id, adSoyad: m.displayName, telefon: m.phone ?? null,
+        hisseSayisi: m.shareCount, toplamBedel, toplamOdenen, kalan,
+        durum: m.shareCount === 0 ? "yok" : kalan <= 0 ? "odendi" : toplamOdenen > 0 ? "kismi" : "odenmedi",
+        kayitTarihi: new Date(m.createdAt), ilkKurbanNo: null, ilkHisseNo: null,
+      };
+    });
+    const liste = mapped.filter((m) => {
+      if (filtreler.harf && alfabeHarfi(m.adSoyad) !== filtreler.harf) return false;
+      if (filtreler.durum === "borclu") return m.kalan > 0 && m.toplamOdenen === 0;
+      if (filtreler.durum === "kismi") return m.kalan > 0 && m.toplamOdenen > 0;
+      if (filtreler.durum === "odendi") return m.kalan <= 0 && m.hisseSayisi > 0;
+      return true;
+    });
+    return { liste, toplam: sonuc.total, doluHarfler: new Set(mapped.map((m) => alfabeHarfi(m.adSoyad))) };
+  }
   // Soft delete: silinenler hariç (MIMARI §5.3)
   const where: Record<string, unknown> = { silindiMi: false };
 

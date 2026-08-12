@@ -1,5 +1,15 @@
 # 09 — Veri Göçü, Yedek ve Güncelleme
 
+```yaml
+id: ARC-009
+status: IMPLEMENTED_UNVERIFIED
+owner: Architecture-and-Data
+source_role: migration_backup_update_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Veri politikası
 
 Mevcut yerel veriler geliştirme/test verisi kabul edilmiştir. Buna rağmen dönüşümler script/migration olarak, dry-run ve raporla yapılmalıdır. Harici yedeklere ve `backups` klasörüne rastgele dokunulmaz.

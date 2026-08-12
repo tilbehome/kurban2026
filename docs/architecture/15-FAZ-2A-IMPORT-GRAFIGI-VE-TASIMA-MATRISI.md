@@ -1,8 +1,20 @@
 # 15 — Faz 2A Import Grafiği ve Taşıma Matrisi
 
-Birinci kaynak: `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`.
+```yaml
+id: ARC-015
+status: VERIFIED
+owner: Architecture
+source_role: phase_2a_import_graph_and_migration_record
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
+İlgili bağlayıcı mimari bağlam [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), kaynak çelişkilerinin tek çözüm kuralı [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md)’tür.
 
 Bu belge Faz 2A kapsamında davranış değiştirmeden çıkarılan import grafiğini, bağımlılık sınırlarını ve sonraki küçük taşıma paketlerinin matrisini tutar. Bu paket uygulama route davranışını, Prisma şemasını, veritabanını veya mevcut app dizinlerini taşımaz.
+
+Faz 2A sonrasında Faz 2B/2C ile gerçek `apps/*`, `packages/*`, PostgreSQL ve runtime uygulamaları eklenmiştir. Bu belge tarihsel Faz 2A baseline’ını korur; güncel repo fotoğrafı için [ARC-000](00-MEVCUT-DURUM-ANALIZI.md) kullanılır.
 
 ## Doğrulama kanıtı
 
@@ -36,6 +48,20 @@ Bu commit Faz 2A’nın tamamlandığı anlamına gelmez. Faz 2A’nın gerçek 
 ## Mevcut workspace durumu
 
 `package.json` kök uygulama paketidir ve Next.js uygulaması hâlâ kökte çalışır.
+
+Bu nedenle repo bir geçiş monoreposudur. Yeni `apps/*`/`packages/*` yanında legacy tenant web hâlâ kök `app/modules/shared/components/prisma` importlarına dayanır. `tenant-web`, `field-pwa`, `public-display` ve sürekli ayrı worker hedeflerinin fiziksel geçişi tamamlanmamıştır; kök Prisma tüketicileri taşınmadan legacy dizinler kaldırılmaz. Dizin taşıması ile davranış değişikliği aynı committe birleştirilmez.
+
+### DIR-001 kapanış kriterleri
+
+`DIR-001` yalnız aşağıdakiler birlikte kanıtlandığında kapanır:
+
+1. `field-pwa/tenant-mobile`, `worker/jobs-worker`, `domains/modules` ad kararı kabul edilmiş ADR ile kapanır.
+2. Kök tenant web import grafiği sıfırlanır veya açık, testli uyumluluk katmanına iner.
+3. `app`, `modules`, `shared`, `components`, `prisma` sahipleri hedefe küçük `git mv` paketleriyle taşınır; her move davranış değişikliğinden ayrıdır.
+4. Tenant-web, field PWA, public display ve worker için build/smoke; legacy route, auth, PWA asset ve Prisma tüketici kontrolleri geçer.
+5. Boş hedef klasör/`.gitkeep` yoktur; kaldırılan her legacy yol için bağlantı/import taraması ve revert noktası vardır.
+
+Aşamalı sıra: ad/ADR → güncel import grafiği → composition root ve alias uyumluluğu → route/use-case bazlı ayrıştırma → tenant-web move → public/PWA move → field-pwa/public-display gerçek yüzeyleri → worker gerçek job’ları → legacy yol kaldırma. Bu görev bu adımların hiçbirinde fiziksel taşıma yapmaz.
 
 Faz 2A öncesinde `pnpm-workspace.yaml` dosyasında `packages` deseni yoktu; yalnız `allowBuilds` politikası vardı. Bu pakette davranış değiştirmeden `packages/*` workspace deseni eklenmiştir. Boş `apps/*` veya göstermelik klasör oluşturulmamıştır.
 
@@ -164,7 +190,7 @@ Test:
 | Platform/tenant TS sözleşmeleri var | Karşılandı | `PlatformTenantDescriptor`, `TenantRuntimeContext`, `TenantDatabaseRef`, `SupportSessionContract`. |
 | Profesyonel domain/origin sözleşmesi var | Karşılandı | `packages/config`, ADR-0001 ve `tests/saas-domain-config.test.ts`. |
 | Platform–tenant veri sınırı ADR’si var | Karşılandı | `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`. |
-| Tenant izolasyon test planı var | Karşılandı | `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md` tenant izolasyon test planı. |
+| Tenant izolasyon test planı var | Karşılandı | `docs/testing/TST-001-MASTER-TEST-PLANI.md` tenant izolasyon test planı; eski architecture yolu yalnız `ARC-010 / SUPERSEDED` yönlendirmesidir. |
 | Paket/app bağımlılık sınırları tanımlandı | Karşılandı | Bu belge ve `tests/architecture-boundaries.test.ts`. |
 | Yasak bağımlılıkları yakalayan test var | Karşılandı | `tests/architecture-boundaries.test.ts`. |
 | Mevcut import grafiği çıkarıldı | Karşılandı | Kök ve modül bazlı sayım tablosu. |

@@ -1,3 +1,13 @@
+---
+id: ARCH-68130906FCCD
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 10 — YENİ MÜŞTERİ FORMU MODERN UI
 
 **Hedef:** `/musteriler/yeni` sayfasını tam fonksiyonel ve modern hale getir.

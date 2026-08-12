@@ -19,7 +19,15 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@tilbecore/config": ["./packages/config/src/index.ts"],
+      "@tilbecore/contracts": ["./packages/contracts/src/index.ts"],
+      "@tilbecore/operations": ["./packages/operations/src/index.ts"],
+      "@tilbecore/platform": ["./packages/platform/src/index.ts"],
+      "@tilbecore/provisioning": ["./packages/provisioning/src/index.ts"],
+      "@tilbecore/tenant-core": ["./packages/tenant-core/src/index.ts"],
+      "@tilbecore/tenant-runtime": ["./packages/tenant-runtime/src/index.ts"],
+      "@tilbecore/tenant-web-runtime": ["./packages/tenant-web-runtime/src/index.ts"]
     }
   },
   "include": [

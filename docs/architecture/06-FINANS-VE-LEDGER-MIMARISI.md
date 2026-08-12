@@ -1,5 +1,15 @@
 # 06 — Finans ve Ledger Mimarisi
 
+```yaml
+id: ARC-006
+status: IMPLEMENTING
+owner: Architecture-and-Finance
+source_role: finance_ledger_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Mevcut finans kanıtı
 
 `prisma/schema.prisma` içinde finansal alanlar `Float`:
@@ -13,6 +23,8 @@
 - `KasaHareketi.tutar`
 
 `shared/lib/para.ts` kuruşa yuvarlama yardımcıları içeriyor; ancak kalıcı model hâlâ `Float`.
+
+Tenant PostgreSQL başlangıç şeması Decimal/Numeric para alanları ve ledger modelleri içerir. Buna rağmen legacy SQLite iş akışları ve yukarıdaki `Float` alanları bütünüyle göç etmediği için finans mimarisi tamamlanmış sayılmaz.
 
 ## Hedef
 

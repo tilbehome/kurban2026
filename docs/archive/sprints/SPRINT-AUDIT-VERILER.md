@@ -1,3 +1,13 @@
+---
+id: ARCH-A4BD18EE7008
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🔍 SPRINT-AUDIT-VERILER — GERÇEK VERİ DENETİMİ
 
 **Amaç:** Tüm sayfalar, kartlar, KPI'lar, grafikler, listeler, raporlar ve bildirimler **gerçek Prisma sorgusu ile** veri çekiyor mu kontrol et. Hiçbir yerde:

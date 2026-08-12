@@ -1,3 +1,13 @@
+---
+id: ARCH-9F5C2292CCF0
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 6 — Personel Mobil Operasyon Paneli
 
 **Tahmini süre**: 4-6 saat

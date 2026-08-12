@@ -1,3 +1,13 @@
+---
+id: ARCH-EA9420BC170E
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 💳 SPRINT-DEKONT-İYİ — Dekont + Tahsilat Form İyileştirmesi
 
 **Hedef:** 3 küçük ama operasyonel değeri yüksek iyileştirme:

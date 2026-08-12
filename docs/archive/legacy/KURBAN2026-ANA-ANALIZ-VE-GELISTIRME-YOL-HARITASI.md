@@ -1,3 +1,13 @@
+---
+id: ARCH-C9DFDEA4F7FB
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # Kurban 2026 — Ana Analiz, Hedef Mimari ve Geliştirme Yol Haritası
 
 **Tarih:** 7 Ağustos 2026

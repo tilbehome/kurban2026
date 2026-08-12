@@ -1,3 +1,13 @@
+---
+id: ARCH-95F11B690456
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # ⏱️ SPRINT-11 — OTOMATİK İLERLEME + AŞAMA SAYACI
 
 **Amaç:** Sistem akıllı olsun. Personel veya admin "İlerlet" butonuna basınca:

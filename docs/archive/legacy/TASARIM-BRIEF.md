@@ -1,3 +1,13 @@
+---
+id: ARCH-A115EEA698D3
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # TİLBECORE KURBAN YÖNETİM SİSTEMİ — TAM VİZYON TASARIM BRİEF
 
 > 10 Ağustos 2026 uyum notu: Bu belge tarihsel tam vizyon/tasarım briefidir. Birinci bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Küçükbaş/adak/akika, gelişmiş çok şube, self-service üyelik, otomatik abonelik/faturalama ve ticari SaaS ayrıntıları ilk canlı kapsamı değildir; çok firma veri izolasyonu ise Faz 2 çekirdeğidir.

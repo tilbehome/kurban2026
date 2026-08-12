@@ -1,3 +1,13 @@
+---
+id: ARCH-0ACA2393455B
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT-FAZ-9: TV KESİM EKRANI (Yeni Tasarım v2)
 
 > **Claude Code'a ver. Otonom modda çalıştır. Her adımda commit at.**

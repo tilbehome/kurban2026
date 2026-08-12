@@ -1,15 +1,25 @@
 # 12 — Fazlar, Riskler ve Geri Dönüş
 
-Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu dosya faz, risk ve geri dönüş özetini o belgeye göre tutar.
+```yaml
+id: GOV-007
+status: IMPLEMENTING
+owner: Product-and-Architecture
+source_role: phase_risk_rollback_register
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
 
-## 10 Ağustos 2026 bağlayıcı faz durumu
+Faz hedef sırası ve çıkış kriterleri için görev yönlendirmesi [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), güncel gerçekleşme için [TRK-001](KURBAN2026-UYGULAMA-TAKIP.md)’dir; kaynak çelişkileri yalnız [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile çözülür. Bu dosyanın tek sahipliği kimlikli riskler ve geri dönüş desenleridir. Teknik borç ve açık kararlar [GOV-014](../governance/GOV-014-TEKNIK-BORC-VE-ACIK-KARAR-KAYDI.md) içinde tutulur.
+
+## 12 Ağustos 2026 doğrulanmış faz durumu
 
 - Faz 1 tamamlandı ve `origin/main` dalına gönderildi.
 - Faz 1 commit: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
-- Faz 2A başladı; tamamlandı olarak kabul edilmez.
+- Faz 2A sözleşme/import grafiği çıkış şartları karşılandı; bu durum sonraki uygulama fazlarının tamamlandığı anlamına gelmez.
 - `b536078` commit’i erken tamamlanan saha satış modüler pilotudur; Faz 2A kapanışı değildir.
 - Gerçek Faz 2A workspace/sözleşme/sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden yürütülür.
-- Faz 2A’da mevcut kaynak kod davranışı, Prisma şeması, PostgreSQL kurulumu veya Süper Admin kodlaması yapılmaz; bunlar onaylı sonraki uygulama paketlerine ayrılır.
+- Faz 2B ve Faz 2C uygulama paketleri Faz 2A sonrasında ilerlemiştir. `74915b6` ile Faz 2B kodu ve CI kapsamı doğrulandı; canlı/genel kabul bekliyor. Faz 2B kanıt sınırı [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) belgesindedir.
 
 ## Yerine geçen faz kararı
 
@@ -60,7 +70,7 @@ Faz 2B/2C uygulama notu: `apps/platform-admin` ayrı platform hostu, kimliği, o
 | Faz 2D | `PRO-003`, `PRO-030` | Import, veri kalitesi ve sezon durum makinesi sözleşmesi firma çekirdek şemasıyla birlikte hazırlanır; Faz 2A’ya kod olarak yığılmaz. |
 | Faz 3 | `PRO-004`, `PRO-005`, `PRO-009` | Müşteri, telefon, KVKK, iletişim izni ve veri kalitesi müşteri/sezon/cari modeliyle ilişkilidir. |
 | Faz 4 | `PRO-003`, `PRO-004`, `PRO-005` | Hayvan, küpe, tedarik ve toplu veri içe aktarma bu fazın veri sınırına bağlıdır. |
-| Faz 5 | `PRO-002`, `PRO-005`, `PRO-032` | Hisse, satış, yedinci hisse, çifte satış denetimi ve kritik satış onayları atomik satış fazında ele alınır. |
+| Faz 5 | `PRO-002`, `PRO-005`, `PRO-032` | Hisse, rezervasyon/kesin satış ayrımı, satılmamış işletme envanteri, çifte satış denetimi ve kritik ödemeli satış onayları atomik satış fazında ele alınır. |
 | Faz 6 | `PRO-002`, `PRO-032` | Finansal onaylar, tahsilat istisnaları, ödeme/kasa farkı ve ledger/tahsilat doğruluğu birlikte ele alınır. |
 | Faz 8 | `PRO-001`, `PRO-006`, `PRO-032` | Operasyon istisnaları, tutarlılık bulguları ve vardiya devri kesim operasyon motoruyla birlikte anlam kazanır. |
 | Faz 9 | `PRO-010`, `PRO-031`, `PRO-035` | Sentetik demo/prova verisi, paket/tartım ve donanım adapterleri gerçek üretim verisinden ayrılır. |
@@ -71,56 +81,64 @@ Faz 2B/2C uygulama notu: `apps/platform-admin` ayrı platform hostu, kimliği, o
 
 ## Kritik teknik riskler
 
-1. Float parasal model.
-2. SQLite → PostgreSQL migration riski.
-3. Tenant routing yanlış DB’ye bağlanma riski.
-4. Platform ve firma kimliklerinin karışması.
-5. Büyük route dosyalarında saklı iş kuralları.
-6. Yetkinin tüm API’lerde standardize olmaması.
-7. PII veya DB secret log sızıntısı.
-8. Vekâlet/belge dosya erişiminde legacy public dosyalar.
-9. PWA offline/sync belirsizliği.
-10. PDF/Excel Türkçe/Arapça font sorunları.
-11. RTL tasarımın sonradan yamalanması.
-12. Testlerin mock ağırlıklı kalması.
-13. Gerçek concurrency’nin PostgreSQL’de doğrulanmaması.
-14. Yedek/restore provasının eksikliği.
-15. Placeholder modüllerin çekirdek ürünü karıştırması.
-16. Session/cookie ayrımının platformda zayıf kurulması.
-17. Kullanıcı rol modelinin string kalması.
-18. Domain olaylarının idempotency/retry tasarımının eksikliği.
-19. Güncelleme öncesi yedek zorunluluğunun otomatik olmaması.
-20. Windows/Linux path ve encoding farkları.
-21. Sezon durum makinesi olmadan satış/kesim/teslim/mutabakat akışlarının karışması.
-22. Güvenli offline kuyruk ve read-only mod olmadan ağ/arıza anında tutarsız yazma riski.
-23. Yapay zekâ çıktısının insan onayı olmadan kritik işlem gibi uygulanması.
-24. Donanım ve dış entegrasyonların adapter/outbox/idempotency sınırı olmadan domain koduna sızması.
-25. Kurban Günü Provası yapılmadan ilk canlı sezona geçilmesi.
+Aşağıdaki kalıcı kayıtlar ancak bağlı iş açılıp telafi kontrolü ve kapanış EVD’si doğrulandıktan ve TRK-001 güncellendikten sonra `CLOSED` yapılabilir.
+
+| ID | Durum | Risk | Sahip | Olasılık | Etki | Tetikleyici | Azaltım / telafi kontrolü | Hedef | Bağlı REQ / issue | Kapanış kanıtı / EVD |
+|---|---|---|---|---|---|---|---|---|---|---|
+| RSK-TECH-001 | OPEN | Float parasal model | Finance-and-Ledger | Yüksek | Çok yüksek | Yeni finans kaydında `Float` veya yuvarlama farkı | Kesin parasal tip, ledger invariantı ve mutabakat kapısı | Faz 6 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | PG parasal invariant ve mutabakat EVD’si |
+| RSK-TECH-002 | OPEN | SQLite → PostgreSQL migration | Data-and-Migration | Yüksek | Yüksek | Üretim verisi taşıma dry-run’ında kayıp/fark | Yedek, dry-run, satır ve finans mutabakatı, geri dönüş provası | Faz 2C–2D | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Migration ve restore EVD’si |
+| RSK-TECH-003 | OPEN | Tenant routing yanlış DB’ye bağlanır | Security-and-Tenancy | Orta | Çok yüksek | Request tenant bağlamı ile çözülen DB uyuşmaz | Request-local bağlama, fail-closed çözümleme ve iki-tenant negatif test | Faz 2C | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Tenant izolasyon EVD’si |
+| RSK-TECH-004 | OPEN | Platform ve firma kimlikleri karışır | Security-and-IAM | Orta | Çok yüksek | Cookie, issuer veya yetki ailesi ortaklaşır | Ayrı host/cookie/issuer/rol alanı ve negatif erişim testi | Faz 2B–2C | REQ eşlemesi karar bekliyor; issue henüz açılmadı | IAM ayrım EVD’si |
+| RSK-TECH-005 | OPEN | İş kuralları büyük route dosyalarında kalır | Architecture-and-Engineering | Yüksek | Yüksek | Route doğrudan iş durumu veya finans kuralı uygular | Use-case/domain portuna aşamalı taşıma ve import sınırı | Faz 2D–10 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Import grafiği, unit ve route smoke EVD’si |
+| RSK-TECH-006 | OPEN | API yetkisi standardize değildir | Security-and-IAM | Yüksek | Çok yüksek | Auth/yetki kapısı olmayan veya UI’ya güvenen route | Merkezi policy, deny-by-default ve route envanteri | Faz 2D–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Negatif auth/IDOR EVD’si |
+| RSK-TECH-007 | OPEN | PII veya DB secret loga sızar | Security-and-Privacy | Orta | Çok yüksek | Log/hata/telemetride credential veya PII görülür | Redaction, güvenli hata gövdesi ve secret tarama | Faz 2B–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Secret/PII negatif test ve log inceleme EVD’si |
+| RSK-TECH-008 | OPEN | Legacy public belge dosyaları yetkisiz açılır | Security-and-Privacy | Orta | Çok yüksek | Hassas dosya `public` veya doğrudan URL’den erişilir | Korumalı depolama, yetkili indirme API’si ve taşınma envanteri | Faz 7 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Dosya erişim ve migration EVD’si |
+| RSK-TECH-009 | OPEN | PWA offline/sync davranışı belirsizdir | Field-Operations | Yüksek | Yüksek | Ağ kesilince aynı iş tekrarlanır veya kaybolur | İşlem sınıfı, idempotent kuyruk ve çatışma UX’i | Faz 10–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Offline yeniden senkronizasyon EVD’si |
+| RSK-TECH-010 | OPEN | PDF/Excel Türkçe/Arapça fontları bozulur | I18n-and-Documents | Orta | Orta | Üretilen belgede glif veya yön kaybı | Gömülü font, UTF-8 ve TR/AR belge fixture’ı | Faz 7–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Görsel belge kabul EVD’si |
+| RSK-TECH-011 | OPEN | RTL sonradan yamalanır | UX-and-I18n | Yüksek | Yüksek | Bileşenler fiziksel yön değerlerine bağımlı kalır | Mantıksal CSS, RTL tasarım tokenı ve görsel test | Faz 12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | RTL cihaz/görsel EVD’si |
+| RSK-TECH-012 | OPEN | Testler mock ağırlıklı kalır | Quality-Engineering | Yüksek | Yüksek | Kritik akış yalnız mock ile geçer | Gerçek PostgreSQL, route ve E2E kalite kapıları | Faz 2C–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | PG/E2E koşu EVD’si |
+| RSK-TECH-013 | OPEN | Gerçek concurrency PostgreSQL’de doğrulanmaz | Quality-and-Data | Yüksek | Çok yüksek | Eşzamanlı satış/tahsilat isteği aynı kaydı kazanır | Unique/lock/transaction/idempotency ve yarış testi | Faz 5–6 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | PG concurrency EVD’si |
+| RSK-TECH-014 | OPEN | Yedek/restore provası eksiktir | Reliability-and-Operations | Yüksek | Çok yüksek | Restore süresi veya veri bütünlüğü bilinmez | Otomatik yedek, doğrulama ve izole restore provası | Faz 12–15 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Değişmez restore/WAL/PITR EVD’si |
+| RSK-TECH-015 | OPEN | Placeholder modüller çekirdek ürünü karıştırır | Product-and-Architecture | Orta | Orta | Registry/menü hazır olmayan yüzeyi aktif gösterir | Runtime readiness ve placeholder dışlama kapısı | Faz 2D–11 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Registry/menü negatif test EVD’si |
+| RSK-TECH-016 | OPEN | Platform session/cookie ayrımı zayıftır | Security-and-IAM | Orta | Çok yüksek | Platform oturumu tenant yüzeyinde kabul edilir | Ayrı cookie adı/domain/issuer ve süreli destek oturumu | Faz 2B | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Çapraz yüzey negatif oturum EVD’si |
+| RSK-TECH-017 | OPEN | Kullanıcı rol modeli string kalır | Security-and-IAM | Yüksek | Yüksek | Serbest rol adı policy kontrolünü aşar | Tipli rol/izin sözleşmesi ve migration | Faz 2D–3 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Rol migration ve negatif yetki EVD’si |
+| RSK-TECH-018 | OPEN | Domain olaylarında idempotency/retry eksiktir | Architecture-and-Engineering | Yüksek | Yüksek | Replay çift finans/operasyon kaydı üretir | Event kimliği, outbox, retry bütçesi ve replay testi | Faz 2D–10 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Replay/idempotency EVD’si |
+| RSK-TECH-019 | OPEN | Güncelleme öncesi yedek otomatik değildir | Reliability-and-Operations | Orta | Çok yüksek | Migration yedeksiz başlatılır | Preflight yedek doğrulama ve fail-closed release kapısı | Faz 15 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Güncelleme/geri dönüş prova EVD’si |
+| RSK-TECH-020 | OPEN | Windows/Linux path ve encoding farkı | Architecture-and-Quality | Orta | Yüksek | CI ile saha hostunda dosya/path sonucu ayrışır | Path API, UTF-8 kapısı ve iki işletim sistemi CI | Faz 1–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Windows/Linux CI ve dosya EVD’si |
+| RSK-TECH-021 | OPEN | Sezon durum makinesi olmadan akışlar karışır | Product-and-Domain | Yüksek | Çok yüksek | Kapalı/yanlış sezona satış, kesim veya mutabakat yazılır | Açık durum makinesi ve çapraz sezon negatif test | Faz 2D–8 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Sezon lifecycle PG/E2E EVD’si |
+| RSK-TECH-022 | OPEN | Ağ/arıza anında tutarsız offline yazı oluşur | Field-Operations | Yüksek | Çok yüksek | O3 işlem offline başarılı gösterilir veya kuyruk yinelenir | O0–O3 sınıfı, read-only mod ve idempotent kuyruk | Faz 10–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Kesinti/sync/readonly EVD’si |
+| RSK-TECH-023 | OPEN | Yapay zekâ çıktısı onaysız kritik işleme dönüşür | Security-and-Operations | Orta | Çok yüksek | AI önerisi satış/finans/yetki durumunu doğrudan değiştirir | İnsan onayı, açık kapsam ve auditli öneri sınırı | Faz 12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Onaysız işlem negatif EVD’si |
+| RSK-TECH-024 | OPEN | Donanım/dış entegrasyon domain koduna sızar | Architecture-and-Integration | Yüksek | Yüksek | Sağlayıcı SDK’sı veya cihaz protokolü domain bağımlılığı olur | Port/adapter, outbox ve idempotency sınırı | Faz 9–15 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Import sınırı ve adapter sözleşme EVD’si |
+| RSK-TECH-025 | OPEN | Kurban Günü Provası olmadan canlı sezona geçilir | Operations-and-Quality | Orta | Çok yüksek | Go/no-go öncesi çok cihazlı tam gün EVD yoktur | Release kapısında zorunlu prova ve geri dönüş tatbikatı | Faz 12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | İmzalı Kurban Günü Provası EVD’si |
 
 ## Kritik iş akışı riskleri
 
-1. Çifte satış.
-2. Kapora alınıp hisse atanmaması veya tersi.
-3. Ödemeli hissenin yanlış boşaltılması.
-4. İptalde ters kayıt/iade zincirinin kopması.
-5. Müşteri mükerrerliği nedeniyle yanlış hissedar.
-6. Ortak telefonlu aile üyelerinin karışması.
-7. Fiyat snapshot kaybı.
-8. Pazarlık/indirim audit eksikliği.
-9. POS vade farkının kasaya yanlış yansıması.
-10. Vekâlet eksikken kesim izni.
-11. Acil sıra değişiminde TV/mobil uyumsuzluğu.
-12. Tartım düzeltmesinin geçmişsiz kalması.
-13. Paket kg farkı iadesinin oluşmaması.
-14. Borçlu teslim override’ın kontrolsüz yapılması.
-15. QR belgenin tekrar kullanılması.
-16. Yedi hisse teslim olmadan hayvan kapanması.
-17. İnternet kesintisinde lisansın sistemi durdurması.
-18. Yedek geri dönüşünün çalışmaması.
-19. Demo verinin canlıya karışması.
-20. Destek kullanıcısının sessiz veri erişimi.
-21. Ödemeli hisse iptali, teslimat geri alma, kasa kapatma, yetki değişikliği veya toplu işlemin yeniden doğrulama/ikinci yetkili onayı olmadan yapılması.
-22. Teslim edilmeyen paket, eksik vekâlet, ödeme/kasa farkı veya sezon kapanış farklarının otomatik denetime takılmaması.
+Aşağıdaki kayıtların sahipleri risk bazında görünürdür; finans, tenant ve kesim risklerinin kapanışı ilgili uzmanlık sahibinin ortak onayını gerektirir.
+
+| ID | Durum | Risk | Sahip | Olasılık | Etki | Tetikleyici | Azaltım / telafi kontrolü | Hedef | Bağlı REQ / issue | Kapanış kanıtı / EVD |
+|---|---|---|---|---|---|---|---|---|---|---|
+| RSK-WFL-001 | OPEN | Çifte satış | Sales-and-Shares | Yüksek | Çok yüksek | Aynı hisse için iki eşzamanlı satış kazanır | Transaction, unique/lock ve idempotency | Faz 5 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | PG yarış testi EVD’si |
+| RSK-WFL-002 | OPEN | Kapora ile hisse ataması ayrışır | Sales-and-Finance | Yüksek | Çok yüksek | Kapora var/hisse yok veya tersi oluşur | Tek atomik use-case ve başarısızlık rollback’i | Faz 5–6 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Atomiklik PG EVD’si |
+| RSK-WFL-003 | OPEN | Ödemeli hisse yanlış boşaltılır | Sales-and-Finance | Orta | Çok yüksek | Hareketli hisse doğrudan sahipsiz yapılır | Silme yasağı, onaylı iptal/transfer ve reversal | Faz 5–6 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Ödemeli hisse negatif EVD’si |
+| RSK-WFL-004 | OPEN | İptalde ters kayıt/iade zinciri kopar | Finance-and-Ledger | Orta | Çok yüksek | İptal sonrası bakiye/kasa/satış ayrışır | Bağlı reversal/iade/mahsup ve mutabakat | Faz 6 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | İptal-iade ledger EVD’si |
+| RSK-WFL-005 | OPEN | Müşteri mükerrerliği yanlış hissedar üretir | Customer-and-Sales | Yüksek | Yüksek | Arama yanlış müşteri kartını seçer | Kimlik bağlamı, uyarı ve manuel doğrulama | Faz 3–5 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Mükerrer müşteri E2E EVD’si |
+| RSK-WFL-006 | OPEN | Ortak telefonlu aile üyeleri karışır | Customer-and-Sales | Yüksek | Yüksek | Telefon benzersizlik kuralı kişileri birleştirir | Telefonu uyarı alanı yap; ayrı müşteri/hissedar koru | Faz 3–5 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Ortak telefon pozitif/negatif EVD’si |
+| RSK-WFL-007 | OPEN | Fiyat snapshot kaybolur | Sales-and-Finance | Orta | Çok yüksek | Liste fiyatı değişince satılmış hisse değişir | Anlaşılmış fiyat ve indirim immutable snapshot | Faz 5–6 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Satılmış/satılmamış fiyat EVD’si |
+| RSK-WFL-008 | OPEN | Pazarlık/indirim audit izi eksiktir | Sales-and-Finance | Yüksek | Yüksek | Anlaşılmış fiyat farkı açıklamasız kalır | Liste, satış ve indirim ayrı alan/hareket/audit | Faz 5–6 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Fiyat/indirim audit EVD’si |
+| RSK-WFL-009 | OPEN | POS vade farkı kasaya yanlış yansır | Finance-and-Ledger | Orta | Çok yüksek | Vade farkı toplam ödemeye uygulanır | Yalnız POS bileşenine kesin hesap ve dağıtım | Faz 6 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Karma ödeme/POS EVD’si |
+| RSK-WFL-010 | OPEN | Eksik vekâletle kesim izni verilir | Proxy-and-Slaughter | Orta | Çok yüksek | Kesim geçişinde geçerli vekâlet önkoşulu yoktur | Kesim state guard ve açık istisna/onay izi | Faz 7–8 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Eksik vekâlet negatif EVD’si |
+| RSK-WFL-011 | OPEN | Acil sıra değişiminde TV/mobil ayrışır | Slaughter-Operations | Yüksek | Yüksek | Projection ve istasyon farklı sıra sürümü gösterir | Sürümlü sıra olayı, idempotent projection ve refresh | Faz 8–10 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Eşzamanlı sıra değişimi E2E EVD’si |
+| RSK-WFL-012 | OPEN | Tartım düzeltmesi geçmişsiz kalır | Processing-and-Audit | Orta | Yüksek | Ölçüm overwrite edilir | Append-only ölçüm/düzeltme ve audit | Faz 9 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Tartım düzeltme EVD’si |
+| RSK-WFL-013 | OPEN | Paket kg farkı iadesi oluşmaz | Processing-and-Finance | Orta | Yüksek | Teslim miktarı ile fiyat/iade kuralı ayrışır | Değer/miktar dengesi ve onaylı fark akışı | Faz 9–10 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Paket farkı mutabakat EVD’si |
+| RSK-WFL-014 | OPEN | Borçlu teslim override kontrolsüzdür | Delivery-and-Finance | Orta | Çok yüksek | Borç varken tek kullanıcılı teslim gerçekleşir | Policy, yeniden doğrulama, gerekçe ve ikinci onay | Faz 10 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Borçlu teslim negatif/onay EVD’si |
+| RSK-WFL-015 | OPEN | QR belge tekrar kullanılır | Proxy-and-Security | Orta | Çok yüksek | Aynı token ikinci işlemi doğrular | Tek kullanımlık, süreli ve sürümlü token | Faz 7–10 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | QR replay negatif EVD’si |
+| RSK-WFL-016 | OPEN | Yedi hisse teslim olmadan hayvan kapanır | Delivery-and-Slaughter | Orta | Çok yüksek | Hayvan kapanış guard’ı eksik teslimi atlar | Hisse bazlı teslim bütünlüğü ve state guard | Faz 10 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Eksik teslim kapanış negatif EVD’si |
+| RSK-WFL-017 | OPEN | İnternet kesintisinde lisans sistemi durdurur | Platform-and-Operations | Orta | Çok yüksek | Lisans doğrulama servisine erişilemez | Kararı beklenen imzalı tolerans; kanıtsız anlık durdurma yok | Faz 12–15 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Kesinti/lisans toleransı EVD’si |
+| RSK-WFL-018 | OPEN | Yedekten geri dönüş çalışmaz | Reliability-and-Operations | Orta | Çok yüksek | Restore provası başarısız veya veri mutabık değil | İzole restore, checksum ve RPO/RTO ölçümü | Faz 12–15 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | İmzalı restore EVD’si |
+| RSK-WFL-019 | OPEN | Demo veri canlıya karışır | Training-and-Data | Orta | Yüksek | Sentetik profil production tenant’a yüklenir | Ortam/tenant etiketi ve production deny kapısı | Faz 9–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Demo-canlı ayrımı negatif EVD’si |
+| RSK-WFL-020 | OPEN | Destek kullanıcısı sessiz veri erişir | Security-and-Support | Orta | Çok yüksek | Firma onayı/süre/gerekçe olmadan destek oturumu açılır | Firma onaylı süreli kapsam ve değişmez audit | Faz 2B–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | SupportSession negatif/audit EVD’si |
+| RSK-WFL-021 | OPEN | Kritik işlem yeniden doğrulamasız/ikinci onaysız yürür | Security-and-Operations | Yüksek | Çok yüksek | Ödemeli iptal, teslim geri alma, kasa kapama, yetki/toplu işlem tek adımlıdır | Risk bazlı yeniden doğrulama ve ayrık ikinci onay | Faz 6–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Kritik onay matrisi EVD’si |
+| RSK-WFL-022 | OPEN | Operasyon/finans farkları otomatik denetime takılmaz | Audit-and-Data-Quality | Yüksek | Çok yüksek | Eksik paket/vekâlet veya kasa/sezon farkı kapanışı engellemez | Veri kalitesi kuralı, bulgu kuyruğu ve fail-closed kapanış | Faz 8–12 | REQ eşlemesi karar bekliyor; issue henüz açılmadı | Otomatik bulgu ve kapanış negatif EVD’si |
 
 ## Kısa ADR önerileri
 

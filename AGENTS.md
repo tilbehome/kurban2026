@@ -1,6 +1,16 @@
 # AGENTS.md — TilbeCore – Kurban Takip Codex Kuralları
 
-Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu kuralları, sonra bağlayıcı ana mimari belgeyi ve göreve en yakın mimari/gereksinim belgelerini uygular. Ayrıntılı mimari kararları burada tekrar etme; kararın kaynağı olarak ilgili belgeye yönel.
+```yaml
+id: GOV-ROOT-001
+status: VERIFIED
+owner: Product-and-Architecture
+source_role: repository_agent_operating_policy
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
+```
+
+Bu dosya kök çalışma talimatıdır. Codex bu kurallarla birlikte göreve en yakın bağlayıcı mimari/gereksinim belgelerini uygular; kaynaklar arasındaki ilişki ve çelişki yalnız GOV-003 ile çözülür. Ayrıntılı mimari kararları burada tekrar etme; kararın kaynağı olarak ilgili belgeye yönel.
 
 ## 1. Ürün kimliği
 
@@ -11,7 +21,7 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - Kurban Bayramı gibi yüksek yoğunluklu bir günde hızlı, kararlı, hataya dayanıklı ve geri alınabilir çalışmak zorundadır.
 - Ürün markası ile müşteri firma markası birbirine karıştırılmayacaktır.
 
-## 2. Bağlayıcı kaynak sırası
+## 2. Bağlayıcı kaynaklar
 
 - İş kurallarını tahmin etme.
 - Belgelenmiş kullanıcı kararlarını, ana yol haritasını, mimari belgeleri ve gereksinim matrisini kaynak kabul et.
@@ -20,9 +30,9 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - Gereksinim belirsizse kritik iş kuralı uydurma; kullanıcıdan karar iste.
 - Mimari karar değişirse ilgili mimari belgeyi ve takip dokümanını güncelle.
 
-Öncelikli kaynaklar:
+Kaynak önceliğinin tek ana sahibi `docs/governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md` dosyasıdır. Bu dosya ayrı bir öncelik sırası üretmez. Aşağıdaki liste görev yönlendirme listesidir:
 
-- Birinci kaynak: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
+- Mimari ve yol haritası görev yönlendirmesi: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
 - `docs/architecture/00-MEVCUT-DURUM-ANALIZI.md`
 - `docs/architecture/01-HEDEF-SISTEM-MIMARISI.md`
 - `docs/architecture/02-MODULER-MONOLIT-VE-DOMAIN-SINIRLARI.md`
@@ -33,22 +43,24 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - `docs/architecture/07-UTF8-COKLU-DIL-VE-RTL.md`
 - `docs/architecture/08-TASARIM-SISTEMI-VE-MOBIL-PWA.md`
 - `docs/architecture/09-VERI-GOCU-YEDEK-VE-GUNCELLEME.md`
-- `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md`
+- `docs/testing/TST-001-MASTER-TEST-PLANI.md`
+- Tarihsel uyumluluk yolu: `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md` (`ARC-010`, `SUPERSEDED`)
 - `docs/architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md`
 - `docs/architecture/12-FAZLAR-RISKLER-VE-GERI-DONUS.md`
 - `docs/architecture/13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md`
 - `docs/architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md`
 - `docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md`
 - Eski ana yol haritası: `docs/archive/legacy/KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
-- Tarihsel kaynaklar: `docs/archive/legacy/MIMARI.md`, `docs/archive/legacy/DATABASE_FACE_AUDIT.md`, `README.md`, `docs/archive/legacy/CLAUDE.md`
+- Aktif fakat normatif olmayan depo giriş belgesi: `README.md`
+- Tarihsel kaynaklar: `docs/archive/legacy/MIMARI.md`, `docs/archive/legacy/DATABASE_FACE_AUDIT.md`, `docs/archive/legacy/CLAUDE.md`
 
-Yeni ana belgeyle eski belgeler çelişirse yeni ana belge uygulanır; eski karar sessizce silinmez, ilgili dokümanda “yerine geçen karar” ve gerekçesiyle işaretlenir.
+Belgeler çelişirse GOV-003 uygulanır; eski karar sessizce silinmez, ilgili dokümanda “yerine geçen karar” ve gerekçesiyle işaretlenir.
 
 ## 3. Hedef mimari
 
 - Modüler monolit kullanılacaktır.
 - Tek kod tabanı korunacaktır.
-- Faz 2’de çok firma ve veri izolasyonu temel mimari gereksinimdir; ayrıntılar birinci kaynak ana belgede tanımlıdır.
+- Faz 2’de çok firma ve veri izolasyonu temel mimari gereksinimdir; ayrıntılar ilgili bağlayıcı mimari ve yol haritası belgesinde tanımlıdır.
 - Platform için ayrı PostgreSQL ve her firma için ayrı PostgreSQL operasyon veritabanı hedeflenecektir.
 - Platform Süper Admin ile Firma Admin ayrı kimlik, oturum, yetki ve audit alanlarına sahip olacaktır.
 - Firma verisi başka firmalardan kesin olarak izole edilecektir.
@@ -191,6 +203,12 @@ UI/API → Application → Domain
 - `Belgelendi`, `kodlandı`, `test edildi` ve `canlıya hazır` durumları ayrı tutulur.
 - Mimari karar değişirse ilgili mimari belge güncellenir.
 - Bu dosya mimari belgelerin tamamını tekrar etmez; onları bağlayıcı kaynak olarak gösterir.
+- Aktif her belge benzersiz `id`, `status`, `owner`, `source_role`, `source_of_truth`, `last_reviewed` ve doğrulama varsa tam `verified_against_commit` alanlarını taşır.
+- Belge durum dili ve kanıt standardının ana kaynağı `docs/governance/GOV-001-DOKUMANTASYON-POLITIKASI.md`; kaynak önceliğinin ana kaynağı `docs/governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md` dosyasıdır.
+- `PLANNED` henüz uygulanmamış hedefi, `IMPLEMENTED_UNVERIFIED` kodun genel/canlı kabul beklediğini, `VERIFIED` ise yalnız belgede açıkça yazılan commit ve senaryo kapsamının doğrulandığını ifade eder.
+- Mükerrer kural elle çoğaltılmaz; tek ana belgeye bağlanır. Sorumluluğu taşınan eski belge önce `SUPERSEDED`, aktarım ve bağlantı doğrulamasından sonra `ARCHIVED` yapılır.
+- CI kanıtı değişmez commit SHA ve koşu bağlantısıyla tutulur. Başarılı CI tek başına canlı deployment, cihaz, restore, UAT veya Kurban Günü provası kanıtı sayılmaz.
+- `docs/README.md` aktif çekirdek belgelerin tek ana indeksidir; belge kimliği, durum, sahiplik ve kaynak rolü değiştiğinde aynı pakette güncellenir.
 
 ## 14. Codex çalışma biçimi
 

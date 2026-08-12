@@ -10,6 +10,9 @@ export type ShareCardId = Brand<string, "ShareCardId">;
 export type ShareId = Brand<string, "ShareId">;
 export type SaleId = Brand<string, "SaleId">;
 export type LedgerEntryId = Brand<string, "LedgerEntryId">;
+export type ReceiptId = Brand<string, "ReceiptId">;
+export type JournalEntryId = Brand<string, "JournalEntryId">;
+export type FinancialAccountId = Brand<string, "FinancialAccountId">;
 export type IdempotencyKey = Brand<string, "IdempotencyKey">;
 
 export type DecimalString = Brand<string, "DecimalString">;
@@ -18,9 +21,11 @@ export type KilogramString = Brand<string, "KilogramString">;
 export type SeasonStatus = "preparation" | "sales" | "slaughter" | "delivery" | "reconciliation" | "archived";
 export type AnimalStatus = "draft" | "available" | "reserved" | "sold_out" | "slaughtered" | "delivered" | "cancelled";
 export type ShareStatus = "available" | "reserved" | "sold" | "cancelled" | "delivered";
-export type SaleStatus = "draft" | "confirmed" | "cancelled" | "reversed";
+export type SaleStatus = "draft" | "confirmed" | "cancelled" | "reversed" | "transferred";
 export type LedgerEntryType = "sale" | "payment" | "discount" | "expense" | "refund" | "reversal" | "adjustment";
 export type OutboxStatus = "pending" | "processing" | "sent" | "failed" | "dead";
+export type JournalSide = "debit" | "credit";
+export type ReceiptMethod = "cash" | "bank_transfer" | "pos";
 
 export interface TenantEntity {
   tenantInstanceId: TenantInstanceId;
@@ -102,6 +107,24 @@ export interface LedgerEntry extends TenantEntity {
   occurredAt: string;
 }
 
+export interface JournalLineDraft {
+  accountCode: string;
+  side: JournalSide;
+  amount: DecimalString;
+  customerId?: CustomerId;
+  saleId?: SaleId;
+  shareId?: ShareId;
+  memo?: string;
+}
+
+export interface ReceiptMethodSplitDraft {
+  method: ReceiptMethod;
+  amount: DecimalString;
+  referenceNo?: string;
+  posInstallmentCount?: number;
+  posFeeAmount?: DecimalString;
+}
+
 export interface TenantAuditEvent extends TenantEntity {
   action: string;
   actorUserId?: UserId;
@@ -121,9 +144,9 @@ export interface TenantOutboxMessage extends TenantEntity {
 }
 
 const SEASON_TRANSITIONS: Record<SeasonStatus, readonly SeasonStatus[]> = {
-  preparation: ["sales", "archived"],
-  sales: ["slaughter", "reconciliation"],
-  slaughter: ["delivery", "reconciliation"],
+  preparation: ["sales"],
+  sales: ["slaughter"],
+  slaughter: ["delivery"],
   delivery: ["reconciliation"],
   reconciliation: ["archived"],
   archived: [],
@@ -162,6 +185,63 @@ export function assertShareCanBeSold(share: Share): void {
   }
 }
 
+export function assertPositiveMoney(value: DecimalString): void {
+  if (/^-/.test(value) || /^0(?:\.0{1,4})?$/.test(value)) throw new Error("POSITIVE_AMOUNT_REQUIRED");
+}
+
+export function assertNonNegativeMoney(value: DecimalString): void {
+  if (/^-/.test(value)) throw new Error("NEGATIVE_AMOUNT_FORBIDDEN");
+}
+
+export function assertConfirmedSaleHasPositiveDeposit(amount: DecimalString): void {
+  assertPositiveMoney(amount);
+}
+
+export function assertJournalBalanced(lines: readonly JournalLineDraft[]): void {
+  const debit = lines.filter((line) => line.side === "debit").map((line) => line.amount);
+  const credit = lines.filter((line) => line.side === "credit").map((line) => line.amount);
+  if (fixedUnitsSum(debit) !== fixedUnitsSum(credit)) throw new Error("JOURNAL_ENTRY_NOT_BALANCED");
+}
+
+export function decimalAdd(values: readonly DecimalString[]): DecimalString {
+  return fixedUnitsToDecimal(fixedUnitsSum(values));
+}
+
+export function decimalSubtract(left: DecimalString, right: DecimalString): DecimalString {
+  return fixedUnitsToDecimal(toFixedUnits(left) - toFixedUnits(right));
+}
+
+export function decimalCompare(left: DecimalString, right: DecimalString): number {
+  const l = toFixedUnits(left);
+  const r = toFixedUnits(right);
+  return l === r ? 0 : l > r ? 1 : -1;
+}
+
+export function decimalMultiplyInt(value: DecimalString, multiplier: number): DecimalString {
+  if (!Number.isInteger(multiplier) || multiplier < 0) throw new Error("DECIMAL_MULTIPLIER_INVALID");
+  return fixedUnitsToDecimal(toFixedUnits(value) * BigInt(multiplier));
+}
+
 export function assertLedgerEntryImmutableUpdate(): never {
   throw new Error("LEDGER_ENTRY_IMMUTABLE_USE_REVERSAL");
+}
+
+function fixedUnitsSum(values: readonly DecimalString[]): bigint {
+  return values.reduce((sum, value) => sum + toFixedUnits(value), BigInt(0));
+}
+
+function toFixedUnits(value: DecimalString): bigint {
+  const negative = value.startsWith("-");
+  const source = negative ? value.slice(1) : value;
+  const [whole, fraction = ""] = source.split(".");
+  const units = BigInt(whole) * BigInt(10000) + BigInt(fraction.padEnd(4, "0").slice(0, 4));
+  return negative ? -units : units;
+}
+
+function fixedUnitsToDecimal(value: bigint): DecimalString {
+  const negative = value < BigInt(0);
+  const absolute = negative ? -value : value;
+  const whole = absolute / BigInt(10000);
+  const fraction = (absolute % BigInt(10000)).toString().padStart(4, "0").replace(/0+$/, "");
+  return decimal(`${negative ? "-" : ""}${whole.toString()}${fraction ? `.${fraction}` : ""}`);
 }

@@ -1,3 +1,13 @@
+---
+id: ARCH-81F1BAF092C5
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # TİLBECORE KURBAN — YOL HARİTASI VE YENİ MODÜLLER
 
 > 10 Ağustos 2026 uyum notu: Bu belge tarihsel fikir/yol haritası kaynağıdır. Birinci bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir.

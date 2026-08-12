@@ -1,3 +1,13 @@
+---
+id: ARCH-DE76649023CB
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 8 — VEKALET YÖNETİMİ MODERN UI
 
 **Hedef:** `/hayvanlar/vekalet` sayfasını bayram günü kullanıma hazırla.

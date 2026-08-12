@@ -1,8 +1,20 @@
 # ADR-0001 — Profesyonel SaaS Domain, URL, Origin ve Tenant Host Çözümleme Standardı
 
+```yaml
+id: ADR-0001
+status: PLANNED
+owner: Architecture-and-Operations
+source_role: domain_origin_tenant_host_decision
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Durum
 
 Kabul edildi. Bu ADR Faz 2A kapsamında davranış değiştirmeyen sözleşme ve test kararını tanımlar.
+
+`74915b6` merkezi config ve host/origin testleriyle kod düzeyinde doğrulanmıştır. Canlı DNS kaydı, sertifika, reverse proxy ve production erişimi bu ADR’nin doğrulanmış uygulama sonucu değildir.
 
 Domain sahipliği doğrulandı: `tilbecore.com` alan adı kullanıcı tarafından satın alınmış ve domain kayıt panelinde aktif olduğu doğrulanmıştır. Production ana domain kararı taslak değildir; bağlayıcı production değeri `BASE_DOMAIN=tilbecore.com` olarak kabul edilir.
 

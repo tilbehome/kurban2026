@@ -1,3 +1,13 @@
+---
+id: ARCH-DDD46EADBDCD
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 16 — ESNEK FİYATLANDIRMA + MOBİL ALT NAVİGASYON
 
 **Hedef:** (A) Esnek/seçilebilir fiyatlandırma sistemi, (B) Mobil saha kullanımı için alt navigasyon + hızlı işlem butonu.

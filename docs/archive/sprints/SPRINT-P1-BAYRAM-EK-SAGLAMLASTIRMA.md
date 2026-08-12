@@ -1,3 +1,13 @@
+---
+id: ARCH-1B7696E49410
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🛡️ SPRINT-P1 — BAYRAM ÖNCESİ EK SAĞLAMLAŞTIRMA
 
 **Kaynak:** ChatGPT bağımsız audit raporu (25 May 2026) — P1 seviyesi maddeler

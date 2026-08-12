@@ -1,3 +1,13 @@
+---
+id: ARCH-7AFB3BFE4A43
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT-FAZ-7: HİSSE ATAMA UI (Drag-Drop + Stable Görünümü)
 
 > **Claude Code'a ver. Otonom modda çalıştır. Her adımda commit at.**

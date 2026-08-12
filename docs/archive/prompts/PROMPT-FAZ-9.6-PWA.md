@@ -1,3 +1,13 @@
+---
+id: ARCH-55C075F3111A
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT-FAZ-9.6 — PWA + Arka Plan Push (TilbeCore Kurban 2026)
 
 ## 🎯 Hedef

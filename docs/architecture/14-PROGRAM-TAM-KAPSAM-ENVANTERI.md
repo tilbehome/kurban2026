@@ -1,16 +1,27 @@
 # 14 — Program Tam Kapsam Envanteri
 
+```yaml
+id: INV-001
+status: IMPLEMENTING
+owner: Product-and-Architecture
+source_role: program_scope_inventory
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Bu belge, TilbeCore – Kurban Takip yazılımını yalnızca görüşmelerde geçen 68 iş akışıyla değil, mevcut repo, veritabanı şeması, altyapı ve profesyonel ürün beklentileriyle birlikte izlemek için oluşturuldu.
 
 Bu belge bir tamamlanma beyanı değildir. Amaç, bulunan alanları görünür kılmak, durumlarını sınıflandırmak ve sonraki fazlara güvenli dönüşüm listesi vermektir.
 
-Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu envanterde görünen kod, ekran veya route varlığı tek başına ürün kararını veya tamamlanmış özelliği kanıtlamaz.
+Bu envanterin görev bağlamı [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), kaynak ve kanıt değerlendirme kuralı [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md)’tür. Bu envanterde görünen kod, ekran veya route varlığı tek başına ürün kararını veya tamamlanmış özelliği kanıtlamaz.
 
-## 10 Ağustos 2026 uyum notu
+## 12 Ağustos 2026 uyum notu
 
 - Ürün adı TilbeCore – Kurban Takip’tir.
 - Faz 1 tamamlandı: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
-- Faz 2A workspace/sözleşme/sınır paketi başladı; tamamlandı olarak kabul edilmez. `b536078` erken saha satış modüler pilotu olarak sınıflandırılır.
+- Faz 2A workspace/sözleşme/sınır çıkış şartları karşılandı. `b536078` yalnız erken saha satış modüler pilotudur.
+- `74915b6` ile Faz 2B kontrol düzlemi kodlandı ve CI kapsamındaki PostgreSQL senaryolarında doğrulandı; canlı/genel kabul bekliyor.
 - Çok firma veri izolasyonu, Platform Süper Admin ve firma başına ayrı PostgreSQL Faz 2’nin zorunlu temelidir.
 - Çok şube, self-service üyelik, otomatik abonelik/faturalama ve gelişmiş ticari SaaS özellikleri sonraya bırakılmıştır.
 - Sistem yalnız büyükbaş kurban içindir.

@@ -9,6 +9,7 @@ import {
 } from "@/modules/tahsilat/lib/tahsilat.service";
 import { TahsilatAramaKutusu } from "./TahsilatAramaKutusu";
 import { Wallet, TrendingUp, Receipt, Banknote, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,23 @@ export default async function TahsilatAnaPage() {
         <div className="mb-6">
           <TahsilatAramaKutusu />
         </div>
+
+        <Card className="mb-6 border-emerald-200 bg-emerald-50/70">
+          <CardContent className="flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-emerald-950">Faz 5–6 satış finans çalışma alanı</p>
+              <p className="text-sm text-emerald-900/75">
+                Kesin satış, kaporasız rezervasyon, karma tahsilat, kasa/mutabakat ve ApprovalPolicy akışlarını tek uygulama kabuğunda yürütün.
+              </p>
+            </div>
+            <Link
+              href="/tahsilat/calisma-alani"
+              className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+            >
+              Çalışma alanını aç
+            </Link>
+          </CardContent>
+        </Card>
 
         <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <OzetKart

@@ -1,3 +1,13 @@
+---
+id: ARCH-1B5A54729288
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 13 — KESİM SIRASI DETAYLI MUHASEBE RAPORU
 
 **Hedef:** Kesim sırasına göre, her hayvanın hissedarları + ödeme detayları (nakit/havale/kart ayrı) gösteren kapsamlı muhasebe raporu.

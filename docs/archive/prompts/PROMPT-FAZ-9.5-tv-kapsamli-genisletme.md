@@ -1,3 +1,13 @@
+---
+id: ARCH-F19478310EB1
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT-FAZ-9.5: TV KAPSAMLI GENİŞLETME
 
 > **FAZ 9 v2 (temel TV) bittiğinde Claude Code'a ver.**

@@ -1,5 +1,15 @@
 # 08 — Tasarım Sistemi ve Mobil PWA
 
+```yaml
+id: ARC-008
+status: IMPLEMENTING
+owner: Architecture-and-UX
+source_role: design_system_mobile_pwa_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Mevcut gözlem
 
 - `components/ui` shadcn tabanlı küçük bileşen seti içeriyor.

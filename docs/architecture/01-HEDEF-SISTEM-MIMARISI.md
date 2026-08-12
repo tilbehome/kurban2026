@@ -1,5 +1,15 @@
 # 01 — Hedef Sistem Mimarisi
 
+```yaml
+id: ARC-001
+status: PLANNED
+owner: Architecture
+source_role: target_system_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Ürün kimliği
 
 | Alan | Kesin değer |
@@ -14,7 +24,7 @@
 
 ## Hedef ilke
 
-TilbeCore – Kurban Takip tek kod tabanlı, modüler monolit bir ürün olacaktır. Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir.
+TilbeCore – Kurban Takip tek kod tabanlı, modüler monolit bir ürün olacaktır. İlgili bağlayıcı hedefler [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), kaynak çelişkilerinin çözümü [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) içindedir.
 
 10 Ağustos 2026 yerine geçen karar: Çok firma veri izolasyonu sonraki SaaS hedefi değildir; Faz 2’nin zorunlu çekirdeğidir. Platform için ayrı PostgreSQL, her firma için ayrı PostgreSQL operasyon veritabanı ve ayrı Platform Süper Admin/Firma Admin sınırı hedef mimarinin temelidir. Self-service üyelik, otomatik abonelik/faturalama ve gelişmiş ticari SaaS özellikleri sonraya bırakılır.
 

@@ -1,3 +1,13 @@
+---
+id: ARCH-AF3E7CD4BE46
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT-FAZ-5: SIDEBAR 12 MENÜ SİSTEMİ
 
 > **Claude Code'a ver. Otonom modda çalıştır. Her adımda commit at.**

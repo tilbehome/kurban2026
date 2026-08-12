@@ -45,12 +45,13 @@ export interface RegisterAnimalInput {
   earTag: string;
 }
 
-export interface ConfirmSaleInput {
+export interface LegacyConfirmSaleInput {
   id: Sale["id"];
   seasonId: SeasonId;
   customerId: CustomerId;
   shares: readonly Share[];
   priceSnapshot: DecimalString;
+  depositAmount: DecimalString;
 }
 
 export function registerSupplier(
@@ -84,9 +85,12 @@ export function registerAnimal(
 
 export function confirmSale(
   context: TenantCommandContext,
-  input: ConfirmSaleInput,
-): TenantCommandResult<{ sale: Sale; ledger: LedgerEntry; shares: readonly Share[] }> {
+  input: LegacyConfirmSaleInput,
+): TenantCommandResult<{ sale: Sale; ledger: LedgerEntry; paymentLedger: LedgerEntry; shares: readonly Share[] }> {
   input.shares.forEach(assertShareCanBeSold);
+  if (input.depositAmount.startsWith("-") || /^0(?:\.0{1,4})?$/.test(input.depositAmount)) {
+    throw new Error("POSITIVE_DEPOSIT_REQUIRED");
+  }
   const shareIds = input.shares.map((share) => share.id);
   const sale: Sale = {
     tenantInstanceId: context.tenantInstanceId,
@@ -109,13 +113,41 @@ export function confirmSale(
     customerId: input.customerId,
     occurredAt: context.occurredAt,
   };
+  const paymentLedger: LedgerEntry = {
+    tenantInstanceId: context.tenantInstanceId,
+    id: `${input.id}_ledger_deposit` as LedgerEntry["id"],
+    seasonId: input.seasonId,
+    type: "payment",
+    amount: input.depositAmount,
+    currency: "TRY",
+    saleId: input.id,
+    customerId: input.customerId,
+    occurredAt: context.occurredAt,
+  };
   const shares = input.shares.map((share) => ({
     ...share,
     status: "sold" as const,
     customerId: input.customerId,
     agreedPrice: input.priceSnapshot,
   }));
-  return withAudit(context, { sale, ledger, shares }, "sale.confirmed", "Sale", input.id);
+  return withAudit(context, { sale, ledger, paymentLedger, shares }, "sale.confirmed", "Sale", input.id);
+}
+
+export function expireReservation(
+  context: TenantCommandContext,
+  share: Share,
+): TenantCommandResult<Share> {
+  if (share.status !== "reserved") throw new Error(`SHARE_NOT_RESERVED:${share.status}`);
+  if (!share.reservedUntil || Date.parse(share.reservedUntil) > Date.parse(context.occurredAt)) {
+    throw new Error("RESERVATION_NOT_EXPIRED");
+  }
+  return withAudit(
+    context,
+    { ...share, status: "available", customerId: undefined, reservedUntil: undefined },
+    "share.reservation.expired",
+    "Share",
+    share.id,
+  );
 }
 
 export function cancelSaleWithReversal(
@@ -156,6 +188,14 @@ function withAudit<TEntity>(
       requestId: context.requestId,
       occurredAt: context.occurredAt,
     },
-    outbox: [],
+    outbox: [{
+      tenantInstanceId: context.tenantInstanceId,
+      id: `outbox_${context.requestId}_${targetType}_${targetId}`,
+      topic: action,
+      payload: { targetType, targetId, requestId: context.requestId },
+      status: "pending",
+      idempotencyKey: context.idempotencyKey,
+      createdAt: context.occurredAt,
+    }],
   };
 }

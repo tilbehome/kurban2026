@@ -1,3 +1,13 @@
+---
+id: ARCH-BD627D0A4748
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 📺 SPRINT-12 — TV EKRANI YENİ TASARIM (Görsel Referanslı)
 
 **Bayram günü TV ekranı.** Kullanıcı net bir tasarım gönderdi — birebir uygulanacak.

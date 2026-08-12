@@ -1,3 +1,13 @@
+---
+id: ARCH-E7EF7C1D2B01
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 11 — MÜŞTERİ DÜZENLEME SAYFASI
 
 **Hedef:** Mevcut müşteri kaydının bilgilerini güncellemek için PATCH endpoint + UI.

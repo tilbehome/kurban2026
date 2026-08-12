@@ -1,6 +1,16 @@
 # TilbeCore – Kurban Takip Uygulama Takip Defteri
 
-Birinci kaynak sözleşme: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
+```yaml
+id: TRK-001
+status: IMPLEMENTING
+owner: Product-and-Architecture
+source_role: implementation_evidence_ledger
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
+Mimari hedef görev yönlendirmesi: [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md). Kaynak çelişkileri [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile çözülür.
 
 Eski ana yol haritası, yeni ana belgeyle çelişmeyen tarihsel analiz kaynağıdır: `docs/archive/legacy/KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
 
@@ -20,7 +30,7 @@ Bu defter, yol haritasındaki fazları ve 68 iş akışını kod değişiklikler
 | Hassas veri ignore kuralları | 62, 63 | Tamamlandı | SQLite WAL/SHM, seed kopyaları, `public/uploads/`, `data/uploads/` ignore ediliyor. |
 | Korumalı vekâlet dosyası | 38, 62 | Tamamlandı | Yeni dosyalar `data/uploads/vekalet` altına yazılıyor, DB fiziksel yol göstermiyor, okuma `/api/vekaletler/[id]` üzerinden yetkili ve no-store. |
 | Eski vekâlet taşıma hazırlığı | 38, 62 | Tamamlandı | `scripts/migrate-vekalet-files.mjs` eklendi; varsayılan dry-run, `--apply` verilmeden veri değiştirmiyor. |
-| Saha satış + kapora atomikliği | 21, 22, 29, 30 | Tamamlandı | `/api/saha-satis` atama + opsiyonel kaporayı tek transaction içinde yapıyor, `clientRequestId` ile idempotent tekrarları engelliyor. |
+| Saha satış transaction/idempotency teknik paketi | 21, 22, 29, 30 | Teknik paket tamamlandı; hedef iş kuralı `IMPLEMENTING` | `/api/saha-satis` atama + opsiyonel kaporayı tek transaction içinde yapıyor ve `clientRequestId` ile tekrarları engelliyor. Ancak sıfır kaporayla müşteri atayıp satış/alacak açabilen mevcut davranış, kaporasız kaydı yalnız rezervasyon sayan bağlayıcı hedefle uyumsuzdur. Teknik atomiklik kanıtı korunur; iş kuralı tamamlanmış sayılmaz. |
 | Build/start güvenliği | 63, 64, 65 | Tamamlandı | `baslat.bat` build yoksa loop'a girmiyor; `pnpm build` başarılı. |
 | Lint kalite kapısı | 14, 23.2, 24.12 | Tamamlandı | `pnpm lint` 0 hata ile tamamlanıyor; kalan 41 warning sınıflandırıldı. |
 | Node/pnpm sabitleme | 63, 65 | Tamamlandı | `packageManager` ve `engines` eklendi. |
@@ -101,7 +111,7 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Import grafiği ve taşıma matrisi | Uygulandı | `docs/architecture/15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md`. |
 | Profesyonel domain/origin sözleşmesi | Uygulandı | `packages/config`, `packages/contracts`, `tests/saas-domain-config.test.ts`, ADR-0001. |
 | Platform–tenant veri sınırı ADR’si | Uygulandı | `docs/adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md`. |
-| Tenant izolasyon test planı | Uygulandı | `docs/architecture/10-TEST-KALITE-VE-KABUL-PLANI.md`. |
+| Tenant izolasyon test planı | Uygulandı | `docs/testing/TST-001-MASTER-TEST-PLANI.md`; eski architecture yolu `ARC-010 / SUPERSEDED` uyumluluk yönlendirmesidir. |
 | Faz 2A kapanış değerlendirmesi | Uygulandı | Faz 2A yalnız davranış değiştirmeyen sözleşme/plan/matris/test planı kapsamına göre kapanır; DB, tenant routing ve app taşıma sonraki fazlara bırakıldı. |
 
 ### Profesyonel ürün ve operasyon önerileri uyumlandırması
@@ -117,6 +127,8 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 ## Faz 2B durumu
 
 **Durum:** Uygulandı — genel doğrulama bekliyor. Platform Süper Admin kontrol düzlemi, gerçek PostgreSQL migration/repository testi ve iki firma izolasyon kapısı paket kapsamında çalıştırıldı; canlı altyapı ve Faz 2–12 genel kabul dönemi ayrıca bekliyor.
+
+**Sabit kanıt:** `74915b6f3f1f8d53116b760b6a6be9797111efa5` ve [TilbeCore CI / 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803), sonuç `success`. Kapsam ve kanıtlanmayan alanlar için [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) ana özettir.
 
 | İş | Durum | Kanıt |
 |---|---|---|
@@ -138,7 +150,7 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Faz 2B Platform Süper Admin 360° uygulaması | Uygulandı — genel doğrulama bekliyor | `apps/platform-admin` içinde komuta merkezi, firma listesi/360°, async provisioning sihirbazı ve iş merkezi, plan/lisans/kota/entitlement, yaşam döngüsü, domain, backup/restore doğrulama, SupportSession, platform kullanıcı/rol ve audit sayfaları gerçek Platform DB repository adaptörlerine bağlandı. `0006_platform_admin_operations` migration’ı, optimistic concurrency, idempotent komut kuyruğu ve provisioning/tenant-ops `worker --once` yürütmesi eklendi. |
 | Faz 2B kontrol düzlemi tamamlama | Uygulandı — genel doğrulama bekliyor | `0007`, `/security`, `/incidents`, `/maintenance`, incident timeline, planlı bakım, tenant runtime emergency/read-only/module-stop politikası, güvenli yapılandırma farkı, yeniden doğrulamalı/ikinci onaylı ve request/audit bağlı firma operasyon işleri ile backup sonrası tek kullanımlık aktivasyon bağlantılı Firma Admin daveti eklendi. Export içeriği Platform Admin’e verilmez. |
 
-2B integration test kapsamı `packages/database-platform/tests/platform-postgres.integration.test.ts` içindedir. Testler `RUN_PLATFORM_POSTGRES_TESTS=1` ve `PLATFORM_TEST_DATABASE_URL` olmadan normal unit koşusunda atlanır; CI'da geçici PostgreSQL servisiyle çalışır. Kapsam: boş DB’ye `0001..0007`, eski migration sonrası güncel zincir, drift/idempotent deploy, check constraint, foreign key, unique, gerçek repository create/read/nested write, transaction commit/rollback, challenge/recovery tek kullanım ve connection string sızıntısı kontrolü. Paket sonunda yerel PostgreSQL 16 üzerinde platform integration `9/9`, iki firma web/pool/backup isolation `1/1` geçti; Platform Admin build’i ve aynı PostgreSQL kapıları ayrıca CI iş akışında zorunludur.
+2B integration test kapsamı `packages/database-platform/tests/platform-postgres.integration.test.ts` içindedir. Testler `RUN_PLATFORM_POSTGRES_TESTS=1` ve `PLATFORM_TEST_DATABASE_URL` olmadan normal unit koşusunda atlanır; CI'da geçici PostgreSQL servisiyle çalışır. Kapsam: boş DB’ye `0001..0007`, eski migration sonrası güncel zincir, drift/idempotent deploy, check constraint, foreign key, unique, gerçek repository create/read/nested write, transaction commit/rollback, challenge/recovery tek kullanım ve connection string sızıntısı kontrolü. Önceki yerel kayıtlarda platform integration `9/9` ve iki firma web/pool/backup isolation `1/1` sonucu bulunur. Güncel değişmez kanıt, `74915b6` için GitHub Actions koşusundaki ilgili PostgreSQL, build ve kalite adımlarının başarılı olmasıdır; yerel sayı canlı kabul anlamına gelmez.
 
 Bu kayıt Faz 2B’nin canlıya hazır olduğu anlamına gelmez. Fiziksel passkey cihaz kabulü, canlı DNS/TLS/deployment, production restore onayı, gerçek abonelik/faturalama ve genel güvenlik/E2E kabulü sonraki uygun kapılarda kalır.
 
@@ -150,7 +162,7 @@ Bu matris yalnız kaynak kod, migration, test ve takip belgesi kanıtıyla tutul
 |---|---|---|---|---|---|
 | 1 | Faz 2B | Platform PostgreSQL `0001..0007`, ayrı Platform Admin, parola+TOTP+passkey/recovery, DB session/device, komuta merkezi, firma 360°, provisioning, plan/lisans, domain, backup, SupportSession, kullanıcı/audit, incident/bakım/acil durdurma, yapılandırma farkı ve onaylı firma operasyon akışları. | Provisioning sonrası ilk backup işi ve davet hazırlığı gerçek worker zincirine; tenant erişim modu gerçek request runtime’a bağlandı. | Data export içeriğini üreten tenant tarafı executor Faz 2D–6 modül taşımasına bağlıdır; Platform yalnız güvenli işi ve metadata’yı yönetir. | Fiziksel passkey cihaz kabulü, canlı DNS/TLS/deployment, production restore onayı, gerçek abonelik/faturalama ve genel E2E/güvenlik kabulü. |
 | 2 | Faz 2C | Gerçek tenant DB create/exists/migrate/verify/rollback adapteri, ownership marker, idempotent/resumable provisioning, kontrollü CLI’lar, host/custom-domain resolution, request-local context, session/databaseRef fail-closed guard, auditli SupportSession, gözlemlenebilir tenant Prisma pool’u, tenant bazlı dump/geçici restore doğrulaması ve iki firma PostgreSQL web/backup isolation CI testi. | Platform metadata–tenant request composition bridge’i; pool event/metric portu ve tenant ops CLI sözleşme düzeyinden çalışan altyapıya taşındı. | Gerçek OpenTelemetry sağlayıcısı ve canlı WAL/PITR yapılandırması yoktur; mevcut legacy route’lar yeni runtime’a toplu taşınmamıştır. | Legacy route’ların modül bazlı runtime’a taşınması, pool kapasite eşikleri/alarmları, yönetilen WAL/PITR ve ölçülmüş RPO/RTO, production restore onay akışı, canlı DNS/TLS/deployment. |
-| 3 | Faz 2D–6 | Tenant core customer/supplier/animal/share/sale/ledger domain sözleşmeleri, Decimal/Numeric para-kilo kuralları ve hedefli unit testleri. | Yok. | Eski SQLite importu ve mevcut app taşıması iskelet düzeyinde. | Mevcut müşteri/hayvan/satış/tahsilat API'lerinin yeni tenant DB ve ledger'a taşınması. |
+| 3 | Faz 2D–4 | BusinessProfile/Location/Setting/Season, Customer/Phone/Address/SeasonAccount, Supplier/Account/PurchaseInvoice/Payment/ExpenseDocument, Animal/Weight/Health/QurbanAssignment tenant modelleri; atomik authorization/audit/idempotency/outbox use-case'leri ve adaptif ekranlar kodlandı. | Müşteri ve hayvan mevcut API/liste/detay yolları `TENANT_MASTER_DATA_MODE` adapter'ıyla tenant PostgreSQL'e geçirildi; legacy varsayılan geri dönüşü korundu. | Kod üretimi dışında test, lint, typecheck, build ve PostgreSQL migration uygulanmadı; durum `IMPLEMENTED_UNVERIFIED`. | Legacy veri dry-run/import, satış/tahsilat/ledger tam taşıması, rezervasyon worker'ı, finans mutabakatı ve genel kalite turu. |
 | 4 | Faz 7–10 | Proxy document, QR token, slaughter state machine, weighing/package/delivery/offline/device adapter sözleşmeleri ve tenant DB `0002`. | Yok. | PWA sync, TV/customer tracking ve cihaz doğrulama sözleşme düzeyinde. | Vekâlet belge runtime, kesim/paket/teslim API taşıması, offline sync runtime, cihaz adapter uygulamaları. |
 | 5 | Faz 11–12 | Operations package: dashboard KPI, exception queue, universal search, observability, release, backup/restore, simulation readiness ve acil durum runbook. | Yok. | OpenTelemetry/axe/Playwright/ASVS/WCAG kabul hedefleri sözleşme düzeyinde. | Yönetim paneli veri bağlantısı, E2E/prova, tenant izolasyon genel doğrulaması, güvenlik/veri bütünlüğü/kapsamlı build dönemi. |
 
@@ -164,6 +176,7 @@ Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 gel
 |---|---|---|
 | Müşteri/sezon cari sözleşmesi | Uygulandı — genel doğrulama bekliyor | `@tilbecore/tenant-core` içinde müşteri oluşturma, telefon normalizasyonu ve sezon bazlı cari hesap özet sözleşmesi eklendi. |
 | Satış ve hisse kuralı | Uygulandı — genel doğrulama bekliyor | `confirmSale` akışı satılabilir hisse kontrolü, fiyat snapshot'ı, idempotency key ve ledger satış kaydı üretir. |
+| Rezervasyon–kesin satış ve işletme envanteri hedef farkı | `IMPLEMENTING` | Tenant `confirmSale` pozitif kaporayı zorunlu kılar ve süre sonu domain komutu finans reversal'ı üretmez; legacy saha satış hâlâ taşınmadığı için uçtan uca Faz 5 hedefi tamamlanmış sayılmaz. |
 | Ledger/tahsilat temeli | Uygulandı — genel doğrulama bekliyor | Decimal string para sözleşmesi, ödeme dağıtımı toplam kontrolü, ödeme ledger kayıtları ve ters kayıt/reversal akışı eklendi. Yeni `Float` para modeli eklenmedi. |
 
 ## Faz 7–10 durumu

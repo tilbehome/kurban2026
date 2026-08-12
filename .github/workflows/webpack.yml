@@ -71,6 +71,9 @@ jobs:
       - name: UTF-8 check
         run: pnpm check:utf8
 
+      - name: Documentation inventory and policy checks
+        run: pnpm validate:docs
+
       - name: Platform Prisma validate
         run: pnpm exec prisma validate --schema packages/database-platform/prisma/schema.prisma
 

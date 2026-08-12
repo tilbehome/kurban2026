@@ -15,4 +15,7 @@ export function assertTenantDatabaseTarget(target: TenantDatabaseMigrationTarget
 }
 
 export * from "./postgres-tenant-database";
+export * from "./repositories/prisma-tenant-master-data-repository";
+export * from "./repositories/prisma-tenant-authorization-repository";
+export * from "./repositories/prisma-tenant-sales-finance-repository";
 export * from "./postgres-tenant-backup";

@@ -1,5 +1,15 @@
 # 07 — UTF-8, Çoklu Dil ve RTL
 
+```yaml
+id: ARC-007
+status: IMPLEMENTING
+owner: Architecture-and-Frontend
+source_role: utf8_i18n_rtl_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Mevcut UTF-8 gözlemi
 
 Repo taramasında aktif kaynaklarda mojibake örneği yakalandı:

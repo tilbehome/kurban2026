@@ -26,7 +26,7 @@ if (process.env.NODE_ENV !== "production") {
 // SQLite optimize — sadece bir kez (hot-reload'da tekrar çalışmaz).
 // PRAGMA atamaları SQLite'da sonuç döndürür (örn. journal_mode = WAL → "wal"),
 // bu yüzden $executeRawUnsafe değil $queryRawUnsafe kullanılmalı; sonucu yut.
-if (!globalForPrisma.prismaPragmaUygulandi) {
+if (process.env.DATABASE_URL && !globalForPrisma.prismaPragmaUygulandi) {
   globalForPrisma.prismaPragmaUygulandi = true;
   void (async () => {
     try {

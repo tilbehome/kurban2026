@@ -1,3 +1,13 @@
+---
+id: ARCH-9046D9264AE3
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 14 — MASTER MUHASEBE DENETİM DEFTERİ
 
 **Hedef:** Kesim no sırasına göre tam denetim raporu. Otomatik tutarsızlık tespiti, kırmızı işaretleme. A4 yazdırılabilir.
