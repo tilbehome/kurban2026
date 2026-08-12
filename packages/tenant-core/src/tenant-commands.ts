@@ -45,7 +45,7 @@ export interface RegisterAnimalInput {
   earTag: string;
 }
 
-export interface ConfirmSaleInput {
+export interface LegacyConfirmSaleInput {
   id: Sale["id"];
   seasonId: SeasonId;
   customerId: CustomerId;
@@ -85,7 +85,7 @@ export function registerAnimal(
 
 export function confirmSale(
   context: TenantCommandContext,
-  input: ConfirmSaleInput,
+  input: LegacyConfirmSaleInput,
 ): TenantCommandResult<{ sale: Sale; ledger: LedgerEntry; paymentLedger: LedgerEntry; shares: readonly Share[] }> {
   input.shares.forEach(assertShareCanBeSold);
   if (input.depositAmount.startsWith("-") || /^0(?:\.0{1,4})?$/.test(input.depositAmount)) {

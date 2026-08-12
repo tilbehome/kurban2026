@@ -16,6 +16,7 @@ export type HataKodu =
   | "FINANCE_SHARE_HAS_ACTIVE_PAYMENT"
   | "TENANT_MASTER_DATA_POSTGRES_NOT_ENABLED"
   | "TENANT_SALES_FINANCE_FAILED"
+  | "TENANT_RESERVATION_EXPIRY_FAILED"
   | "PRICE_TARIFF_ITEM_REQUIRED"
   | "RESERVATION_WINDOW_INVALID"
   | "SHARE_COUNT_INVALID"
@@ -167,6 +168,7 @@ export const HATA_KATALOGU = {
   },
   TENANT_MASTER_DATA_POSTGRES_NOT_ENABLED: { kod: "TENANT_MASTER_DATA_POSTGRES_NOT_ENABLED", mesajAnahtari: "error.tenant.postgresNotEnabled", httpStatus: 409, kullaniciyaGosterilebilir: true },
   TENANT_SALES_FINANCE_FAILED: { kod: "TENANT_SALES_FINANCE_FAILED", mesajAnahtari: "error.internal.saleCouldNotComplete", httpStatus: 500, kullaniciyaGosterilebilir: true },
+  TENANT_RESERVATION_EXPIRY_FAILED: { kod: "TENANT_RESERVATION_EXPIRY_FAILED", mesajAnahtari: "error.internal.saleCouldNotComplete", httpStatus: 500, kullaniciyaGosterilebilir: true },
   PRICE_TARIFF_ITEM_REQUIRED: { kod: "PRICE_TARIFF_ITEM_REQUIRED", mesajAnahtari: "error.pricing.itemRequired", httpStatus: 400, kullaniciyaGosterilebilir: true },
   RESERVATION_WINDOW_INVALID: { kod: "RESERVATION_WINDOW_INVALID", mesajAnahtari: "error.reservation.windowInvalid", httpStatus: 400, kullaniciyaGosterilebilir: true },
   SHARE_COUNT_INVALID: { kod: "SHARE_COUNT_INVALID", mesajAnahtari: "error.share.countInvalid", httpStatus: 400, kullaniciyaGosterilebilir: true },

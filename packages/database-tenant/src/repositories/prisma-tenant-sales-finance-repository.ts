@@ -163,7 +163,7 @@ export class PrismaTenantSalesFinanceRepository implements TenantSalesFinanceRep
         lines: buildSaleJournalLines(input),
       });
       await tx.share.updateMany({
-        where: { id: { in: input.shareIds }, status: { in: ["available", "reserved"] } },
+        where: { id: { in: [...input.shareIds] }, status: { in: ["available", "reserved"] } },
         data: {
           status: "sold",
           customerId: input.customerId,
@@ -176,7 +176,7 @@ export class PrismaTenantSalesFinanceRepository implements TenantSalesFinanceRep
           soldAt: meta.occurredAt,
         },
       });
-      await tx.shareReservation.updateMany({ where: { shareId: { in: input.shareIds }, status: "active" }, data: { status: "confirmed", confirmedAt: meta.occurredAt, saleId: input.id } });
+      await tx.shareReservation.updateMany({ where: { shareId: { in: [...input.shareIds] }, status: "active" }, data: { status: "confirmed", confirmedAt: meta.occurredAt, saleId: input.id } });
       await tx.customerSeasonAccount.upsert({
         where: { customerId_seasonId: { customerId: input.customerId, seasonId: input.seasonId } },
         create: { id: `account_${input.customerId}_${input.seasonId}`, customerId: input.customerId, seasonId: input.seasonId, debitTotal: input.agreedPriceTotal, balance: input.agreedPriceTotal },

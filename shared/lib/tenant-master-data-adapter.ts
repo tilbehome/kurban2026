@@ -198,7 +198,7 @@ export function tenantUseCaseContext(
   return {
     tenantInstanceId: tenantInstanceId as TenantInstanceId,
     actorUserId: session.kullaniciId as UserId,
-    identityKind: session.identityKind,
+    identityKind: tenantIdentityKind(session.identityKind),
     actorIdentityId: session.organizationUserId,
     organizationMembershipId: session.organizationMembershipId,
     sessionId: session.tenantSessionId,
@@ -219,9 +219,19 @@ export function tenantUseCaseContext(
   };
 }
 
+function tenantIdentityKind(kind: AuthOturum["identityKind"]): TenantUseCaseContext["identityKind"] {
+  return kind === "PLATFORM_USER" || kind === "CUSTOMER" ? undefined : kind;
+}
+
 function permissionsForRole(role: AuthOturum["rol"]): readonly string[] {
-  if (role === "admin") return ["*"];
-  if (role === "kasiyer") return [
+  if (role === "admin") return legacyAdminPermissions();
+  if (role === "kasiyer") return legacyOperatorPermissions();
+  if (role === "izleyici") return ["kurban.season.read.organization", "kurban.customer.read.organization", "kurban.supplier.read.organization", "kurban.animal.read.organization", "kurban.share.read.operational_period", "kurban.finance.ledger.read.organization", "public.tv.read.organization", "public.tracking.read.assigned_record", "management.dashboard.read.organization", "management.reporting.read.organization", "management.search.read.organization"];
+  return [];
+}
+
+function legacyOperatorPermissions(): readonly string[] {
+  return [
     "kurban.season.read.organization", "kurban.customer.read.organization", "kurban.customer.manage.organization",
     "kurban.supplier.read.organization", "kurban.supplier.manage.organization", "kurban.purchase.manage.organization",
     "kurban.expense.manage.organization", "kurban.animal.read.organization", "kurban.animal.manage.organization",
@@ -238,8 +248,25 @@ function permissionsForRole(role: AuthOturum["rol"]): readonly string[] {
     "management.reporting.export.organization", "management.search.read.organization", "management.exception.manage.organization",
     "management.company.manage.organization",
   ];
-  if (role === "izleyici") return ["kurban.season.read.organization", "kurban.customer.read.organization", "kurban.supplier.read.organization", "kurban.animal.read.organization", "kurban.share.read.operational_period", "kurban.finance.ledger.read.organization", "public.tv.read.organization", "public.tracking.read.assigned_record", "management.dashboard.read.organization", "management.reporting.read.organization", "management.search.read.organization"];
-  return [];
+}
+
+function legacyAdminPermissions(): readonly string[] {
+  return [
+    ...legacyOperatorPermissions(),
+    "kurban.business.manage.organization",
+    "kurban.season.manage.organization",
+    "devices.adapters.manage.organization",
+    "identity.role.assign.organization",
+    "identity.role.revoke.organization",
+    "identity.role.create.organization",
+    "identity.delegation.create.organization",
+    "identity.module.register.organization",
+    "identity.audit.read.organization",
+    "identity.approval.decide.organization",
+    "identity.service-account.manage.organization",
+    "identity.device.manage.organization",
+    "identity.external-user.manage.organization",
+  ];
 }
 
 function safeRequestId(value: string | null | undefined): string | undefined {

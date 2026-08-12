@@ -266,6 +266,7 @@ function assignedRecordMatches(condition: NonNullable<AuthorizationConditions["a
   if (!record) return false;
   const assigned = record.assignedToSubjectId === subject.id || (!!subject.organizationMembershipId && record.assignedToMembershipId === subject.organizationMembershipId);
   if (condition === true) return assigned;
+  if (condition === false) return true;
   if (!assigned) return false;
   if (condition.types && !condition.types.includes(record.type)) return false;
   return !condition.ids || condition.ids.includes(record.id);

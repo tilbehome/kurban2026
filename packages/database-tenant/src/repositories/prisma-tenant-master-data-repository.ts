@@ -54,7 +54,7 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
       include: { supplier: true, qurbanAssignments: { where: { active: true }, take: 1 } },
       orderBy: { createdAt: "desc" },
     });
-    return rows.map((row) => ({ id: row.id, seasonId: row.seasonId, earTag: row.earTag, status: row.status, supplierName: row.supplier?.displayName, purchaseAmount: row.purchaseAmount?.toString(), liveWeightKg: row.liveWeightKg?.toString(), qurbanNo: row.qurbanAssignments[0]?.qurbanNo ?? undefined, queueNo: row.qurbanAssignments[0]?.queueNo ?? undefined }));
+    return rows.map((row) => ({ id: row.id, seasonId: row.seasonId ?? row.qurbanAssignments[0]?.seasonId ?? seasonId, earTag: row.earTag, status: row.status, supplierName: row.supplier?.displayName, purchaseAmount: row.purchaseAmount?.toString(), liveWeightKg: row.liveWeightKg?.toString(), qurbanNo: row.qurbanAssignments[0]?.qurbanNo ?? undefined, queueNo: row.qurbanAssignments[0]?.queueNo ?? undefined }));
   }
 
   async getAnimal(id: string) {
@@ -70,7 +70,7 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
     if (!row) return null;
     const active = row.qurbanAssignments.find((item) => item.active);
     return {
-      id: row.id, seasonId: row.seasonId, earTag: row.earTag, status: row.status,
+      id: row.id, seasonId: row.seasonId ?? active?.seasonId ?? "", earTag: row.earTag, status: row.status,
       supplierName: row.supplier?.displayName, purchaseAmount: row.purchaseAmount?.toString(),
       liveWeightKg: row.liveWeightKg?.toString(), qurbanNo: active?.qurbanNo ?? undefined,
       queueNo: active?.queueNo ?? undefined, qurbanEligibility: row.qurbanEligibility, notes: row.notes ?? undefined,
@@ -88,7 +88,7 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
         update: input,
         select: { id: true },
       });
-      await evidence(tx, meta, "business.profile.updated", "BusinessProfile", row.id, input);
+      await evidence(tx, meta, "business.profile.updated", "BusinessProfile", row.id, { ...input });
       return row;
     });
   }

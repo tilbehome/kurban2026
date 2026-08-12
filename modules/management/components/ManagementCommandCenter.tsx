@@ -221,11 +221,9 @@ function ExportButton({ reportKey, seasonId, facilityId, format }: { reportKey: 
   if (seasonId) params.set("seasonId", seasonId);
   if (facilityId) params.set("facilityId", facilityId);
   return (
-    <Button asChild variant="secondary">
-      <a href={`/api/tenant/management-analytics/export?${params.toString()}`}>
-        <Download className="mr-1 h-4 w-4" />{format.toUpperCase()}
-      </a>
-    </Button>
+    <a className="inline-flex h-9 items-center justify-center rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground shadow-xs transition-colors hover:bg-secondary/80" href={`/api/tenant/management-analytics/export?${params.toString()}`}>
+      <Download className="mr-1 h-4 w-4" />{format.toUpperCase()}
+    </a>
   );
 }
 

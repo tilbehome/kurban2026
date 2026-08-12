@@ -151,8 +151,8 @@ export class PrismaTenantAuthorizationRepository implements TenantAuthorizationR
         accessLevel: input.accessLevel, sourceRoleId: source.id,
         versions: { create: {
           id: roleVersionId, version: 1, status: "draft", changeReason: input.reason, createdByMembershipId: input.createdByMembershipId,
-          permissions: { create: version.permissions.map((grant) => ({ permissionId: grant.permissionId, effect: grant.effect, constraints: grant.constraints ?? undefined })) },
-          conditionalPolicies: { create: version.conditionalPolicies.map((policy) => ({ id: stableId("conditional_policy_copy", `${input.id}:${policy.id}`), name: policy.name, permissionId: policy.permissionId, effect: policy.effect, priority: policy.priority, conditions: policy.conditions, active: policy.active, validFrom: policy.validFrom, validUntil: policy.validUntil })) },
+          permissions: { create: version.permissions.map((grant) => ({ permissionId: grant.permissionId, effect: grant.effect, constraints: jsonOrUndefined(grant.constraints) })) },
+          conditionalPolicies: { create: version.conditionalPolicies.map((policy) => ({ id: stableId("conditional_policy_copy", `${input.id}:${policy.id}`), name: policy.name, permissionId: policy.permissionId, effect: policy.effect, priority: policy.priority, conditions: jsonOrEmpty(policy.conditions), active: policy.active, validFrom: policy.validFrom, validUntil: policy.validUntil })) },
         } },
       } });
       return { roleId: input.id, roleVersionId };
@@ -406,7 +406,7 @@ export class PrismaTenantAuthorizationRepository implements TenantAuthorizationR
     const next = await tx.roleVersion.create({ data: {
       id, roleId: owner.id, version: current.version + 1, status: "published", changeReason: `Owner permissions extended by ${manifest.moduleId}@${manifest.version}`,
       createdByMembershipId: actorMembershipId, publishedAt: new Date(),
-      permissions: { create: [...current.permissions.map((item) => ({ permissionId: item.permissionId, effect: item.effect, constraints: item.constraints ?? undefined })), ...additions.map((permissionId) => ({ permissionId, effect: "ALLOW" }))] },
+      permissions: { create: [...current.permissions.map((item) => ({ permissionId: item.permissionId, effect: item.effect, constraints: jsonOrUndefined(item.constraints) })), ...additions.map((permissionId) => ({ permissionId, effect: "ALLOW" }))] },
     } });
     await tx.membershipRole.updateMany({ where: { roleVersionId: current.id, revokedAt: null }, data: { roleVersionId: next.id } });
     await tx.roleVersion.update({ where: { id: current.id }, data: { status: "retired", retiredAt: new Date() } });
@@ -429,3 +429,5 @@ function mapScope(value: { id: string; facilityId: string | null; departmentId: 
 function stableId(prefix: string, value: string) { return `${prefix}_${createHash("sha256").update(value).digest("hex").slice(0, 24)}`; }
 function numericVersion(version: string) { const [major, minor, patch] = version.split(".").map(Number); return major * 1_000_000 + minor * 1_000 + patch; }
 function requiredPermissionId(ids: Map<string, string>, key: string) { const id = ids.get(key); if (!id) throw new AuthorizationError("ROLE_TEMPLATE_PERMISSION_NOT_REGISTERED"); return id; }
+function jsonOrUndefined(value: Prisma.JsonValue | null | undefined): Prisma.InputJsonValue | undefined { return value === null || value === undefined ? undefined : value as Prisma.InputJsonValue; }
+function jsonOrEmpty(value: Prisma.JsonValue | null | undefined): Prisma.InputJsonValue { return value === null || value === undefined ? {} : value as Prisma.InputJsonValue; }
