@@ -1,25 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
-import { ipCikar } from "@/shared/lib/audit";
-import { yayinla } from "@/shared/lib/events";
-import { masterDataMode, tenantActiveSeasonId, tenantSalesFinanceService, tenantUseCaseContext } from "@/shared/lib/tenant-master-data-adapter";
 import {
   apiHataYaniti,
   beklenmeyenHataYaniti,
   zodHataYaniti,
 } from "@/shared/lib/api-hata";
-import {
-  sahaSatisTamamla,
-  SahaSatisIslemSuruyorHatasi,
-} from "@/modules/tahsilat/application/saha-satis.use-case";
-import {
-  SahaSatisKuraliHatasi,
-  type SahaSatisSonucu,
-} from "@/modules/tahsilat/domain/saha-satis";
-import { TenantSalesFinanceError } from "@/packages/tenant-core/src";
+import type { SahaSatisSonucu } from "@/modules/tahsilat/domain/saha-satis";
 import type { HataKodu } from "@/shared/lib/hata-katalogu";
 
 const SahaSatisSchema = z.object({
@@ -62,7 +50,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    if (masterDataMode() === "postgres") {
+    if (postgresMasterDataEnabled()) {
+      const {
+        tenantActiveSeasonId,
+        tenantSalesFinanceService,
+        tenantUseCaseContext,
+      } = await import("@/shared/lib/tenant-master-data-adapter");
       const nakit = moneyString(veri.nakit);
       const havale = moneyString(veri.havale);
       const kart = moneyString(veri.kart);
@@ -89,6 +82,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ basarili: true, musteriId: veri.musteriId, hisseIds: veri.hisseIds, odemeIds: [result.receiptId] } satisfies SahaSatisSonucu);
     }
 
+    const [{ prisma }, { ipCikar }, { yayinla }, { sahaSatisTamamla }] = await Promise.all([
+      import("@/shared/lib/prisma"),
+      import("@/shared/lib/audit"),
+      import("@/shared/lib/events"),
+      import("@/modules/tahsilat/application/saha-satis.use-case"),
+    ]);
+
     const body: SahaSatisBody = await sahaSatisTamamla(
       {
         komut: veri,
@@ -101,6 +101,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json(body);
   } catch (e) {
+    const [{ TenantSalesFinanceError }, { SahaSatisKuraliHatasi }, { SahaSatisIslemSuruyorHatasi }] = await Promise.all([
+      import("@/packages/tenant-core/src"),
+      import("@/modules/tahsilat/domain/saha-satis"),
+      import("@/modules/tahsilat/application/saha-satis.use-case"),
+    ]);
+
     if (e instanceof TenantSalesFinanceError) {
       return apiHataYaniti(e.code as HataKodu);
     }
@@ -116,4 +122,10 @@ export async function POST(req: Request) {
 
 function moneyString(value: number): string {
   return value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
+}
+
+function postgresMasterDataEnabled(): boolean {
+  const mode = process.env.TENANT_MASTER_DATA_MODE?.trim().toLowerCase() || "legacy";
+  if (mode !== "legacy" && mode !== "postgres") throw new Error("TENANT_MASTER_DATA_MODE_INVALID");
+  return mode === "postgres";
 }
