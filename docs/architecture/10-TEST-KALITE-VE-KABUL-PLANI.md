@@ -9,7 +9,7 @@ source_role: historical_test_plan_compatibility_redirect
 source_of_truth: false
 last_reviewed: 2026-08-12
 verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
-superseded_by: ../testing/TST-001-MASTER-TEST-PLANI.md
+superseded_by: TST-001
 ```
 
 Bu dosya eski bağlantıları kırmamak için korunur. Test stratejisi, kalite kapıları, tenant izolasyon matrisi ve kanıt dili için tek bağlayıcı kaynak [TST-001 Master Test Planı](../testing/TST-001-MASTER-TEST-PLANI.md) belgesidir.

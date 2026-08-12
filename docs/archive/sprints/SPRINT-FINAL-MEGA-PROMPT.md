@@ -1,3 +1,13 @@
+---
+id: ARCH-F3C72C93A289
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🎯 SPRINT-FINAL — BAYRAM ÖNCESİ SON KAPSAMLI REFACTOR
 
 **Bayrama 36 saat kaldı (27 Mayıs 2026 Çarşamba 06:00).** Bu prompt SPRINT-9 sonrasında çalıştırılacak. Tek seferde **SPRINT-7 + SPRINT-8 + son rötüşlar** birleşik.

@@ -12,6 +12,10 @@ related_requirements: [REQ-036, REQ-044, REQ-045, PRO-005, PRO-011, PRO-035]
 
 # Cihaz ve yerleşim standardı
 
+## Canlı menü ve placeholder hedefi
+
+`PLANNED`: Placeholder, “yakında” veya executor/runtime bağlantısı bulunmayan yüzey canlı menüde görev seçeneği olarak gösterilmez. Doğrudan URL korunuyorsa güvenli planlı durum, yetki ve geri dönüş yolu sunulur; ekran tamamlanmış modül gibi KPI veya navigasyon sahipliği kazanmaz.
+
 Yerleşim cihaz adına göre yalnız küçülmez; göreve, giriş yöntemine, izleme mesafesine, PII sınırına ve bağlantı durumuna göre değişir. Breakpoint tek başına ürün kararı değildir.
 
 ## Masaüstü

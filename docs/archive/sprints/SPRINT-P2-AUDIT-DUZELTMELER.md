@@ -1,3 +1,13 @@
+---
+id: ARCH-5832F9C8203F
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🔧 SPRINT-P2 — AUDIT BULGULARI 8 KRİTİK DÜZELTME
 
 **Kaynak:** ChatGPT 2. bağımsız audit raporu (26 May 2026 11:30)

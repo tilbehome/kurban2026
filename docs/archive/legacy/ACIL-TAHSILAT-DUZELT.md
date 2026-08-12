@@ -1,3 +1,13 @@
+---
+id: ARCH-5AC4EF4B8522
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🚨 ACIL — TAHSILAT BOZULDU TANI VE DUZELT
 
 **SORUN:** SPRINT EX commit'i (c4e0d42) sonrasında `/api/tahsilat/odeme` "Ödeme kaydedilemedi" hatası veriyor. Bayrama 2 gün var, sistem KIRIK.

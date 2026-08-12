@@ -1,3 +1,13 @@
+---
+id: ARCH-DA2379184193
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # SPRINT 9 — MÜŞTERİLER SAYFASI TASARIM İYİLEŞTİRMESİ
 
 **Hedef:** `/musteriler` sayfasının görsel tasarımını modernize et.

@@ -1,3 +1,13 @@
+---
+id: ARCH-934D27266116
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 📊 ADA BEREKET — KAPSAMLI SİSTEM ANALİZİ & YOL HARİTASI
 
 **Analiz Tarihi:** 27 Mayıs 2026 (bayram sonrası)

@@ -39,7 +39,7 @@ Domain/application sorumluluğu:
 | Müşteri/cari | `Musteri`, müşteri API ve modülleri | Müşteri kimliği, mükerrer uyarı, sezon geçmişi |
 | Tedarik/alım/gider | `app/hayvanlar/tedarik`, `app/kasa/gider` | Tedarikçi, alış faturası, gider defteri |
 | Hayvan | `Kurban` | Hayvan kartı, küpe, uygunluk, tartım geçmişi |
-| Hisse kartı/envanter | `Hisse` | Bağımsız hisse kartı, stok, transfer, yedinci hisse istisnası |
+| Hisse kartı/envanter | `Hisse` | Bağımsız hisse kartı, rezervasyon, kesin satış, transfer ve satılmamış işletme envanteri |
 | Satış/kapora | `/api/saha-satis`, `/api/hisseler/*` | Satış emri, fiyat snapshot, borçlandırma |
 | Finansal defter | `Odeme`, `KasaHareketi` | Tek ledger, kasa/banka/POS alt defterleri |
 | Vekâlet/belge | `Vekalet`, `/api/vekaletler` | Dosya güvenliği, belge snapshot, QR doğrulama |

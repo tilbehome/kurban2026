@@ -30,7 +30,7 @@ Bu defter, yol haritasındaki fazları ve 68 iş akışını kod değişiklikler
 | Hassas veri ignore kuralları | 62, 63 | Tamamlandı | SQLite WAL/SHM, seed kopyaları, `public/uploads/`, `data/uploads/` ignore ediliyor. |
 | Korumalı vekâlet dosyası | 38, 62 | Tamamlandı | Yeni dosyalar `data/uploads/vekalet` altına yazılıyor, DB fiziksel yol göstermiyor, okuma `/api/vekaletler/[id]` üzerinden yetkili ve no-store. |
 | Eski vekâlet taşıma hazırlığı | 38, 62 | Tamamlandı | `scripts/migrate-vekalet-files.mjs` eklendi; varsayılan dry-run, `--apply` verilmeden veri değiştirmiyor. |
-| Saha satış + kapora atomikliği | 21, 22, 29, 30 | Tamamlandı | `/api/saha-satis` atama + opsiyonel kaporayı tek transaction içinde yapıyor, `clientRequestId` ile idempotent tekrarları engelliyor. |
+| Saha satış transaction/idempotency teknik paketi | 21, 22, 29, 30 | Teknik paket tamamlandı; hedef iş kuralı `IMPLEMENTING` | `/api/saha-satis` atama + opsiyonel kaporayı tek transaction içinde yapıyor ve `clientRequestId` ile tekrarları engelliyor. Ancak sıfır kaporayla müşteri atayıp satış/alacak açabilen mevcut davranış, kaporasız kaydı yalnız rezervasyon sayan bağlayıcı hedefle uyumsuzdur. Teknik atomiklik kanıtı korunur; iş kuralı tamamlanmış sayılmaz. |
 | Build/start güvenliği | 63, 64, 65 | Tamamlandı | `baslat.bat` build yoksa loop'a girmiyor; `pnpm build` başarılı. |
 | Lint kalite kapısı | 14, 23.2, 24.12 | Tamamlandı | `pnpm lint` 0 hata ile tamamlanıyor; kalan 41 warning sınıflandırıldı. |
 | Node/pnpm sabitleme | 63, 65 | Tamamlandı | `packageManager` ve `engines` eklendi. |
@@ -176,6 +176,7 @@ Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 gel
 |---|---|---|
 | Müşteri/sezon cari sözleşmesi | Uygulandı — genel doğrulama bekliyor | `@tilbecore/tenant-core` içinde müşteri oluşturma, telefon normalizasyonu ve sezon bazlı cari hesap özet sözleşmesi eklendi. |
 | Satış ve hisse kuralı | Uygulandı — genel doğrulama bekliyor | `confirmSale` akışı satılabilir hisse kontrolü, fiyat snapshot'ı, idempotency key ve ledger satış kaydı üretir. |
+| Rezervasyon–kesin satış ve işletme envanteri hedef farkı | `IMPLEMENTING` | Tenant `confirmSale` ve legacy saha satış sıfır kaporayla satış/alacak üretebilir. Pozitif kapora şartı, kaporasız süre sonu ve sahte kişi/finans/vekâlet üretmeyen işletme envanteri uçtan uca kodlanıp test edilmeden Faz 5 hedefi tamamlanmış sayılmaz. |
 | Ledger/tahsilat temeli | Uygulandı — genel doğrulama bekliyor | Decimal string para sözleşmesi, ödeme dağıtımı toplam kontrolü, ödeme ledger kayıtları ve ters kayıt/reversal akışı eklendi. Yeni `Float` para modeli eklenmedi. |
 
 ## Faz 7–10 durumu

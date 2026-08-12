@@ -1,3 +1,13 @@
+---
+id: ARCH-5EB3B349A050
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🏗️ MİMARİ SAĞLIK DENETİMİ — "Sürekli Geliştirilebilir Temel" Hedefi
 
 **Tarih:** 28 Mayıs 2026

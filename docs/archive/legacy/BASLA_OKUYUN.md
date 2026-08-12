@@ -1,3 +1,13 @@
+---
+id: ARCH-B846D3CADA86
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # Tilbe Kurban — Hızlı Başlangıç (Modüler Mimari)
 
 > 10 Ağustos 2026 uyum notu: Bu belge tarihsel hızlı başlangıç kaynağıdır. TilbeCore – Kurban Takip için birinci bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Küçükbaş, gelişmiş SaaS, otomatik abonelik/faturalama, gelişmiş çok şube veya placeholder üretimi önerileri yeni ana belgeye göre kapsam dışı/sonraki faz kabul edilir.

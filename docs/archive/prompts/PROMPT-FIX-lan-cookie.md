@@ -1,3 +1,13 @@
+---
+id: ARCH-A948996A6A63
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT-FIX: LAN Üzerinden Cookie Sorunu
 
 > **ÖNCELİK: YÜKSEK** - Claude Code'a hemen ver.

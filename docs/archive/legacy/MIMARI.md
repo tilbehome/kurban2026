@@ -1,3 +1,13 @@
+---
+id: ARCH-64AA6F8740A0
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # MIMARI.md — TilbeCore Mimari Belgesi
 
 > 10 Ağustos 2026 uyum notu: Bu belge tarihsel TilbeCore mimari standardı olarak korunur. TilbeCore – Kurban Takip için birinci bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Eski klasör, ürün adı, tek firma veya refactor sırası ifadeleri yeni ana belgeyle çelişirse yeni ana belge uygulanır.

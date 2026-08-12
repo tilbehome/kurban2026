@@ -35,6 +35,10 @@ TilbeCore – Kurban Takip; büyükbaş kurban işletmelerinin tedarik, hayvan, 
 - İlk aşamada gereksiz mikroservis parçalanması.
 - İşlevsiz placeholder ekranı tamamlanmış ürün kapsamı saymak.
 
+## Placeholder görünürlük hedefi
+
+`PLANNED`: Placeholder, “yakında” veya yalnız iskelet durumundaki ekranlar canlı menüde kullanıcıya sunulmaz. Doğrudan URL korunacaksa ekran tamamlanmış özellik izlenimi vermez, yetkiyi atlamaz ve güvenli planlı durum gösterir. Kabul ölçütü `REQ-065` altında izlenir.
+
 ## Mevcut doğrulanmış konum
 
 `74915b6` ile Platform Süper Admin kontrol düzlemi, Platform PostgreSQL `0001..0007` migration zinciri, tenant PostgreSQL `0001..0003` zinciri, platform/tenant sınırları ve ilgili CI kapıları kodlanıp belirtilen CI ortamında doğrulandı. Bu, bütün ürün zincirinin veya Faz 2–12’nin tamamlandığı anlamına gelmez. Ayrıntı [ARC-016](../architecture/16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) belgesindedir.

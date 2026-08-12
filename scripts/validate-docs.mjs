@@ -1,17 +1,16 @@
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, extname, relative, resolve, sep } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-const root = resolve(import.meta.dirname, "..");
-const inventoryPath = "docs/governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md";
+export const inventoryPath = "docs/governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md";
+export const requiredMetadata = [
+  "id", "status", "owner", "source_role", "source_of_truth", "last_reviewed", "verified_against_commit",
+];
+
 const allowedStatuses = new Set([
-  "VERIFIED",
-  "IMPLEMENTED_UNVERIFIED",
-  "IMPLEMENTING",
-  "PLANNED",
-  "NOT_RUN",
-  "SUPERSEDED",
-  "ARCHIVED",
+  "VERIFIED", "IMPLEMENTED_UNVERIFIED", "IMPLEMENTING", "PLANNED", "NOT_RUN", "SUPERSEDED", "ARCHIVED",
 ]);
 const ignoredDirectories = new Set([".git", ".next", "node_modules", "generated"]);
 const categoryOrder = [
@@ -20,30 +19,31 @@ const categoryOrder = [
   "operations", "reliability", "runbooks", "releases", "training", "evidence", "archive",
   "app-package-readme", "third-party-generated",
 ];
+const textConfigExtensions = new Set([
+  ".md", ".mdx", ".mjs", ".cjs", ".js", ".jsx", ".mts", ".cts", ".ts", ".tsx", ".json",
+  ".yaml", ".yml", ".toml", ".ini", ".properties", ".xml", ".env", ".example", ".sh", ".ps1", ".bat",
+]);
 
-function walk(directory) {
+function walk(directory, include) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     if (entry.isDirectory() && ignoredDirectories.has(entry.name)) return [];
     const absolute = resolve(directory, entry.name);
-    if (entry.isDirectory()) return walk(absolute);
-    return extname(entry.name).toLowerCase() === ".md" ? [absolute] : [];
+    if (entry.isDirectory()) return walk(absolute, include);
+    return include(absolute, entry.name) ? [absolute] : [];
   });
 }
 
-function repoPath(absolute) {
+function repoPath(root, absolute) {
   return relative(root, absolute).split(sep).join("/");
 }
 
-function metadata(content) {
+export function parseMetadata(content) {
   const block = content.match(/^---\s*\r?\n([\s\S]*?)\r?\n---/) ?? content.match(/```yaml\s*\r?\n([\s\S]*?)\r?\n```/i);
   if (!block) return {};
-  return Object.fromEntries(
-    block[1]
-      .split(/\r?\n/)
-      .map((line) => line.match(/^([a-z_]+):\s*(.*?)\s*$/i))
-      .filter(Boolean)
-      .map((match) => [match[1], match[2].replace(/^['"]|['"]$/g, "")]),
-  );
+  return Object.fromEntries(block[1].split(/\r?\n/).map((line) => {
+    const match = line.match(/^([a-z_]+):\s*(.*?)\s*$/i);
+    return match ? [match[1], match[2].replace(/^['"]|['"]$/g, "")] : null;
+  }).filter(Boolean));
 }
 
 function category(path) {
@@ -51,80 +51,37 @@ function category(path) {
   if (path === "docs/README.md") return "governance";
   if (/^(apps|packages)\/.+\/README\.md$/i.test(path)) return "app-package-readme";
   if (path.startsWith("docs/archive/")) return "archive";
-  if (path.startsWith("docs/")) return path.split("/")[1] ?? "docs-root";
+  if (path.startsWith("docs/")) return path.split("/")[1] ?? "third-party-generated";
   return "third-party-generated";
-}
-
-function fallbackId(path, index) {
-  if (path === "AGENTS.md") return "GOV-ROOT-001";
-  if (path === "README.md") return "GOV-ROOT-002";
-  if (path.startsWith("docs/archive/legacy/")) return `ARCH-LEGACY-${String(index + 1).padStart(3, "0")}`;
-  if (path.startsWith("docs/archive/prompts/")) return `ARCH-PROMPT-${String(index + 1).padStart(3, "0")}`;
-  if (path.startsWith("docs/archive/sprints/")) return `ARCH-SPRINT-${String(index + 1).padStart(3, "0")}`;
-  return `DOC-${String(index + 1).padStart(3, "0")}`;
-}
-
-function masterSource(group) {
-  const map = {
-    architecture: "RMP-001 / TRK-001",
-    adr: "RMP-001",
-    governance: "GOV-001",
-    product: "PRD-001 / RMP-001",
-    domains: "RMP-001 / REQ-003",
-    workflows: "RMP-001 / REQ-003",
-    personas: "PRD-001 / RMP-001",
-    ux: "PRD-001 / RMP-001",
-    accessibility: "PRD-001 / RMP-001",
-    i18n: "PRD-001 / RMP-001",
-    security: "ADR-0002 / RMP-001",
-    privacy: "ADR-0002 / RMP-001",
-    testing: "TST-001",
-    infrastructure: "RMP-001 / TST-001",
-    operations: "RMP-001 / TST-001",
-    reliability: "RMP-001 / TST-001",
-    runbooks: "RMP-001 / TST-001",
-    releases: "RMP-001 / TST-001",
-    training: "RMP-001 / TST-001",
-    evidence: "TST-001 / GOV-003",
-    archive: "GOV-011",
-    "root-governance": "GOV-001",
-    "app-package-readme": "ilgili uygulama/paket",
-    "third-party-generated": "yok",
-  };
-  return map[group] ?? "GOV-002";
 }
 
 function titleOf(content, path) {
   return content.match(/^#\s+(.+)$/m)?.[1]?.trim() ?? path.split("/").at(-1);
 }
 
-function readDocuments() {
-  const paths = walk(root).map(repoPath).sort((a, b) => a.localeCompare(b, "tr"));
-  return paths.map((path, index) => {
+export function readDocuments(root) {
+  const paths = walk(root, (absolute) => extname(absolute).toLowerCase() === ".md")
+    .map((absolute) => repoPath(root, absolute)).sort((a, b) => a.localeCompare(b, "tr"));
+  return paths.map((path) => {
     const content = readFileSync(resolve(root, path), "utf8");
-    const meta = metadata(content);
+    const realMeta = parseMetadata(content);
     const group = category(path);
-    const archived = group === "archive";
-    const rootGovernance = group === "root-governance";
+    const active = group !== "archive";
+    const meta = realMeta;
     return {
-      path,
-      content,
-      meta,
-      group,
-      id: meta.id ?? fallbackId(path, index),
+      path, content, realMeta, meta, group, active,
+      id: meta.id,
       title: titleOf(content, path),
-      status: meta.status ?? (archived ? "ARCHIVED" : rootGovernance ? "VERIFIED" : "PLANNED"),
-      sourceOfTruth: meta.source_of_truth ?? (path === "AGENTS.md" || path === "README.md" ? "true" : "false"),
-      owner: meta.owner ?? (archived ? "Historical" : rootGovernance ? "Repository" : "Unassigned"),
-      freshness: archived
-        ? "tarihsel; güncellik uygulanmaz"
-        : `${meta.last_reviewed ?? "eksik"}; ${meta.verified_against_commit ?? "eksik"}`,
+      status: meta.status,
+      sourceOfTruth: meta.source_of_truth,
+      owner: meta.owner,
+      freshness: `${meta.last_reviewed ?? "eksik"}; ${meta.verified_against_commit ?? "eksik"}`,
     };
   });
 }
 
 function escapeCell(value) {
-  return String(value).replaceAll("|", "\\|").replace(/\r?\n/g, " ");
+  return String(value ?? "").replaceAll("|", "\\|").replace(/\r?\n/g, " ");
 }
 
 function inventoryLink(path) {
@@ -132,182 +89,309 @@ function inventoryLink(path) {
   return target.replaceAll("(", "%28").replaceAll(")", "%29").replaceAll(" ", "%20");
 }
 
-function writeInventory(documents) {
-  const withoutInventory = documents.filter((document) => document.path !== inventoryPath);
-  const inventory = {
-    path: inventoryPath,
-    id: "GOV-012",
-    title: "Markdown Envanteri ve Tasnif Kararları",
-    status: "VERIFIED",
-    sourceOfTruth: "true",
-    group: "governance",
-    owner: "Architecture-and-Documentation",
-    freshness: "2026-08-12; 74915b6f3f1f8d53116b760b6a6be9797111efa5",
+function masterSource(group) {
+  const map = {
+    architecture: "RMP-001 / TRK-001", adr: "RMP-001", governance: "GOV-001", product: "PRD-001 / RMP-001",
+    domains: "RMP-001 / REQ-003", workflows: "RMP-001 / REQ-003", personas: "PRD-001 / RMP-001",
+    ux: "PRD-001 / RMP-001", accessibility: "PRD-001 / RMP-001", i18n: "PRD-001 / RMP-001",
+    security: "ADR-0002 / RMP-001", privacy: "ADR-0002 / RMP-001", testing: "TST-001",
+    infrastructure: "RMP-001 / TST-001", operations: "RMP-001 / TST-001", reliability: "RMP-001 / TST-001",
+    runbooks: "RMP-001 / TST-001", releases: "RMP-001 / TST-001", training: "RMP-001 / TST-001",
+    evidence: "TST-001 / GOV-003", archive: "GOV-011", "root-governance": "GOV-001 / GOV-003",
+    "app-package-readme": "ilgili uygulama/paket", "third-party-generated": "yok",
   };
-  const rows = [...withoutInventory, inventory].sort((a, b) => a.path.localeCompare(b.path, "tr"));
+  return map[group] ?? "GOV-002";
+}
+
+export function generateInventoryContent(documents) {
+  const inventoryDocument = documents.find((document) => document.path === inventoryPath);
+  const inventoryMeta = {
+    id: "GOV-012", status: "VERIFIED", owner: "Architecture-and-Documentation",
+    source_role: "complete_markdown_inventory_and_classification", source_of_truth: "true",
+    last_reviewed: "not_applicable", verified_against_commit: "not_applicable",
+    code_baseline_commit: "not_applicable",
+    ...(inventoryDocument?.realMeta ?? {}),
+  };
+  inventoryMeta.verified_against_commit = "not_applicable";
+  const rows = documents.map((document) => document.path === inventoryPath ? {
+    ...document, meta: inventoryMeta, id: inventoryMeta.id, status: inventoryMeta.status,
+    sourceOfTruth: inventoryMeta.source_of_truth, owner: inventoryMeta.owner,
+    freshness: `${inventoryMeta.last_reviewed}; ${inventoryMeta.verified_against_commit}`,
+  } : document).sort((a, b) => a.path.localeCompare(b.path, "tr"));
   const counts = new Map();
   for (const row of rows) counts.set(row.group, (counts.get(row.group) ?? 0) + 1);
-
   const lines = [
-    "# Markdown Envanteri ve Tasnif Kararları",
-    "",
-    "```yaml",
-    "id: GOV-012",
-    "status: VERIFIED",
-    "owner: Architecture-and-Documentation",
-    "source_role: complete_markdown_inventory_and_classification",
-    "source_of_truth: true",
-    "last_reviewed: 2026-08-12",
-    "verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5",
-    "```",
-    "",
-    "Bu envanter `scripts/validate-docs.mjs --write-inventory` ile repo içindeki bütün Markdown dosyalarından üretilir. `node_modules`, `.next` ve `generated` dizinleri üçüncü taraf/üretilmiş içerik oldukları için tarama dışında tutulur. Envanterde bulunmak, bir hedefin uygulandığı anlamına gelmez; `status` ve kanıt kapsamı birlikte okunur.",
-    "",
-    "## Kategori özeti",
-    "",
-    "| Kategori | Belge sayısı |",
-    "|---|---:|",
+    "# Markdown Envanteri ve Tasnif Kararları", "", "```yaml",
+    `id: ${inventoryMeta.id}`, `status: ${inventoryMeta.status}`, `owner: ${inventoryMeta.owner}`,
+    `source_role: ${inventoryMeta.source_role}`, `source_of_truth: ${inventoryMeta.source_of_truth}`,
+    `last_reviewed: ${inventoryMeta.last_reviewed}`, "verified_against_commit: not_applicable",
+    `code_baseline_commit: ${inventoryMeta.code_baseline_commit}`, "```", "",
+    "Bu envanter `pnpm validate:docs:write` ile deterministik üretilir. Normal `pnpm validate:docs` ve `--check-inventory` dosya yazmaz; yeniden üretilecek içerik izlenen dosyadan farklıysa kalite kapısı hata verir. `code_baseline_commit` yalnız uygulama kodu/migration/test fotoğrafıdır; envanterin kendi güncellik veya commit kanıtı değildir.",
+    "", "## Kategori özeti", "", "| Kategori | Belge sayısı |", "|---|---:|",
     ...categoryOrder.map((group) => `| ${group} | ${counts.get(group) ?? 0} |`),
-    "",
-    "## Belge envanteri",
-    "",
+    "", "## Belge envanteri", "",
     "| Yol | ID | Başlık | Durum | Ana kaynak | Kategori | Sahip | Güncellik | Bağlı ana kaynak | Aynı konu kaynağı | Karar |",
     "|---|---|---|---|---|---|---|---|---|---|---|",
   ];
-
   for (const row of rows) {
-    const archived = row.group === "archive";
-    const superseded = row.status === "SUPERSEDED";
     const related = row.id === masterSource(row.group) || row.id === "GOV-012" ? "yok" : masterSource(row.group);
-    const decision = archived ? "arşivde tutulacak" : superseded ? "superseded; uyumluluk için tutulacak" : "tutulacak";
-    lines.push(
-      `| [${escapeCell(row.path)}](${inventoryLink(row.path)}) | ${escapeCell(row.id)} | ${escapeCell(row.title)} | ${escapeCell(row.status)} | ${escapeCell(row.sourceOfTruth)} | ${escapeCell(row.group)} | ${escapeCell(row.owner)} | ${escapeCell(row.freshness)} | ${escapeCell(masterSource(row.group))} | ${escapeCell(related)} | ${decision} |`,
-    );
+    const decision = row.group === "archive" ? "arşivde tutulacak" : row.status === "SUPERSEDED" ? "superseded; uyumluluk için tutulacak" : "tutulacak";
+    lines.push(`| [${escapeCell(row.path)}](${inventoryLink(row.path)}) | ${escapeCell(row.id)} | ${escapeCell(row.title)} | ${escapeCell(row.status)} | ${escapeCell(row.sourceOfTruth)} | ${escapeCell(row.group)} | ${escapeCell(row.owner)} | ${escapeCell(row.freshness)} | ${escapeCell(masterSource(row.group))} | ${escapeCell(related)} | ${decision} |`);
   }
-
-  lines.push(
-    "",
-    "## Tasnif sonucu",
-    "",
+  lines.push("", "## Tasnif sonucu", "",
     "- Aktif belgeler kendi uzmanlık dizinlerinde tutulur ve `docs/README.md` üzerinden bu envantere bağlanır.",
-    "- `ARC-010`, yeni `TST-001` ana planına yönlendiren `SUPERSEDED` uyumluluk belgesidir; silinmez.",
-    "- `docs/archive` içerikleri tarihsel kayıttır, aktif karar kaynağı değildir ve `ARCHIVED` kabul edilir.",
-    "- İnceleme birebir içerik kopyası göstermedikçe yalnız benzer başlık nedeniyle belge birleştirilmez veya silinmez.",
-    "- Uygulama/paket README ve üçüncü taraf/üretilmiş Markdown kategorilerinde bu taramada kayıt yoksa kategori sayısı sıfırdır; üretilmiş dizinler kaynak belge sayılmaz.",
+    "- `ARC-010`, `TST-001` ana planına yönlendiren `SUPERSEDED` uyumluluk belgesidir; silinmez.",
+    "- `docs/archive` tarihsel kayıttır ve aktif karar kaynağı değildir; yine de fallback olmadan gerçek `ARCHIVED` metadata taşır.",
+    "- Envanter satırları yol, ID, durum, kaynak rolü, kategori, sahip ve güncellik alanlarında validator tarafından yapısal karşılaştırılır.",
   );
-  writeFileSync(resolve(root, inventoryPath), `${lines.join("\n")}\n`, "utf8");
+  return `${lines.join("\n")}\n`;
 }
 
-function markdownLinks(document) {
-  return [...document.content.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)].map((match) => match[1].trim());
+function stripFencedCode(content) {
+  return content.replace(/```[\s\S]*?```/g, "");
 }
 
-function normalizeForDuplicate(content) {
-  return content.replace(/\r\n/g, "\n").trim();
-}
-
-function main() {
-  let documents = readDocuments();
-  if (process.argv.includes("--write-inventory")) {
-    writeInventory(documents);
-    documents = readDocuments();
+function markdownTargets(document, errors) {
+  const content = stripFencedCode(document.content);
+  const definitions = new Map();
+  for (const match of content.matchAll(/^ {0,3}\[([^\]]+)\]:\s*(<[^>]+>|\S+)/gm)) {
+    definitions.set(match[1].trim().toLocaleLowerCase("tr"), match[2].replace(/^<|>$/g, ""));
   }
+  const targets = [...content.matchAll(/!?\[[^\]]*\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g)]
+    .map((match) => match[1].replace(/^<|>$/g, ""));
+  const withoutInline = content.replace(/!?\[[^\]]*\]\([^)]+\)/g, "").replace(/^ {0,3}\[[^\]]+\]:.*$/gm, "");
+  for (const match of withoutInline.matchAll(/!?\[([^\]]*)\]\[([^\]]*)\]/g)) {
+    const key = (match[2] || match[1]).trim().toLocaleLowerCase("tr");
+    if (!definitions.has(key)) errors.push(`kırık reference-style bağlantı: ${document.path} -> ${key}`);
+    else targets.push(definitions.get(key));
+  }
+  for (const target of definitions.values()) targets.push(target);
+  return [...new Set(targets)];
+}
 
+export function githubSlug(text) {
+  return text.trim().toLocaleLowerCase("tr").replace(/<[^>]+>/g, "")
+    .replace(/[`*_~]/g, "").replace(/[^\p{L}\p{N}\s_-]/gu, "").replace(/\s+/g, "-");
+}
+
+function anchorsFor(content) {
+  const anchors = new Set();
+  const seen = new Map();
+  const stripped = stripFencedCode(content);
+  for (const match of stripped.matchAll(/^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/gm)) {
+    const base = githubSlug(match[1]);
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+    anchors.add(count ? `${base}-${count}` : base);
+  }
+  for (const match of stripped.matchAll(/\bid=["']([^"']+)["']/gi)) anchors.add(match[1]);
+  return anchors;
+}
+
+function splitTarget(target) {
+  const hash = target.indexOf("#");
+  if (hash < 0) return { path: target, anchor: "" };
+  return { path: target.slice(0, hash), anchor: decodeURIComponent(target.slice(hash + 1)) };
+}
+
+function splitTableRow(line) {
+  const cells = [];
+  let cell = "";
+  for (let index = 1; index < line.length - 1; index += 1) {
+    if (line[index] === "|" && line[index - 1] !== "\\") { cells.push(cell.trim().replaceAll("\\|", "|")); cell = ""; }
+    else cell += line[index];
+  }
+  cells.push(cell.trim().replaceAll("\\|", "|"));
+  return cells;
+}
+
+function sectionTable(content, heading) {
+  const start = content.indexOf(heading);
+  if (start < 0) return [];
+  const lines = content.slice(start + heading.length).split(/\r?\n/);
+  const table = [];
+  let started = false;
+  for (const line of lines) {
+    if (line.startsWith("|")) { started = true; table.push(splitTableRow(line)); }
+    else if (started && line.trim()) break;
+  }
+  return table.length >= 2 ? table.filter((_, index) => index !== 1) : [];
+}
+
+function parseInventory(content, errors) {
+  const countTable = sectionTable(content, "## Kategori özeti");
+  const rowTable = sectionTable(content, "## Belge envanteri");
+  if (!countTable.length) errors.push("envanter kategori tablosu yapısal olarak okunamadı");
+  if (!rowTable.length) errors.push("envanter belge tablosu yapısal olarak okunamadı");
+  const counts = new Map(countTable.slice(1).map((row) => [row[0], Number(row[1])]));
+  const rows = rowTable.slice(1).map((row) => ({
+    path: row[0]?.match(/^\[([^\]]+)\]\(/)?.[1], id: row[1], title: row[2], status: row[3],
+    sourceOfTruth: row[4], group: row[5], owner: row[6], freshness: row[7],
+  }));
+  return { counts, rows };
+}
+
+function listValue(value) {
+  if (!value || value === "null" || value === "[]") return [];
+  if (value.startsWith("[") && value.endsWith("]")) return value.slice(1, -1).split(",").map((item) => item.trim()).filter(Boolean);
+  return [value];
+}
+
+function validateSupersession(active, errors) {
+  const byId = new Map(active.filter((document) => document.id).map((document) => [document.id, document]));
+  for (const document of active) {
+    for (const targetId of listValue(document.meta.supersedes)) {
+      const target = byId.get(targetId);
+      if (!target) errors.push(`supersedes hedefi yok: ${document.path} -> ${targetId}`);
+      else if (!listValue(target.meta.superseded_by).includes(document.id)) errors.push(`supersedes karşılığı eksik: ${document.id} -> ${targetId}`);
+    }
+    for (const sourceId of listValue(document.meta.superseded_by)) {
+      const source = byId.get(sourceId);
+      if (!source) errors.push(`superseded_by kaynağı yok: ${document.path} -> ${sourceId}`);
+      else if (!listValue(source.meta.supersedes).includes(document.id)) errors.push(`superseded_by karşılığı eksik: ${document.id} <- ${sourceId}`);
+    }
+  }
+}
+
+function isAllowedFixtureSecret(path, line) {
+  if (path === ".github/workflows/webpack.yml") return /tilbecore_test_password|ci_only_[a-z0-9_]+/.test(line);
+  const testFixtureAllowlist = new Map([
+    ["packages/provisioning/tests/tenant-provisioning.test.ts", "postgresql://user:" + "password@example.test/db"],
+    ["packages/tenant-runtime/tests/tenant-connection-pool.test.ts", "postgresql://user:" + "password@host/private_database"],
+  ]);
+  const allowedValue = testFixtureAllowlist.get(path);
+  return Boolean(allowedValue && line.includes(allowedValue));
+}
+
+function secretErrors(root) {
+  const patterns = [
+    /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
+    /\b(?:ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[0-9A-Z]{16})\b/,
+    /\b(?:sk_live_[A-Za-z0-9]{16,}|xox[baprs]-[A-Za-z0-9-]{20,})\b/,
+    /postgres(?:ql)?:\/\/[^\s:@/]+:[^\s@/]{8,}@[^\s/]+/i,
+  ];
+  let files;
+  try {
+    files = execFileSync("git", ["-C", root, "ls-files", "--cached", "--others", "--exclude-standard"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
+      .split(/\r?\n/).filter(Boolean).map((path) => resolve(root, path))
+      .filter((absolute) => existsSync(absolute) && statSync(absolute).isFile())
+      .filter((absolute) => textConfigExtensions.has(extname(absolute).toLowerCase()) || absolute.endsWith(".env.example"));
+  } catch {
+    files = walk(root, (absolute, name) => textConfigExtensions.has(extname(name).toLowerCase()) || name === ".env.example");
+  }
+  const errors = [];
+  for (const absolute of files) {
+    const path = repoPath(root, absolute);
+    let content;
+    try { content = readFileSync(absolute, "utf8"); } catch { continue; }
+    let count = 0;
+    for (const line of content.split(/\r?\n/)) {
+      if (isAllowedFixtureSecret(path, line)) continue;
+      if (patterns.some((pattern) => pattern.test(line))) count += 1;
+    }
+    if (count) errors.push(`hassas bilgi adayı: ${path} (${count} eşleşme; değer gösterilmedi)`);
+  }
+  return errors;
+}
+
+export function validateRepository(root, options = {}) {
   const errors = [];
   const warnings = [];
-  const active = documents.filter((document) => document.group !== "archive");
+  const documents = readDocuments(root);
+  const active = documents.filter((document) => document.active);
+  for (const document of documents) {
+    for (const key of requiredMetadata) if (!document.realMeta[key]) errors.push(`eksik metadata ${key}: ${document.path}`);
+    if (document.status && !allowedStatuses.has(document.status)) errors.push(`geçersiz durum: ${document.path} (${document.status})`);
+    if (document.meta.source_of_truth && !["true", "false"].includes(document.meta.source_of_truth)) errors.push(`geçersiz source_of_truth: ${document.path}`);
+    const verified = document.meta.verified_against_commit;
+    if (verified && verified !== "not_applicable" && !/^[a-f0-9]{40}$/i.test(verified)) errors.push(`geçersiz verified_against_commit: ${document.path}`);
+  }
+  const idMap = new Map();
+  for (const document of documents) {
+    if (!document.id) continue;
+    const paths = idMap.get(document.id) ?? [];
+    paths.push(document.path); idMap.set(document.id, paths);
+  }
+  for (const [id, paths] of idMap) if (paths.length > 1) errors.push(`mükerrer ID ${id}: ${paths.join(", ")}`);
+  validateSupersession(active, errors);
+
+  const byPath = new Map(documents.map((document) => [document.path, document]));
+  const graph = new Map(active.map((document) => [document.path, new Set()]));
   for (const document of active) {
-    if (!allowedStatuses.has(document.status)) errors.push(`geçersiz durum: ${document.path} (${document.status})`);
-    if (document.group !== "root-governance") {
-      for (const key of ["id", "status", "owner", "source_role", "source_of_truth", "last_reviewed", "verified_against_commit"]) {
-        if (!document.meta[key]) errors.push(`eksik metadata ${key}: ${document.path}`);
+    const targets = markdownTargets(document, errors);
+    for (const rawTarget of targets) {
+      if (/^(?:https?:|mailto:|tel:)/i.test(rawTarget)) continue;
+      const { path: targetPart, anchor } = splitTarget(rawTarget);
+      const targetAbsolute = targetPart ? resolve(dirname(resolve(root, document.path)), decodeURIComponent(targetPart)) : resolve(root, document.path);
+      if (!existsSync(targetAbsolute)) { errors.push(`kırık bağlantı: ${document.path} -> ${targetPart || rawTarget}`); continue; }
+      const resolvedPath = statSync(targetAbsolute).isDirectory()
+        ? repoPath(root, resolve(targetAbsolute, "README.md")) : repoPath(root, targetAbsolute);
+      if (graph.has(document.path) && byPath.get(resolvedPath)?.active) graph.get(document.path).add(resolvedPath);
+      if (anchor) {
+        const targetDocument = byPath.get(resolvedPath);
+        if (!targetDocument || !anchorsFor(targetDocument.content).has(anchor)) errors.push(`kırık anchor: ${document.path} -> ${rawTarget}`);
       }
     }
   }
 
-  const idMap = new Map();
-  for (const document of active) {
-    const paths = idMap.get(document.id) ?? [];
-    paths.push(document.path);
-    idMap.set(document.id, paths);
+  const roots = ["AGENTS.md", "README.md", "docs/README.md"].filter((path) => graph.has(path));
+  const reachable = new Set(roots);
+  const queue = [...roots];
+  while (queue.length) {
+    const current = queue.shift();
+    for (const target of graph.get(current) ?? []) if (!reachable.has(target)) { reachable.add(target); queue.push(target); }
   }
-  for (const [id, paths] of idMap) if (paths.length > 1) errors.push(`mükerrer ID ${id}: ${paths.join(", ")}`);
+  for (const document of active) if (!reachable.has(document.path)) errors.push(`yetim aktif belge: ${document.path}`);
 
-  for (const document of documents) {
-    for (const link of markdownLinks(document)) {
-      if (/^(?:https?:|mailto:|tel:|#)/i.test(link)) continue;
-      const target = decodeURIComponent(link.split("#")[0].replace(/^<|>$/g, ""));
-      if (!target) continue;
-      const absolute = resolve(dirname(resolve(root, document.path)), target);
-      if (!existsSync(absolute)) errors.push(`kırık bağlantı: ${document.path} -> ${target}`);
-    }
-  }
-
-  const hashMap = new Map();
-  for (const document of documents) {
-    const hash = createHash("sha256").update(normalizeForDuplicate(document.content)).digest("hex");
-    const paths = hashMap.get(hash) ?? [];
-    paths.push(document.path);
-    hashMap.set(hash, paths);
-  }
-  for (const paths of hashMap.values()) if (paths.length > 1) warnings.push(`birebir mükerrer: ${paths.join(", ")}`);
-
-  const normalizedTitles = new Map();
-  for (const document of documents) {
-    const normalized = document.title
-      .toLocaleLowerCase("tr")
-      .normalize("NFKD")
-      .replace(/[^a-z0-9çğıöşü]+/gi, " ")
-      .trim();
-    const paths = normalizedTitles.get(normalized) ?? [];
-    paths.push(document.path);
-    normalizedTitles.set(normalized, paths);
-  }
-  for (const paths of normalizedTitles.values()) if (paths.length > 1) warnings.push(`aynı başlık: ${paths.join(", ")}`);
-
-  const tokenSets = documents.map((document) => new Set(
-    document.content
-      .toLocaleLowerCase("tr")
-      .normalize("NFKD")
-      .replace(/```[\s\S]*?```/g, " ")
-      .replace(/[^a-z0-9çğıöşü]+/gi, " ")
-      .split(/\s+/)
-      .filter((token) => token.length > 3),
-  ));
-  for (let left = 0; left < documents.length; left += 1) {
-    if (tokenSets[left].size < 40) continue;
-    for (let right = left + 1; right < documents.length; right += 1) {
-      if (tokenSets[right].size < 40) continue;
-      let intersection = 0;
-      for (const token of tokenSets[left]) if (tokenSets[right].has(token)) intersection += 1;
-      const union = tokenSets[left].size + tokenSets[right].size - intersection;
-      if (intersection / union >= 0.82) warnings.push(`çok benzer içerik: ${documents[left].path}, ${documents[right].path}`);
-    }
-  }
-
-  const sensitivePatterns = [
-    /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/g,
-    /\b(?:ghp|github_pat|sk_live|sk_test)_[A-Za-z0-9_\-]{12,}\b/g,
-    /postgres(?:ql)?:\/\/[^\s:@/]+:[^\s@/]+@/gi,
-  ];
-  for (const document of documents) {
-    const count = sensitivePatterns.reduce((sum, pattern) => sum + [...document.content.matchAll(pattern)].length, 0);
-    if (count) errors.push(`hassas bilgi adayı: ${document.path} (${count} eşleşme; değer gösterilmedi)`);
-  }
-
-  const inventory = documents.find((document) => document.path === inventoryPath);
+  const inventory = byPath.get(inventoryPath);
   if (!inventory) errors.push(`envanter yok: ${inventoryPath}`);
   else {
+    const parsed = parseInventory(inventory.content, errors);
+    const inventoryRows = new Map();
+    for (const row of parsed.rows) {
+      if (!row.path) { errors.push("envanter satırında yol okunamadı"); continue; }
+      if (inventoryRows.has(row.path)) errors.push(`mükerrer envanter satırı: ${row.path}`);
+      inventoryRows.set(row.path, row);
+      if (!byPath.has(row.path)) errors.push(`envanterde olmayan yol: ${row.path}`);
+    }
     for (const document of documents) {
-      if (document.path !== inventoryPath && !inventory.content.includes(document.path)) errors.push(`envanter dışı belge: ${document.path}`);
+      const row = inventoryRows.get(document.path);
+      if (!row) { errors.push(`envanter dışı belge: ${document.path}`); continue; }
+      const expected = { id: document.id, status: document.status, sourceOfTruth: document.sourceOfTruth, group: document.group, owner: document.owner, freshness: document.freshness };
+      for (const key of Object.keys(expected)) if (row[key] !== expected[key]) errors.push(`envanter metadata uyumsuzluğu ${key}: ${document.path}`);
+    }
+    const actualCounts = new Map();
+    for (const document of documents) actualCounts.set(document.group, (actualCounts.get(document.group) ?? 0) + 1);
+    for (const group of categoryOrder) if (parsed.counts.get(group) !== (actualCounts.get(group) ?? 0)) errors.push(`yanlış kategori sayısı ${group}: envanter=${parsed.counts.get(group)} gerçek=${actualCounts.get(group) ?? 0}`);
+    for (const group of parsed.counts.keys()) if (!categoryOrder.includes(group)) errors.push(`bilinmeyen envanter kategorisi: ${group}`);
+    if (options.checkInventory !== false) {
+      const expectedContent = generateInventoryContent(documents);
+      if (inventory.content.replace(/\r\n/g, "\n") !== expectedContent) errors.push("güncel olmayan envanter: pnpm validate:docs:write çalıştırılmalı");
     }
   }
 
-  const counts = Object.fromEntries(
-    [...documents.reduce((map, document) => map.set(document.group, (map.get(document.group) ?? 0) + 1), new Map()).entries()].sort(([a], [b]) => a.localeCompare(b, "tr")),
-  );
-  console.log(JSON.stringify({ markdownCount: documents.length, categories: counts, duplicateIds: [...idMap.values()].filter((paths) => paths.length > 1).length, warnings, errors }, null, 2));
-  if (errors.length) process.exitCode = 1;
+  const hashes = new Map();
+  for (const document of documents) {
+    const hash = createHash("sha256").update(document.content.replace(/\r\n/g, "\n").trim()).digest("hex");
+    const paths = hashes.get(hash) ?? []; paths.push(document.path); hashes.set(hash, paths);
+  }
+  for (const paths of hashes.values()) if (paths.length > 1) warnings.push(`birebir mükerrer: ${paths.join(", ")}`);
+  errors.push(...secretErrors(root));
+  const counts = Object.fromEntries([...documents.reduce((map, document) => map.set(document.group, (map.get(document.group) ?? 0) + 1), new Map()).entries()].sort(([a], [b]) => a.localeCompare(b, "tr")));
+  return { markdownCount: documents.length, categories: counts, duplicateIds: [...idMap.values()].filter((paths) => paths.length > 1).length, warnings, errors };
 }
 
-main();
+export function runCli(argv = process.argv.slice(2)) {
+  const rootIndex = argv.indexOf("--root");
+  const root = rootIndex >= 0 ? resolve(argv[rootIndex + 1]) : resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  if (argv.includes("--write-inventory")) {
+    const documents = readDocuments(root);
+    writeFileSync(resolve(root, inventoryPath), generateInventoryContent(documents), "utf8");
+  }
+  const result = validateRepository(root, { checkInventory: true });
+  console.log(JSON.stringify(result, null, 2));
+  if (result.errors.length) process.exitCode = 1;
+  return result;
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) runCli();

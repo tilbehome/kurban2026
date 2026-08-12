@@ -1,3 +1,13 @@
+---
+id: ARCH-786E837D6229
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # 🎯 SPRINT-9 — TV KONTROL PANELİ: KURBAN BAZLI + 6 AŞAMA
 
 **Amaç:** TV Kontrol Paneli şu an **hisse bazlı** (260 satır) ve **12 aşama** gösteriyor. Olması gereken:

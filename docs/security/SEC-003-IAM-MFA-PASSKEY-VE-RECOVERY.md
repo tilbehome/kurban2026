@@ -74,6 +74,8 @@ MFA/passkey devre dışı bırakma, yeni cihaz kaydı, recovery yenileme, bütü
 
 ## Negatif kabul senaryoları
 
+- Firma aktivasyonu, aynı tenantta ilk adminden ayrı en az bir aktif/yetkili yedek Firma Admin bulunmadan tamamlanamaz (`PLANNED`); başka tenant kullanıcısı veya yinelenen aynı kullanıcı bu sayıya dahil edilmez.
+
 - Platform cookie’si tenant hostunda, tenant cookie’si console hostunda reddedilir.
 - Başka kullanıcı veya tenant challenge’ı, süresi dolmuş/replay challenge ve yanlış RP/origin reddedilir.
 - Kullanılmış recovery kodu ve eşzamanlı ikinci tüketim reddedilir.

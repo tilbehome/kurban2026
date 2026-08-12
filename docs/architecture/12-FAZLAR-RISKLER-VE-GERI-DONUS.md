@@ -10,7 +10,7 @@ last_reviewed: 2026-08-12
 verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
 ```
 
-Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu dosya faz, risk ve geri dönüş özetini o belgeye göre tutar.
+Faz hedef sırası ve çıkış kriterlerinin birinci kaynağı `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`, güncel gerçekleşme kaynağı TRK-001’dir. Bu dosyanın tek sahipliği kimlikli riskler ve geri dönüş desenleridir; ayrı faz durumu veya kaynak önceliği üretmez. Teknik borç ve açık kararlar [GOV-014](../governance/GOV-014-TEKNIK-BORC-VE-ACIK-KARAR-KAYDI.md) içinde tutulur.
 
 ## 12 Ağustos 2026 doğrulanmış faz durumu
 
@@ -70,7 +70,7 @@ Faz 2B/2C uygulama notu: `apps/platform-admin` ayrı platform hostu, kimliği, o
 | Faz 2D | `PRO-003`, `PRO-030` | Import, veri kalitesi ve sezon durum makinesi sözleşmesi firma çekirdek şemasıyla birlikte hazırlanır; Faz 2A’ya kod olarak yığılmaz. |
 | Faz 3 | `PRO-004`, `PRO-005`, `PRO-009` | Müşteri, telefon, KVKK, iletişim izni ve veri kalitesi müşteri/sezon/cari modeliyle ilişkilidir. |
 | Faz 4 | `PRO-003`, `PRO-004`, `PRO-005` | Hayvan, küpe, tedarik ve toplu veri içe aktarma bu fazın veri sınırına bağlıdır. |
-| Faz 5 | `PRO-002`, `PRO-005`, `PRO-032` | Hisse, satış, yedinci hisse, çifte satış denetimi ve kritik satış onayları atomik satış fazında ele alınır. |
+| Faz 5 | `PRO-002`, `PRO-005`, `PRO-032` | Hisse, rezervasyon/kesin satış ayrımı, satılmamış işletme envanteri, çifte satış denetimi ve kritik ödemeli satış onayları atomik satış fazında ele alınır. |
 | Faz 6 | `PRO-002`, `PRO-032` | Finansal onaylar, tahsilat istisnaları, ödeme/kasa farkı ve ledger/tahsilat doğruluğu birlikte ele alınır. |
 | Faz 8 | `PRO-001`, `PRO-006`, `PRO-032` | Operasyon istisnaları, tutarlılık bulguları ve vardiya devri kesim operasyon motoruyla birlikte anlam kazanır. |
 | Faz 9 | `PRO-010`, `PRO-031`, `PRO-035` | Sentetik demo/prova verisi, paket/tartım ve donanım adapterleri gerçek üretim verisinden ayrılır. |
@@ -80,6 +80,8 @@ Faz 2B/2C uygulama notu: `apps/platform-admin` ayrı platform hostu, kimliği, o
 | Faz 15 | `PRO-007`, `PRO-014`, `PRO-015`, `PRO-016`, `PRO-018`, `PRO-019`, `PRO-021`, `PRO-028`, `PRO-029`, `PRO-034`, `PRO-036` | Güncelleme, backup/restore, incident, bakım, güvenli sürüm geçişi, entegrasyon ve operasyon sürekliliği bu fazda kanıtlanır. |
 
 ## Kritik teknik riskler
+
+Aşağıdaki sıralı kayıtların kalıcı kimliği `RSK-TECH-001..RSK-TECH-025`, durumu `OPEN`, sahibi aksi yazılmadıkça `Architecture-and-Engineering` kabul edilir. Kapanış; bağlı issue, telafi kontrolü, test/EVD ve TRK-001 güncellemesi olmadan yapılamaz.
 
 1. Float parasal model.
 2. SQLite → PostgreSQL migration riski.
@@ -108,6 +110,8 @@ Faz 2B/2C uygulama notu: `apps/platform-admin` ayrı platform hostu, kimliği, o
 25. Kurban Günü Provası yapılmadan ilk canlı sezona geçilmesi.
 
 ## Kritik iş akışı riskleri
+
+Aşağıdaki sıralı kayıtların kalıcı kimliği `RSK-WFL-001..RSK-WFL-022`, durumu `OPEN`, sahibi aksi yazılmadıkça `Product-and-Domain` kabul edilir. Finans, tenant ve kesim riskleri ilgili uzmanlık sahibinin ortak onayını gerektirir.
 
 1. Çifte satış.
 2. Kapora alınıp hisse atanmaması veya tersi.

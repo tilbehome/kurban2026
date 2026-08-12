@@ -49,6 +49,20 @@ Bu commit Faz 2A’nın tamamlandığı anlamına gelmez. Faz 2A’nın gerçek 
 
 `package.json` kök uygulama paketidir ve Next.js uygulaması hâlâ kökte çalışır.
 
+Bu nedenle repo bir geçiş monoreposudur. Yeni `apps/*`/`packages/*` yanında legacy tenant web hâlâ kök `app/modules/shared/components/prisma` importlarına dayanır. `tenant-web`, `field-pwa`, `public-display` ve sürekli ayrı worker hedeflerinin fiziksel geçişi tamamlanmamıştır; kök Prisma tüketicileri taşınmadan legacy dizinler kaldırılmaz. Dizin taşıması ile davranış değişikliği aynı committe birleştirilmez.
+
+### DIR-001 kapanış kriterleri
+
+`DIR-001` yalnız aşağıdakiler birlikte kanıtlandığında kapanır:
+
+1. `field-pwa/tenant-mobile`, `worker/jobs-worker`, `domains/modules` ad kararı kabul edilmiş ADR ile kapanır.
+2. Kök tenant web import grafiği sıfırlanır veya açık, testli uyumluluk katmanına iner.
+3. `app`, `modules`, `shared`, `components`, `prisma` sahipleri hedefe küçük `git mv` paketleriyle taşınır; her move davranış değişikliğinden ayrıdır.
+4. Tenant-web, field PWA, public display ve worker için build/smoke; legacy route, auth, PWA asset ve Prisma tüketici kontrolleri geçer.
+5. Boş hedef klasör/`.gitkeep` yoktur; kaldırılan her legacy yol için bağlantı/import taraması ve revert noktası vardır.
+
+Aşamalı sıra: ad/ADR → güncel import grafiği → composition root ve alias uyumluluğu → route/use-case bazlı ayrıştırma → tenant-web move → public/PWA move → field-pwa/public-display gerçek yüzeyleri → worker gerçek job’ları → legacy yol kaldırma. Bu görev bu adımların hiçbirinde fiziksel taşıma yapmaz.
+
 Faz 2A öncesinde `pnpm-workspace.yaml` dosyasında `packages` deseni yoktu; yalnız `allowBuilds` politikası vardı. Bu pakette davranış değiştirmeden `packages/*` workspace deseni eklenmiştir. Boş `apps/*` veya göstermelik klasör oluşturulmamıştır.
 
 Faz 2C ilerleme notu: `apps/*` workspace deseni, gerçek `apps/provisioning-cli` composition root’u oluştuğu anda eklenmiştir. Bu uygulama DB create/migrate/status/resume/rollback davranışı ve test içerdiği için Faz 2A’daki “boş/göstermelik apps klasörü açmama” kuralını ihlal etmez. Kök Next.js tenant uygulaması bu paket kapsamında taşınmamıştır.

@@ -34,4 +34,8 @@ Lisans durumları ve sezon durumları ayrı kavramlardır. Lisans kesintisi, Kur
 - Lisans toleransının gerçek çevrimdışı Kurban Günü kabulü.
 - Tüm firma başlangıç ve sezon sihirbazlarının uçtan uca kullanıcı kabulü.
 
+## Yedek Firma Admin aktivasyon kapısı
+
+`PLANNED`: Firma aktivasyonu ve kurulum sihirbazı çıkışı için ilk admin dışında en az bir aktif/yetkili yedek Firma Admin bulunmalıdır. Aynı kişi veya aynı kullanıcı kaydı iki admin gibi sayılamaz. İkinci admin daveti kabul edilip güvenli kimlik kurulumu tamamlanmadan aktivasyon kapısı geçmez; acil durum istisnası tasarlanacaksa süreli, gerekçeli ve auditli ayrı karara bağlanır. Provisioning kabulü bu koşulu tenant sınırında ve başka firma kullanıcılarını saymadan doğrular.
+
 Bu sınırların kanıt kaynağı [ARC-016](../architecture/16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) ve [TRK-001](../architecture/KURBAN2026-UYGULAMA-TAKIP.md) belgeleridir.

@@ -17,7 +17,7 @@ related_requirements: [REQ-001, REQ-068, PRO-011, PRO-021, PRO-023, PRO-024, PRO
 related_adrs: [ADR-0002, ADR-0003]
 related_modules: [all]
 related_tests: [TST-004, TST-006, TST-008, TST-010, TST-011]
-supersedes: []
+supersedes: [ARC-010]
 superseded_by: null
 ```
 
@@ -115,6 +115,8 @@ Birinci karar kaynağı [ADR-0002](../adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-V
 
 ```text
 pnpm check:utf8
+pnpm validate:docs
+pnpm test:docs
 pnpm exec tsc --noEmit
 pnpm test
 pnpm lint

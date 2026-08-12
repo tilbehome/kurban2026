@@ -1,3 +1,13 @@
+---
+id: ARCH-93B9E1A3DFDB
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT-FAZ-8: WHATSAPP TOPLU GÖNDERİM
 
 > **Claude Code'a ver. Otonom modda çalıştır. Her adımda commit at.**

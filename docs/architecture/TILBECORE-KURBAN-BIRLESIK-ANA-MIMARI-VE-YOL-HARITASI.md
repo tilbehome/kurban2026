@@ -41,13 +41,7 @@ Bu belge yazılırken erişilebilen kayıtlar arasında eski ürün/tasarım bri
 
 ## 2. Karar önceliği ve değişiklik kuralı
 
-Çelişkili iki kayıt bulunduğunda aşağıdaki sıra uygulanır:
-
-1. Kullanıcının daha sonra açıkça kabul ettiği karar.
-2. Tarihli ve sürümlü ana mimari/karar belgesi.
-3. Doğrulanmış kaynak kod ve test kanıtı.
-4. Eski tasarım briefi veya fikir listesi.
-5. Yardımcı öneri ve varsayım.
+Kaynak önceliği ve normatif hedef ile mevcut uygulama kanıtının nasıl ayrılacağı [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) belgesinin tek sorumluluğudur. Bu yol haritası Faz 1–12 hedef sırası ve çıkış kriterlerinin sahibidir; ayrı bir kaynak önceliği sırası üretmez.
 
 Yeni karar eski kararı tamamen silmez. Karar günlüğünde:
 
@@ -659,16 +653,20 @@ domains/share-sales/
 
 Mevcut `app`, `components`, `modules`, `shared`, `prisma` yapısı tek seferde taşınmaz.
 
+Repo bugün geçiş monoreposudur: gerçek `apps/*` ve `packages/*` bulunur; legacy tenant uygulaması hâlâ kök dizinleri ve kök Prisma tüketicilerini kullanır. `tenant-web`, `field-pwa`, `public-display` ve sürekli ayrı worker fiziksel geçişleri tamamlanmış değildir. Ana belgedeki `field-pwa`, `worker`, `domains/*` adları hedef tercihtir; alternatif adlarla çatışma kabul edilmiş ADR olmadan fiziksel taşıma veya yeniden adlandırmayla çözülmez.
+
 Geçiş sırası:
 
 1. Mimari bağımlılık envanteri ve import grafiği çıkarılır.
-2. Workspace ve boş hedef paketler davranış değiştirmeden oluşturulur.
+2. Workspace sözleşmesi kurulur; boş hedef paket veya `.gitkeep` iskeleti oluşturulmaz.
 3. Mevcut uygulama geçici olarak `apps/tenant-web` rolünü sürdürür.
 4. Önce ortak güvenlik/API/i18n/test paketleri ayrılır.
 5. Sonra yeni geliştirilen domainler hedef yapıda doğar.
 6. Eski modüller testlerle ve küçük partiler hâlinde taşınır.
 7. Her taşıma sonrası lint, typecheck, test, build ve smoke test çalışır.
 8. Eski klasör yalnız bütün importlar ve davranış kanıtlandıktan sonra kaldırılır.
+
+Dizin taşıması ile davranış değişikliği aynı committe birleştirilmez. `DIR-001` kapanış sırası ve kanıtları [ARC-015](15-FAZ-2A-IMPORT-GRAFIGI-VE-TASIMA-MATRISI.md), açık ad kararı `DEC-001` içinde tutulur.
 
 ---
 
@@ -911,12 +909,13 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 - Evrensel hisse/QR araması
 - Rezervasyon ve süre
 - Liste/indirim/net fiyat snapshot’ı
-- Satış + opsiyonel kapora tek transaction
-- Kapora son tarihi ve otomatik ters kayıt
+- Kaporasız süreli rezervasyon; satış, gelir, alacak, ledger veya vekâlet üretmeme
+- Herhangi bir pozitif kaporada fiyat snapshot’lı kesin satış, alacak ve tahsilatın tek transaction’da oluşması
+- Kapora son tarihinde ödemesiz rezervasyonun süre sonu olayıyla kapanması ve hissenin işletme envanterine açılması; oluşmamış satış için finansal ters kayıt üretmeme
 - İptal, transfer, sağlık kaynaklı taşıma
-- İşletme sahibi yedinci hisse
+- Satılmamış hissenin sahte kişi/finans/vekâlet üretmeden işletme envanterinde kalması; kesim öncesi dinî uygunluk çözümünün açık karar olarak izlenmesi
 
-**Çıkış:** Eşzamanlı iki satıştan yalnız biri başarılı olur; satış ve finans yarım kalmaz.
+**Çıkış:** Eşzamanlı iki satıştan yalnız biri başarılı olur; sıfır kapora kesin satışı reddeder; kaporasız rezervasyon finans/vekâlet üretmeden süre sonunda açılır; pozitif kaporalı satış ve finans yarım kalmaz.
 
 ### Faz 6 — Ledger, tahsilat ve kasa
 
@@ -1156,6 +1155,21 @@ Faz 2 başlamadan önce verilecek zorunlu kanıtlar:
 ---
 
 ## 15. Son bağlayıcı özet
+
+### 15.1 Yeni nesil YN aktivasyon kapısı
+
+`YN-00..YN-26` bu Faz 1–12 programı kapanmadan etkin değildir. Hazırlık kaynağı bulunması, backlog veya placeholder yüzeyi uygulama başlangıcı sayılmaz.
+
+| Geçiş | Zorunlu kapı | Kanıt | Durum |
+|---|---|---|---|
+| Faz 1–12 → YN karar dondurma | Tüm faz çıkışları; açık P0/P1 yok; migration/restore, tenant izolasyonu, finans mutabakatı, cihaz/E2E ve Kurban Günü provası | REQ/TST/EVD/release zinciri ve kullanıcı onayı | `PLANNED` |
+| YN-00 → YN-01..YN-06 temel | Gerçek durum, kapsam, isimler ve karar kaydı donduruldu | Kabul edilmiş ADR/karar ve baseline envanteri | `PLANNED` |
+| YN-01..YN-06 → YN-07..YN-16 platform/domain | Dizin, modül, domain, ledger, tasarım sistemi ve 360 sözleşmeleri doğrulandı | Mimari sınır, migration ve sözleşme testleri | `PLANNED` |
+| YN-07..YN-16 → YN-17..YN-25 operasyon | Firma aktivasyonu ve ticari/operasyon çekirdekleri kabul edildi | Tenant/finans/iş akışı EVD’leri | `PLANNED` |
+| YN-25 → YN-26 | Tam ekran envanteri ve placeholder temizliği geçti | Menü/route/cihaz kabul matrisi | `PLANNED` |
+| YN-26 → release | İkinci genel doğrulama ve tam Kurban Günü provası | Değişmez commit, EVD ve go/no-go | `PLANNED` |
+
+Kapı istisnası [GOV-013](../governance/GOV-013-TESLIM-IZLENEBILIRLIK-VE-GITHUB-HEDEFI.md) uyarınca kimlikli, süreli, risk sahibi ve onaylı olmadıkça geçerli değildir. YN fazlarının ayrıntılı kapsamı salt-okunur kaynak pakette `PLANNED` girdi olarak tutulur; bu belge onları uygulandı saymaz.
 
 - Ürün yalnız tek çiftlik için geçici program değil, çok firmalı TilbeCore Kurban platformudur.
 - Çok firma çekirdeği Faz 2’de, iş domainlerinden önce kurulacaktır.

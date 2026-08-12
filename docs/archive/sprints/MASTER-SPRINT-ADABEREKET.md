@@ -1,3 +1,13 @@
+---
+id: ARCH-C01065D32238
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # MASTER SPRINT — Ada Bereket Geçişi + Sistem İyileştirmeleri
 
 > 10 Ağustos 2026 uyum notu: Bu belge Ada Bereket’e özel tarihsel sprint paketidir. Ürün geneli karar kaynağı değildir. Güncel ürün adı TilbeCore – Kurban Takip’tir; firma markası, müşteri verisi ve iletişim örnekleri yeni ana belgeye göre firma ayarı/snapshot olarak ele alınır ve ürün kimliğiyle karıştırılmaz.

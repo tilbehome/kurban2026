@@ -1,5 +1,15 @@
 # AGENTS.md — TilbeCore – Kurban Takip Codex Kuralları
 
+```yaml
+id: GOV-ROOT-001
+status: VERIFIED
+owner: Product-and-Architecture
+source_role: repository_agent_operating_policy
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: not_applicable
+```
+
 Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu kuralları, sonra bağlayıcı ana mimari belgeyi ve göreve en yakın mimari/gereksinim belgelerini uygular. Ayrıntılı mimari kararları burada tekrar etme; kararın kaynağı olarak ilgili belgeye yönel.
 
 ## 1. Ürün kimliği
@@ -11,7 +21,7 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - Kurban Bayramı gibi yüksek yoğunluklu bir günde hızlı, kararlı, hataya dayanıklı ve geri alınabilir çalışmak zorundadır.
 - Ürün markası ile müşteri firma markası birbirine karıştırılmayacaktır.
 
-## 2. Bağlayıcı kaynak sırası
+## 2. Bağlayıcı kaynaklar
 
 - İş kurallarını tahmin etme.
 - Belgelenmiş kullanıcı kararlarını, ana yol haritasını, mimari belgeleri ve gereksinim matrisini kaynak kabul et.
@@ -20,7 +30,7 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - Gereksinim belirsizse kritik iş kuralı uydurma; kullanıcıdan karar iste.
 - Mimari karar değişirse ilgili mimari belgeyi ve takip dokümanını güncelle.
 
-Öncelikli kaynaklar:
+Kaynak önceliğinin tek ana sahibi `docs/governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md` dosyasıdır. Bu dosya ayrı bir öncelik sırası üretmez. Aşağıdaki liste görev yönlendirme listesidir:
 
 - Birinci kaynak: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
 - `docs/architecture/00-MEVCUT-DURUM-ANALIZI.md`
@@ -41,7 +51,8 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 - `docs/architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md`
 - `docs/architecture/KURBAN2026-UYGULAMA-TAKIP.md`
 - Eski ana yol haritası: `docs/archive/legacy/KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
-- Tarihsel kaynaklar: `docs/archive/legacy/MIMARI.md`, `docs/archive/legacy/DATABASE_FACE_AUDIT.md`, `README.md`, `docs/archive/legacy/CLAUDE.md`
+- Aktif fakat normatif olmayan depo giriş belgesi: `README.md`
+- Tarihsel kaynaklar: `docs/archive/legacy/MIMARI.md`, `docs/archive/legacy/DATABASE_FACE_AUDIT.md`, `docs/archive/legacy/CLAUDE.md`
 
 Yeni ana belgeyle eski belgeler çelişirse yeni ana belge uygulanır; eski karar sessizce silinmez, ilgili dokümanda “yerine geçen karar” ve gerekçesiyle işaretlenir.
 

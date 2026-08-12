@@ -2,25 +2,34 @@
 
 ```yaml
 id: GOV-003
-status: PLANNED
+status: VERIFIED
 owner: Product-and-Architecture
 source_role: source_precedence_and_evidence_source
 source_of_truth: true
 last_reviewed: 2026-08-12
-verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+verified_against_commit: not_applicable
 ```
 
-## Çelişki çözme sırası
+Bu belge kaynak önceliği ve kanıt sınıflarının tek ana sahibidir. `AGENTS.md`, kök `README.md`, RMP-001, TRK-001 ve uzmanlık belgeleri ayrı bir öncelik sırası üretmez; yalnız bu belgeye yönlendirir.
+
+## Normatif hedef karar önceliği
 
 1. Kullanıcının son açık ve kapsamlı kararı.
 2. Kabul edilmiş ADR ile belgelenmiş ürün/iş kararı.
-3. Doğrulanmış kod, migration ve otomatik test davranışı.
-4. Başarılı CI, release ve operasyon kanıtı.
-5. Birleşik ana yol haritası ve uygulama takip defteri.
-6. İncelemedeki ürün/mimari belgeler.
-7. Kaynak belge paketi, arşiv, prompt ve sohbet kayıtları.
+3. Birleşik ana yol haritasındaki normatif hedef ve ilgili tek-sahip domain/ürün sözleşmesi.
+4. Gereksinim ve kabul kriteri belgeleri.
+5. İncelemedeki ürün/mimari taslaklar.
+6. Salt-okunur kaynak belge paketi, arşiv, prompt ve sohbet kayıtları.
 
-Kodun mevcut davranışı hedef kararın doğru uygulandığını kendiliğinden kanıtlamaz. Kod ile karar çelişirse fark kaydedilir; kritik iş kuralı sessizce kod lehine değiştirilmez.
+## Mevcut uygulama gerçeği ve kanıt önceliği
+
+1. Değişmez committe doğrudan incelenmiş kaynak kodu ve migration.
+2. Aynı committe gerçekten çalışmış otomatik test ve CI adımları.
+3. Ortamı, senaryosu ve sonucu kayıtlı operasyon/UAT kanıtı.
+4. TRK-001 uygulama takip kaydı ve ARC-016 gibi kapsamı sınırlı kanıt özetleri.
+5. Tarihli analiz ve envanter; yeniden üretilebilir kanıt yoksa yalnız gözlem kabul edilir.
+
+Kodun mevcut davranışı hedef kararın doğru uygulandığını kendiliğinden kanıtlamaz ve normatif hedefi sessizce değiştiremez. Kod ile karar çelişirse hedef karar korunur; mevcut davranış TRK-001 ve ilgili domain belgesinde `IMPLEMENTING` farkı olarak kaydedilir.
 
 ## Kanıt sınıfları
 

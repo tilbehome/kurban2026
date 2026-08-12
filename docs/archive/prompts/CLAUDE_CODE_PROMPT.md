@@ -1,3 +1,13 @@
+---
+id: ARCH-4851F2F7F201
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # TİLBE KURBAN — Claude Code Master Prompt (Modüler Mimari v2)
 
 > 10 Ağustos 2026 uyum notu: Bu prompt tarihsel referanstır. Güncel bağlayıcı kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Küçükbaş modül örnekleri, eski klasör sırası ve tek firma varsayımları yeni ana belgeyle çelişirse uygulanmaz.

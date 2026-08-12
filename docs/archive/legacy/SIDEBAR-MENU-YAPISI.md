@@ -1,3 +1,13 @@
+---
+id: ARCH-3433F3ABFADC
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # TİLBECORE KURBAN — PROFESYONEL SIDEBAR MENÜ YAPISI
 
 > 10 Ağustos 2026 uyum notu: Bu belge tarihsel menü/ürünleşme araştırmasıdır. Yeni ana belgeye göre placeholder/yakında sayfaları tamamlanmış özellik sayılmaz; çok firma veri izolasyonu Faz 2 çekirdeğidir, gelişmiş ticari SaaS ve çok şube sonraya bırakılır.

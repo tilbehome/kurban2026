@@ -1,3 +1,13 @@
+---
+id: ARCH-BC93688C4126
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # PROMPT 2: MÜŞTERİ LİSTE + DETAY GELİŞTİRMESİ
 
 > Bu prompt'u **akordiyon menü prompt'u bittikten sonra** Claude Code'a ver.

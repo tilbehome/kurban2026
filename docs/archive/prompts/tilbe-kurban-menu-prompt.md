@@ -1,3 +1,13 @@
+---
+id: ARCH-BC49F3636C62
+status: ARCHIVED
+owner: Historical
+source_role: historical_record
+source_of_truth: false
+last_reviewed: not_applicable
+verified_against_commit: not_applicable
+---
+
 # TİLBE KURBAN — MENÜ GENİŞLETME PROMPT (FAZ 1.5)
 
 > Bu prompt'u Claude Code'a tek seferde ver. Mevcut çalışan sistemi BOZMAYACAK.

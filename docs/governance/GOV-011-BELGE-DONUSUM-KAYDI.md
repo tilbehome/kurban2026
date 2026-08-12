@@ -63,3 +63,9 @@ Yeni nesil `YN-00–YN-26` yol haritası bu entegrasyonda bağlayıcı uygulama 
 - YN yol haritasının erken etkinleştirilmesi reddedildi.
 - Fiziksel HTTPS passkey, Playwright/axe, gerçek cihaz, yük/soak, offline cihaz, WAL/PITR ve production restore hedefleri kaynakta bulunsa da çalıştırılmış kanıt olmadığı için `NOT_RUN` sınırında tutuldu.
 - Eski architecture test planı silinmedi; [ARC-010](../architecture/10-TEST-KALITE-VE-KABUL-PLANI.md) uyumluluk belgesine dönüştürülerek [TST-001](../testing/TST-001-MASTER-TEST-PLANI.md) kaynağına bağlandı.
+
+## 12 Ağustos 2026 hedef yeniden doğrulaması
+
+- `02-URUN-VIZYONU-KAPSAM-VE-BASARI.md` SHA-256 kaydıyla eşleşen salt-okunur kaynakta “placeholder ekranlar tamamlanmış özellik sayılmaz ve canlı menüde görünmez” hedefi yeniden doğrulandı. Canlı menü bölümü daha önce görünür sonuç üretmediği için [PRD-001](../product/PRD-001-URUN-VIZYONU-KAPSAM-VE-BASARI.md) ve `REQ-065` içine `PLANNED` olarak aktarıldı.
+- `03-KULLANICI-ROLLER-LISANS-VE-KURULUM.md` SHA-256 kaydıyla eşleşen salt-okunur kaynakta firma kurulum sihirbazının kullanıcı adımı için “en az bir yedek admin var” çıkış koşulu yeniden doğrulandı. Hedef [PRD-005](../product/PRD-005-FIRMA-LISANS-VE-SEZON-YASAM-DONGUSU.md), `PRO-012` ve IAM kabul ölçütlerine `PLANNED` olarak aktarıldı.
+- İki hedef de reddedilmedi ve uygulanmış gösterilmedi; kaynak paket değiştirilmedi.
