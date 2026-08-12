@@ -1,7 +1,18 @@
 # TilbeCore – Kurban Takip
 ## Birleşik Ana Mimari, Gelişmiş Dizin Yapısı ve Düzeltilmiş Yol Haritası
 
+```yaml
+id: RMP-001
+status: APPROVED
+owner: Product-and-Architecture
+source_role: binding_phase_1_12_architecture_roadmap
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 **Belge tarihi:** 10 Ağustos 2026
+**Son kanıt incelemesi:** 12 Ağustos 2026, `74915b6f3f1f8d53116b760b6a6be9797111efa5`
 **Belge durumu:** Bağlayıcı ana mimari ve yol haritası
 **Ürün adı:** TilbeCore – Kurban Takip
 **Kısa ad:** TilbeCore Kurban
@@ -803,6 +814,8 @@ Faz 2A kapsamında davranış değiştirmeden üretilen import grafiği, domain/
 Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçek app taşıması Faz 2A işi değildir; Faz 2B, Faz 2C veya sonraki küçük taşıma paketlerinde uygulanır.
 
 #### Faz 2B — Platform Control Plane ve Süper Admin MVP
+
+**Doğrulanmış durum (12 Ağustos 2026):** Kodlandı ve `74915b6` CI kapsamındaki PostgreSQL/migration/test/build kapılarında doğrulandı; canlı/genel kabul bekliyor. Ayrıntılı tek kanıt özeti [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) belgesidir.
 
 **Mevcut durum:** Uygulandı — genel doğrulama bekliyor. Platform PostgreSQL `0001..0007`, ayrı `apps/platform-admin`, parola+TOTP, WebAuthn/passkey ve hashlenmiş tek kullanımlık recovery, DB session/device, dört platform rolü, güvenli bootstrap, komuta merkezi, firma 360°, provisioning, plan/lisans, domain, backup, SupportSession, kullanıcı/audit, incident/bakım/acil durdurma, yapılandırma farkı ve onaylı firma operasyon iş akışları gerçek Platform DB adaptörlerine bağlanmıştır. Tenant runtime aktif firma, bakım, read-only, tam durdurma ve modül scope politikasını request öncesi fail-closed uygular. Provisioning sonrası ilk backup işi kuyruğa alınır; backup metadata’sı oluşmadan ilk Firma Admin için tek kullanımlık aktivasyon bağlantısı verilemez. Gerçek PostgreSQL migration/repository ve iki firma izolasyon testleri paket sonunda geçmiştir; canlı altyapı ile Faz 2–12 genel kabul dönemi bu durumun dışında kalır.
 

@@ -1,5 +1,15 @@
 # TilbeCore – Kurban Takip Uygulama Takip Defteri
 
+```yaml
+id: TRK-001
+status: IMPLEMENTING
+owner: Product-and-Architecture
+source_role: implementation_evidence_ledger
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Birinci kaynak sözleşme: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
 
 Eski ana yol haritası, yeni ana belgeyle çelişmeyen tarihsel analiz kaynağıdır: `docs/archive/legacy/KURBAN2026-ANA-ANALIZ-VE-GELISTIRME-YOL-HARITASI.md`
@@ -118,6 +128,8 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 
 **Durum:** Uygulandı — genel doğrulama bekliyor. Platform Süper Admin kontrol düzlemi, gerçek PostgreSQL migration/repository testi ve iki firma izolasyon kapısı paket kapsamında çalıştırıldı; canlı altyapı ve Faz 2–12 genel kabul dönemi ayrıca bekliyor.
 
+**Sabit kanıt:** `74915b6f3f1f8d53116b760b6a6be9797111efa5` ve [TilbeCore CI / 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803), sonuç `success`. Kapsam ve kanıtlanmayan alanlar için [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) ana özettir.
+
 | İş | Durum | Kanıt |
 |---|---|---|
 | `packages/platform` domain paketi | Uygulandı | `Organization`, `TenantInstance`, `Plan`, `ModuleDefinition`, `License`, `LicenseEntitlement` domain temeli ve saf doğrulama fonksiyonları eklendi. |
@@ -138,7 +150,7 @@ Bu pilotta Prisma şeması, veritabanı, `apps/*` veya `packages/*` yapısı de�
 | Faz 2B Platform Süper Admin 360° uygulaması | Uygulandı — genel doğrulama bekliyor | `apps/platform-admin` içinde komuta merkezi, firma listesi/360°, async provisioning sihirbazı ve iş merkezi, plan/lisans/kota/entitlement, yaşam döngüsü, domain, backup/restore doğrulama, SupportSession, platform kullanıcı/rol ve audit sayfaları gerçek Platform DB repository adaptörlerine bağlandı. `0006_platform_admin_operations` migration’ı, optimistic concurrency, idempotent komut kuyruğu ve provisioning/tenant-ops `worker --once` yürütmesi eklendi. |
 | Faz 2B kontrol düzlemi tamamlama | Uygulandı — genel doğrulama bekliyor | `0007`, `/security`, `/incidents`, `/maintenance`, incident timeline, planlı bakım, tenant runtime emergency/read-only/module-stop politikası, güvenli yapılandırma farkı, yeniden doğrulamalı/ikinci onaylı ve request/audit bağlı firma operasyon işleri ile backup sonrası tek kullanımlık aktivasyon bağlantılı Firma Admin daveti eklendi. Export içeriği Platform Admin’e verilmez. |
 
-2B integration test kapsamı `packages/database-platform/tests/platform-postgres.integration.test.ts` içindedir. Testler `RUN_PLATFORM_POSTGRES_TESTS=1` ve `PLATFORM_TEST_DATABASE_URL` olmadan normal unit koşusunda atlanır; CI'da geçici PostgreSQL servisiyle çalışır. Kapsam: boş DB’ye `0001..0007`, eski migration sonrası güncel zincir, drift/idempotent deploy, check constraint, foreign key, unique, gerçek repository create/read/nested write, transaction commit/rollback, challenge/recovery tek kullanım ve connection string sızıntısı kontrolü. Paket sonunda yerel PostgreSQL 16 üzerinde platform integration `9/9`, iki firma web/pool/backup isolation `1/1` geçti; Platform Admin build’i ve aynı PostgreSQL kapıları ayrıca CI iş akışında zorunludur.
+2B integration test kapsamı `packages/database-platform/tests/platform-postgres.integration.test.ts` içindedir. Testler `RUN_PLATFORM_POSTGRES_TESTS=1` ve `PLATFORM_TEST_DATABASE_URL` olmadan normal unit koşusunda atlanır; CI'da geçici PostgreSQL servisiyle çalışır. Kapsam: boş DB’ye `0001..0007`, eski migration sonrası güncel zincir, drift/idempotent deploy, check constraint, foreign key, unique, gerçek repository create/read/nested write, transaction commit/rollback, challenge/recovery tek kullanım ve connection string sızıntısı kontrolü. Önceki yerel kayıtlarda platform integration `9/9` ve iki firma web/pool/backup isolation `1/1` sonucu bulunur. Güncel değişmez kanıt, `74915b6` için GitHub Actions koşusundaki ilgili PostgreSQL, build ve kalite adımlarının başarılı olmasıdır; yerel sayı canlı kabul anlamına gelmez.
 
 Bu kayıt Faz 2B’nin canlıya hazır olduğu anlamına gelmez. Fiziksel passkey cihaz kabulü, canlı DNS/TLS/deployment, production restore onayı, gerçek abonelik/faturalama ve genel güvenlik/E2E kabulü sonraki uygun kapılarda kalır.
 

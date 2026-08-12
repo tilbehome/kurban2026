@@ -1,15 +1,25 @@
 # 12 — Fazlar, Riskler ve Geri Dönüş
 
+```yaml
+id: GOV-007
+status: IMPLEMENTING
+owner: Product-and-Architecture
+source_role: phase_risk_rollback_register
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu dosya faz, risk ve geri dönüş özetini o belgeye göre tutar.
 
-## 10 Ağustos 2026 bağlayıcı faz durumu
+## 12 Ağustos 2026 doğrulanmış faz durumu
 
 - Faz 1 tamamlandı ve `origin/main` dalına gönderildi.
 - Faz 1 commit: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
-- Faz 2A başladı; tamamlandı olarak kabul edilmez.
+- Faz 2A sözleşme/import grafiği çıkış şartları karşılandı; bu durum sonraki uygulama fazlarının tamamlandığı anlamına gelmez.
 - `b536078` commit’i erken tamamlanan saha satış modüler pilotudur; Faz 2A kapanışı değildir.
 - Gerçek Faz 2A workspace/sözleşme/sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden yürütülür.
-- Faz 2A’da mevcut kaynak kod davranışı, Prisma şeması, PostgreSQL kurulumu veya Süper Admin kodlaması yapılmaz; bunlar onaylı sonraki uygulama paketlerine ayrılır.
+- Faz 2B ve Faz 2C uygulama paketleri Faz 2A sonrasında ilerlemiştir. `74915b6` ile Faz 2B kodu ve CI kapsamı doğrulandı; canlı/genel kabul bekliyor. Faz 2B kanıt sınırı [ARC-016](16-FAZ-2B-DOGRULANMIS-DURUM-VE-KAPSAM-SINIRI.md) belgesindedir.
 
 ## Yerine geçen faz kararı
 

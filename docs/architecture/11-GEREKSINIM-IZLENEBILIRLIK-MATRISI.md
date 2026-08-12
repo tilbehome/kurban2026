@@ -1,11 +1,22 @@
 # 11 — Gereksinim İzlenebilirlik Matrisi
 
+```yaml
+id: REQ-003
+status: IMPLEMENTING
+owner: Product-and-QA
+source_role: requirement_traceability_matrix
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dönüştürür. Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Detaylar fazlarda genişletilecek; hiçbir madde sessizce kapsam dışına çıkarılamaz.
 
 ## 10 Ağustos 2026 uyum notu
 
 - Faz 1 tamamlandı ve `origin/main` dalına gönderildi: `a6720378123f01fb4e19db3fd782a910f18c0acf`.
-- Faz 2A workspace/sözleşme/sınır paketi başladı; tamamlandı olarak kabul edilmez. `b536078` erken saha satış modüler pilotu olarak sınıflandırılır.
+- Faz 2A workspace/sözleşme/sınır çıkış şartları karşılandı; `b536078` yalnız erken saha satış modüler pilotudur.
+- Faz 2B kontrol düzlemi `74915b6` ile kodlandı ve CI kapsamındaki PostgreSQL/migration/test/build kapılarında doğrulandı; canlı/genel kabul bekliyor.
 - Eski belgelerde çok firma, SaaS veya PostgreSQL’in ileri faza bırakıldığı yerlerde yerine geçen karar şudur: çok firma veri izolasyonu, Platform Süper Admin ve firma başına ayrı PostgreSQL Faz 2’nin zorunlu çekirdeğidir; self-service üyelik, otomatik abonelik/faturalama ve gelişmiş ticari SaaS özellikleri sonraya bırakılır.
 - Sistem yalnız büyükbaş kurban içindir; küçükbaş/adak/akika kapsam dışıdır.
 - Placeholder/yakında sayfaları tamamlanmış özellik sayılmaz.

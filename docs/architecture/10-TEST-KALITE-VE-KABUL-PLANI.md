@@ -1,5 +1,15 @@
 # 10 — Test, Kalite ve Kabul Planı
 
+```yaml
+id: TST-001
+status: IMPLEMENTING
+owner: QA-and-Engineering
+source_role: core_test_quality_acceptance_plan
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Mevcut test sınıflandırması
 
 | Dosya | Tür | Kapsam |
@@ -12,7 +22,13 @@
 | `tests/hisse-iptal-route.test.ts` | Mock route | Ödemeli hisse boşaltma engeli |
 | `tests/vekalet-dosya.test.ts` | Unit/security | Path traversal ve dosya URL modeli |
 
-Toplam: 84 test.
+Bu tablo Faz 1 tarihsel çekirdek setini gösterir; güncel test envanterinin tamamı değildir. `74915b6` ağacında 33 test dosyası vardır. 12 Ağustos 2026 yerel doğrulamasında gerekli üç Prisma client üretildikten sonra `pnpm test` sonucu 31 dosyada 197 test geçti; PostgreSQL ortam değişkeni isteyen 2 dosyadaki 10 integration testi atlandı. Gerçek PostgreSQL sonuçları aşağıdaki CI kanıtıyla ayrı tutulur.
+
+## Son doğrulanmış CI kanıtı
+
+[TilbeCore CI / 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803), `74915b6f3f1f8d53116b760b6a6be9797111efa5` için `success` sonucuyla tamamlandı. PostgreSQL 16 platform/tenant servisleri üzerinde migration apply, platform integration, iki-tenant web/pool/backup izolasyonu; ardından typecheck, unit/route test, lint, root build, Platform Admin build, UTF-8 ve PWA artefakt kontrolleri geçti.
+
+Bu CI koşusu canlı DNS/TLS, fiziksel cihaz, production restore, browser E2E, ASVS/WCAG veya Kurban Günü provası değildir.
 
 ## Mock testlerin kanıtlayamadıkları
 
@@ -84,7 +100,7 @@ Henüz tamamlanmayan kabul kanıtları: canlı sağlayıcıda WAL/PITR ayarı ve
 
 ## Lint warning durumu
 
-Son P0 doğrulaması: `pnpm lint` 0 hata, 38 warning.
+`0 hata, 38 warning` ifadesi tarihsel Faz 1 sonucudur. `74915b6` için güncel bağlayıcı kanıt, CI’daki `Lint` adımının başarılı olmasıdır; warning sayısı koşu kanıtından çıkarılmadığı için güncel sayı uydurulmaz.
 
 Kategoriler:
 

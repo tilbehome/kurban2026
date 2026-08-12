@@ -1,5 +1,15 @@
 # 13 — Hedef Dizin İskeleti ve Modül Standardı
 
+```yaml
+id: ARC-013
+status: APPROVED
+owner: Architecture
+source_role: target_repository_module_standard
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Bu belge fiziksel klasör taşıma talimatı değildir. Hedef yapıyı tarif eder; boş ve göstermelik kurumsal dizinler şimdi oluşturulmayacaktır. Yeni klasörler yalnız gerçek çalışan kod taşındığında veya yeni paket fiilen kullanılmaya başladığında açılacaktır.
 
 Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu dosyadaki eski sıra veya adlandırma ana belgeyle çelişirse ana belge uygulanır.

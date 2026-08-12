@@ -1,5 +1,15 @@
 # 01 — Hedef Sistem Mimarisi
 
+```yaml
+id: ARC-001
+status: APPROVED
+owner: Architecture
+source_role: target_system_architecture
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 ## Ürün kimliği
 
 | Alan | Kesin değer |

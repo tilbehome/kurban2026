@@ -1,5 +1,15 @@
 # ADR-0002 — Platform–Tenant Veri Sınırı ve Erişim Standardı
 
+```yaml
+id: ADR-0002
+status: IMPLEMENTED_PENDING_VERIFICATION
+owner: Architecture-and-Security
+source_role: platform_tenant_data_boundary_decision
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Tarih: 10 Ağustos 2026
 
 Durum: Kabul edildi

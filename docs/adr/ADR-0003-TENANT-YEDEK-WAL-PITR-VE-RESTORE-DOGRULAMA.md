@@ -1,5 +1,15 @@
 # ADR-0003 — Tenant Yedek, WAL/PITR ve Restore Doğrulama Standardı
 
+```yaml
+id: ADR-0003
+status: IMPLEMENTED_PENDING_VERIFICATION
+owner: Architecture-and-Operations
+source_role: tenant_backup_restore_pitr_decision
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Tarih: 11 Ağustos 2026
 
 Durum: Kabul edildi; canlı WAL/PITR yapılandırması bekliyor

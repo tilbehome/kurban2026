@@ -1,8 +1,20 @@
 # 15 — Faz 2A Import Grafiği ve Taşıma Matrisi
 
+```yaml
+id: ARC-015
+status: VERIFIED
+owner: Architecture
+source_role: phase_2a_import_graph_and_migration_record
+source_of_truth: true
+last_reviewed: 2026-08-12
+verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+```
+
 Birinci kaynak: `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`.
 
 Bu belge Faz 2A kapsamında davranış değiştirmeden çıkarılan import grafiğini, bağımlılık sınırlarını ve sonraki küçük taşıma paketlerinin matrisini tutar. Bu paket uygulama route davranışını, Prisma şemasını, veritabanını veya mevcut app dizinlerini taşımaz.
+
+Faz 2A sonrasında Faz 2B/2C ile gerçek `apps/*`, `packages/*`, PostgreSQL ve runtime uygulamaları eklenmiştir. Bu belge tarihsel Faz 2A baseline’ını korur; güncel repo fotoğrafı için [ARC-000](00-MEVCUT-DURUM-ANALIZI.md) kullanılır.
 
 ## Doğrulama kanıtı
 
