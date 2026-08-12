@@ -30,6 +30,8 @@ verified_against_commit: tam-commit-sha-veya-not_applicable
 
 `VERIFIED` yalnız belgenin açıkça belirttiği kapsam ve kanıt için kullanılır. Kod veya migration varlığı, kabul doğrulaması yoksa en fazla `IMPLEMENTED_UNVERIFIED` sonucunu destekler. Çalıştırılmayan fiziksel, canlı veya uçtan uca kabul `NOT_RUN` olarak yazılır.
 
+`last_reviewed` aktif belgelerde gerçek ve geçerli bir ISO `YYYY-MM-DD` takvim tarihidir. Yalnız `docs/archive` altındaki `ARCHIVED` tarihsel belgeler için inceleme yapılmadığını açıkça göstermek amacıyla `not_applicable` kullanılabilir; aktif belgelerde serbest metin veya geçersiz tarih kabul edilmez.
+
 ## Tek kaynak ilkesi
 
 - Her konu için tek ana kaynak belirlenir.

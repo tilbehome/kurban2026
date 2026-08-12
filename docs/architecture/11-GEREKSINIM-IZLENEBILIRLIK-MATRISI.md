@@ -10,7 +10,7 @@ last_reviewed: 2026-08-12
 verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
 ```
 
-Bu matris ana yol haritasındaki kesin kararları kalıcı takip nesnelerine dönüştürür. Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Detaylar fazlarda genişletilecek; hiçbir madde sessizce kapsam dışına çıkarılamaz.
+Bu matris [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md) içindeki kesin kararları kalıcı takip nesnelerine dönüştürür; kaynak çelişkileri [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile çözülür. Detaylar fazlarda genişletilecek; hiçbir madde sessizce kapsam dışına çıkarılamaz.
 
 ## 10 Ağustos 2026 uyum notu
 

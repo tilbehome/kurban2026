@@ -10,7 +10,7 @@ last_reviewed: 2026-08-12
 verified_against_commit: not_applicable
 ```
 
-Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu kuralları, sonra bağlayıcı ana mimari belgeyi ve göreve en yakın mimari/gereksinim belgelerini uygular. Ayrıntılı mimari kararları burada tekrar etme; kararın kaynağı olarak ilgili belgeye yönel.
+Bu dosya kök çalışma talimatıdır. Codex bu kurallarla birlikte göreve en yakın bağlayıcı mimari/gereksinim belgelerini uygular; kaynaklar arasındaki ilişki ve çelişki yalnız GOV-003 ile çözülür. Ayrıntılı mimari kararları burada tekrar etme; kararın kaynağı olarak ilgili belgeye yönel.
 
 ## 1. Ürün kimliği
 
@@ -32,7 +32,7 @@ Bu dosya kök çalışma talimatıdır. Codex bu projede çalışırken önce bu
 
 Kaynak önceliğinin tek ana sahibi `docs/governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md` dosyasıdır. Bu dosya ayrı bir öncelik sırası üretmez. Aşağıdaki liste görev yönlendirme listesidir:
 
-- Birinci kaynak: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
+- Mimari ve yol haritası görev yönlendirmesi: `docs/architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md`
 - `docs/architecture/00-MEVCUT-DURUM-ANALIZI.md`
 - `docs/architecture/01-HEDEF-SISTEM-MIMARISI.md`
 - `docs/architecture/02-MODULER-MONOLIT-VE-DOMAIN-SINIRLARI.md`
@@ -54,13 +54,13 @@ Kaynak önceliğinin tek ana sahibi `docs/governance/GOV-003-KAYNAK-ONCELIGI-VE-
 - Aktif fakat normatif olmayan depo giriş belgesi: `README.md`
 - Tarihsel kaynaklar: `docs/archive/legacy/MIMARI.md`, `docs/archive/legacy/DATABASE_FACE_AUDIT.md`, `docs/archive/legacy/CLAUDE.md`
 
-Yeni ana belgeyle eski belgeler çelişirse yeni ana belge uygulanır; eski karar sessizce silinmez, ilgili dokümanda “yerine geçen karar” ve gerekçesiyle işaretlenir.
+Belgeler çelişirse GOV-003 uygulanır; eski karar sessizce silinmez, ilgili dokümanda “yerine geçen karar” ve gerekçesiyle işaretlenir.
 
 ## 3. Hedef mimari
 
 - Modüler monolit kullanılacaktır.
 - Tek kod tabanı korunacaktır.
-- Faz 2’de çok firma ve veri izolasyonu temel mimari gereksinimdir; ayrıntılar birinci kaynak ana belgede tanımlıdır.
+- Faz 2’de çok firma ve veri izolasyonu temel mimari gereksinimdir; ayrıntılar ilgili bağlayıcı mimari ve yol haritası belgesinde tanımlıdır.
 - Platform için ayrı PostgreSQL ve her firma için ayrı PostgreSQL operasyon veritabanı hedeflenecektir.
 - Platform Süper Admin ile Firma Admin ayrı kimlik, oturum, yetki ve audit alanlarına sahip olacaktır.
 - Firma verisi başka firmalardan kesin olarak izole edilecektir.

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
-import { dirname, extname, relative, resolve, sep } from "node:path";
+import { basename, dirname, extname, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const inventoryPath = "docs/governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md";
@@ -74,6 +74,7 @@ export function readDocuments(root) {
       title: titleOf(content, path),
       status: meta.status,
       sourceOfTruth: meta.source_of_truth,
+      sourceRole: meta.source_role,
       owner: meta.owner,
       freshness: `${meta.last_reviewed ?? "eksik"}; ${meta.verified_against_commit ?? "eksik"}`,
     };
@@ -116,6 +117,7 @@ export function generateInventoryContent(documents) {
   const rows = documents.map((document) => document.path === inventoryPath ? {
     ...document, meta: inventoryMeta, id: inventoryMeta.id, status: inventoryMeta.status,
     sourceOfTruth: inventoryMeta.source_of_truth, owner: inventoryMeta.owner,
+    sourceRole: inventoryMeta.source_role,
     freshness: `${inventoryMeta.last_reviewed}; ${inventoryMeta.verified_against_commit}`,
   } : document).sort((a, b) => a.path.localeCompare(b.path, "tr"));
   const counts = new Map();
@@ -126,23 +128,23 @@ export function generateInventoryContent(documents) {
     `source_role: ${inventoryMeta.source_role}`, `source_of_truth: ${inventoryMeta.source_of_truth}`,
     `last_reviewed: ${inventoryMeta.last_reviewed}`, "verified_against_commit: not_applicable",
     `code_baseline_commit: ${inventoryMeta.code_baseline_commit}`, "```", "",
-    "Bu envanter `pnpm validate:docs:write` ile deterministik üretilir. Normal `pnpm validate:docs` ve `--check-inventory` dosya yazmaz; yeniden üretilecek içerik izlenen dosyadan farklıysa kalite kapısı hata verir. `code_baseline_commit` yalnız uygulama kodu/migration/test fotoğrafıdır; envanterin kendi güncellik veya commit kanıtı değildir.",
+    "Bu envanter `pnpm validate:docs:write` ile deterministik üretilir. Normal `pnpm validate:docs` ve `--check-inventory` dosya yazmaz; yeniden üretilecek içerik izlenen dosyadan farklıysa kalite kapısı hata verir. `code_baseline_commit` yalnız uygulama kodu/migration/test fotoğrafıdır; envanterin kendi güncellik veya commit kanıtı değildir. Validator satır yolunu, ID’yi, başlığı, durumu, `source_of_truth`, `source_role`, kategori, sahip ve güncellik alanlarını yapısal olarak karşılaştırır.",
     "", "## Kategori özeti", "", "| Kategori | Belge sayısı |", "|---|---:|",
     ...categoryOrder.map((group) => `| ${group} | ${counts.get(group) ?? 0} |`),
     "", "## Belge envanteri", "",
-    "| Yol | ID | Başlık | Durum | Ana kaynak | Kategori | Sahip | Güncellik | Bağlı ana kaynak | Aynı konu kaynağı | Karar |",
-    "|---|---|---|---|---|---|---|---|---|---|---|",
+    "| Yol | ID | Başlık | Durum | Ana kaynak | Kaynak rolü | Kategori | Sahip | Güncellik | Bağlı ana kaynak | Aynı konu kaynağı | Karar |",
+    "|---|---|---|---|---|---|---|---|---|---|---|---|",
   ];
   for (const row of rows) {
     const related = row.id === masterSource(row.group) || row.id === "GOV-012" ? "yok" : masterSource(row.group);
     const decision = row.group === "archive" ? "arşivde tutulacak" : row.status === "SUPERSEDED" ? "superseded; uyumluluk için tutulacak" : "tutulacak";
-    lines.push(`| [${escapeCell(row.path)}](${inventoryLink(row.path)}) | ${escapeCell(row.id)} | ${escapeCell(row.title)} | ${escapeCell(row.status)} | ${escapeCell(row.sourceOfTruth)} | ${escapeCell(row.group)} | ${escapeCell(row.owner)} | ${escapeCell(row.freshness)} | ${escapeCell(masterSource(row.group))} | ${escapeCell(related)} | ${decision} |`);
+    lines.push(`| [${escapeCell(row.path)}](${inventoryLink(row.path)}) | ${escapeCell(row.id)} | ${escapeCell(row.title)} | ${escapeCell(row.status)} | ${escapeCell(row.sourceOfTruth)} | ${escapeCell(row.sourceRole)} | ${escapeCell(row.group)} | ${escapeCell(row.owner)} | ${escapeCell(row.freshness)} | ${escapeCell(masterSource(row.group))} | ${escapeCell(related)} | ${decision} |`);
   }
   lines.push("", "## Tasnif sonucu", "",
-    "- Aktif belgeler kendi uzmanlık dizinlerinde tutulur ve `docs/README.md` üzerinden bu envantere bağlanır.",
+    "- Aktif belgeler kendi uzmanlık dizinlerinde tutulur ve gerçek gezinme/bağlam belgelerinden erişilir; GOV-012’nin otomatik envanter bağlantıları yetim-belge erişilebilirliği oluşturmaz.",
     "- `ARC-010`, `TST-001` ana planına yönlendiren `SUPERSEDED` uyumluluk belgesidir; silinmez.",
     "- `docs/archive` tarihsel kayıttır ve aktif karar kaynağı değildir; yine de fallback olmadan gerçek `ARCHIVED` metadata taşır.",
-    "- Envanter satırları yol, ID, durum, kaynak rolü, kategori, sahip ve güncellik alanlarında validator tarafından yapısal karşılaştırılır.",
+    "- GOV-012 içindeki bağlantı hedefleri ve anchor’lar doğrulanır; yalnız reachability grafiğine kaynak sayılmaz.",
   );
   return `${lines.join("\n")}\n`;
 }
@@ -155,13 +157,15 @@ function markdownTargets(document, errors) {
   const content = stripFencedCode(document.content);
   const definitions = new Map();
   for (const match of content.matchAll(/^ {0,3}\[([^\]]+)\]:\s*(<[^>]+>|\S+)/gm)) {
-    definitions.set(match[1].trim().toLocaleLowerCase("tr"), match[2].replace(/^<|>$/g, ""));
+    definitions.set(match[1].trim().toLowerCase(), match[2].replace(/^<|>$/g, ""));
   }
-  const targets = [...content.matchAll(/!?\[[^\]]*\]\((<[^>]+>|[^)\s]+)(?:\s+["'][^"']*["'])?\)/g)]
-    .map((match) => match[1].replace(/^<|>$/g, ""));
-  const withoutInline = content.replace(/!?\[[^\]]*\]\([^)]+\)/g, "").replace(/^ {0,3}\[[^\]]+\]:.*$/gm, "");
+  const inline = inlineMarkdownTargets(content);
+  const targets = inline.targets;
+  const characters = [...content];
+  for (const [start, end] of inline.spans) characters.fill(" ", start, end);
+  const withoutInline = characters.join("").replace(/^ {0,3}\[[^\]]+\]:.*$/gm, "");
   for (const match of withoutInline.matchAll(/!?\[([^\]]*)\]\[([^\]]*)\]/g)) {
-    const key = (match[2] || match[1]).trim().toLocaleLowerCase("tr");
+    const key = (match[2] || match[1]).trim().toLowerCase();
     if (!definitions.has(key)) errors.push(`kırık reference-style bağlantı: ${document.path} -> ${key}`);
     else targets.push(definitions.get(key));
   }
@@ -169,8 +173,51 @@ function markdownTargets(document, errors) {
   return [...new Set(targets)];
 }
 
+function inlineMarkdownTargets(content) {
+  const targets = [];
+  const spans = [];
+  for (let start = 0; start < content.length; start += 1) {
+    const labelStart = content[start] === "!" && content[start + 1] === "[" ? start + 1 : start;
+    if (content[labelStart] !== "[") continue;
+    const labelEnd = content.indexOf("](", labelStart + 1);
+    if (labelEnd < 0) continue;
+    let cursor = labelEnd + 2;
+    let target = "";
+    if (content[cursor] === "<") {
+      const close = content.indexOf(">", cursor + 1);
+      if (close < 0) continue;
+      target = content.slice(cursor + 1, close);
+      cursor = close + 1;
+    } else {
+      let depth = 1;
+      const targetStart = cursor;
+      while (cursor < content.length) {
+        const character = content[cursor];
+        if (character === "(") depth += 1;
+        else if (character === ")") {
+          if (depth === 1) break;
+          depth -= 1;
+        } else if (/\s/.test(character) && depth === 1) break;
+        cursor += 1;
+      }
+      target = content.slice(targetStart, cursor);
+    }
+    let depth = 1;
+    while (cursor < content.length && depth > 0) {
+      if (content[cursor] === "(") depth += 1;
+      else if (content[cursor] === ")") depth -= 1;
+      cursor += 1;
+    }
+    if (!target || depth !== 0) continue;
+    targets.push(target);
+    spans.push([start, cursor]);
+    start = cursor - 1;
+  }
+  return { targets, spans };
+}
+
 export function githubSlug(text) {
-  return text.trim().toLocaleLowerCase("tr").replace(/<[^>]+>/g, "")
+  return text.trim().toLowerCase().replace(/<[^>]+>/g, "")
     .replace(/[`*_~]/g, "").replace(/[^\p{L}\p{N}\s_-]/gu, "").replace(/\s+/g, "-");
 }
 
@@ -226,7 +273,7 @@ function parseInventory(content, errors) {
   const counts = new Map(countTable.slice(1).map((row) => [row[0], Number(row[1])]));
   const rows = rowTable.slice(1).map((row) => ({
     path: row[0]?.match(/^\[([^\]]+)\]\(/)?.[1], id: row[1], title: row[2], status: row[3],
-    sourceOfTruth: row[4], group: row[5], owner: row[6], freshness: row[7],
+    sourceOfTruth: row[4], sourceRole: row[5], group: row[6], owner: row[7], freshness: row[8],
   }));
   return { counts, rows };
 }
@@ -253,14 +300,30 @@ function validateSupersession(active, errors) {
   }
 }
 
-function isAllowedFixtureSecret(path, line) {
-  if (path === ".github/workflows/webpack.yml") return /tilbecore_test_password|ci_only_[a-z0-9_]+/.test(line);
+function allowedFixtureValues(path) {
+  if (path === ".github/workflows/webpack.yml") return [
+    "tilbecore_test_password",
+    "ci_only_session_secret_32_chars_minimum",
+    "ci_only_dekont_secret_32_chars_minimum",
+  ];
   const testFixtureAllowlist = new Map([
     ["packages/provisioning/tests/tenant-provisioning.test.ts", "postgresql://user:" + "password@example.test/db"],
     ["packages/tenant-runtime/tests/tenant-connection-pool.test.ts", "postgresql://user:" + "password@host/private_database"],
   ]);
   const allowedValue = testFixtureAllowlist.get(path);
-  return Boolean(allowedValue && line.includes(allowedValue));
+  return allowedValue ? [allowedValue] : [];
+}
+
+function removeExactAllowedFixtures(line, fixtures) {
+  return fixtures.reduce((value, fixture) => {
+    const escaped = fixture.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return value.replace(new RegExp(`(?<![A-Za-z0-9_])${escaped}(?![A-Za-z0-9_])`, "g"), "");
+  }, line);
+}
+
+function isTextConfigFile(absolute) {
+  const name = basename(absolute).toLowerCase();
+  return name === ".env" || name.startsWith(".env.") || textConfigExtensions.has(extname(name).toLowerCase());
 }
 
 function secretErrors(root) {
@@ -275,9 +338,9 @@ function secretErrors(root) {
     files = execFileSync("git", ["-C", root, "ls-files", "--cached", "--others", "--exclude-standard"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
       .split(/\r?\n/).filter(Boolean).map((path) => resolve(root, path))
       .filter((absolute) => existsSync(absolute) && statSync(absolute).isFile())
-      .filter((absolute) => textConfigExtensions.has(extname(absolute).toLowerCase()) || absolute.endsWith(".env.example"));
+      .filter(isTextConfigFile);
   } catch {
-    files = walk(root, (absolute, name) => textConfigExtensions.has(extname(name).toLowerCase()) || name === ".env.example");
+    files = walk(root, (absolute) => isTextConfigFile(absolute));
   }
   const errors = [];
   for (const absolute of files) {
@@ -286,12 +349,22 @@ function secretErrors(root) {
     try { content = readFileSync(absolute, "utf8"); } catch { continue; }
     let count = 0;
     for (const line of content.split(/\r?\n/)) {
-      if (isAllowedFixtureSecret(path, line)) continue;
-      if (patterns.some((pattern) => pattern.test(line))) count += 1;
+      const candidate = removeExactAllowedFixtures(line, allowedFixtureValues(path));
+      if (patterns.some((pattern) => pattern.test(candidate))) count += 1;
     }
     if (count) errors.push(`hassas bilgi adayı: ${path} (${count} eşleşme; değer gösterilmedi)`);
   }
   return errors;
+}
+
+function isIsoCalendarDate(value) {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
 }
 
 export function validateRepository(root, options = {}) {
@@ -303,6 +376,9 @@ export function validateRepository(root, options = {}) {
     for (const key of requiredMetadata) if (!document.realMeta[key]) errors.push(`eksik metadata ${key}: ${document.path}`);
     if (document.status && !allowedStatuses.has(document.status)) errors.push(`geçersiz durum: ${document.path} (${document.status})`);
     if (document.meta.source_of_truth && !["true", "false"].includes(document.meta.source_of_truth)) errors.push(`geçersiz source_of_truth: ${document.path}`);
+    const reviewed = document.meta.last_reviewed;
+    const archiveException = document.group === "archive" && document.status === "ARCHIVED" && reviewed === "not_applicable";
+    if (reviewed && !archiveException && !isIsoCalendarDate(reviewed)) errors.push(`geçersiz last_reviewed: ${document.path} (${reviewed})`);
     const verified = document.meta.verified_against_commit;
     if (verified && verified !== "not_applicable" && !/^[a-f0-9]{40}$/i.test(verified)) errors.push(`geçersiz verified_against_commit: ${document.path}`);
   }
@@ -326,7 +402,7 @@ export function validateRepository(root, options = {}) {
       if (!existsSync(targetAbsolute)) { errors.push(`kırık bağlantı: ${document.path} -> ${targetPart || rawTarget}`); continue; }
       const resolvedPath = statSync(targetAbsolute).isDirectory()
         ? repoPath(root, resolve(targetAbsolute, "README.md")) : repoPath(root, targetAbsolute);
-      if (graph.has(document.path) && byPath.get(resolvedPath)?.active) graph.get(document.path).add(resolvedPath);
+      if (document.path !== inventoryPath && graph.has(document.path) && byPath.get(resolvedPath)?.active) graph.get(document.path).add(resolvedPath);
       if (anchor) {
         const targetDocument = byPath.get(resolvedPath);
         if (!targetDocument || !anchorsFor(targetDocument.content).has(anchor)) errors.push(`kırık anchor: ${document.path} -> ${rawTarget}`);
@@ -357,8 +433,11 @@ export function validateRepository(root, options = {}) {
     for (const document of documents) {
       const row = inventoryRows.get(document.path);
       if (!row) { errors.push(`envanter dışı belge: ${document.path}`); continue; }
-      const expected = { id: document.id, status: document.status, sourceOfTruth: document.sourceOfTruth, group: document.group, owner: document.owner, freshness: document.freshness };
-      for (const key of Object.keys(expected)) if (row[key] !== expected[key]) errors.push(`envanter metadata uyumsuzluğu ${key}: ${document.path}`);
+      const expected = { id: document.id, title: document.title, status: document.status, sourceOfTruth: document.sourceOfTruth, sourceRole: document.sourceRole, group: document.group, owner: document.owner, freshness: document.freshness };
+      for (const key of Object.keys(expected)) {
+        const label = key === "sourceRole" ? "source_role" : key;
+        if (row[key] !== expected[key]) errors.push(`envanter metadata uyumsuzluğu ${label}: ${document.path}`);
+      }
     }
     const actualCounts = new Map();
     for (const document of documents) actualCounts.set(document.group, (actualCounts.get(document.group) ?? 0) + 1);

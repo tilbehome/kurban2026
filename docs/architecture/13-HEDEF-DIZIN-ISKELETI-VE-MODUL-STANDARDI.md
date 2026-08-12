@@ -16,7 +16,7 @@ Repo hâlâ geçiş monoreposudur: yeni `apps/*` ve `packages/*` vardır; legacy
 
 Adlandırma için ana belgedeki `field-pwa`, `worker` ve `domains/*` yönü hedef tercihidir; `tenant-mobile`, `jobs-worker` ve `modules` karşılıkları kabul edilmiş ADR olmadan sessizce yeniden adlandırılmaz. Konu `DEC-001` olarak açıktır; karar çıkana kadar fiziksel taşıma yoktur.
 
-Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu dosyadaki eski sıra veya adlandırma ana belgeyle çelişirse ana belge uygulanır.
+Bu dizin standardının ilgili bağlayıcı mimari bağlamı [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md)’dir. Kaynaklar arasında çelişki varsa karar yalnız [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile verilir.
 
 ## Kesin karar
 

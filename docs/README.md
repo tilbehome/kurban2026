@@ -12,7 +12,9 @@ verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
 
 Bu dosya aktif belge sisteminin tek giriş noktasıdır. Bir belgenin listelenmesi, içindeki hedeflerin kodlandığı veya kabul testlerinin çalıştırıldığı anlamına gelmez. Gerçek durum; belge durumu, kaynak kod/migration/test kanıtı ve doğrulanan commit birlikte okunarak belirlenir.
 
-## Öncelikli okuma sırası
+## Başlangıç okuma yönlendirmesi
+
+Bu liste kaynak önceliği değildir; kaynak çelişkileri yalnız [GOV-003](governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile çözülür.
 
 1. [Dokümantasyon politikası](governance/GOV-001-DOKUMANTASYON-POLITIKASI.md)
 2. [Kaynak önceliği ve kanıt standardı](governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md)
@@ -30,7 +32,7 @@ Eski test planı yolu [ARC-010 uyumluluk yönlendirmesi](architecture/10-TEST-KA
 
 Eksiksiz dosya bazlı liste, metadata, sahiplik, güncellik, aynı konu kaynağı ve tasnif kararı [GOV-012 Markdown envanterinde](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md) bulunur.
 
-| Alan | Dizin | Ana kaynak / erişim |
+| Alan | Dizin | Bağlayıcı belge / erişim |
 |---|---|---|
 | Kök yönetişim | repo kökü | [AGENTS.md](../AGENTS.md), [README.md](../README.md) |
 | Mimari ve izlenebilirlik | `docs/architecture` | [RMP-001](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), [REQ-003](architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md), [TRK-001](architecture/KURBAN2026-UYGULAMA-TAKIP.md), [ARC-017](architecture/17-HEDEF-MODUL-KATALOGU.md), [EXT-001](architecture/18-GUVENLI-EKLENTI-OMURGASI.md) |
@@ -44,6 +46,17 @@ Eksiksiz dosya bazlı liste, metadata, sahiplik, güncellik, aynı konu kaynağ�
 | Altyapı ve işletim | `docs/infrastructure`, `docs/operations`, `docs/reliability`, `docs/runbooks` | [INF-001](infrastructure/INF-001-ORTAM-DEPLOYMENT-VE-YAPILANDIRMA.md), [OPS-001](operations/OPS-001-CANLI-ISLETIM-EL-KITABI.md), [runbook dizini GOV-012’de](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md) |
 | Release, eğitim ve destek | `docs/releases`, `docs/training` | [REL-004](releases/REL-004-RELEASE-GO-NO-GO-VE-ROLLOUT.md), [TRN-006](training/TRN-006-ROL-BAZLI-EGITIM-VE-PROVA.md), [SUP-002](training/SUP-002-DESTEK-VE-SUPPORTSESSION-PROSEDURU.md) |
 | Tarihsel kayıt | `docs/archive` | Yalnız [GOV-012 envanterindeki](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md) `ARCHIVED` kayıtlar; aktif karar kaynağı değildir |
+
+## Aktif belge gezinme bağlantıları
+
+GOV-012 otomatik envanter bağlantıları yetim-belge erişilebilirliği oluşturmaz. Aşağıdaki bağlantılar aktif uzmanlık belgelerinin gerçek gezinme bağlamıdır:
+
+- Mimari: [ARC-001](architecture/01-HEDEF-SISTEM-MIMARISI.md), [ARC-002](architecture/02-MODULER-MONOLIT-VE-DOMAIN-SINIRLARI.md), [ARC-006](architecture/06-FINANS-VE-LEDGER-MIMARISI.md), [ARC-007](architecture/07-UTF8-COKLU-DIL-VE-RTL.md), [ARC-008](architecture/08-TASARIM-SISTEMI-VE-MOBIL-PWA.md), [ARC-013](architecture/13-HEDEF-DIZIN-ISKELETI-VE-MODUL-STANDARDI.md), [ARC-014](architecture/14-PROGRAM-TAM-KAPSAM-ENVANTERI.md).
+- Domain: [DOM-003](domains/DOM-003-FIRMA-TESIS-VE-SEZON.md), [DOM-004](domains/DOM-004-MUSTERI-VE-SEZON-CARISI.md), [DOM-005](domains/DOM-005-TEDARIKCI-VE-SATIN-ALMA.md), [DOM-006](domains/DOM-006-HAYVAN-SAGLIK-VE-PADOK.md), [DOM-009](domains/DOM-009-VEKALET-VE-BELGELER.md), [DOM-010](domains/DOM-010-KESIM-VE-KONTROL-MERKEZI.md), [DOM-011](domains/DOM-011-PARCALAMA-TARTIM-VE-PAKETLEME.md), [DOM-012](domains/DOM-012-SOGUK-ODA-YUKLEME-VE-TESLIMAT.md).
+- İş akışı: [WFL-005](workflows/WFL-005-VEKALET-VE-BELGE.md), [WFL-006](workflows/WFL-006-KURBAN-GUNU-KESIMDEN-TESLIME.md), [WFL-007](workflows/WFL-007-SEZON-ACILISI-VE-KAPANISI.md), [WFL-008](workflows/WFL-008-ISTISNA-VE-DUZELTME.md), [WFL-009](workflows/WFL-009-OFFLINE-VE-YENIDEN-SENKRONIZASYON.md).
+- Test ve UX: [TST-006](testing/TST-006-LEDGER-VE-VERI-BUTUNLUGU.md), [TST-008](testing/TST-008-PLAYWRIGHT-AXE-VE-CIHAZ-MATRISI.md), [TST-010](testing/TST-010-OFFLINE-SYNC-VE-CIHAZ-TESTLERI.md), [TST-011](testing/TST-011-YUK-PERFORMANS-VE-DAYANIKLILIK.md), [UX-008](ux/UX-008-PWA-OFFLINE-KUYRUK-VE-CATISMA.md).
+- Altyapı, işletim ve süreklilik: [INF-006](infrastructure/INF-006-POSTGRESQL-ISLETIM-STANDARDI.md), [OPS-002](operations/OPS-002-OPENTELEMETRY-GOZLEMLENEBILIRLIK.md), [OPS-007](operations/OPS-007-YEDEKLEME-POLITIKASI.md), [OPS-016](operations/OPS-016-SEZON-KAPANISI-VE-DEVIR.md), [OPS-003](reliability/OPS-003-SLI-SLO-ALARM-VE-HATA-BUTCESI.md), [OPS-009](reliability/OPS-009-FELAKET-KURTARMA-VE-IS-SUREKLILIGI.md).
+- Gizlilik: [PRV-004](privacy/PRV-004-VERI-SAHIBI-TALEP-VE-SAKLAMA-PLAYBOOKU.md).
 
 ## Bağlayıcı iş kuralı düzeltmeleri
 

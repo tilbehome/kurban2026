@@ -14,7 +14,7 @@ Bu belge, TilbeCore – Kurban Takip yazılımını yalnızca görüşmelerde ge
 
 Bu belge bir tamamlanma beyanı değildir. Amaç, bulunan alanları görünür kılmak, durumlarını sınıflandırmak ve sonraki fazlara güvenli dönüşüm listesi vermektir.
 
-Birinci kaynak `TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md` belgesidir. Bu envanterde görünen kod, ekran veya route varlığı tek başına ürün kararını veya tamamlanmış özelliği kanıtlamaz.
+Bu envanterin görev bağlamı [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), kaynak ve kanıt değerlendirme kuralı [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md)’tür. Bu envanterde görünen kod, ekran veya route varlığı tek başına ürün kararını veya tamamlanmış özelliği kanıtlamaz.
 
 ## 12 Ağustos 2026 uyum notu
 
