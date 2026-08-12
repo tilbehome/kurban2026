@@ -9,36 +9,41 @@ datasource db {
 }
 
 model TenantProvisioningMarker {
-  id               String   @id
+  id                String   @id
   provisioningJobId String
-  tenantInstanceId String
-  databaseRefId    String
-  createdAt        DateTime @default(now())
+  tenantInstanceId  String
+  databaseRefId     String
+  createdAt         DateTime @default(now())
 }
 
 model Season {
-  id         String   @id
-  locationId String?
-  name       String
-  year       Int?
-  status     String
-  startsAt   DateTime?
-  endsAt     DateTime?
-  archivedAt DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  location   Location? @relation(fields: [locationId], references: [id])
-  legacyCustomers Customer[] @relation("LegacyCustomerSeason")
-  customerAccounts CustomerSeasonAccount[]
-  animals   Animal[]
-  shareCards ShareCard[]
-  sales     Sale[]
-  ledgerEntries LedgerEntry[]
-  slaughterJobs SlaughterJob[]
-  supplierAccounts SupplierAccount[]
-  purchaseInvoices PurchaseInvoice[]
-  supplierPayments SupplierPayment[]
-  expenseDocuments ExpenseDocument[]
+  id                String                  @id
+  locationId        String?
+  name              String
+  year              Int?
+  status            String
+  startsAt          DateTime?
+  endsAt            DateTime?
+  archivedAt        DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  location          Location?               @relation(fields: [locationId], references: [id])
+  legacyCustomers   Customer[]              @relation("LegacyCustomerSeason")
+  customerAccounts  CustomerSeasonAccount[]
+  animals           Animal[]
+  shareCards        ShareCard[]
+  sales             Sale[]
+  priceTariffs      PriceTariff[]
+  journalEntries    JournalEntry[]
+  receipts          Receipt[]
+  shareReservations ShareReservation[]
+  shareTransfers    ShareTransfer[]
+  ledgerEntries     LedgerEntry[]
+  slaughterJobs     SlaughterJob[]
+  supplierAccounts  SupplierAccount[]
+  purchaseInvoices  PurchaseInvoice[]
+  supplierPayments  SupplierPayment[]
+  expenseDocuments  ExpenseDocument[]
   qurbanAssignments QurbanAssignment[]
 
   @@index([locationId])
@@ -46,73 +51,73 @@ model Season {
 }
 
 model OrganizationUser {
-  id             String   @id
-  email          String?  @unique
+  id             String                   @id
+  email          String?                  @unique
   displayName    String
-  status         String   @default("active")
-  legacyUserId   String?  @unique
+  status         String                   @default("active")
+  legacyUserId   String?                  @unique
   externalRef    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
   memberships    OrganizationMembership[]
   trustedDevices TrustedDevice[]
 }
 
 model OrganizationMembership {
-  id                 String   @id
-  organizationUserId String
-  status             String   @default("active")
-  validFrom          DateTime @default(now())
-  validUntil         DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  organizationUser   OrganizationUser @relation(fields: [organizationUserId], references: [id])
-  roleAssignments    MembershipRole[] @relation("MembershipRoleTarget")
-  assignedRoles      MembershipRole[] @relation("MembershipRoleAssigner")
-  createdRoleVersions RoleVersion[] @relation("RoleVersionCreator")
-  delegationsFrom    Delegation[] @relation("DelegationSource")
-  delegationsTo      Delegation[] @relation("DelegationTarget")
-  approvedDelegations Delegation[] @relation("DelegationApprover")
-  userSessions       UserSession[]
+  id                     String             @id
+  organizationUserId     String
+  status                 String             @default("active")
+  validFrom              DateTime           @default(now())
+  validUntil             DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  organizationUser       OrganizationUser   @relation(fields: [organizationUserId], references: [id])
+  roleAssignments        MembershipRole[]   @relation("MembershipRoleTarget")
+  assignedRoles          MembershipRole[]   @relation("MembershipRoleAssigner")
+  createdRoleVersions    RoleVersion[]      @relation("RoleVersionCreator")
+  delegationsFrom        Delegation[]       @relation("DelegationSource")
+  delegationsTo          Delegation[]       @relation("DelegationTarget")
+  approvedDelegations    Delegation[]       @relation("DelegationApprover")
+  userSessions           UserSession[]
   createdServiceAccounts ServiceAccount[]
-  requestedApprovals ApprovalRequest[] @relation("ApprovalRequester")
-  approvalDecisions  ApprovalDecision[] @relation("ApprovalDecider")
+  requestedApprovals     ApprovalRequest[]  @relation("ApprovalRequester")
+  approvalDecisions      ApprovalDecision[] @relation("ApprovalDecider")
 
   @@index([organizationUserId, status])
   @@index([validUntil])
 }
 
 model ModuleAuthorizationRegistration {
-  id          String   @id
-  moduleId    String
-  version     String
-  displayName String
-  active      Boolean  @default(true)
-  registeredAt DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  permissions Permission[]
-  roles       Role[]
+  id           String       @id
+  moduleId     String
+  version      String
+  displayName  String
+  active       Boolean      @default(true)
+  registeredAt DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  permissions  Permission[]
+  roles        Role[]
 
   @@unique([moduleId, version])
   @@index([moduleId, active])
 }
 
 model Role {
-  id                   String   @id
+  id                   String                           @id
   name                 String
   description          String?
   type                 String
-  protectedCode        String?  @unique
+  protectedCode        String?                          @unique
   functionalArea       String
   accessLevel          String
   moduleRegistrationId String?
   sourceRoleId         String?
-  active               Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  active               Boolean                          @default(true)
+  createdAt            DateTime                         @default(now())
+  updatedAt            DateTime                         @updatedAt
   moduleRegistration   ModuleAuthorizationRegistration? @relation(fields: [moduleRegistrationId], references: [id])
-  sourceRole           Role? @relation("RoleTemplateCopy", fields: [sourceRoleId], references: [id])
-  copiedRoles          Role[] @relation("RoleTemplateCopy")
+  sourceRole           Role?                            @relation("RoleTemplateCopy", fields: [sourceRoleId], references: [id])
+  copiedRoles          Role[]                           @relation("RoleTemplateCopy")
   versions             RoleVersion[]
 
   @@index([type, active])
@@ -121,16 +126,16 @@ model Role {
 }
 
 model RoleVersion {
-  id                    String   @id
+  id                    String                 @id
   roleId                String
   version               Int
-  status                String   @default("draft")
+  status                String                 @default("draft")
   changeReason          String
   createdByMembershipId String
-  createdAt             DateTime @default(now())
+  createdAt             DateTime               @default(now())
   publishedAt           DateTime?
   retiredAt             DateTime?
-  role                  Role @relation(fields: [roleId], references: [id])
+  role                  Role                   @relation(fields: [roleId], references: [id])
   createdBy             OrganizationMembership @relation("RoleVersionCreator", fields: [createdByMembershipId], references: [id])
   permissions           RolePermission[]
   membershipRoles       MembershipRole[]
@@ -141,24 +146,24 @@ model RoleVersion {
 }
 
 model Permission {
-  id                   String   @id
-  key                  String   @unique
+  id                   String                           @id
+  key                  String                           @unique
   moduleId             String
   resource             String
   action               String
   scope                String
   description          String?
-  riskLevel            String   @default("normal")
+  riskLevel            String                           @default("normal")
   moduleRegistrationId String?
-  active               Boolean  @default(true)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  active               Boolean                          @default(true)
+  createdAt            DateTime                         @default(now())
+  updatedAt            DateTime                         @updatedAt
   moduleRegistration   ModuleAuthorizationRegistration? @relation(fields: [moduleRegistrationId], references: [id])
   rolePermissions      RolePermission[]
   conditionalPolicies  ConditionalPolicy[]
   delegations          Delegation[]
-  approvalPolicies     ApprovalPolicy[] @relation("ApprovalTargetPermission")
-  approverPolicies     ApprovalPolicy[] @relation("ApprovalApproverPermission")
+  approvalPolicies     ApprovalPolicy[]                 @relation("ApprovalTargetPermission")
+  approverPolicies     ApprovalPolicy[]                 @relation("ApprovalApproverPermission")
   serviceAccountGrants ServiceAccountPermission[]
   deviceGrants         DevicePermission[]
   externalUserGrants   ExternalUserPermission[]
@@ -172,16 +177,16 @@ model RolePermission {
   permissionId  String
   effect        String
   constraints   Json?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime    @default(now())
   roleVersion   RoleVersion @relation(fields: [roleVersionId], references: [id])
-  permission    Permission @relation(fields: [permissionId], references: [id])
+  permission    Permission  @relation(fields: [permissionId], references: [id])
 
   @@id([roleVersionId, permissionId])
   @@index([permissionId, effect])
 }
 
 model AccessScope {
-  id                    String   @id
+  id                    String                     @id
   name                  String
   facilityId            String?
   departmentId          String?
@@ -189,8 +194,8 @@ model AccessScope {
   assignedRecordType    String?
   assignedRecordId      String?
   additionalConstraints Json?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
   membershipRoles       MembershipRole[]
   delegations           Delegation[]
   serviceAccountGrants  ServiceAccountPermission[]
@@ -199,20 +204,20 @@ model AccessScope {
 }
 
 model MembershipRole {
-  id                     String   @id
+  id                     String                 @id
   membershipId           String
   roleVersionId          String
   accessScopeId          String?
-  validFrom              DateTime @default(now())
+  validFrom              DateTime               @default(now())
   validUntil             DateTime?
   assignedByMembershipId String
   assignmentReason       String
   revokedAt              DateTime?
   revokedByMembershipId  String?
-  createdAt              DateTime @default(now())
+  createdAt              DateTime               @default(now())
   membership             OrganizationMembership @relation("MembershipRoleTarget", fields: [membershipId], references: [id])
-  roleVersion            RoleVersion @relation(fields: [roleVersionId], references: [id])
-  accessScope            AccessScope? @relation(fields: [accessScopeId], references: [id])
+  roleVersion            RoleVersion            @relation(fields: [roleVersionId], references: [id])
+  accessScope            AccessScope?           @relation(fields: [accessScopeId], references: [id])
   assignedBy             OrganizationMembership @relation("MembershipRoleAssigner", fields: [assignedByMembershipId], references: [id])
   conditionalPolicies    ConditionalPolicy[]
 
@@ -221,134 +226,134 @@ model MembershipRole {
 }
 
 model ConditionalPolicy {
-  id               String   @id
+  id               String          @id
   name             String
   roleVersionId    String?
   membershipRoleId String?
   permissionId     String?
   effect           String
-  priority         Int      @default(0)
+  priority         Int             @default(0)
   conditions       Json
-  active           Boolean  @default(true)
+  active           Boolean         @default(true)
   validFrom        DateTime?
   validUntil       DateTime?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  roleVersion      RoleVersion? @relation(fields: [roleVersionId], references: [id])
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  roleVersion      RoleVersion?    @relation(fields: [roleVersionId], references: [id])
   membershipRole   MembershipRole? @relation(fields: [membershipRoleId], references: [id])
-  permission       Permission? @relation(fields: [permissionId], references: [id])
+  permission       Permission?     @relation(fields: [permissionId], references: [id])
 
   @@index([permissionId, active])
   @@index([roleVersionId, active])
 }
 
 model Delegation {
-  id                       String   @id
-  fromMembershipId         String
-  toMembershipId           String
-  permissionId             String
-  accessScopeId            String?
-  reason                   String
-  validFrom                DateTime
-  validUntil               DateTime
-  status                   String   @default("active")
-  approvedByMembershipId   String?
-  revokedAt                DateTime?
-  createdAt                DateTime @default(now())
-  fromMembership           OrganizationMembership @relation("DelegationSource", fields: [fromMembershipId], references: [id])
-  toMembership             OrganizationMembership @relation("DelegationTarget", fields: [toMembershipId], references: [id])
-  approvedBy               OrganizationMembership? @relation("DelegationApprover", fields: [approvedByMembershipId], references: [id])
-  permission               Permission @relation(fields: [permissionId], references: [id])
-  accessScope              AccessScope? @relation(fields: [accessScopeId], references: [id])
+  id                     String                  @id
+  fromMembershipId       String
+  toMembershipId         String
+  permissionId           String
+  accessScopeId          String?
+  reason                 String
+  validFrom              DateTime
+  validUntil             DateTime
+  status                 String                  @default("active")
+  approvedByMembershipId String?
+  revokedAt              DateTime?
+  createdAt              DateTime                @default(now())
+  fromMembership         OrganizationMembership  @relation("DelegationSource", fields: [fromMembershipId], references: [id])
+  toMembership           OrganizationMembership  @relation("DelegationTarget", fields: [toMembershipId], references: [id])
+  approvedBy             OrganizationMembership? @relation("DelegationApprover", fields: [approvedByMembershipId], references: [id])
+  permission             Permission              @relation(fields: [permissionId], references: [id])
+  accessScope            AccessScope?            @relation(fields: [accessScopeId], references: [id])
 
   @@index([toMembershipId, status, validUntil])
   @@index([fromMembershipId, status])
 }
 
 model ApprovalPolicy {
-  id                    String   @id
-  name                  String
-  permissionId          String
-  approverPermissionId  String
-  conditions            Json
-  requiredApprovals     Int      @default(1)
-  requireDistinctUser   Boolean  @default(true)
-  requireReauthentication Boolean @default(true)
-  active                Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  permission            Permission @relation("ApprovalTargetPermission", fields: [permissionId], references: [id])
-  approverPermission    Permission @relation("ApprovalApproverPermission", fields: [approverPermissionId], references: [id])
-  requests              ApprovalRequest[]
+  id                      String            @id
+  name                    String
+  permissionId            String
+  approverPermissionId    String
+  conditions              Json
+  requiredApprovals       Int               @default(1)
+  requireDistinctUser     Boolean           @default(true)
+  requireReauthentication Boolean           @default(true)
+  active                  Boolean           @default(true)
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+  permission              Permission        @relation("ApprovalTargetPermission", fields: [permissionId], references: [id])
+  approverPermission      Permission        @relation("ApprovalApproverPermission", fields: [approverPermissionId], references: [id])
+  requests                ApprovalRequest[]
 
   @@index([permissionId, active])
 }
 
 model ApprovalRequest {
-  id                    String   @id
-  approvalPolicyId      String
+  id                      String                 @id
+  approvalPolicyId        String
   requestedByMembershipId String
-  operationType         String
-  operationRef          String
-  payloadHash           String
-  reason                String
-  status                String   @default("pending")
-  expiresAt             DateTime
-  completedAt           DateTime?
-  createdAt             DateTime @default(now())
-  approvalPolicy        ApprovalPolicy @relation(fields: [approvalPolicyId], references: [id])
-  requestedBy           OrganizationMembership @relation("ApprovalRequester", fields: [requestedByMembershipId], references: [id])
-  decisions             ApprovalDecision[]
+  operationType           String
+  operationRef            String
+  payloadHash             String
+  reason                  String
+  status                  String                 @default("pending")
+  expiresAt               DateTime
+  completedAt             DateTime?
+  createdAt               DateTime               @default(now())
+  approvalPolicy          ApprovalPolicy         @relation(fields: [approvalPolicyId], references: [id])
+  requestedBy             OrganizationMembership @relation("ApprovalRequester", fields: [requestedByMembershipId], references: [id])
+  decisions               ApprovalDecision[]
 
   @@unique([operationType, operationRef, payloadHash])
   @@index([status, expiresAt])
 }
 
 model ApprovalDecision {
-  id                   String   @id
-  approvalRequestId    String
+  id                    String                 @id
+  approvalRequestId     String
   decidedByMembershipId String
-  decision             String
-  reason               String
-  reauthenticatedAt    DateTime
-  decidedAt            DateTime
-  approvalRequest      ApprovalRequest @relation(fields: [approvalRequestId], references: [id])
-  decidedBy            OrganizationMembership @relation("ApprovalDecider", fields: [decidedByMembershipId], references: [id])
+  decision              String
+  reason                String
+  reauthenticatedAt     DateTime
+  decidedAt             DateTime
+  approvalRequest       ApprovalRequest        @relation(fields: [approvalRequestId], references: [id])
+  decidedBy             OrganizationMembership @relation("ApprovalDecider", fields: [decidedByMembershipId], references: [id])
 
   @@unique([approvalRequestId, decidedByMembershipId])
 }
 
 model UserSession {
-  id                       String   @id
+  id                       String                 @id
   organizationMembershipId String
-  tokenHash                String   @unique
-  status                   String   @default("active")
-  mfaLevel                 Int      @default(1)
+  tokenHash                String                 @unique
+  status                   String                 @default("active")
+  mfaLevel                 Int                    @default(1)
   authenticatedAt          DateTime
   lastReauthenticatedAt    DateTime?
   trustedDeviceId          String?
   networkFingerprint       String?
   expiresAt                DateTime
   revokedAt                DateTime?
-  createdAt                DateTime @default(now())
+  createdAt                DateTime               @default(now())
   membership               OrganizationMembership @relation(fields: [organizationMembershipId], references: [id])
-  trustedDevice            TrustedDevice? @relation(fields: [trustedDeviceId], references: [id])
+  trustedDevice            TrustedDevice?         @relation(fields: [trustedDeviceId], references: [id])
 
   @@index([organizationMembershipId, status])
   @@index([expiresAt])
 }
 
 model TrustedDevice {
-  id                 String   @id
+  id                 String           @id
   organizationUserId String
   displayName        String
   fingerprintHash    String
-  trustStatus        String   @default("trusted")
+  trustStatus        String           @default("trusted")
   trustedAt          DateTime
   expiresAt          DateTime?
   revokedAt          DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
   organizationUser   OrganizationUser @relation(fields: [organizationUserId], references: [id])
   sessions           UserSession[]
 
@@ -357,17 +362,17 @@ model TrustedDevice {
 }
 
 model ServiceAccount {
-  id                    String   @id
+  id                    String                     @id
   name                  String
-  clientId              String   @unique
+  clientId              String                     @unique
   credentialHash        String
-  status                String   @default("active")
+  status                String                     @default("active")
   createdByMembershipId String
   validUntil            DateTime?
   lastUsedAt            DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  createdBy             OrganizationMembership @relation(fields: [createdByMembershipId], references: [id])
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+  createdBy             OrganizationMembership     @relation(fields: [createdByMembershipId], references: [id])
   permissions           ServiceAccountPermission[]
 }
 
@@ -376,27 +381,27 @@ model ServiceAccountPermission {
   permissionId     String
   accessScopeId    String?
   effect           String
-  validFrom        DateTime @default(now())
+  validFrom        DateTime       @default(now())
   validUntil       DateTime?
   serviceAccount   ServiceAccount @relation(fields: [serviceAccountId], references: [id])
-  permission       Permission @relation(fields: [permissionId], references: [id])
-  accessScope      AccessScope? @relation(fields: [accessScopeId], references: [id])
+  permission       Permission     @relation(fields: [permissionId], references: [id])
+  accessScope      AccessScope?   @relation(fields: [accessScopeId], references: [id])
 
   @@id([serviceAccountId, permissionId])
 }
 
 model DeviceIdentity {
-  id              String   @id
-  kind            String
-  displayName     String
-  credentialHash  String   @unique
-  status          String   @default("active")
-  facilityId      String?
-  validUntil      DateTime?
-  lastSeenAt      DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  permissions     DevicePermission[]
+  id             String             @id
+  kind           String
+  displayName    String
+  credentialHash String             @unique
+  status         String             @default("active")
+  facilityId     String?
+  validUntil     DateTime?
+  lastSeenAt     DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  permissions    DevicePermission[]
 }
 
 model DevicePermission {
@@ -404,25 +409,25 @@ model DevicePermission {
   permissionId     String
   accessScopeId    String?
   effect           String
-  validFrom        DateTime @default(now())
+  validFrom        DateTime       @default(now())
   validUntil       DateTime?
   deviceIdentity   DeviceIdentity @relation(fields: [deviceIdentityId], references: [id])
-  permission       Permission @relation(fields: [permissionId], references: [id])
-  accessScope      AccessScope? @relation(fields: [accessScopeId], references: [id])
+  permission       Permission     @relation(fields: [permissionId], references: [id])
+  accessScope      AccessScope?   @relation(fields: [accessScopeId], references: [id])
 
   @@id([deviceIdentityId, permissionId])
 }
 
 model ExternalUser {
-  id          String   @id
+  id          String                   @id
   issuer      String
   subject     String
   email       String?
   displayName String?
-  status      String   @default("active")
+  status      String                   @default("active")
   validUntil  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
   permissions ExternalUserPermission[]
 
   @@unique([issuer, subject])
@@ -433,10 +438,10 @@ model ExternalUserPermission {
   permissionId   String
   accessScopeId  String?
   effect         String
-  validFrom      DateTime @default(now())
+  validFrom      DateTime     @default(now())
   validUntil     DateTime?
   externalUser   ExternalUser @relation(fields: [externalUserId], references: [id])
-  permission     Permission @relation(fields: [permissionId], references: [id])
+  permission     Permission   @relation(fields: [permissionId], references: [id])
   accessScope    AccessScope? @relation(fields: [accessScopeId], references: [id])
 
   @@id([externalUserId, permissionId])
@@ -491,6 +496,7 @@ model Location {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   seasons     Season[]
+  animals     Animal[]
 }
 
 model Setting {
@@ -507,25 +513,34 @@ model Setting {
 }
 
 model Customer {
-  id                     String   @id
+  id                     String                  @id
   seasonId               String?
   displayName            String
-  normalizedName         String   @default("")
+  normalizedName         String                  @default("")
   phone                  String?
   normalizedPhone        String?
   identityNumber         String?
   notes                  String?
-  active                 Boolean  @default(true)
+  active                 Boolean                 @default(true)
   kvkkConsentAt          DateTime?
   communicationConsentAt DateTime?
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  legacySeason           Season?  @relation("LegacyCustomerSeason", fields: [seasonId], references: [id])
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  legacySeason           Season?                 @relation("LegacyCustomerSeason", fields: [seasonId], references: [id])
   phones                 CustomerPhone[]
   addresses              CustomerAddress[]
   seasonAccounts         CustomerSeasonAccount[]
   sales                  Sale[]
+  receipts               Receipt[]
+  payerSales             Sale[]                  @relation("SalePayerCustomer")
+  reservedShares         Share[]                 @relation("ShareReservationCustomer")
+  shareReservations      ShareReservation[]
+  payerReceipts          Receipt[]               @relation("ReceiptPayerCustomer")
+  transferSources        ShareTransfer[]         @relation("ShareTransferFromCustomer")
+  transferTargets        ShareTransfer[]         @relation("ShareTransferToCustomer")
+  journalLines           JournalLine[]
   shares                 Share[]
+  paymentAllocations     PaymentAllocation[]
   ledgerEntries          LedgerEntry[]
   proxyDocuments         ProxyDocument[]
   deliveries             DeliveryRecord[]
@@ -585,18 +600,18 @@ model CustomerSeasonAccount {
 }
 
 model Supplier {
-  id          String   @id
-  displayName String
-  phone       String?
-  taxNumber   String?
-  normalizedName String @default("")
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  animals     Animal[]
-  accounts    SupplierAccount[]
+  id               String            @id
+  displayName      String
+  phone            String?
+  taxNumber        String?
+  normalizedName   String            @default("")
+  active           Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  animals          Animal[]
+  accounts         SupplierAccount[]
   purchaseInvoices PurchaseInvoice[]
-  payments    SupplierPayment[]
+  payments         SupplierPayment[]
 
   @@index([normalizedName])
 }
@@ -618,81 +633,81 @@ model SupplierAccount {
 }
 
 model PurchaseInvoice {
-  id             String   @id
+  id             String                @id
   supplierId     String
   seasonId       String
   invoiceNo      String
   invoiceDate    DateTime
-  status         String   @default("posted")
-  currency       String   @default("TRY")
-  subtotal       Decimal  @db.Decimal(18, 4)
-  taxTotal       Decimal  @default(0) @db.Decimal(18, 4)
-  grandTotal     Decimal  @db.Decimal(18, 4)
-  idempotencyKey String   @unique
+  status         String                @default("posted")
+  currency       String                @default("TRY")
+  subtotal       Decimal               @db.Decimal(18, 4)
+  taxTotal       Decimal               @default(0) @db.Decimal(18, 4)
+  grandTotal     Decimal               @db.Decimal(18, 4)
+  idempotencyKey String                @unique
   reversalOfId   String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  supplier       Supplier @relation(fields: [supplierId], references: [id])
-  season         Season   @relation(fields: [seasonId], references: [id])
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  supplier       Supplier              @relation(fields: [supplierId], references: [id])
+  season         Season                @relation(fields: [seasonId], references: [id])
   lines          PurchaseInvoiceLine[]
-  reversalOf     PurchaseInvoice? @relation("PurchaseInvoiceReversal", fields: [reversalOfId], references: [id])
-  reversals      PurchaseInvoice[] @relation("PurchaseInvoiceReversal")
+  reversalOf     PurchaseInvoice?      @relation("PurchaseInvoiceReversal", fields: [reversalOfId], references: [id])
+  reversals      PurchaseInvoice[]     @relation("PurchaseInvoiceReversal")
 
   @@unique([supplierId, invoiceNo])
   @@index([seasonId])
 }
 
 model PurchaseInvoiceLine {
-  id               String   @id
+  id                String           @id
   purchaseInvoiceId String
-  lineNo           Int
-  description      String
-  animalId         String?  @unique
-  quantity         Decimal  @default(1) @db.Decimal(12, 3)
-  unitPrice        Decimal  @db.Decimal(18, 4)
-  lineTotal        Decimal  @db.Decimal(18, 4)
+  lineNo            Int
+  description       String
+  animalId          String?          @unique
+  quantity          Decimal          @default(1) @db.Decimal(12, 3)
+  unitPrice         Decimal          @db.Decimal(18, 4)
+  lineTotal         Decimal          @db.Decimal(18, 4)
   expenseDocumentId String?
-  createdAt        DateTime @default(now())
-  purchaseInvoice  PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
-  animal           Animal? @relation(fields: [animalId], references: [id])
-  expenseDocument  ExpenseDocument? @relation(fields: [expenseDocumentId], references: [id])
+  createdAt         DateTime         @default(now())
+  purchaseInvoice   PurchaseInvoice  @relation(fields: [purchaseInvoiceId], references: [id])
+  animal            Animal?          @relation(fields: [animalId], references: [id])
+  expenseDocument   ExpenseDocument? @relation(fields: [expenseDocumentId], references: [id])
 
   @@unique([purchaseInvoiceId, lineNo])
 }
 
 model SupplierPayment {
-  id             String   @id
+  id             String            @id
   supplierId     String
   seasonId       String
-  amount         Decimal  @db.Decimal(18, 4)
+  amount         Decimal           @db.Decimal(18, 4)
   method         String
   referenceNo    String?
   occurredAt     DateTime
-  idempotencyKey String   @unique
+  idempotencyKey String            @unique
   reversalOfId   String?
-  createdAt      DateTime @default(now())
-  supplier       Supplier @relation(fields: [supplierId], references: [id])
-  season         Season   @relation(fields: [seasonId], references: [id])
-  reversalOf     SupplierPayment? @relation("SupplierPaymentReversal", fields: [reversalOfId], references: [id])
+  createdAt      DateTime          @default(now())
+  supplier       Supplier          @relation(fields: [supplierId], references: [id])
+  season         Season            @relation(fields: [seasonId], references: [id])
+  reversalOf     SupplierPayment?  @relation("SupplierPaymentReversal", fields: [reversalOfId], references: [id])
   reversals      SupplierPayment[] @relation("SupplierPaymentReversal")
 
   @@index([supplierId, seasonId])
 }
 
 model ExpenseDocument {
-  id             String   @id
+  id             String                @id
   seasonId       String
   documentNo     String?
   category       String
   description    String
-  amount         Decimal  @db.Decimal(18, 4)
-  currency       String   @default("TRY")
+  amount         Decimal               @db.Decimal(18, 4)
+  currency       String                @default("TRY")
   sourceType     String
   sourceRef      String
   occurredAt     DateTime
-  idempotencyKey String   @unique
-  createdAt      DateTime @default(now())
-  season         Season   @relation(fields: [seasonId], references: [id])
+  idempotencyKey String                @unique
+  createdAt      DateTime              @default(now())
+  season         Season                @relation(fields: [seasonId], references: [id])
   purchaseLines  PurchaseInvoiceLine[]
 
   @@unique([sourceType, sourceRef])
@@ -700,29 +715,33 @@ model ExpenseDocument {
 }
 
 model Animal {
-  id              String   @id
-  seasonId        String
-  supplierId      String?
-  earTag          String
-  status          String
-  purchaseAmount  Decimal? @db.Decimal(18, 4)
-  liveWeightKg    Decimal? @db.Decimal(12, 3)
-  carcassWeightKg Decimal? @db.Decimal(12, 3)
-  qurbanEligibility String @default("undecided")
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  season          Season   @relation(fields: [seasonId], references: [id])
-  supplier        Supplier? @relation(fields: [supplierId], references: [id])
-  shareCards      ShareCard[]
-  slaughterJobs   SlaughterJob[]
-  weighingRecords WeighingRecord[]
-  weights         AnimalWeight[]
-  healthEvents    AnimalHealthEvent[]
-  qurbanAssignments QurbanAssignment[]
+  id                  String               @id
+  seasonId            String?
+  locationId          String?
+  supplierId          String?
+  earTag              String
+  status              String
+  purchaseAmount      Decimal?             @db.Decimal(18, 4)
+  liveWeightKg        Decimal?             @db.Decimal(12, 3)
+  carcassWeightKg     Decimal?             @db.Decimal(12, 3)
+  qurbanEligibility   String               @default("undecided")
+  notes               String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  season              Season?              @relation(fields: [seasonId], references: [id])
+  location            Location?            @relation(fields: [locationId], references: [id])
+  supplier            Supplier?            @relation(fields: [supplierId], references: [id])
+  shareCards          ShareCard[]
+  slaughterJobs       SlaughterJob[]
+  weighingRecords     WeighingRecord[]
+  weights             AnimalWeight[]
+  healthEvents        AnimalHealthEvent[]
+  qurbanAssignments   QurbanAssignment[]
   purchaseInvoiceLine PurchaseInvoiceLine?
 
-  @@unique([seasonId, earTag])
+  @@unique([earTag])
+  @@index([locationId])
+  @@index([seasonId])
   @@index([supplierId])
 }
 
@@ -755,21 +774,21 @@ model AnimalHealthEvent {
 }
 
 model QurbanAssignment {
-  id               String   @id
+  id               String             @id
   seasonId         String
   animalId         String
   qurbanNo         String?
   queueNo          Int?
-  active           Boolean  @default(true)
+  active           Boolean            @default(true)
   reason           String?
   assignedByUserId String
   assignedAt       DateTime
   endedAt          DateTime?
   previousId       String?
-  createdAt        DateTime @default(now())
-  season           Season   @relation(fields: [seasonId], references: [id])
-  animal           Animal   @relation(fields: [animalId], references: [id])
-  previous         QurbanAssignment? @relation("QurbanAssignmentHistory", fields: [previousId], references: [id])
+  createdAt        DateTime           @default(now())
+  season           Season             @relation(fields: [seasonId], references: [id])
+  animal           Animal             @relation(fields: [animalId], references: [id])
+  previous         QurbanAssignment?  @relation("QurbanAssignmentHistory", fields: [previousId], references: [id])
   nextAssignments  QurbanAssignment[] @relation("QurbanAssignmentHistory")
 
   @@index([seasonId, queueNo])
@@ -777,102 +796,382 @@ model QurbanAssignment {
 }
 
 model TenantIdempotencyRecord {
-  key          String   @id
-  scope        String
-  actorUserId  String
-  requestId    String
-  requestHash  String
-  resultType   String?
-  resultId     String?
+  key           String    @id
+  scope         String
+  actorUserId   String
+  requestId     String
+  requestHash   String
+  resultType    String?
+  resultId      String?
   resultPayload Json?
-  status       String   @default("processing")
-  createdAt    DateTime @default(now())
-  completedAt  DateTime?
+  status        String    @default("processing")
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
 
   @@index([scope, actorUserId])
 }
 
 model ShareCard {
-  id               String   @id
-  seasonId         String
-  animalId         String
-  displayNo        String?
-  targetShareCount Int      @default(7)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  season           Season   @relation(fields: [seasonId], references: [id])
-  animal           Animal   @relation(fields: [animalId], references: [id])
-  shares           Share[]
-  slaughterJobs    SlaughterJob[]
+  id                   String              @id
+  seasonId             String
+  animalId             String
+  displayNo            String?
+  version              Int                 @default(1)
+  status               String              @default("active")
+  priceTariffVersionId String?
+  targetShareCount     Int                 @default(7)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  season               Season              @relation(fields: [seasonId], references: [id])
+  animal               Animal              @relation(fields: [animalId], references: [id])
+  priceTariffVersion   PriceTariffVersion? @relation(fields: [priceTariffVersionId], references: [id])
+  shares               Share[]
+  slaughterJobs        SlaughterJob[]
 
+  @@unique([seasonId, animalId, version])
   @@index([seasonId])
   @@index([animalId])
+  @@index([priceTariffVersionId])
 }
 
 model Share {
-  id            String   @id
-  shareCardId   String
-  sequenceNo    Int
-  status        String
-  customerId    String?
-  agreedPrice   Decimal? @db.Decimal(18, 4)
-  reservedUntil DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  shareCard     ShareCard @relation(fields: [shareCardId], references: [id])
-  customer      Customer? @relation(fields: [customerId], references: [id])
-  saleShares    SaleShare[]
-  proxyDocumentShares ProxyDocumentShare[]
-  packages      PackageRecord[]
-  deliveries    DeliveryRecord[]
+  id                     String               @id
+  shareCardId            String
+  sequenceNo             Int
+  status                 String
+  customerId             String?
+  reservedByCustomerId   String?
+  listPriceSnapshot      Decimal?             @db.Decimal(18, 4)
+  discountAmountSnapshot Decimal?             @db.Decimal(18, 4)
+  agreedPrice            Decimal?             @db.Decimal(18, 4)
+  reservedUntil          DateTime?
+  reservationId          String?
+  soldAt                 DateTime?
+  cancelledAt            DateTime?
+  cancellationReason     String?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  shareCard              ShareCard            @relation(fields: [shareCardId], references: [id])
+  customer               Customer?            @relation(fields: [customerId], references: [id])
+  reservationCustomer    Customer?            @relation("ShareReservationCustomer", fields: [reservedByCustomerId], references: [id])
+  activeReservation      ShareReservation?    @relation("ShareActiveReservation", fields: [reservationId], references: [id])
+  reservations           ShareReservation[]   @relation("ShareReservationHistory")
+  saleShares             SaleShare[]
+  saleEvents             SaleEvent[]
+  transfersOut           ShareTransfer[]      @relation("ShareTransferSource")
+  transfersIn            ShareTransfer[]      @relation("ShareTransferTarget")
+  journalLines           JournalLine[]
+  paymentAllocations     PaymentAllocation[]
+  proxyDocumentShares    ProxyDocumentShare[]
+  packages               PackageRecord[]
+  deliveries             DeliveryRecord[]
 
   @@unique([shareCardId, sequenceNo])
   @@index([customerId])
+  @@index([reservedByCustomerId])
+  @@index([reservationId])
+  @@index([status, reservedUntil])
 }
 
 model Sale {
-  id             String   @id
-  seasonId       String
-  customerId     String
-  status         String
-  priceSnapshot  Decimal  @db.Decimal(18, 4)
-  discountAmount Decimal? @db.Decimal(18, 4)
-  idempotencyKey String   @unique
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  season         Season   @relation(fields: [seasonId], references: [id])
-  customer       Customer @relation(fields: [customerId], references: [id])
-  shares         SaleShare[]
-  ledgerEntries  LedgerEntry[]
+  id                 String              @id
+  seasonId           String
+  customerId         String
+  payerCustomerId    String?
+  status             String
+  listPriceSnapshot  Decimal             @default(0) @db.Decimal(18, 4)
+  priceSnapshot      Decimal             @db.Decimal(18, 4)
+  discountAmount     Decimal             @default(0) @db.Decimal(18, 4)
+  downPaymentAmount  Decimal             @default(0) @db.Decimal(18, 4)
+  currency           String              @default("TRY")
+  confirmedAt        DateTime?
+  cancelledAt        DateTime?
+  transferredAt      DateTime?
+  cancellationReason String?
+  idempotencyKey     String              @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  season             Season              @relation(fields: [seasonId], references: [id])
+  customer           Customer            @relation(fields: [customerId], references: [id])
+  payerCustomer      Customer?           @relation("SalePayerCustomer", fields: [payerCustomerId], references: [id])
+  shares             SaleShare[]
+  reservations       ShareReservation[]
+  events             SaleEvent[]
+  transfers          ShareTransfer[]
+  receipts           Receipt[]
+  paymentAllocations PaymentAllocation[]
+  journalLines       JournalLine[]
+  ledgerEntries      LedgerEntry[]
 
   @@index([seasonId])
   @@index([customerId])
+  @@index([payerCustomerId])
 }
 
 model SaleShare {
-  saleId  String
-  shareId String
-  sale    Sale  @relation(fields: [saleId], references: [id])
-  share   Share @relation(fields: [shareId], references: [id])
+  saleId                 String
+  shareId                String
+  listPriceSnapshot      Decimal @db.Decimal(18, 4)
+  discountAmountSnapshot Decimal @default(0) @db.Decimal(18, 4)
+  agreedPriceSnapshot    Decimal @db.Decimal(18, 4)
+  sale                   Sale    @relation(fields: [saleId], references: [id])
+  share                  Share   @relation(fields: [shareId], references: [id])
 
   @@id([saleId, shareId])
 }
 
+model PriceTariff {
+  id        String               @id
+  seasonId  String
+  name      String
+  status    String               @default("draft")
+  currency  String               @default("TRY")
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  season    Season               @relation(fields: [seasonId], references: [id])
+  versions  PriceTariffVersion[]
+
+  @@index([seasonId, status])
+}
+
+model PriceTariffVersion {
+  id              String            @id
+  priceTariffId   String
+  version         Int
+  status          String            @default("draft")
+  validFrom       DateTime?
+  validUntil      DateTime?
+  publishedAt     DateTime?
+  createdByUserId String
+  changeReason    String
+  createdAt       DateTime          @default(now())
+  priceTariff     PriceTariff       @relation(fields: [priceTariffId], references: [id])
+  items           PriceTariffItem[]
+  shareCards      ShareCard[]
+
+  @@unique([priceTariffId, version])
+  @@index([status, validFrom, validUntil])
+}
+
+model PriceTariffItem {
+  id                   String             @id
+  priceTariffVersionId String
+  shareGroup           String
+  sequenceNo           Int?
+  listPrice            Decimal            @db.Decimal(18, 4)
+  minDepositAmount     Decimal            @default(0) @db.Decimal(18, 4)
+  currency             String             @default("TRY")
+  priceTariffVersion   PriceTariffVersion @relation(fields: [priceTariffVersionId], references: [id])
+
+  @@unique([priceTariffVersionId, shareGroup, sequenceNo])
+}
+
+model ShareReservation {
+  id              String    @id
+  seasonId        String
+  shareId         String
+  customerId      String
+  saleId          String?
+  status          String    @default("active")
+  reservedUntil   DateTime
+  expiredAt       DateTime?
+  confirmedAt     DateTime?
+  cancelledAt     DateTime?
+  reason          String?
+  idempotencyKey  String    @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  season          Season    @relation(fields: [seasonId], references: [id])
+  share           Share     @relation("ShareReservationHistory", fields: [shareId], references: [id])
+  customer        Customer  @relation(fields: [customerId], references: [id])
+  sale            Sale?     @relation(fields: [saleId], references: [id])
+  activeForShares Share[]   @relation("ShareActiveReservation")
+
+  @@index([seasonId, status, reservedUntil])
+  @@index([shareId, status])
+}
+
+model SaleEvent {
+  id          String   @id
+  saleId      String?
+  shareId     String?
+  type        String
+  reason      String?
+  payload     Json?
+  actorUserId String
+  occurredAt  DateTime
+  createdAt   DateTime @default(now())
+  sale        Sale?    @relation(fields: [saleId], references: [id])
+  share       Share?   @relation(fields: [shareId], references: [id])
+
+  @@index([saleId, occurredAt])
+  @@index([shareId, occurredAt])
+}
+
+model ShareTransfer {
+  id             String    @id
+  seasonId       String
+  sourceShareId  String
+  targetShareId  String
+  fromCustomerId String?
+  toCustomerId   String?
+  saleId         String?
+  reason         String
+  status         String    @default("posted")
+  occurredAt     DateTime
+  createdAt      DateTime  @default(now())
+  season         Season    @relation(fields: [seasonId], references: [id])
+  sourceShare    Share     @relation("ShareTransferSource", fields: [sourceShareId], references: [id])
+  targetShare    Share     @relation("ShareTransferTarget", fields: [targetShareId], references: [id])
+  fromCustomer   Customer? @relation("ShareTransferFromCustomer", fields: [fromCustomerId], references: [id])
+  toCustomer     Customer? @relation("ShareTransferToCustomer", fields: [toCustomerId], references: [id])
+  sale           Sale?     @relation(fields: [saleId], references: [id])
+
+  @@index([seasonId, occurredAt])
+  @@index([sourceShareId])
+  @@index([targetShareId])
+}
+
+model FinancialAccount {
+  id           String        @id
+  code         String        @unique
+  name         String
+  type         String
+  normalSide   String
+  currency     String        @default("TRY")
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  journalLines JournalLine[]
+
+  @@index([type, active])
+}
+
+model JournalEntry {
+  id             String         @id
+  seasonId       String
+  sourceType     String
+  sourceId       String
+  status         String         @default("posted")
+  currency       String         @default("TRY")
+  memo           String?
+  idempotencyKey String         @unique
+  reversalOfId   String?
+  occurredAt     DateTime
+  postedAt       DateTime
+  createdAt      DateTime       @default(now())
+  season         Season         @relation(fields: [seasonId], references: [id])
+  reversalOf     JournalEntry?  @relation("JournalReversal", fields: [reversalOfId], references: [id])
+  reversals      JournalEntry[] @relation("JournalReversal")
+  lines          JournalLine[]
+  receipts       Receipt[]
+
+  @@unique([sourceType, sourceId])
+  @@index([seasonId, occurredAt])
+  @@index([reversalOfId])
+}
+
+model JournalLine {
+  id             String           @id
+  journalEntryId String
+  accountId      String
+  side           String
+  amount         Decimal          @db.Decimal(18, 4)
+  currency       String           @default("TRY")
+  customerId     String?
+  saleId         String?
+  shareId        String?
+  memo           String?
+  journalEntry   JournalEntry     @relation(fields: [journalEntryId], references: [id])
+  account        FinancialAccount @relation(fields: [accountId], references: [id])
+  customer       Customer?        @relation(fields: [customerId], references: [id])
+  sale           Sale?            @relation(fields: [saleId], references: [id])
+  share          Share?           @relation(fields: [shareId], references: [id])
+
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@index([customerId])
+  @@index([saleId])
+  @@index([shareId])
+}
+
+model Receipt {
+  id              String               @id
+  seasonId        String
+  customerId      String
+  payerCustomerId String?
+  saleId          String?
+  journalEntryId  String
+  receiptNo       String
+  status          String               @default("posted")
+  totalAmount     Decimal              @db.Decimal(18, 4)
+  currency        String               @default("TRY")
+  occurredAt      DateTime
+  idempotencyKey  String               @unique
+  reversalOfId    String?
+  createdAt       DateTime             @default(now())
+  season          Season               @relation(fields: [seasonId], references: [id])
+  customer        Customer             @relation(fields: [customerId], references: [id])
+  payerCustomer   Customer?            @relation("ReceiptPayerCustomer", fields: [payerCustomerId], references: [id])
+  sale            Sale?                @relation(fields: [saleId], references: [id])
+  journalEntry    JournalEntry         @relation(fields: [journalEntryId], references: [id])
+  reversalOf      Receipt?             @relation("ReceiptReversal", fields: [reversalOfId], references: [id])
+  reversals       Receipt[]            @relation("ReceiptReversal")
+  methodSplits    ReceiptMethodSplit[]
+  allocations     PaymentAllocation[]
+
+  @@unique([seasonId, receiptNo])
+  @@index([customerId, seasonId])
+  @@index([saleId])
+}
+
+model ReceiptMethodSplit {
+  id                  String  @id
+  receiptId           String
+  method              String
+  amount              Decimal @db.Decimal(18, 4)
+  referenceNo         String?
+  posInstallmentCount Int?
+  posFeeAmount        Decimal @default(0) @db.Decimal(18, 4)
+  receipt             Receipt @relation(fields: [receiptId], references: [id])
+
+  @@index([receiptId])
+}
+
+model PaymentAllocation {
+  id         String   @id
+  receiptId  String
+  saleId     String?
+  customerId String
+  shareId    String?
+  amount     Decimal  @db.Decimal(18, 4)
+  createdAt  DateTime @default(now())
+  receipt    Receipt  @relation(fields: [receiptId], references: [id])
+  sale       Sale?    @relation(fields: [saleId], references: [id])
+  customer   Customer @relation(fields: [customerId], references: [id])
+  share      Share?   @relation(fields: [shareId], references: [id])
+
+  @@index([receiptId])
+  @@index([saleId])
+  @@index([customerId])
+  @@index([shareId])
+}
+
 model LedgerEntry {
-  id                String   @id
+  id                String        @id
   seasonId          String
   type              String
-  amount            Decimal  @db.Decimal(18, 4)
+  amount            Decimal       @db.Decimal(18, 4)
   currency          String
   saleId            String?
   customerId        String?
   reversalOfEntryId String?
   occurredAt        DateTime
-  createdAt         DateTime @default(now())
-  season            Season   @relation(fields: [seasonId], references: [id])
-  sale              Sale?    @relation(fields: [saleId], references: [id])
-  customer          Customer? @relation(fields: [customerId], references: [id])
-  reversalOf        LedgerEntry? @relation("LedgerReversal", fields: [reversalOfEntryId], references: [id])
+  createdAt         DateTime      @default(now())
+  season            Season        @relation(fields: [seasonId], references: [id])
+  sale              Sale?         @relation(fields: [saleId], references: [id])
+  customer          Customer?     @relation(fields: [customerId], references: [id])
+  reversalOf        LedgerEntry?  @relation("LedgerReversal", fields: [reversalOfEntryId], references: [id])
   reversals         LedgerEntry[] @relation("LedgerReversal")
 
   @@index([seasonId])
@@ -909,17 +1208,17 @@ model TenantOutboxMessage {
 }
 
 model ProxyDocument {
-  id          String   @id
-  customerId  String
-  status      String
-  version     Int
-  storageKey  String
-  signedAt    DateTime?
-  revokedAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  customer    Customer @relation(fields: [customerId], references: [id])
-  shares      ProxyDocumentShare[]
+  id         String               @id
+  customerId String
+  status     String
+  version    Int
+  storageKey String
+  signedAt   DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+  customer   Customer             @relation(fields: [customerId], references: [id])
+  shares     ProxyDocumentShare[]
 
   @@index([customerId])
 }
@@ -928,35 +1227,35 @@ model ProxyDocumentShare {
   proxyDocumentId String
   shareId         String
   proxyDocument   ProxyDocument @relation(fields: [proxyDocumentId], references: [id])
-  share           Share @relation(fields: [shareId], references: [id])
+  share           Share         @relation(fields: [shareId], references: [id])
 
   @@id([proxyDocumentId, shareId])
 }
 
 model QrToken {
-  id          String   @id
+  id          String    @id
   purpose     String
   targetId    String
-  opaqueToken String   @unique
+  opaqueToken String    @unique
   expiresAt   DateTime?
   revokedAt   DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@index([purpose])
   @@index([targetId])
 }
 
 model SlaughterJob {
-  id             String   @id
+  id             String    @id
   seasonId       String
   animalId       String
   shareCardId    String
   status         String
   queueNo        Int?
   assignedUserId String?
-  updatedAt      DateTime @updatedAt
-  season         Season @relation(fields: [seasonId], references: [id])
-  animal         Animal @relation(fields: [animalId], references: [id])
+  updatedAt      DateTime  @updatedAt
+  season         Season    @relation(fields: [seasonId], references: [id])
+  animal         Animal    @relation(fields: [animalId], references: [id])
   shareCard      ShareCard @relation(fields: [shareCardId], references: [id])
 
   @@index([seasonId])
@@ -971,7 +1270,7 @@ model WeighingRecord {
   carcassWeightKg  Decimal  @db.Decimal(12, 3)
   recordedByUserId String
   recordedAt       DateTime
-  animal           Animal @relation(fields: [animalId], references: [id])
+  animal           Animal   @relation(fields: [animalId], references: [id])
 
   @@index([animalId])
 }
@@ -982,22 +1281,22 @@ model PackageRecord {
   grossWeightKg Decimal  @db.Decimal(12, 3)
   labelNo       String
   createdAt     DateTime @default(now())
-  share         Share @relation(fields: [shareId], references: [id])
+  share         Share    @relation(fields: [shareId], references: [id])
 
-  @@index([shareId])
   @@unique([labelNo])
+  @@index([shareId])
 }
 
 model DeliveryRecord {
-  id             String   @id
+  id             String    @id
   shareId        String
   customerId     String
   status         String
   deliveredAt    DateTime?
   reversedAt     DateTime?
   reversalReason String?
-  share          Share @relation(fields: [shareId], references: [id])
-  customer       Customer @relation(fields: [customerId], references: [id])
+  share          Share     @relation(fields: [shareId], references: [id])
+  customer       Customer  @relation(fields: [customerId], references: [id])
 
   @@index([shareId])
   @@index([customerId])

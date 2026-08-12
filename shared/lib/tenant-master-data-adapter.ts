@@ -2,7 +2,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { PrismaClient as TenantPrismaClient } from "@/packages/database-tenant/generated/client";
 import { PrismaTenantMasterDataRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-master-data-repository";
 import { PrismaTenantAuthorizationRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-authorization-repository";
-import { IDENTITY_AUTHORIZATION_MANIFEST, TenantAuthorizationService, TenantMasterDataService, type AuthorizationActor, type TenantUseCaseContext } from "@/packages/tenant-core/src";
+import { PrismaTenantSalesFinanceRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-sales-finance-repository";
+import { IDENTITY_AUTHORIZATION_MANIFEST, TenantAuthorizationService, TenantMasterDataService, TenantSalesFinanceService, type AuthorizationActor, type TenantUseCaseContext } from "@/packages/tenant-core/src";
 import type { AuthOturum } from "@/shared/types/module.types";
 import type { TenantInstanceId, UserId } from "@tilbecore/contracts";
 
@@ -13,6 +14,7 @@ declare global {
 }
 
 let service: TenantMasterDataService | undefined;
+let salesFinanceService: TenantSalesFinanceService | undefined;
 let authorizationService: TenantAuthorizationService | undefined;
 
 function tenantClient(): TenantPrismaClient {
@@ -42,6 +44,15 @@ export function tenantMasterDataService(): TenantMasterDataService {
     service = new TenantMasterDataService(new PrismaTenantMasterDataRepository(client), tenantAuthorizationService());
   }
   return service;
+}
+
+export function tenantSalesFinanceService(): TenantSalesFinanceService {
+  if (masterDataMode() !== "postgres") throw new Error("TENANT_SALES_FINANCE_POSTGRES_NOT_ENABLED");
+  if (!salesFinanceService) {
+    const client = tenantClient();
+    salesFinanceService = new TenantSalesFinanceService(new PrismaTenantSalesFinanceRepository(client), tenantAuthorizationService());
+  }
+  return salesFinanceService;
 }
 
 export function tenantAuthorizationService(): TenantAuthorizationService {
@@ -192,8 +203,11 @@ function permissionsForRole(role: AuthOturum["rol"]): readonly string[] {
     "kurban.supplier.read.organization", "kurban.supplier.manage.organization", "kurban.purchase.manage.organization",
     "kurban.expense.manage.organization", "kurban.animal.read.organization", "kurban.animal.manage.organization",
     "kurban.animal-health.manage.assigned_record", "kurban.qurban-queue.manage.operational_period",
+    "kurban.pricing.manage.organization", "kurban.share.read.operational_period", "kurban.share.reserve.operational_period",
+    "kurban.sale.confirm.operational_period", "kurban.sale.cancel.operational_period", "kurban.sale.transfer.operational_period",
+    "kurban.finance.receipt.create.organization", "kurban.finance.ledger.read.organization",
   ];
-  if (role === "izleyici") return ["kurban.season.read.organization", "kurban.customer.read.organization", "kurban.supplier.read.organization", "kurban.animal.read.organization"];
+  if (role === "izleyici") return ["kurban.season.read.organization", "kurban.customer.read.organization", "kurban.supplier.read.organization", "kurban.animal.read.organization", "kurban.share.read.operational_period", "kurban.finance.ledger.read.organization"];
   return [];
 }
 

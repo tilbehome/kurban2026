@@ -5,6 +5,7 @@ import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
 import { ipCikar } from "@/shared/lib/audit";
 import { yayinla } from "@/shared/lib/events";
+import { masterDataMode, tenantActiveSeasonId, tenantSalesFinanceService, tenantUseCaseContext } from "@/shared/lib/tenant-master-data-adapter";
 import {
   apiHataYaniti,
   beklenmeyenHataYaniti,
@@ -18,6 +19,8 @@ import {
   SahaSatisKuraliHatasi,
   type SahaSatisSonucu,
 } from "@/modules/tahsilat/domain/saha-satis";
+import { TenantSalesFinanceError } from "@/packages/tenant-core/src";
+import type { HataKodu } from "@/shared/lib/hata-katalogu";
 
 const SahaSatisSchema = z.object({
   musteriId: z.string().min(1),
@@ -59,6 +62,33 @@ export async function POST(req: Request) {
   }
 
   try {
+    if (masterDataMode() === "postgres") {
+      const nakit = moneyString(veri.nakit);
+      const havale = moneyString(veri.havale);
+      const kart = moneyString(veri.kart);
+      const methodSplits = [
+        veri.nakit > 0 ? { id: `split_cash_${veri.clientRequestId}`, method: "cash" as const, amount: nakit } : null,
+        veri.havale > 0 ? { id: `split_bank_${veri.clientRequestId}`, method: "bank_transfer" as const, amount: havale } : null,
+        veri.kart > 0 ? { id: `split_pos_${veri.clientRequestId}`, method: "pos" as const, amount: kart } : null,
+      ].filter((item): item is NonNullable<typeof item> => item !== null);
+      const service = tenantSalesFinanceService();
+      const seasonId = tenantActiveSeasonId();
+      const result = await service.confirmSale(tenantUseCaseContext(oturum, { request: req, payload: veri, idempotencyKey: veri.clientRequestId }), {
+        id: `sale_${veri.clientRequestId}`,
+        seasonId,
+        customerId: veri.musteriId,
+        shareIds: veri.hisseIds,
+        listPricePerShare: moneyString(veri.hisseFiyati),
+        discountPerShare: "0",
+        downPayment: {
+          receiptId: `receipt_${veri.clientRequestId}`,
+          receiptNo: `SFS-${veri.clientRequestId.slice(0, 8)}`,
+          methodSplits,
+        },
+      });
+      return NextResponse.json({ basarili: true, musteriId: veri.musteriId, hisseIds: veri.hisseIds, odemeIds: [result.receiptId] } satisfies SahaSatisSonucu);
+    }
+
     const body: SahaSatisBody = await sahaSatisTamamla(
       {
         komut: veri,
@@ -71,6 +101,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json(body);
   } catch (e) {
+    if (e instanceof TenantSalesFinanceError) {
+      return apiHataYaniti(e.code as HataKodu);
+    }
     if (e instanceof SahaSatisKuraliHatasi) {
       return apiHataYaniti(e.kod, e.parametreler);
     }
@@ -79,4 +112,8 @@ export async function POST(req: Request) {
     }
     return beklenmeyenHataYaniti(e, "INTERNAL_SALE_FAILED", "Saha satış tamamlanamadı");
   }
+}
+
+function moneyString(value: number): string {
+  return value.toFixed(4).replace(/0+$/, "").replace(/\.$/, "");
 }
