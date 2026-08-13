@@ -1,7 +1,8 @@
-import { metrics, trace, type Attributes } from "@opentelemetry/api";
+import { metrics, SpanStatusCode, trace, type Attributes } from "@opentelemetry/api";
 
 const forbiddenKey = /password|secret|token|authorization|cookie|connection.?string|database.?url|email|phone|address|customer|person/i;
 const forbiddenValue = /postgres(?:ql)?:\/\/|bearer\s+|-----BEGIN|(?:password|secret|token)=/i;
+const SAFE_EXCEPTION_CODE = "OBSERVED_OPERATION_FAILED";
 
 export interface ObservedContext {
   requestId: string;
@@ -46,15 +47,27 @@ export async function runObservedOperation<T>(context: ObservedContext, operatio
   return tracer.startActiveSpan(context.operation, { attributes }, async (span) => {
     try {
       const result = await operation();
-      outcomes.add(1, { ...attributes, "tilbecore.outcome": "success" });
+      bestEffortTelemetry(() => outcomes.add(1, { ...attributes, "tilbecore.outcome": "success" }));
       return result;
     } catch (error) {
-      span.recordException(error instanceof Error ? error : new Error("OBSERVED_OPERATION_FAILED"));
-      outcomes.add(1, { ...attributes, "tilbecore.outcome": "error" });
+      bestEffortTelemetry(() => span.recordException({
+        name: SAFE_EXCEPTION_CODE,
+        message: SAFE_EXCEPTION_CODE,
+      }));
+      bestEffortTelemetry(() => span.setStatus({ code: SpanStatusCode.ERROR }));
+      bestEffortTelemetry(() => outcomes.add(1, { ...attributes, "tilbecore.outcome": "error" }));
       throw error;
     } finally {
-      duration.record(performance.now() - started, attributes);
-      span.end();
+      bestEffortTelemetry(() => duration.record(performance.now() - started, attributes));
+      bestEffortTelemetry(() => span.end());
     }
   });
+}
+
+function bestEffortTelemetry(action: () => void): void {
+  try {
+    action();
+  } catch {
+    // Telemetry hiçbir zaman uygulama sonucunu veya asıl hatayı değiştiremez.
+  }
 }

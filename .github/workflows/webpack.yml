@@ -80,6 +80,13 @@ jobs:
       - name: Staging package static validation
         run: pnpm staging:validate
 
+      - name: OpenTelemetry Collector config validation
+        run: >-
+          docker run --rm
+          --volume "$PWD/infrastructure/staging/otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro"
+          otel/opentelemetry-collector-contrib:0.132.0
+          validate --config=/etc/otelcol-contrib/config.yaml
+
       - name: Playwright project and test discovery
         run: pnpm test:e2e:list
 
