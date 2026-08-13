@@ -54,7 +54,7 @@ result: BLOCKED
 decision: NOT_DECIDED
 commit_sha: dce7d539122c1ae263cec566d18e907a5a63b0f1
 release: FAZ_1_12_STAGING_ACCEPTANCE_INFRASTRUCTURE
-ci_evidence: BASE_COMMIT_31626396792_SUCCESS
+ci_evidence: CANDIDATE_RUN_31692186321_SUCCESS_HEAD_71db94ff45e642411c32a6b99675daab52f14c51
 tenant_isolation_evidence: LOCAL_POSTGRESQL_16_14_PASSED_AND_BASE_CI_PASSED
 local_typecheck: PASSED
 local_unit_route_tests: PASSED_242_OF_242_WITH_MAX_WORKERS_2
@@ -78,5 +78,4 @@ production_write: false
 stop_conditions:
   - Fiziksel passkey ve cihaz kabulü tamamlanmadı.
   - Staging E2E/axe/yük/restore/PITR tatbikatı tamamlanmadı.
-  - Release adayı commit için tam CI kanıtı henüz yok.
 ```
