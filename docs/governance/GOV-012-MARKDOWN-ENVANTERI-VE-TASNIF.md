@@ -40,7 +40,7 @@ Bu envanter `pnpm validate:docs:write` ile deterministik üretilir. Normal `pnpm
 | evidence | 11 |
 | archive | 50 |
 | app-package-readme | 0 |
-| third-party-generated | 1 |
+| third-party-generated | 0 |
 
 ## Belge envanteri
 
@@ -203,7 +203,6 @@ Bu envanter `pnpm validate:docs:write` ile deterministik üretilir. Normal `pnpm
 | [docs/workflows/WFL-008-ISTISNA-VE-DUZELTME.md](../workflows/WFL-008-ISTISNA-VE-DUZELTME.md) | WFL-008 | İstisna ve düzeltme | PLANNED | false | business_workflow_contract | workflows | Domain-and-Operations | 2026-08-12; not_applicable | RMP-001 / REQ-003 | RMP-001 / REQ-003 | tutulacak |
 | [docs/workflows/WFL-009-OFFLINE-VE-YENIDEN-SENKRONIZASYON.md](../workflows/WFL-009-OFFLINE-VE-YENIDEN-SENKRONIZASYON.md) | WFL-009 | Offline ve yeniden senkronizasyon | PLANNED | false | business_workflow_contract | workflows | UX-and-Operations | 2026-08-12; not_applicable | RMP-001 / REQ-003 | RMP-001 / REQ-003 | tutulacak |
 | [README.md](../../README.md) | GOV-ROOT-002 | TilbeCore – Kurban Takip | IMPLEMENTING | false | repository_entrypoint_and_product_overview | root-governance | Product-and-Architecture | 2026-08-12; 74915b6f3f1f8d53116b760b6a6be9797111efa5 | GOV-001 / GOV-003 | GOV-001 / GOV-003 | tutulacak |
-| [TILBECORE-EVO-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md](../../TILBECORE-EVO-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md) | EVO-ROADMAP-001 | TilbeCore EVO — Kurumsal Güvenlik, Ölçek ve Ekosistem Yol Haritası | PLANNED | false | post_yn_enterprise_evolution_roadmap | third-party-generated | TilbeCore Platform | eksik; eksik | yok | yok | tutulacak |
 
 ## Tasnif sonucu
 
