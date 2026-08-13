@@ -1,0 +1,409 @@
+name: tilbecore-staging
+
+x-platform-secrets: &platform-secrets
+  - platform_db_password
+  - platform_session_secret
+  - platform_mfa_encryption_key
+
+x-tenant-secrets: &tenant-secrets
+  - tenant_db_password
+  - tenant_session_secret
+  - receipt_hmac_secret
+
+x-worker-secrets: &worker-secrets
+  - platform_db_password
+  - tenant_db_password
+
+services:
+  postgres-platform:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/postgres/Dockerfile
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PLATFORM_DB_USER:?required}
+      POSTGRES_DB: ${PLATFORM_DB_NAME:?required}
+      POSTGRES_PASSWORD_FILE: /run/secrets/platform_db_password
+    secrets: [platform_db_password]
+    volumes:
+      - platform-data:/var/lib/postgresql/data
+      - platform-wal:/wal-archive
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=test ! -f /wal-archive/%f && cp %p /wal-archive/%f
+      - -c
+      - archive_timeout=60s
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PLATFORM_DB_USER} -d ${PLATFORM_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [data]
+
+  postgres-tenant-a:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/postgres/Dockerfile
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TENANT_DB_USER:?required}
+      POSTGRES_DB: ${TENANT_A_DB_NAME:?required}
+      POSTGRES_PASSWORD_FILE: /run/secrets/tenant_db_password
+    secrets: [tenant_db_password]
+    volumes:
+      - tenant-a-data:/var/lib/postgresql/data
+      - tenant-a-wal:/wal-archive
+    command: ["postgres", "-c", "wal_level=replica", "-c", "archive_mode=on", "-c", "archive_command=test ! -f /wal-archive/%f && cp %p /wal-archive/%f", "-c", "archive_timeout=60s"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TENANT_DB_USER} -d ${TENANT_A_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [data]
+
+  postgres-tenant-b:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/postgres/Dockerfile
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TENANT_DB_USER:?required}
+      POSTGRES_DB: ${TENANT_B_DB_NAME:?required}
+      POSTGRES_PASSWORD_FILE: /run/secrets/tenant_db_password
+    secrets: [tenant_db_password]
+    volumes:
+      - tenant-b-data:/var/lib/postgresql/data
+      - tenant-b-wal:/wal-archive
+    command: ["postgres", "-c", "wal_level=replica", "-c", "archive_mode=on", "-c", "archive_command=test ! -f /wal-archive/%f && cp %p /wal-archive/%f", "-c", "archive_timeout=60s"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TENANT_DB_USER} -d ${TENANT_B_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks: [data]
+
+  migrate-platform:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.tenant
+      target: tools
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: platform
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_HOST: postgres-platform
+      PLATFORM_DB_NAME: ${PLATFORM_DB_NAME}
+    secrets: *platform-secrets
+    entrypoint: ["/workspace/infrastructure/staging/scripts/with-secrets.sh"]
+    command: ["pnpm", "exec", "prisma", "migrate", "deploy", "--schema", "packages/database-platform/prisma/schema.prisma"]
+    depends_on:
+      postgres-platform: { condition: service_healthy }
+    networks: [data]
+    restart: "no"
+
+  provision-tenant-a:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.tenant
+      target: tools
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: worker
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_HOST: postgres-platform
+      PLATFORM_DB_NAME: ${PLATFORM_DB_NAME}
+      TENANT_DB_USER: ${TENANT_DB_USER}
+      TENANT_DB_HOST: postgres-tenant-a
+    secrets: *worker-secrets
+    entrypoint: ["/workspace/infrastructure/staging/scripts/with-secrets.sh"]
+    command: ["pnpm", "provisioning:cli", "create", "--input", "infrastructure/staging/fixtures/tenant-a.json"]
+    depends_on:
+      migrate-platform: { condition: service_completed_successfully }
+      postgres-tenant-a: { condition: service_healthy }
+    networks: [data]
+    restart: "no"
+
+  provision-tenant-b:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.tenant
+      target: tools
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: worker
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_HOST: postgres-platform
+      PLATFORM_DB_NAME: ${PLATFORM_DB_NAME}
+      TENANT_DB_USER: ${TENANT_DB_USER}
+      TENANT_DB_HOST: postgres-tenant-b
+    secrets: *worker-secrets
+    entrypoint: ["/workspace/infrastructure/staging/scripts/with-secrets.sh"]
+    command: ["pnpm", "provisioning:cli", "create", "--input", "infrastructure/staging/fixtures/tenant-b.json"]
+    depends_on:
+      migrate-platform: { condition: service_completed_successfully }
+      postgres-tenant-b: { condition: service_healthy }
+    networks: [data]
+    restart: "no"
+
+  platform-admin:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.platform
+    restart: unless-stopped
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: platform
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_HOST: postgres-platform
+      PLATFORM_DB_NAME: ${PLATFORM_DB_NAME}
+      OTEL_SERVICE_NAME: tilbecore-platform-admin-staging
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    secrets: *platform-secrets
+    depends_on:
+      migrate-platform: { condition: service_completed_successfully }
+      otel-collector: { condition: service_started }
+    networks: [edge, data, telemetry]
+
+  tenant-web-a:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.tenant
+    restart: unless-stopped
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: tenant-a
+      TENANT_MASTER_DATA_MODE: postgres
+      TENANT_INSTANCE_ID: tenant_staging_a
+      TENANT_ACTIVE_SEASON_ID: season_staging_a
+      TENANT_DB_USER: ${TENANT_DB_USER}
+      TENANT_DB_HOST: postgres-tenant-a
+      TENANT_DB_NAME: tc_dbref_staging_a
+      OTEL_SERVICE_NAME: tilbecore-tenant-web-a-staging
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    secrets: *tenant-secrets
+    depends_on:
+      provision-tenant-a: { condition: service_completed_successfully }
+      provision-tenant-b: { condition: service_completed_successfully }
+      otel-collector: { condition: service_started }
+    networks: [edge, data, telemetry]
+
+  tenant-web-b:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.tenant
+    restart: unless-stopped
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: tenant-b
+      TENANT_MASTER_DATA_MODE: postgres
+      TENANT_INSTANCE_ID: tenant_staging_b
+      TENANT_ACTIVE_SEASON_ID: season_staging_b
+      TENANT_DB_USER: ${TENANT_DB_USER}
+      TENANT_DB_HOST: postgres-tenant-b
+      TENANT_DB_NAME: tc_dbref_staging_b
+      OTEL_SERVICE_NAME: tilbecore-tenant-web-b-staging
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    secrets: *tenant-secrets
+    depends_on:
+      provision-tenant-b: { condition: service_completed_successfully }
+      otel-collector: { condition: service_started }
+    networks: [edge, data, telemetry]
+
+  provisioning-worker:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.tenant
+      target: tools
+    restart: unless-stopped
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: worker
+      WORKER_KIND: provisioning
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_HOST: postgres-platform
+      PLATFORM_DB_NAME: ${PLATFORM_DB_NAME}
+      TENANT_DB_USER: ${TENANT_DB_USER}
+      TENANT_DB_HOST: postgres-tenant-a
+      OTEL_SERVICE_NAME: tilbecore-provisioning-worker-staging
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    secrets: *worker-secrets
+    entrypoint: ["/workspace/infrastructure/staging/scripts/with-secrets.sh"]
+    command: ["node", "infrastructure/staging/scripts/worker-loop.mjs"]
+    depends_on:
+      provision-tenant-a: { condition: service_completed_successfully }
+      provision-tenant-b: { condition: service_completed_successfully }
+    networks: [data, telemetry]
+
+  tenant-ops-worker-a:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.tenant
+      target: tools
+    restart: unless-stopped
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: worker
+      WORKER_KIND: tenant-ops
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_HOST: postgres-platform
+      PLATFORM_DB_NAME: ${PLATFORM_DB_NAME}
+      TENANT_DB_USER: ${TENANT_DB_USER}
+      TENANT_DB_HOST: postgres-tenant-a
+      TENANT_BACKUP_ROOT: /backup-repository/logical
+      OTEL_SERVICE_NAME: tilbecore-tenant-ops-worker-staging
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    secrets: *worker-secrets
+    entrypoint: ["/workspace/infrastructure/staging/scripts/with-secrets.sh"]
+    command: ["node", "infrastructure/staging/scripts/worker-loop.mjs"]
+    volumes:
+      - backup-repository:/backup-repository
+    depends_on:
+      provision-tenant-a: { condition: service_completed_successfully }
+    networks: [data, telemetry]
+
+  tenant-ops-worker-b:
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/Dockerfile.tenant
+      target: tools
+    restart: unless-stopped
+    environment:
+      TILBECORE_ENV: staging
+      TILBECORE_COMPONENT: worker
+      WORKER_KIND: tenant-ops
+      PLATFORM_DB_USER: ${PLATFORM_DB_USER}
+      PLATFORM_DB_HOST: postgres-platform
+      PLATFORM_DB_NAME: ${PLATFORM_DB_NAME}
+      TENANT_DB_USER: ${TENANT_DB_USER}
+      TENANT_DB_HOST: postgres-tenant-b
+      TENANT_BACKUP_ROOT: /backup-repository/logical
+      OTEL_SERVICE_NAME: tilbecore-tenant-ops-worker-b-staging
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    secrets: *worker-secrets
+    entrypoint: ["/workspace/infrastructure/staging/scripts/with-secrets.sh"]
+    command: ["node", "infrastructure/staging/scripts/worker-loop.mjs"]
+    volumes:
+      - backup-repository:/backup-repository
+    depends_on:
+      provision-tenant-b: { condition: service_completed_successfully }
+    networks: [data, telemetry]
+
+  reverse-proxy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?required}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      platform-admin: { condition: service_started }
+      tenant-web-a: { condition: service_started }
+      tenant-web-b: { condition: service_started }
+    networks: [edge]
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.132.0
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol/config.yml"]
+    volumes:
+      - ./otel-collector.yml:/etc/otelcol/config.yml:ro
+    networks: [telemetry]
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks: [telemetry]
+
+  backup-tenant-a:
+    profiles: ["backup"]
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/postgres/Dockerfile
+    environment:
+      TILBECORE_ENV: staging
+      PGHOST: postgres-tenant-a
+      PGUSER: ${TENANT_DB_USER}
+      PGPASSWORD_FILE: /run/secrets/tenant_db_password
+      BACKUP_ID: ${BACKUP_ID:?set BACKUP_ID}
+      TENANT_INSTANCE_ID: tenant_staging_a
+      DATABASE_REF_ID: dbref_staging_a
+      APP_VERSION: ${APP_VERSION:?set APP_VERSION}
+      MIGRATION_VERSION: ${TENANT_MIGRATION_VERSION:?set TENANT_MIGRATION_VERSION}
+    secrets: [tenant_db_password]
+    entrypoint: ["/bin/sh", "-c", "export PGPASSWORD=$$(tr -d '\\r\\n' </run/secrets/tenant_db_password); exec /scripts/base-backup.sh"]
+    volumes:
+      - ./scripts:/scripts:ro
+      - backup-repository:/backup-repository
+    depends_on:
+      postgres-tenant-a: { condition: service_healthy }
+    networks: [data]
+
+  pitr-tenant-a:
+    profiles: ["pitr"]
+    build:
+      context: ../..
+      dockerfile: infrastructure/staging/postgres/Dockerfile
+    environment:
+      TILBECORE_ENV: staging
+      BACKUP_ID: ${BACKUP_ID:?set BACKUP_ID}
+      RECOVERY_TARGET_KIND: ${RECOVERY_TARGET_KIND:-time}
+      RECOVERY_TARGET: ${RECOVERY_TARGET:?set RECOVERY_TARGET}
+      EXPECTED_TENANT_INSTANCE_ID: tenant_staging_a
+      EXPECTED_DATABASE_REF_ID: dbref_staging_a
+      POSTGRES_PASSWORD_FILE: /run/secrets/tenant_db_password
+    secrets: [tenant_db_password]
+    entrypoint: ["/bin/sh", "-c", "/scripts/pitr-prepare.sh && exec docker-entrypoint.sh postgres"]
+    volumes:
+      - ./scripts:/scripts:ro
+      - backup-repository:/backup-repository:ro
+      - tenant-a-wal:/wal-archive:ro
+      - pitr-tenant-a-data:/var/lib/postgresql/data
+    networks: [data]
+
+secrets:
+  platform_db_password:
+    file: ./secrets/platform_db_password.txt
+  tenant_db_password:
+    file: ./secrets/tenant_db_password.txt
+  platform_session_secret:
+    file: ./secrets/platform_session_secret.txt
+  tenant_session_secret:
+    file: ./secrets/tenant_session_secret.txt
+  platform_mfa_encryption_key:
+    file: ./secrets/platform_mfa_encryption_key.txt
+  receipt_hmac_secret:
+    file: ./secrets/receipt_hmac_secret.txt
+
+networks:
+  edge: {}
+  data:
+    internal: true
+  telemetry:
+    internal: true
+
+volumes:
+  platform-data: {}
+  platform-wal: {}
+  tenant-a-data: {}
+  tenant-a-wal: {}
+  tenant-b-data: {}
+  tenant-b-wal: {}
+  backup-repository: {}
+  pitr-tenant-a-data: {}
+  caddy-data: {}
+  caddy-config: {}
+  prometheus-data: {}

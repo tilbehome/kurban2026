@@ -74,6 +74,15 @@ jobs:
       - name: Documentation inventory and policy checks
         run: pnpm validate:docs
 
+      - name: Secret scan
+        run: pnpm scan:secrets
+
+      - name: Staging package static validation
+        run: pnpm staging:validate
+
+      - name: Playwright project and test discovery
+        run: pnpm test:e2e:list
+
       - name: Platform Prisma validate
         run: pnpm exec prisma validate --schema packages/database-platform/prisma/schema.prisma
 

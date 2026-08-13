@@ -1,4 +1,7 @@
 import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { runObservedOperation } from "@tilbecore/observability";
+import { registerNodeObservability } from "@tilbecore/observability/node";
 import {
   createPlatformPrismaClient,
   PrismaOrganizationRepository,
@@ -18,7 +21,10 @@ import { parseProvisioningCommand, readProvisioningCommand } from "./input";
 
 type CommandName = "dry-run" | "create" | "status" | "resume" | "rollback" | "worker";
 
-void main().catch((error) => {
+void registerNodeObservability().then(() => runObservedOperation({
+  requestId: `provisioning-cli-${randomUUID()}`,
+  operation: "provisioning.cli",
+}, main)).catch((error) => {
   process.stderr.write(`${JSON.stringify({ ok: false, code: safeProvisioningErrorCode(error) })}\n`);
   process.exitCode = 1;
 });

@@ -40,10 +40,16 @@ yarn-error.log*
 /logs/
 /tmp/
 /temp/
+/artifacts/
+/playwright-report/
+/test-results/
 
 # env files
 .env*
 !.env.example
+/infrastructure/staging/staging.env
+/infrastructure/staging/secrets/*.txt
+!/infrastructure/staging/secrets/*.example
 
 # vercel
 .vercel

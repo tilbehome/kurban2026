@@ -7,6 +7,7 @@
   "dependencies": {
     "@tilbecore/contracts": "workspace:*",
     "@tilbecore/database-platform": "workspace:*",
-    "@tilbecore/database-tenant": "workspace:*"
+    "@tilbecore/database-tenant": "workspace:*",
+    "@tilbecore/observability": "workspace:*"
   }
 }

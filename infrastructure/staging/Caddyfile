@@ -1,0 +1,38 @@
+{
+  admin off
+  email {$ACME_EMAIL}
+}
+
+(staging_security) {
+  header {
+    Strict-Transport-Security "max-age=86400"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "no-referrer"
+    -Server
+  }
+}
+
+https://console.staging.tilbecore.com {
+  import staging_security
+  reverse_proxy platform-admin:3100 {
+    health_uri /api/health
+  }
+}
+
+https://staging.tilbecore.com, https://demo.staging.tilbecore.com {
+  import staging_security
+  reverse_proxy tenant-web-a:3000 {
+    health_uri /
+  }
+}
+
+https://sentetik-b.staging.tilbecore.com {
+  import staging_security
+  reverse_proxy tenant-web-b:3000 {
+    health_uri /
+  }
+}
+
+http://console.staging.tilbecore.com, http://staging.tilbecore.com, http://demo.staging.tilbecore.com, http://sentetik-b.staging.tilbecore.com {
+  redir https://{host}{uri} permanent
+}

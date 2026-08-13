@@ -10,36 +10,29 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
   // Custom push handler dahil et
   importScripts: ["/push-handler.js"],
-  // Offline fallback: /offline sayfası Workbox precache'inde otomatik;
-  // next-pwa "fallbacks" config'i babel-loader gerektirdiği için manuel.
-  // Workbox cache strategy
+  // Hassas veya oturum bağlı veri cache'e girmez. API cache politikası
+  // deny-by-default'tur; yalnız PII içermediği ayrıca doğrulanan public akış
+  // açıkça READ_CACHE listesine alınabilir.
   runtimeCaching: [
-    // KUTSAL — tahsilat, auth, push gönderim asla cache'lenmez
     {
-      urlPattern:
-        /\/api\/(tahsilat|auth|tv\/push-gonder|tv\/push-abonelik|tv\/kurban-asama|tv\/kesim-durum|tv\/ilerleme|tv\/sira-degistir|tv\/acil-durum)/,
+      urlPattern: /\/api\/.*/,
       handler: "NetworkOnly",
       method: "POST",
     },
     {
-      urlPattern:
-        /\/api\/(tahsilat|auth|tv\/push-gonder|tv\/push-abonelik|tv\/kurban-asama|tv\/kesim-durum|tv\/ilerleme|tv\/sira-degistir|tv\/acil-durum)/,
-      handler: "NetworkOnly",
-      method: "GET",
-    },
-    // Diğer API'ler — NetworkFirst (5sn timeout)
-    {
-      urlPattern: /\/api\/.*/,
+      urlPattern: /\/api\/public\/operations-tv(?:\?.*)?$/,
       handler: "NetworkFirst",
       method: "GET",
       options: {
-        cacheName: "tilbe-api",
-        networkTimeoutSeconds: 5,
-        expiration: {
-          maxEntries: 100,
-          maxAgeSeconds: 5 * 60,
-        },
+        cacheName: "tilbecore-public-tv-read-cache-v1",
+        networkTimeoutSeconds: 3,
+        expiration: { maxEntries: 10, maxAgeSeconds: 30 },
       },
+    },
+    {
+      urlPattern: /\/api\/.*/,
+      handler: "NetworkOnly",
+      method: "GET",
     },
     // Resimler — CacheFirst
     {
@@ -53,19 +46,6 @@ const withPWA = withPWAInit({
         },
       },
     },
-    // Diğer her şey — NetworkFirst
-    {
-      urlPattern: /^https?.*/,
-      handler: "NetworkFirst",
-      options: {
-        cacheName: "tilbe-runtime",
-        networkTimeoutSeconds: 5,
-        expiration: {
-          maxEntries: 200,
-          maxAgeSeconds: 24 * 60 * 60,
-        },
-      },
-    },
   ],
   buildExcludes: [
     /middleware-manifest\.json$/,
@@ -76,6 +56,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // next-pwa Webpack tabanlı plugin → Next 16 Turbopack varsayılan ile
   // çakışıyor. Dev'de PWA disable (zaten yukarıda) + bu boş Turbopack
   // config ile uyarı susturulur. Build için --webpack flag kullanılır.

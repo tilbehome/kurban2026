@@ -10,5 +10,6 @@ allowBuilds:
   esbuild: true
   msw: false
   prisma: true
+  protobufjs: true
   sharp: true
   unrs-resolver: true

@@ -6,6 +6,7 @@
   "dependencies": {
     "@tilbecore/database-platform": "workspace:*",
     "@tilbecore/database-tenant": "workspace:*",
+    "@tilbecore/observability": "workspace:*",
     "@tilbecore/platform": "workspace:*",
     "@tilbecore/provisioning": "workspace:*"
   }

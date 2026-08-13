@@ -16,6 +16,10 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: false,
+    // Route testleri vi.resetModules + dinamik Next route importu kullandığı için
+    // yüksek dosya paralelliği 5 sn'lik test bütçesini CPU yarışına dönüştürüyor.
+    // Assertion ve timeout değişmeden CI/yerel koşumu deterministik tut.
+    maxWorkers: 2,
     include: [
       "shared/**/*.test.ts",
       "modules/**/*.test.ts",

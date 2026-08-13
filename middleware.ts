@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createRequestCorrelation } from "@/shared/lib/request-correlation";
 
 /**
  * SPRINT-P1 İŞ 5: Cache-Control standardı.
@@ -47,15 +48,25 @@ function noStoreUygula(res: NextResponse): NextResponse {
  */
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  const correlation = createRequestCorrelation(req.headers);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-request-id", correlation.requestId);
+  requestHeaders.set("traceparent", correlation.traceparent);
+
+  const correlated = (response: NextResponse) => {
+    response.headers.set("x-request-id", correlation.requestId);
+    return response;
+  };
+  const next = () => correlated(NextResponse.next({ request: { headers: requestHeaders } }));
 
   if (pathname.startsWith("/uploads/vekalet/")) {
-    return new NextResponse("Forbidden", {
+    return correlated(new NextResponse("Forbidden", {
       status: 403,
       headers: {
         "Cache-Control": "no-store, no-cache, must-revalidate",
         Pragma: "no-cache",
       },
-    });
+    }));
   }
 
   if (
@@ -87,7 +98,7 @@ export function middleware(req: NextRequest) {
     pathname === "/dogrula" ||
     pathname === "/api/dekont/dogrula"
   ) {
-    return NextResponse.next();
+    return next();
   }
 
   const cookie = req.cookies.get("tilbe-kurban-session");
@@ -97,12 +108,12 @@ export function middleware(req: NextRequest) {
       const url = req.nextUrl.clone();
       url.pathname = "/tv/m";
       url.searchParams.delete("pwa");
-      return NextResponse.redirect(url);
+      return correlated(NextResponse.redirect(url));
     }
     const url = req.nextUrl.clone();
     url.pathname = "/giris";
     url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    return correlated(NextResponse.redirect(url));
   }
 
   // PWA ?pwa=1 yönlendirmesi (oturum var) — kasiyer rolünü middleware'de
@@ -110,7 +121,7 @@ export function middleware(req: NextRequest) {
   // Burada sadece pwa=1 parametresini temizleyip akış devam eder.
   // (Gerçek rol-yönlendirme app/page.tsx içinde olabilir)
 
-  const res = NextResponse.next();
+  const res = next();
   if (noStoreGerekli(pathname)) {
     return noStoreUygula(res);
   }
