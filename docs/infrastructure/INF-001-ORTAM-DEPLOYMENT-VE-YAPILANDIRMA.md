@@ -3,14 +3,14 @@
 ```yaml
 id: INF-001
 title: Ortam, Deployment ve Yapılandırma Standardı
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: Operations
 source_role: infrastructure_operating_standard
 reviewers: [Architecture, Security, Release]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 verified_against_commit: not_applicable
-next_review: CANLI_TOPOLOJI_SECIMINDE
+next_review: ILK_STAGING_DEPLOYMENTINDA
 version: 0.1
 source_of_truth: false
 related_requirements: [REQ-048, REQ-051, REQ-063, REQ-064, PRO-014, PRO-016, PRO-022]
@@ -23,7 +23,7 @@ superseded_by: null
 
 ## Durum
 
-Local/staging/production domain sözleşmesi ve uygulama paketleri vardır; canlı sağlayıcı, DNS/TLS/reverse proxy, container orchestration, object storage ve telemetry deployment’ı bu repo kanıtlarıyla tamamlanmış değildir. Bu belge hedef standardı ve yayın kapısını tanımlar.
+Local/staging/production domain sözleşmesine ek olarak `infrastructure/staging` altında sentetik iki tenant PostgreSQL, ayrı Platform PostgreSQL, Platform Admin, tenant web/PWA, worker’lar, Caddy TLS proxy, backup/WAL volume, OTLP collector, Prometheus, staging secret dosyaları ve provisioning fixture’ları tanımlanmıştır. Paket uygulanmış fakat gerçek sunucu/DNS/TLS erişimiyle çalıştırılmamıştır; deployment sonucu `NOT_RUN/BLOCKED`, production durumu değişmemiştir.
 
 ## Ortam ayrımı
 

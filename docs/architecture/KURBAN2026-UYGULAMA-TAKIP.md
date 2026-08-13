@@ -6,8 +6,8 @@ status: IMPLEMENTING
 owner: Product-and-Architecture
 source_role: implementation_evidence_ledger
 source_of_truth: true
-last_reviewed: 2026-08-12
-verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+last_reviewed: 2026-08-13
+verified_against_commit: fef2154ac64c0948f51e42e34c3f93081928e2dd
 ```
 
 Mimari hedef görev yönlendirmesi: [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md). Kaynak çelişkileri [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile çözülür.
@@ -161,10 +161,10 @@ Bu matris yalnız kaynak kod, migration, test ve takip belgesi kanıtıyla tutul
 | Sıra | Faz | Kanıtla tamamlanan işler | Uygulanmış fakat belgede eksik görünen işler | Yalnız sözleşme/iskelet kalan işler | Başlanmamış veya sonraki davranış işleri |
 |---|---|---|---|---|---|
 | 1 | Faz 2B | Platform PostgreSQL `0001..0007`, ayrı Platform Admin, parola+TOTP+passkey/recovery, DB session/device, komuta merkezi, firma 360°, provisioning, plan/lisans, domain, backup, SupportSession, kullanıcı/audit, incident/bakım/acil durdurma, yapılandırma farkı ve onaylı firma operasyon akışları. | Provisioning sonrası ilk backup işi ve davet hazırlığı gerçek worker zincirine; tenant erişim modu gerçek request runtime’a bağlandı. | Data export içeriğini üreten tenant tarafı executor Faz 2D–6 modül taşımasına bağlıdır; Platform yalnız güvenli işi ve metadata’yı yönetir. | Fiziksel passkey cihaz kabulü, canlı DNS/TLS/deployment, production restore onayı, gerçek abonelik/faturalama ve genel E2E/güvenlik kabulü. |
-| 2 | Faz 2C | Gerçek tenant DB create/exists/migrate/verify/rollback adapteri, ownership marker, idempotent/resumable provisioning, kontrollü CLI’lar, host/custom-domain resolution, request-local context, session/databaseRef fail-closed guard, auditli SupportSession, gözlemlenebilir tenant Prisma pool’u, tenant bazlı dump/geçici restore doğrulaması ve iki firma PostgreSQL web/backup isolation CI testi. | Platform metadata–tenant request composition bridge’i; pool event/metric portu ve tenant ops CLI sözleşme düzeyinden çalışan altyapıya taşındı. | Gerçek OpenTelemetry sağlayıcısı ve canlı WAL/PITR yapılandırması yoktur; mevcut legacy route’lar yeni runtime’a toplu taşınmamıştır. | Legacy route’ların modül bazlı runtime’a taşınması, pool kapasite eşikleri/alarmları, yönetilen WAL/PITR ve ölçülmüş RPO/RTO, production restore onay akışı, canlı DNS/TLS/deployment. |
+| 2 | Faz 2C | Gerçek tenant DB create/exists/migrate/verify/rollback adapteri, ownership marker, idempotent/resumable provisioning, kontrollü CLI’lar, host/custom-domain resolution, request-local context, session/databaseRef fail-closed guard, auditli SupportSession, gözlemlenebilir tenant Prisma pool’u, tenant bazlı dump/geçici restore doğrulaması ve iki firma PostgreSQL web/backup isolation CI testi. | Platform metadata–tenant request composition bridge’i; pool event/metric portu ve tenant ops CLI sözleşme düzeyinden çalışan altyapıya taşındı. OpenTelemetry Node SDK ve collector paketi eklendi, gerçek staging trace kanıtı bekliyor. | Mevcut legacy route’lar yeni runtime’a toplu taşınmamıştır. | Legacy route’ların modül bazlı runtime’a taşınması, pool kapasite eşikleri/alarmları, ölçülmüş RPO/RTO, production restore onay akışı ve canlı DNS/TLS/deployment. |
 | 3 | Faz 2D–4 | BusinessProfile/Location/Setting/Season, Customer/Phone/Address/SeasonAccount, Supplier/Account/PurchaseInvoice/Payment/ExpenseDocument, Animal/Weight/Health/QurbanAssignment tenant modelleri; atomik authorization/audit/idempotency/outbox use-case'leri ve adaptif ekranlar kodlandı. | Müşteri ve hayvan mevcut API/liste/detay yolları `TENANT_MASTER_DATA_MODE` adapter'ıyla tenant PostgreSQL'e geçirildi; legacy varsayılan geri dönüşü korundu. | Kod üretimi dışında test, lint, typecheck, build ve PostgreSQL migration uygulanmadı; durum `IMPLEMENTED_UNVERIFIED`. | Legacy veri dry-run/import, satış/tahsilat/ledger tam taşıması, rezervasyon worker'ı, finans mutabakatı ve genel kalite turu. |
-| 4 | Faz 7–10 | Proxy document, QR token, slaughter state machine, weighing/package/delivery/offline/device adapter sözleşmeleri ve tenant DB `0002`. | Yok. | PWA sync, TV/customer tracking ve cihaz doğrulama sözleşme düzeyinde. | Vekâlet belge runtime, kesim/paket/teslim API taşıması, offline sync runtime, cihaz adapter uygulamaları. |
-| 5 | Faz 11–12 | Operations package: dashboard KPI, exception queue, universal search, observability, release, backup/restore, simulation readiness ve acil durum runbook. | Yok. | OpenTelemetry/axe/Playwright/ASVS/WCAG kabul hedefleri sözleşme düzeyinde. | Yönetim paneli veri bağlantısı, E2E/prova, tenant izolasyon genel doğrulaması, güvenlik/veri bütünlüğü/kapsamlı build dönemi. |
+| 4 | Faz 7–10 | Proxy document, QR token, slaughter state machine, weighing/package/delivery/offline/device adapter sözleşmeleri ve tenant DB `0002`. | Tenant/sezon/kullanıcı/cihaz bağlı, TTL/idempotency/retry/conflict/poison kurallı güvenli offline runtime paketi ve görünür durum bileşeni eklendi. | TV/customer tracking ve cihaz doğrulama sözleşme düzeyinde. | Offline runtime’ın gerçek oturum ve saha ekranlarına bağlanması, vekâlet belge runtime, kesim/paket/teslim API taşıması ve cihaz adapter uygulamaları. |
+| 5 | Faz 11–12 | Operations package: dashboard KPI, exception queue, universal search, observability, release, backup/restore, simulation readiness ve acil durum runbook. | OpenTelemetry Node SDK/collector, Playwright 13 proje, axe, k6 profilleri, sentetik staging compose ve WAL/PITR hazırlık paketi eklendi. | ASVS/WCAG manuel kabul ve fiziksel cihaz matrisi dış ortam bekliyor. | Gerçek staging deployment/E2E/prova/yük/PITR tatbikatı, fiziksel cihaz-passkey kabulü ve ölçülmüş sonuçlar. |
 
 Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 geliştirmesini durdurmaz; nihai CI/altyapı temizlik aşamasına bırakıldı.
 
@@ -197,6 +197,25 @@ Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 gel
 | İş | Durum | Kanıt |
 |---|---|---|
 | Yönetim paneli/operasyon merkezi sözleşmeleri | Uygulandı — genel doğrulama bekliyor | `@tilbecore/operations` içinde dashboard KPI, istisna kuyruğu ve evrensel arama sonuç sözleşmeleri eklendi. |
-| Observability, erişilebilirlik ve güvenlik kabul hedefleri | Uygulandı — genel doğrulama bekliyor | Trace context, secret-redaction, WCAG 2.2 AA ve OWASP ASVS L2 kabul hedef sözleşmeleri eklendi. OpenTelemetry/axe/Playwright paket kurulumu genel doğrulama dönemine bırakıldı. |
-| Release, backup/restore ve simülasyon hazırlığı | Uygulandı — genel doğrulama bekliyor | Release gate, canary ve rollback planına ek olarak Faz 2C’de firma bazlı PostgreSQL dump, checksum ve geçici restore doğrulama adapteri/CLI’ı uygulandı. WAL/PITR canlı sağlayıcı ayarı ve Kurban Günü simülasyon kabul kapısı kanıtı bekliyor. |
+| Observability, erişilebilirlik ve güvenlik kabul hedefleri | `IMPLEMENTED_UNVERIFIED` | Trace context/redaction sözleşmelerine ek olarak OpenTelemetry Node SDK ve collector; 13 Playwright projesi, axe/keyboard/zoom/form-error kontrolleri ve sentetik kabul korumaları eklendi. Gerçek staging/browser/fiziksel cihaz koşuları `BLOCKED` veya `NOT_RUN` durumundadır. |
+| Release, backup/restore ve simülasyon hazırlığı | `IMPLEMENTED_UNVERIFIED` | Release gate ve tenant dump doğrulamasına ek olarak iki tenant PostgreSQL, reverse proxy/TLS, worker, telemetry, sentetik provisioning, WAL arşivi, base-backup ve izole PITR profilli tekrar üretilebilir staging paketi eklendi. Deployment, restore tatbikatı ve ölçülmüş RPO/RTO dış altyapı olmadığı için tamamlanmış sayılmaz. |
 | Runbook | Uygulandı — genel doğrulama bekliyor | `docs/runbooks/KURBAN-GUNU-ACIL-DURUM-RUNBOOK.md` eklendi. |
+
+## Faz 1–12 staging ve nihai kabul altyapısı checkpoint'i
+
+**Durum:** `IMPLEMENTED_UNVERIFIED`
+
+**Doğrulanmış taban:** `fef2154ac64c0948f51e42e34c3f93081928e2dd`, GitHub Actions `31626396792` (`PASSED`)
+
+**Aday uygulama commit'i:** `dce7d539122c1ae263cec566d18e907a5a63b0f1`
+
+| Kapsam | Repo kanıtı | Gerçek kabul durumu |
+|---|---|---|
+| Sentetik staging | Platform Admin, tenant web/PWA, ayrı platform + iki tenant PostgreSQL, worker, Caddy HTTPS, Docker secret, OTel/Prometheus ve sentetik fixture compose paketi | `BLOCKED` — staging sunucusu, DNS yetkisi ve Docker runtime yok |
+| Playwright/axe | 13 proje; masaüstü, mobil/tablet, platform, tenant, saha, TV, `tr/en/ar+RTL`; kritik yüzeyler ve sentetik provisioning/davet senaryosu | Test keşfi `PASSED`; gerçek browser/E2E/axe `NOT_RUN` |
+| Passkey ve cihaz | Güvenilir local/staging HTTPS runbook'u, yanlış origin/challenge/revoke/recovery/re-auth adımları ve cihaz matrisi | `BLOCKED` — Windows Hello/authenticator ve fiziksel cihaz etkileşimi yok |
+| Offline | Fail-closed capability politikası, IndexedDB repository, tenant/sezon/kullanıcı/cihaz bağı, idempotency, TTL, izin yeniden doğrulama, retry/backoff, poison/conflict ve durum bileşeni | Unit testleri çalıştırıldı; gerçek PWA/oturum entegrasyonu ve cihaz/ağ kabulü `NOT_RUN` |
+| Yük ve telemetry | k6 baseline/load/spike/soak ve dayanıklılık profilleri; düşük cardinality/PII-redaction OTel SDK ve collector | Araç/staging olmadığı için ölçüm ve gerçek trace `BLOCKED`; eşik veya latency sonucu uydurulmadı |
+| Backup/WAL/PITR | WAL arşivli PostgreSQL imajı, checksum'lı base backup ve time/LSN hedefli izole PITR hazırlığı | Yerel PostgreSQL 16.14 üzerinde migration, iki tenant izolasyonu ve logical backup/geçici restore doğrulaması `PASSED`; staging WAL/PITR, RPO/RTO ve production restore `NOT_RUN` |
+
+Bu checkpoint YN-00–YN-26'yı başlatmaz ve bu yol haritasındaki YN durumlarını değiştirmez. Production DNS, production veri ve production restore işlemi yapılmamıştır.

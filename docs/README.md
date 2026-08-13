@@ -6,8 +6,8 @@ status: VERIFIED
 owner: Product-and-Architecture
 source_role: canonical_document_index
 source_of_truth: true
-last_reviewed: 2026-08-12
-verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+last_reviewed: 2026-08-13
+verified_against_commit: fef2154ac64c0948f51e42e34c3f93081928e2dd
 ```
 
 Bu dosya aktif belge sisteminin tek giriş noktasıdır. Bir belgenin listelenmesi, içindeki hedeflerin kodlandığı veya kabul testlerinin çalıştırıldığı anlamına gelmez. Gerçek durum; belge durumu, kaynak kod/migration/test kanıtı ve doğrulanan commit birlikte okunarak belirlenir.
@@ -36,7 +36,7 @@ Eksiksiz dosya bazlı liste, metadata, sahiplik, güncellik, aynı konu kaynağ�
 |---|---|---|
 | Kök yönetişim | repo kökü | [AGENTS.md](../AGENTS.md), [README.md](../README.md) |
 | Mimari ve izlenebilirlik | `docs/architecture` | [RMP-001](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), [REQ-003](architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md), [TRK-001](architecture/KURBAN2026-UYGULAMA-TAKIP.md), [ARC-017](architecture/17-HEDEF-MODUL-KATALOGU.md), [EXT-001](architecture/18-GUVENLI-EKLENTI-OMURGASI.md) |
-| Mimari kararlar | `docs/adr` | [ADR-0001](adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md), [ADR-0002](adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md), [ADR-0003](adr/ADR-0003-TENANT-YEDEK-WAL-PITR-VE-RESTORE-DOGRULAMA.md) |
+| Mimari kararlar | `docs/adr` | [ADR-0001](adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md), [ADR-0002](adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md), [ADR-0003](adr/ADR-0003-TENANT-YEDEK-WAL-PITR-VE-RESTORE-DOGRULAMA.md), [ADR-0004](adr/ADR-0004-STAGING-YUK-TEST-ARACI-SECIMI.md) |
 | Yönetişim | `docs/governance` | [GOV-001](governance/GOV-001-DOKUMANTASYON-POLITIKASI.md), [GOV-003](governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md), [GOV-011](governance/GOV-011-BELGE-DONUSUM-KAYDI.md), [GOV-012](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md), [GOV-013](governance/GOV-013-TESLIM-IZLENEBILIRLIK-VE-GITHUB-HEDEFI.md), [GOV-014](governance/GOV-014-TEKNIK-BORC-VE-ACIK-KARAR-KAYDI.md), [GOV-015](governance/GOV-015-COKLU-AJAN-WORKTREE-VE-DEVIR-PROTOKOLU.md) |
 | Ürün | `docs/product` | [PRD-001](product/PRD-001-URUN-VIZYONU-KAPSAM-VE-BASARI.md), [PRD-005](product/PRD-005-FIRMA-LISANS-VE-SEZON-YASAM-DONGUSU.md) |
 | Domain ve iş akışı | `docs/domains`, `docs/workflows` | [DOM-007](domains/DOM-007-HISSE-SATIS-TRANSFER-VE-IPTAL.md), [WFL-001](workflows/WFL-001-UCDAN-UCA-KURBAN-OPERASYONU.md); diğerlerinin tamamı GOV-012’de |
@@ -56,6 +56,7 @@ GOV-012 otomatik envanter bağlantıları yetim-belge erişilebilirliği oluştu
 - İş akışı: [WFL-005](workflows/WFL-005-VEKALET-VE-BELGE.md), [WFL-006](workflows/WFL-006-KURBAN-GUNU-KESIMDEN-TESLIME.md), [WFL-007](workflows/WFL-007-SEZON-ACILISI-VE-KAPANISI.md), [WFL-008](workflows/WFL-008-ISTISNA-VE-DUZELTME.md), [WFL-009](workflows/WFL-009-OFFLINE-VE-YENIDEN-SENKRONIZASYON.md).
 - Test ve UX: [TST-006](testing/TST-006-LEDGER-VE-VERI-BUTUNLUGU.md), [TST-008](testing/TST-008-PLAYWRIGHT-AXE-VE-CIHAZ-MATRISI.md), [TST-010](testing/TST-010-OFFLINE-SYNC-VE-CIHAZ-TESTLERI.md), [TST-011](testing/TST-011-YUK-PERFORMANS-VE-DAYANIKLILIK.md), [UX-008](ux/UX-008-PWA-OFFLINE-KUYRUK-VE-CATISMA.md).
 - Altyapı, işletim ve süreklilik: [INF-006](infrastructure/INF-006-POSTGRESQL-ISLETIM-STANDARDI.md), [OPS-002](operations/OPS-002-OPENTELEMETRY-GOZLEMLENEBILIRLIK.md), [OPS-007](operations/OPS-007-YEDEKLEME-POLITIKASI.md), [OPS-016](operations/OPS-016-SEZON-KAPANISI-VE-DEVIR.md), [OPS-003](reliability/OPS-003-SLI-SLO-ALARM-VE-HATA-BUTCESI.md), [OPS-009](reliability/OPS-009-FELAKET-KURTARMA-VE-IS-SUREKLILIGI.md).
+- Staging kabul: [OPS-RB-008](runbooks/OPS-RB-008-STAGING-KABUL-VE-FIZIKSEL-PASSKEY.md), [ADR-0004](adr/ADR-0004-STAGING-YUK-TEST-ARACI-SECIMI.md).
 - Gizlilik: [PRV-004](privacy/PRV-004-VERI-SAHIBI-TALEP-VE-SAKLAMA-PLAYBOOKU.md).
 
 ## Bağlayıcı iş kuralı düzeltmeleri
@@ -82,7 +83,7 @@ Bu özet ayrıntılı domain kurallarının yerine geçmez; bağlayıcı ayrınt
 
 ## Kanıt sınırı ve çalıştırılmamış kabuller
 
-Son doğrulanmış kod referansı `74915b6f3f1f8d53116b760b6a6be9797111efa5` commitidir. [CI koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803) yalnız koşuda gerçekten yer alan kontroller için kanıttır.
+Son doğrulanmış `main` kod referansı `fef2154ac64c0948f51e42e34c3f93081928e2dd` commitidir. [CI koşusu 31626396792](https://github.com/tilbehome/kurban2026/actions/runs/31626396792) yalnız koşuda gerçekten yer alan kontroller için kanıttır. Staging kabul aday dalındaki yeni altyapı ayrıca aday commit ve PR CI kanıtı bekler.
 
 Aşağıdakiler bu entegrasyonda `NOT_RUN` durumundadır ve doğrulanmış gösterilemez:
 

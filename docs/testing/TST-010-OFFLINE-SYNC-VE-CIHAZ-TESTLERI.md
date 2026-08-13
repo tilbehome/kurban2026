@@ -3,14 +3,14 @@
 ```yaml
 id: TST-010
 title: Offline, Sync ve Cihaz Test Planı
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: QA
 source_role: test_plan
 reviewers: [Domain, UX, Security, Operations]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 verified_against_commit: not_applicable
-next_review: OFFLINE_RUNTIME_UYGULANDIGINDA
+next_review: ILK_CIHAZ_OFFLINE_KABULUNDE
 version: 0.1
 source_of_truth: false
 related_requirements: [REQ-044, REQ-045, REQ-067, PRO-033, PRO-034, PRO-035]
@@ -23,7 +23,7 @@ superseded_by: null
 
 ## Durum ve sınıflar
 
-Offline/device sözleşmeleri hedef düzeyindedir; güvenli sync runtime ve gerçek cihaz kabulü tamamlanmış değildir.
+`packages/offline` saf runtime’ı sınıflandırma, tenant/season/user/device/session bağlama, client işlem ID, idempotency, expected version, TTL, izin yeniden doğrulama, exponential retry, poison, conflict ve görünür durum sözleşmesini uygular. IndexedDB adaptörü vardır; satış/ödeme/kesim/teslim/ownership yalnız `ONLINE_REQUIRED` kalır. Gerçek API composition, conflict inbox ekranı ve fiziksel cihaz kabulü tamamlanmadığı için genel durum `IMPLEMENTED_UNVERIFIED` ve cihaz sonuçları `NOT_RUN/BLOCKED` kalır.
 
 | Sınıf | Örnek | Beklenen |
 |---|---|---|

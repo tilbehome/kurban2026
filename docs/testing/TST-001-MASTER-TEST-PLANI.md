@@ -7,12 +7,12 @@ status: VERIFIED
 owner: QA
 reviewers: [Engineering, Security, Operations, Product]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 next_review: HER_RELEASE_ADAYINDA
 version: 0.1
 source_role: master_test_quality_acceptance_plan
 source_of_truth: true
-verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+verified_against_commit: fef2154ac64c0948f51e42e34c3f93081928e2dd
 related_requirements: [REQ-001, REQ-068, PRO-011, PRO-021, PRO-023, PRO-024, PRO-027, PRO-031]
 related_adrs: [ADR-0002, ADR-0003]
 related_modules: [all]
@@ -23,9 +23,11 @@ superseded_by: null
 
 ## Amaç ve gerçek durum
 
-Bu plan gereksinim → risk → test → kanıt → release kararını tanımlar. Repo unit, route, mimari sınır ve koşullu gerçek PostgreSQL testleri içerir. Playwright, axe, gerçek cihaz, yük, offline sync, WAL/PITR ve tam Kurban Günü prova kanıtları henüz mevcut kabul edilmez.
+Bu plan gereksinim → risk → test → kanıt → release kararını tanımlar. Repo unit, route, mimari sınır ve koşullu gerçek PostgreSQL testleri içerir. Güncel aday dal Playwright/axe, güvenli offline runtime, k6, staging Compose/WAL/PITR ve OTel altyapısını ekler; gerçek staging, cihaz, yük, restore/PITR ve tam Kurban Günü prova kanıtları henüz mevcut kabul edilmez.
 
-`74915b6f3f1f8d53116b760b6a6be9797111efa5` için [TilbeCore CI koşusu 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803) doğrulanmıştır: koşu `completed/success` durumundadır ve `headSha` bu tam commit SHA’sıyla eşleşir. Başarılı job; UTF-8, Platform/Tenant Prisma validate-generate, provisioning CLI dry-run, Platform/Tenant PostgreSQL migration apply, Platform PostgreSQL integration, iki-tenant web/pool/backup-restore izolasyonu, TypeScript, unit/route, lint, ana ve Platform Admin build, PWA artefakt ve Git diff kontrollerini çalıştırmıştır. Koşuda Playwright/axe, fiziksel HTTPS passkey, gerçek cihaz, yük/soak, offline cihaz veya WAL/PITR adımı yoktur; bunlar doğrulanmış sayılmaz.
+`fef2154ac64c0948f51e42e34c3f93081928e2dd` için [TilbeCore CI koşusu 31626396792](https://github.com/tilbehome/kurban2026/actions/runs/31626396792) doğrulanmıştır: koşu `completed/success` durumundadır ve `headSha` bu tam commit SHA’sıyla eşleşir. Başarılı job; UTF-8, Platform/Tenant Prisma validate-generate, provisioning CLI dry-run, Platform/Tenant PostgreSQL migration apply, Platform PostgreSQL integration, iki-tenant web/pool/backup-restore izolasyonu, TypeScript, unit/route, lint, ana ve Platform Admin build, PWA artefakt ve Git diff kontrollerini çalıştırmıştır. Koşuda Playwright/axe, fiziksel HTTPS passkey, gerçek cihaz, yük/soak, offline cihaz veya WAL/PITR adımı yoktur; bunlar doğrulanmış sayılmaz.
+
+13 Ağustos 2026 aday dal yerel turunda izole PostgreSQL `16.14` üzerinde platform ve tenant migration deploy, Platform PostgreSQL `9/9` ve iki-tenant provisioning/runtime/pool/logical backup/geçici restore izolasyonu `1/1` geçti. Tam unit/route turu iki kez mevcut bir eşzamanlılık testinin 5 saniyelik timeout'una takıldı; aynı test tek başına `10/10` geçti. Assertion veya timeout değiştirilmeden dosya worker sayısı ikiyle sınırlandı ve varsayılan `pnpm test` turu `242/242` geçti. Bu kayıt önceki flake sonuçlarını gizlemez. Playwright browser binary launch smoke ve 42 test keşfi geçti; gerçek HTTPS E2E/axe koşusu değildir.
 
 ## Test katmanları
 
@@ -46,7 +48,7 @@ Bu plan gereksinim → risk → test → kanıt → release kararını tanımlar
 
 | Test grubu | Kapsam | Kanıt durumu |
 |---|---|---|
-| `shared/lib/para.test.ts`, `shared/lib/tarih.test.ts` | Para ve tarih yardımcıları | CI 31571606803 kapsamında `pnpm test` geçti |
+| `shared/lib/para.test.ts`, `shared/lib/tarih.test.ts` | Para ve tarih yardımcıları | CI 31626396792 kapsamında `pnpm test` geçti |
 | `modules/tahsilat/lib/dagitim.test.ts` | Tahsilat dağıtımı | CI kapsamında geçti |
 | `tests/saha-satis-route.test.ts` | Yetki, atomiklik, idempotency, güvenli hata | CI kapsamında geçti; mock route kanıtıdır |
 | `tests/toplu-atama-route.test.ts` | Kısmi atama engeli | CI kapsamında geçti; mock route kanıtıdır |
@@ -55,7 +57,7 @@ Bu plan gereksinim → risk → test → kanıt → release kararını tanımlar
 | `packages/database-platform/tests/platform-postgres.integration.test.ts` | Platform migration, drift, constraint, repository ve transaction | CI PostgreSQL 16 adımında geçti |
 | `packages/database-tenant/tests/tenant-isolation.integration.test.ts` | İki fiziksel tenant DB, runtime/pool ve backup/restore izolasyonu | CI PostgreSQL 16 adımında geçti |
 
-`74915b6` ağacında 33 test dosyası vardır. CI dışı varsayılan `pnpm test` koşusunda ortam değişkeni isteyen iki integration dosyası atlanabilir; `exit 0` tek başına bu integration senaryolarının koştuğunu kanıtlamaz.
+`fef2154a` temel ağacının CI koşusunda unit/route ve iki gerçek PostgreSQL integration kapısı geçmiştir. CI dışı varsayılan `pnpm test` koşusunda ortam değişkeni isteyen iki integration dosyası atlanabilir; `exit 0` tek başına bu integration senaryolarının koştuğunu kanıtlamaz.
 
 ## Mock testlerin kanıtlayamadıkları
 
@@ -73,9 +75,9 @@ Birinci karar kaynağı [ADR-0002](../adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-V
 
 | Senaryo | Kabul kanıtı | Durum |
 |---|---|---|
-| İki firmanın ayrı fiziksel DB kullanması | Firma A ve B ayrı bağlantı hedeflerine gider | `VERIFIED` — CI 31571606803 |
-| Aynı kayıt ID’lerinin karışmaması | Aynı ID diğer tenant session’ıyla okunamaz/yazılamaz | `VERIFIED` — CI 31571606803 |
-| Başka firmaya ait session/cookie | Host, session ve tenant eşleşmezse fail-closed | `VERIFIED` — CI 31571606803 kapsamı |
+| İki firmanın ayrı fiziksel DB kullanması | Firma A ve B ayrı bağlantı hedeflerine gider | `VERIFIED` — CI 31626396792 |
+| Aynı kayıt ID’lerinin karışmaması | Aynı ID diğer tenant session’ıyla okunamaz/yazılamaz | `VERIFIED` — CI 31626396792 |
+| Başka firmaya ait session/cookie | Host, session ve tenant eşleşmezse fail-closed | `VERIFIED` — CI 31626396792 kapsamı |
 | Bilinmeyen/reserved subdomain | Tenant context üretilmez | `VERIFIED` — test kapsamı |
 | Host header/custom domain | Yalnız doğrulanmış eşleşme kabul edilir | `VERIFIED` — test kapsamı; canlı DNS/TLS değildir |
 | Yanlış `TenantDatabaseRef` | Pool açılmaz, secret gösterilmez | `VERIFIED` — CI kapsamı |
@@ -123,9 +125,15 @@ pnpm lint
 pnpm build
 pnpm test:platform-postgres
 pnpm test:tenant-isolation
+pnpm test:offline
+pnpm test:e2e:list
+pnpm test:e2e
+pnpm test:a11y
+pnpm staging:preflight
+pnpm load:test
 ```
 
-PostgreSQL komutları gerekli environment ve opt-in flag olmadan atlanabilir. “Exit 0” tek başına integration testinin çalıştığını kanıtlamaz; koşan/atlanan test sayısı ve environment profili kanıta yazılır. Playwright/axe/yük komutu repo scripti olarak henüz yoksa komut uydurulmaz.
+PostgreSQL komutları gerekli environment ve opt-in flag olmadan atlanabilir. “Exit 0” tek başına integration testinin çalıştığını kanıtlamaz; koşan/atlanan test sayısı ve environment profili kanıta yazılır. E2E `E2E_RUN=1`, yük testi güvenli `K6_*` staging/local environment ve staging preflight gerçek secret/Docker ister; eksik ön koşul `BLOCKED` kaydedilir.
 
 ## Giriş ve çıkış kriterleri
 

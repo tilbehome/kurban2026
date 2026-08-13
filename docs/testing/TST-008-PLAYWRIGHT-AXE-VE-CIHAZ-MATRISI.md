@@ -3,14 +3,14 @@
 ```yaml
 id: TST-008
 title: Playwright, axe ve Cihaz Kabul Planı
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: QA
 source_role: test_plan
 reviewers: [UX, Accessibility, Security, Product]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 verified_against_commit: not_applicable
-next_review: PLAYWRIGHT_ALTYAPISI_EKLENDIGINDE
+next_review: ILK_STAGING_E2E_KOSUSUNDA
 version: 0.1
 source_of_truth: false
 related_requirements: [REQ-044, REQ-045, PRO-011, PRO-023, PRO-024, PRO-025]
@@ -23,7 +23,9 @@ superseded_by: null
 
 ## Mevcut durum
 
-Playwright ve axe hedefleri mimaride tanımlıdır; repo scripti/paket kurulumu ve çalıştırılmış E2E/axe kanıtı mevcut sayılmaz. Bu plan komut uydurmaz. Altyapı eklendiğinde güncel package scripti tek kaynak olur.
+`@playwright/test` ve `@axe-core/playwright`, `playwright.config.ts`, 13 proje ve 42 listelenebilir test vakası repo scriptlerine bağlanmıştır. `pnpm test:e2e:list` altyapı keşfini doğrular; tarayıcıların gerçek local/staging HTTPS üzerinde koştuğu anlamına gelmez. Gerçek E2E/axe, fiziksel cihaz ve passkey sonuçları EVD-006 kaydı olmadan doğrulanmış sayılmaz.
+
+Çalıştırılabilir komutlar `pnpm test:e2e:install`, `pnpm test:e2e`, `pnpm test:a11y` ve `pnpm test:e2e:list` olarak `package.json` içinde tanımlıdır. `E2E_RUN=1` olmadan testler kabul sonucu üretmez; hedef kod düzeyinde yalnız HTTPS `*.staging.tilbecore.com` veya `*.tilbecore.test` olabilir.
 
 ## Tarayıcı ve yüzey matrisi
 
