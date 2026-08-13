@@ -83,3 +83,57 @@ blockers:
   - Erişilebilir sentetik local/staging HTTPS deployment yok.
   - Windows Hello/gerçek authenticator ve fiziksel cihaz kullanıcı etkileşimi yapılmadı.
 ```
+
+## EVD-006-RUN-20260813-002
+
+```yaml
+result: BLOCKED
+tested_source_sha: d87b1c4ca5cd8d7b2865d506c17ba4967dddb296
+executed_at_utc: 2026-08-13
+environment: WINDOWS_LOCAL_NO_HTTPS_STAGING_DEPLOYMENT
+playwright_version: 1.62.1
+axe_version: 4.13.0
+projects_listed: 13
+tests_listed: 42
+staging_package_static_validation: PASSED
+browser_binaries_installed: PASSED
+browser_launch_assertion_only:
+  chromium: PASSED
+  firefox: PASSED
+  webkit: PASSED
+production_target_guard: PASSED_REJECTED_BEFORE_BROWSER
+local_domains:
+  console.tilbecore.test: UNRESOLVED
+  tenant_a_requested_alias: UNRESOLVED
+  tenant_b_requested_alias: UNRESOLVED
+documented_compose_hosts:
+  demo.tilbecore.test: UNRESOLVED
+  sentetik-b.tilbecore.test: UNRESOLVED
+docker_compose: MISSING
+caddy: MISSING
+staging_env_and_secrets: NOT_CREATED
+staging_preflight: BLOCKED_ENOENT_STAGING_ENV
+page_open_and_assertions: NOT_RUN
+real_e2e_execution: NOT_RUN
+axe_execution: NOT_RUN
+rtl: NOT_RUN
+keyboard: NOT_RUN
+zoom_reflow: NOT_RUN
+form_error_relationship: NOT_RUN
+physical_passkey: MANUAL_ACCEPTANCE_REQUIRED
+real_devices:
+  windows_hello: MANUAL_ACCEPTANCE_REQUIRED
+  android_phone: NOT_RUN
+  tablet: NOT_RUN
+  tv_large_screen: NOT_RUN
+  qr_barcode_camera: NOT_RUN
+  printer: NOT_RUN
+  scale: NOT_RUN
+artifacts:
+  - docs/evidence/EVD-006-E2E-ERISILEBILIRLIK-CIHAZ-SABLONU.md#evd-006-run-20260813-002
+blockers:
+  - Docker Engine/Compose ve Caddy kurulu değil.
+  - Güvenilir local HTTPS, local DNS/hosts, staging.env ve Git dışı sentetik secret seti yok.
+```
+
+Browser launch assertion yalnız kurulu motorların açılabildiğini gösterir; sayfa açan gerçek E2E veya axe sonucu değildir. Fiziksel passkey için [OPS-RB-008](../runbooks/OPS-RB-008-STAGING-KABUL-VE-FIZIKSEL-PASSKEY.md) içindeki kayıt, giriş, yanlış origin, replay, revoke, recovery code ve re-auth adımları kullanıcı etkileşimiyle uygulanmalıdır.

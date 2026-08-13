@@ -219,3 +219,9 @@ Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 gel
 | Backup/WAL/PITR | WAL arşivli PostgreSQL imajı, checksum'lı base backup ve time/LSN hedefli izole PITR hazırlığı | Yerel PostgreSQL 16.14 üzerinde migration, iki tenant izolasyonu ve logical backup/geçici restore doğrulaması `PASSED`; staging WAL/PITR, RPO/RTO ve production restore `NOT_RUN` |
 
 Bu checkpoint YN-00–YN-26'yı başlatmaz ve bu yol haritasındaki YN durumlarını değiştirmez. Production DNS, production veri ve production restore işlemi yapılmamıştır.
+
+### 2026-08-13 gerçek yerel kabul güncellemesi
+
+`d87b1c4ca5cd8d7b2865d506c17ba4967dddb296` kaynak commit'i üzerinde, kalıcı `127.0.0.1:55433` test kümesine dokunmadan iki disposable PostgreSQL 16.14 tenant kümesi çalıştırıldı. Platform PostgreSQL integration 9/9 ve iki-tenant provisioning/runtime/backup/restore izolasyon testi 1/1 geçti. Checksum'lı base backup ile WAL arşivi üretildi; `0/8000360` LSN hedefindeki PITR yeni timeline'a promote oldu. Hedef öncesi kayıt korundu, hedef sonrası kayıt yoktu, tenant B marker ve `2/1000.00` ledger toplamı değişmedi. Ölçülen yerel RPO 847 ms, PostgreSQL başlangıcından yazılabilir hazır durumuna RTO 1.425 ms ve son doğrulama sorguları 501 ms'dir. Ayrıntı `EVD-005-RUN-20260813-002` kaydındadır.
+
+Docker/Compose, Caddy, güvenilir local HTTPS ve `.test` DNS/hosts hazırlığı bulunmadığından Playwright sayfa assertion'ları, axe, gerçek OpenTelemetry collector/export ve k6 baseline/load/spike/soak çalıştırılmadı. Browser binary launch kontrolü E2E sayılmadı; k6 için hiçbir VU/süre veya kapasite sonucu üretilmedi. Windows Hello/passkey `MANUAL_ACCEPTANCE_REQUIRED`, mevcut olmayan fiziksel Android/tablet/TV/yazıcı/QR/terazi hücreleri `NOT_RUN` kaldı. Ayrıntılar `EVD-006-RUN-20260813-002`, `EVD-009-RUN-20260813-002` ve `EVD-012-RUN-20260813-002` kayıtlarındadır.

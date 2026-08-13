@@ -79,3 +79,38 @@ stop_conditions:
   - Fiziksel passkey ve cihaz kabulü tamamlanmadı.
   - Staging E2E/axe/yük/restore/PITR tatbikatı tamamlanmadı.
 ```
+
+## EVD-012-RUN-20260813-002
+
+```yaml
+result: PARTIAL_LOCAL_ACCEPTANCE
+tested_source_sha: d87b1c4ca5cd8d7b2865d506c17ba4967dddb296
+release: FAZ_12_STAGING_ACCEPTANCE_INFRASTRUCTURE
+code_merge_ready: YES_WITH_EXTERNAL_ACCEPTANCE_OPEN
+production_release_ready: NO
+ci_evidence_for_evidence_commit: PENDING
+staging_package_static_validation: PASSED
+platform_postgresql_integration: PASSED_9_OF_9
+tenant_isolation_backup_restore: PASSED_1_OF_1
+wal_pitr_evidence: EVD-005-RUN-20260813-002_PASSED_LOCAL_DISPOSABLE_PITR
+e2e_accessibility_evidence: EVD-006-RUN-20260813-002_BLOCKED_REAL_EXECUTION_NOT_RUN
+load_evidence: EVD-009-RUN-20260813-002_BLOCKED_NO_MEASUREMENTS
+telemetry_source_redaction_regression: PASSED_AT_PREVIOUS_CANDIDATE_CI_31694519841
+telemetry_collector_static_validation: PASSED_AT_PREVIOUS_CANDIDATE_CI_31694519841
+telemetry_real_collector_runtime: NOT_RUN
+telemetry_real_trace_export_and_backend_query: NOT_RUN
+telemetry_blocker: DOCKER_OR_LOCAL_COLLECTOR_RUNTIME_AND_DEPLOYED_WORKLOAD_MISSING
+physical_passkey: MANUAL_ACCEPTANCE_REQUIRED
+physical_devices: NOT_RUN
+simulation_evidence: EVD-010-RUN-20260813-001_NOT_RUN
+production_deployment: NOT_RUN
+production_write: false
+merge_blockers: []
+production_release_blockers:
+  - Gerçek local/staging HTTPS E2E ve axe koşusu yok.
+  - Gerçek collector/export/backend trace kanıtı yok.
+  - Baseline/load/spike/soak ölçümü yok.
+  - Fiziksel passkey, cihaz ve Kurban Günü provası tamamlanmadı.
+```
+
+`code_merge_ready` kararı yalnız mevcut staging kabul altyapısı PR’ının kod kapsamına ilişkindir. Production release kararı değildir; PR draft durumda kalır ve bağımsız merge kararı sonraki adımda verilir.

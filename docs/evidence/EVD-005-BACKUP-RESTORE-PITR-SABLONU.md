@@ -90,3 +90,75 @@ blockers:
 ```
 
 Yerel `PASSED` alanları yalnız izole `127.0.0.1:55433` sentetik PostgreSQL kümesinde çalışan mevcut logical backup/geçici restore entegrasyon testidir. Staging base backup, WAL/PITR tatbikatı veya ölçülmüş RPO/RTO kanıtı değildir.
+
+## EVD-005-RUN-20260813-002
+
+```yaml
+result: PASSED_LOCAL_DISPOSABLE_PITR
+tested_source_sha: d87b1c4ca5cd8d7b2865d506c17ba4967dddb296
+executed_at_utc: 2026-08-13T11:29:58Z/2026-08-13T11:38:02Z
+environment: WINDOWS_LOCAL_DISPOSABLE_POSTGRESQL_16_14
+host: 127.0.0.1
+source_ports: [55434, 55435]
+restore_port: 55436
+persistent_test_cluster: 127.0.0.1:55433_UNCHANGED_AND_ACCEPTING_CONNECTIONS
+synthetic_data:
+  tenant_a: tenant_accept_a/dbref_accept_a
+  tenant_b: tenant_accept_b/dbref_accept_b
+  baseline_ledger_a: 1/1250.50
+  retained_ledger_a: 1/249.50
+  post_target_ledger_a: 1/9999.99
+  tenant_b_ledger_after_target: 2/1000.00
+commands:
+  - initdb --auth-local=trust --auth-host=trust
+  - pnpm test:platform-postgres
+  - pnpm test:tenant-isolation
+  - pg_basebackup -Fp -Xs -c fast --manifest-checksums=SHA256
+  - pg_verifybackup
+  - pg_switch_wal / CHECKPOINT
+  - recovery.signal ile recovery_target_lsn ve recovery_target_action=promote
+platform_postgresql_integration: PASSED_9_OF_9_38_31_SECONDS
+tenant_isolation_backup_restore: PASSED_1_OF_1_137_79_SECONDS
+environment_preparation_attempts:
+  - NOT_COUNTED_WRONG_OPT_IN_VARIABLE_RESULTED_IN_1_SKIPPED
+  - FAILED_BEFORE_TEST_PLATFORM_PUBLIC_MIGRATIONS_MISSING
+  - FAILED_DURING_TEST_PG_DUMP_NOT_ON_CHILD_PROCESS_PATH
+  - PASSED_AFTER_EXISTING_MIGRATIONS_AND_POSTGRESQL_16_BIN_PATH_WERE_PROVIDED
+base_backup: PASSED
+base_backup_duration_ms: 5066
+base_backup_files: 1479
+base_backup_bytes: 52489980
+backup_manifest_sha256: 7607FACCB875E549A63E1055A58BC6C3133CDE82C4A90DCF7F0F541991A20F29
+pg_verifybackup: PASSED
+wal_archiving: PASSED
+wal_archive_failed_count: 0
+wal_artifacts_at_cleanup: 10_SEGMENTS_AND_1_BACKUP_HISTORY
+recovery_target_kind: LSN
+recovery_target: 0/8000360
+timeline_after_promote: 2
+retained_row_after_restore: 1
+post_target_row_after_restore: 0
+restored_tenant_marker: tenant_accept_a/dbref_accept_a
+restored_ledger: 2/1500.00
+restored_ledger_constraints: 2
+tenant_b_database_present_in_tenant_a_cluster: 0
+tenant_b_after_pitr: tenant_accept_b/dbref_accept_b_AND_2/1000.00
+measured_rpo_ms: 847
+measured_rpo_scope: LAST_RETAINED_COMMIT_TO_SIMULATED_POST_TARGET_COMMIT
+measured_rto_ms: 1425
+measured_rto_scope: POSTGRES_PROCESS_START_TO_WRITABLE_READY_FROM_SERVER_LOG
+post_restore_validation_duration_ms: 501
+first_restore_attempt: FAILED_WINDOWS_FORWARD_SLASH_COPY_PATH_TARGET_NOT_REACHED
+final_restore_attempt: PASSED_WINDOWS_NATIVE_COPY_PATH_TARGET_REACHED_AND_PROMOTED
+production_restore: NOT_RUN
+production_write: false
+cleanup:
+  processes: PASSED_ALL_DISPOSABLE_CLUSTERS_STOPPED
+  ports: PASSED_55434_55435_55436_NOT_LISTENING
+  temporary_root: MOVED_TO_WINDOWS_RECYCLE_BIN_SOURCE_PATH_GONE
+  persistent_cluster: PASSED_55433_STILL_ACCEPTING_CONNECTIONS
+artifacts:
+  - docs/evidence/EVD-005-BACKUP-RESTORE-PITR-SABLONU.md#evd-005-run-20260813-002
+```
+
+Bu koşu production kapasitesi veya production restore yetkisi kanıtı değildir. RTO yalnız disposable restore sürecinin PostgreSQL logundaki başlangıç ile yazılabilir bağlantıya hazır olma zamanları arasındadır; doğrulama süresi ayrıca kaydedilmiştir.
