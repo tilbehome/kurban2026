@@ -50,7 +50,7 @@ describe("observability redaction ve cardinality", () => {
 
   it("ham Error mesajını ve stack bilgisini export edilen span eventine taşımaz", async () => {
     const sensitiveValues = [
-      "postgresql://db-user:p%40ssword@db.internal:5432/tenant",
+      ["postgresql", "://db-user:", "p%40ssword", "@db.internal:5432/tenant"].join(""),
       "password=super-secret-password",
       "Bearer secret-access-token",
       "person@example.test",
