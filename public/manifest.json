@@ -42,7 +42,7 @@
       "name": "Saha Görevleri",
       "short_name": "Saha",
       "description": "Mobil görev akışı ve güvenli senkronizasyon",
-      "url": "/operasyon?pwa=field",
+      "url": "/saha?pwa=1",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {

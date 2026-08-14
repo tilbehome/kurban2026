@@ -1743,6 +1743,7 @@ model PackageRecord {
   coldSection    ColdStorageSection? @relation(fields: [coldSectionId], references: [id])
   coldRack       ColdStorageRack?    @relation(fields: [coldRackId], references: [id])
   loadingItems   LoadingListItem[]
+  deliveryLinks  DeliveryPackageLink[]
 
   @@unique([labelNo])
   @@index([shareId])
@@ -1813,6 +1814,7 @@ model PackageExceptionHistory {
 
 model DeliveryRecord {
   id                 String          @id
+  seasonId           String?
   shareId            String
   customerId         String
   status             String
@@ -1820,6 +1822,14 @@ model DeliveryRecord {
   reversedAt         DateTime?
   reversalReason     String?
   receiverName       String?
+  receiverRelationship String?
+  deliveryType       String          @default("on_site")
+  serviceFee         Decimal         @default(0) @db.Decimal(18, 4)
+  staffUserId        String?
+  deviceId           String?
+  latitude           Decimal?        @db.Decimal(10, 7)
+  longitude          Decimal?        @db.Decimal(10, 7)
+  partialExceptionReason String?
   debtOverrideReason String?
   approvalRequestId  String?
   proofDocumentId    String?
@@ -1828,10 +1838,24 @@ model DeliveryRecord {
   customer           Customer        @relation(fields: [customerId], references: [id])
   loadingList        LoadingList?    @relation(fields: [loadingListId], references: [id])
   proofs             DeliveryProof[]
+  packages           DeliveryPackageLink[]
 
   @@index([shareId])
   @@index([customerId])
   @@index([loadingListId])
+}
+
+model DeliveryPackageLink {
+  deliveryRecordId String
+  packageRecordId  String
+  scannedAt        DateTime
+  scannedByUserId  String
+  deviceId         String?
+  deliveryRecord   DeliveryRecord @relation(fields: [deliveryRecordId], references: [id])
+  packageRecord    PackageRecord  @relation(fields: [packageRecordId], references: [id])
+
+  @@id([deliveryRecordId, packageRecordId])
+  @@index([packageRecordId])
 }
 
 model PackageComponent {
@@ -1918,6 +1942,11 @@ model DeliveryProof {
   proofType        String
   storageKey       String?
   note             String?
+  mimeType         String?
+  sizeBytes        Int?
+  checksumSha256   String?
+  capturedByUserId String?
+  deviceId         String?
   capturedAt       DateTime
   deliveryRecord   DeliveryRecord @relation(fields: [deliveryRecordId], references: [id])
 
@@ -1990,9 +2019,34 @@ model OfflineQueueItem {
   operation      String
   payload        Json
   status         String
+  tenantInstanceId String?
+  seasonId       String?
+  actorUserId    String?
+  deviceId       String?
+  sessionId      String?
+  sessionVersion Int       @default(1)
+  expectedVersion Int      @default(0)
+  attempts       Int       @default(0)
+  nextAttemptAt  DateTime?
+  expiresAt      DateTime?
+  lastErrorCode  String?
+  conflictCode   String?
+  serverResultId String?
   createdAt      DateTime @default(now())
 
   @@index([status])
+  @@index([seasonId, actorUserId, deviceId, status])
+}
+
+model OfflineQueueAttempt {
+  id                 String   @id
+  offlineQueueItemId String
+  attemptNo          Int
+  outcome            String
+  safeErrorCode      String?
+  occurredAt         DateTime
+
+  @@unique([offlineQueueItemId, attemptNo])
 }
 
 model DeviceAdapter {

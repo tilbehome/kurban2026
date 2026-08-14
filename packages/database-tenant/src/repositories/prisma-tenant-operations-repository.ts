@@ -12,6 +12,7 @@ import {
   type CreateSlaughterJobInput,
   type CorrectWeighingInput,
   type DeliveryCommandInput,
+  type DeliveryStatus,
   type IssueQrTokenInput,
   type CreateLoadingListInput,
   type MovePackageInput,
@@ -117,6 +118,7 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
           expiresAt: input.expiresAt ? new Date(input.expiresAt) : undefined,
         },
       });
+      await tx.$executeRaw`UPDATE "QrToken" SET "seasonId" = ${input.seasonId ?? null}, "createdByUserId" = ${meta.actorUserId} WHERE "id" = ${input.id}`;
       await evidence(tx, meta, "qr.token.issued", "QrToken", input.id, { purpose: input.purpose, targetId: input.targetId });
       return { id: input.id, opaqueToken: input.opaqueToken };
     });
@@ -136,6 +138,7 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
         revokedAt: token.revokedAt?.toISOString(),
       }, input.now);
       await tx.qrToken.update({ where: { id: token.id }, data: { revokedAt: meta.occurredAt } });
+      await tx.$executeRaw`UPDATE "QrToken" SET "consumedAt" = ${meta.occurredAt} WHERE "id" = ${token.id}`;
       await evidence(tx, meta, "qr.token.consumed", "QrToken", token.id, { purpose: token.purpose, targetId: token.targetId });
       return { id: token.id, targetId: token.targetId };
     });
@@ -314,15 +317,31 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       if (share.packages.length === 0) throw new TenantOperationsError("DELIVERY_REQUIRES_READY_PACKAGE");
       const existing = await tx.deliveryRecord.findFirst({ where: { shareId: input.shareId, status: "delivered" } });
       if (existing) throw new TenantOperationsError("SHARE_ALREADY_DELIVERED");
-      await tx.deliveryRecord.create({ data: { id: input.id, shareId: input.shareId, customerId: input.customerId, status: "delivered", deliveredAt: meta.occurredAt } });
+      const requiredPackageIds = share.packages.filter((item) => !["void", "missing", "wrong", "damaged"].includes((item as { status?: string }).status ?? "created")).map((item) => item.id).sort();
+      const scannedPackageIds = [...new Set(input.packageRecordIds ?? [])].sort();
+      if (scannedPackageIds.some((id) => !share.packages.some((item) => item.id === id))) throw new TenantOperationsError("DELIVERY_PACKAGE_SCOPE_INVALID");
+      const complete = requiredPackageIds.length === scannedPackageIds.length && requiredPackageIds.every((id, index) => id === scannedPackageIds[index]);
+      if (!complete && !input.allowPartial) throw new TenantOperationsError("DELIVERY_PACKAGE_CHECKLIST_INCOMPLETE");
+      if (input.loadingListId) {
+        const loadingRows = await tx.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS "count" FROM "LoadingListItem" AS item JOIN "LoadingList" AS list ON list."id" = item."loadingListId" WHERE list."id" = ${input.loadingListId} AND list."seasonId" = ${input.seasonId} AND item."packageRecordId" = ANY(${scannedPackageIds})`;
+        if (Number(loadingRows[0]?.count ?? 0n) !== scannedPackageIds.length) throw new TenantOperationsError("DELIVERY_LOADING_LIST_SCOPE_INVALID");
+      }
+      const alreadyDelivered = await tx.$queryRaw<Array<{ id: string }>>`SELECT link."packageRecordId" AS "id" FROM "DeliveryPackageLink" AS link JOIN "DeliveryRecord" AS delivery ON delivery."id" = link."deliveryRecordId" WHERE link."packageRecordId" = ANY(${scannedPackageIds}) AND delivery."status" IN ('partial','delivered') FOR UPDATE OF delivery`;
+      if (alreadyDelivered.length > 0) throw new TenantOperationsError("PACKAGE_ALREADY_DELIVERED");
+      const deliveryStatus: DeliveryStatus = complete ? "delivered" : "partial";
+      await tx.deliveryRecord.create({ data: { id: input.id, shareId: input.shareId, customerId: input.customerId, status: deliveryStatus, deliveredAt: complete ? meta.occurredAt : undefined } });
+      for (const packageRecordId of scannedPackageIds) await tx.$executeRaw`INSERT INTO "DeliveryPackageLink" ("deliveryRecordId", "packageRecordId", "scannedAt", "scannedByUserId", "deviceId") VALUES (${input.id}, ${packageRecordId}, ${meta.occurredAt}, ${meta.actorUserId}, ${input.deviceId ?? null})`;
+      await tx.$executeRaw`UPDATE "PackageRecord" SET "status" = 'delivered' WHERE "id" = ANY(${scannedPackageIds})`;
       if (input.receiverName || input.loadingListId || input.debtOverride) {
         await tx.$executeRaw`UPDATE "DeliveryRecord" SET "receiverName" = ${input.receiverName ?? null}, "loadingListId" = ${input.loadingListId ?? null}, "debtOverrideReason" = ${input.debtOverride?.reason ?? null}, "approvalRequestId" = ${input.debtOverride?.approvalRequestId ?? null} WHERE "id" = ${input.id}`;
       }
+      await tx.$executeRaw`UPDATE "DeliveryRecord" SET "seasonId" = ${input.seasonId}, "deliveryType" = ${input.deliveryType ?? "on_site"}, "serviceFee" = ${input.serviceFee ?? "0"}::decimal, "receiverRelationship" = ${input.receiverRelationship ?? null}, "staffUserId" = ${input.staffUserId ?? meta.actorUserId}, "deviceId" = ${input.deviceId ?? null}, "latitude" = ${input.latitude ?? null}::decimal, "longitude" = ${input.longitude ?? null}::decimal, "partialExceptionReason" = ${input.partialExceptionReason ?? null} WHERE "id" = ${input.id}`;
       if (input.proof) {
         await tx.$executeRaw`INSERT INTO "DeliveryProof" ("id", "deliveryRecordId", "proofType", "storageKey", "note", "capturedAt") VALUES (${input.proof.id}, ${input.id}, ${input.proof.proofType}, ${input.proof.storageKey ?? input.debtOverride?.storageKey ?? null}, ${input.proof.note ?? input.reason ?? null}, ${meta.occurredAt})`;
+        await tx.$executeRaw`UPDATE "DeliveryProof" SET "mimeType" = ${input.proof.mimeType ?? null}, "sizeBytes" = ${input.proof.sizeBytes ?? null}, "checksumSha256" = ${input.proof.checksumSha256 ?? null}, "capturedByUserId" = ${input.staffUserId ?? meta.actorUserId}, "deviceId" = ${input.deviceId ?? null} WHERE "id" = ${input.proof.id}`;
       }
-      await evidence(tx, meta, "delivery.recorded", "DeliveryRecord", input.id, { seasonId: input.seasonId, shareId: input.shareId, receiverName: input.receiverName, loadingListId: input.loadingListId, debtOverride: Boolean(input.debtOverride) });
-      return { id: input.id, status: "delivered" as const };
+      await evidence(tx, meta, "delivery.recorded", "DeliveryRecord", input.id, { seasonId: input.seasonId, shareId: input.shareId, packageCount: scannedPackageIds.length, complete, receiverRelationship: input.receiverRelationship, deliveryType: input.deliveryType ?? "on_site", loadingListId: input.loadingListId, debtOverride: Boolean(input.debtOverride) });
+      return { id: input.id, status: deliveryStatus };
     });
   }
 
@@ -330,8 +349,9 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
     return command(this.db, "delivery.reverse", meta, async (tx) => {
       const row = await tx.deliveryRecord.findUnique({ where: { id: input.id }, include: { share: { include: { shareCard: true } } } });
       if (!row || row.share.shareCard.seasonId !== input.seasonId) throw new TenantOperationsError("DELIVERY_NOT_FOUND");
-      if (row.status !== "delivered") throw new TenantOperationsError("DELIVERY_NOT_REVERSIBLE");
+      if (row.status !== "delivered" && row.status !== "partial") throw new TenantOperationsError("DELIVERY_NOT_REVERSIBLE");
       await tx.deliveryRecord.update({ where: { id: input.id }, data: { status: "reversed", reversedAt: meta.occurredAt, reversalReason: input.reason } });
+      await tx.$executeRaw`UPDATE "PackageRecord" SET "status" = CASE WHEN "coldRoomId" IS NULL THEN 'created' ELSE 'stored' END WHERE "id" IN (SELECT "packageRecordId" FROM "DeliveryPackageLink" WHERE "deliveryRecordId" = ${input.id})`;
       await evidence(tx, meta, "delivery.reversed", "DeliveryRecord", input.id, { seasonId: input.seasonId, reason: input.reason });
       return { id: input.id, status: "reversed" as const };
     });
@@ -377,12 +397,23 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
     });
   }
 
-  enqueueOffline(input: { id: string; operation: string; payload: Record<string, unknown> }, meta: CommandMeta) {
+  enqueueOffline(input: { id: string; seasonId: string; deviceId: string; sessionVersion: number; expectedVersion: number; ttlSeconds: number; operation: string; payload: Record<string, unknown>; tenantInstanceId: string; actorUserId: string; sessionId?: string }, meta: CommandMeta) {
     return command(this.db, "offline.queue.enqueue", meta, async (tx) => {
+      const now = meta.occurredAt;
+      const session = input.sessionId ? await tx.userSession.findFirst({ where: { id: input.sessionId, status: "active", revokedAt: null, expiresAt: { gt: now } }, select: { id: true } }) : null;
+      if (!session) throw new TenantOperationsError("OFFLINE_SESSION_NOT_ACTIVE");
+      const device = await tx.deviceIdentity.findFirst({ where: { id: input.deviceId, status: "active", OR: [{ validUntil: null }, { validUntil: { gt: now } }] }, select: { id: true } });
+      if (!device) throw new TenantOperationsError("OFFLINE_DEVICE_NOT_ENROLLED");
       await tx.offlineQueueItem.create({ data: { id: input.id, idempotencyKey: meta.idempotencyKey, operation: input.operation, payload: json(input.payload), status: "queued" } });
+      await tx.$executeRaw`UPDATE "OfflineQueueItem" SET "tenantInstanceId" = ${input.tenantInstanceId}, "seasonId" = ${input.seasonId}, "actorUserId" = ${input.actorUserId}, "deviceId" = ${input.deviceId}, "sessionId" = ${input.sessionId ?? null}, "sessionVersion" = ${input.sessionVersion}, "expectedVersion" = ${input.expectedVersion}, "expiresAt" = ${new Date(meta.occurredAt.getTime() + input.ttlSeconds * 1000)}, "nextAttemptAt" = ${meta.occurredAt} WHERE "id" = ${input.id}`;
       await evidence(tx, meta, "offline.queue.enqueued", "OfflineQueueItem", input.id, { operation: input.operation });
       return { id: input.id };
     });
+  }
+
+  async listOfflineQueue(input: { seasonId: string; deviceId: string; actorUserId: string }) {
+    const rows = await this.db.$queryRaw<Array<{ id: string; operation: string; status: string; attempts: number; nextAttemptAt: Date | null; lastErrorCode: string | null }>>`SELECT "id", "operation", "status", "attempts", "nextAttemptAt", "lastErrorCode" FROM "OfflineQueueItem" WHERE "seasonId" = ${input.seasonId} AND "deviceId" = ${input.deviceId} AND "actorUserId" = ${input.actorUserId} ORDER BY "createdAt" ASC LIMIT 200`;
+    return rows.map((row) => ({ id: row.id, operation: row.operation, status: row.status, attempts: row.attempts, nextAttemptAt: row.nextAttemptAt?.toISOString(), lastErrorCode: row.lastErrorCode ?? undefined }));
   }
 
   async listTvProjection(seasonId: string) {

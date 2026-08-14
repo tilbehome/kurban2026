@@ -60,6 +60,7 @@ export interface ChangeProxyDocumentStatusInput {
 
 export interface IssueQrTokenInput {
   id: string;
+  seasonId?: string;
   purpose: QrPurpose;
   targetId: string;
   expiresAt?: string;
@@ -146,10 +147,31 @@ export interface DeliveryCommandInput {
   shareId: string;
   customerId: string;
   receiverName?: string;
+  receiverRelationship?: string;
+  deliveryType?: "on_site" | "address";
+  serviceFee?: string;
+  packageRecordIds?: string[];
+  allowPartial?: boolean;
+  partialExceptionReason?: string;
+  staffUserId?: string;
+  deviceId?: string;
+  latitude?: string;
+  longitude?: string;
   reason?: string;
-  proof?: { id: string; proofType: "signature" | "photo" | "voice" | "note"; storageKey?: string; note?: string };
+  proof?: { id: string; proofType: "signature" | "photo" | "voice" | "note"; storageKey?: string; note?: string; mimeType?: string; sizeBytes?: number; checksumSha256?: string };
   loadingListId?: string;
   debtOverride?: { approvalRequestId: string; reason: string; storageKey?: string };
+}
+
+export interface EnqueueTenantOfflineInput {
+  id: string;
+  seasonId: string;
+  deviceId: string;
+  sessionVersion: number;
+  expectedVersion: number;
+  ttlSeconds: number;
+  operation: "scan.observation" | "task.note" | "device.diagnostic";
+  payload: Record<string, unknown>;
 }
 
 export interface MovePackageInput {
@@ -195,7 +217,8 @@ export interface OperationsRepository {
   movePackage(input: MovePackageInput, meta: CommandMeta): Promise<{ id: string }>;
   createLoadingList(input: CreateLoadingListInput, meta: CommandMeta): Promise<{ id: string; itemCount: number }>;
   closeAnimalIfDelivered(input: { seasonId: string; animalId: string; reason: string }, meta: CommandMeta): Promise<{ animalId: string; closed: true }>;
-  enqueueOffline(input: { id: string; operation: string; payload: Record<string, unknown> }, meta: CommandMeta): Promise<{ id: string }>;
+  enqueueOffline(input: EnqueueTenantOfflineInput & { tenantInstanceId: string; actorUserId: string; sessionId?: string }, meta: CommandMeta): Promise<{ id: string }>;
+  listOfflineQueue(input: { seasonId: string; deviceId: string; actorUserId: string }): Promise<Array<{ id: string; operation: string; status: string; attempts: number; nextAttemptAt?: string; lastErrorCode?: string }>>;
   listTvProjection(seasonId: string): Promise<Array<{ qurbanNo?: string; queueNo?: number; status: string; updatedAt: string }>>;
 }
 
@@ -242,7 +265,7 @@ export class TenantOperationsService {
   }
 
   async issueQrToken(context: TenantUseCaseContext, input: IssueQrTokenInput) {
-    await this.authorize(context, "qurban.qr.issue.operational_period", { operationalPeriodId: context.operationalPeriodId });
+    await this.authorize(context, "qurban.qr.issue.operational_period", { operationalPeriodId: input.seasonId ?? context.operationalPeriodId });
     const opaqueToken = `qr_${randomUUID()}_${randomUUID()}`;
     return this.repository.issueQrToken({ ...input, opaqueToken }, commandMeta(context));
   }
@@ -331,6 +354,10 @@ export class TenantOperationsService {
     await this.authorize(context, "logistics.delivery.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "share", id: input.shareId } });
     if (input.debtOverride && !context.approval?.approved) throw new TenantOperationsError("DELIVERY_DEBT_OVERRIDE_APPROVAL_REQUIRED");
     if (input.proof?.storageKey?.startsWith("public/")) throw new TenantOperationsError("PROTECTED_DOCUMENT_STORAGE_REQUIRED");
+    if (input.deliveryType === "address" && !input.receiverName?.trim()) throw new TenantOperationsError("DELIVERY_RECEIVER_REQUIRED");
+    if (input.serviceFee && !/^\d+(\.\d{1,4})?$/.test(input.serviceFee)) throw new TenantOperationsError("DELIVERY_SERVICE_FEE_INVALID");
+    if (!input.packageRecordIds?.length) throw new TenantOperationsError("DELIVERY_PACKAGE_CHECKLIST_REQUIRED");
+    if (input.allowPartial && (!input.partialExceptionReason?.trim() || !context.approval?.approved)) throw new TenantOperationsError("PARTIAL_DELIVERY_APPROVAL_REQUIRED");
     return this.repository.recordDelivery(input, commandMeta(context));
   }
 
@@ -355,12 +382,17 @@ export class TenantOperationsService {
     return this.repository.closeAnimalIfDelivered(input, commandMeta(context));
   }
 
-  async enqueueOffline(context: TenantUseCaseContext, input: { id: string; operation: string; payload: Record<string, unknown> }) {
+  async enqueueOffline(context: TenantUseCaseContext, input: EnqueueTenantOfflineInput) {
     await this.authorize(context, "field.pwa.sync.assigned_record", {});
     const serialized = JSON.stringify(input.payload);
     if (/password|secret|token|databaseUrl|connectionString/i.test(serialized)) throw new TenantOperationsError("OFFLINE_QUEUE_SECRET_FORBIDDEN");
-    if (/sale|finance|receipt|slaughter.confirm|delivery.confirm/i.test(input.operation)) throw new TenantOperationsError("CRITICAL_OPERATION_OFFLINE_FORBIDDEN");
-    return this.repository.enqueueOffline(input, commandMeta(context));
+    if (!context.sessionId) throw new TenantOperationsError("OFFLINE_SESSION_REQUIRED");
+    return this.repository.enqueueOffline({ ...input, tenantInstanceId: context.tenantInstanceId, actorUserId: context.actorUserId, sessionId: context.sessionId }, commandMeta(context));
+  }
+
+  async listOfflineQueue(context: TenantUseCaseContext, input: { seasonId: string; deviceId: string }) {
+    await this.authorize(context, "field.pwa.sync.assigned_record", { operationalPeriodId: input.seasonId });
+    return this.repository.listOfflineQueue({ ...input, actorUserId: context.actorUserId });
   }
 
   async listTvProjection(context: TenantUseCaseContext, seasonId: string) {
