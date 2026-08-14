@@ -20,7 +20,8 @@ export type DeliveryId = Brand<string, "DeliveryId">;
 export type OfflineQueueItemId = Brand<string, "OfflineQueueItemId">;
 export type DeviceAdapterId = Brand<string, "DeviceAdapterId">;
 
-export type ProxyDocumentStatus = "draft" | "signed" | "revoked" | "lost";
+export type ProxyDocumentStatus = "draft" | "received" | "signed" | "revoked" | "invalid" | "lost";
+export type ProxyMethod = "face_to_face" | "phone" | "oral" | "written" | "other" | "voice_recording" | "face_to_face_oral";
 export type QrPurpose = "proxyDocument" | "slaughterCheck" | "package" | "delivery" | "customerTracking";
 export type SlaughterStatus = "waiting" | "ready" | "slaughtering" | "skinning" | "cutting" | "weighing" | "packing" | "ready_for_delivery" | "delivered" | "exception";
 export type DeliveryStatus = "pending" | "delivered" | "reversed";
@@ -35,8 +36,29 @@ export interface ProxyDocument {
   status: ProxyDocumentStatus;
   version: number;
   storageKey: string;
+  method: ProxyMethod;
+  policyVersion: string;
+  receivedAt?: string;
+  receivedPlace?: string;
+  receivedByUserId?: UserId;
+  description?: string;
   signedAt?: string;
   revokedAt?: string;
+}
+
+export interface ProxyGrantor {
+  customerId: CustomerId;
+  shareIds: readonly ShareId[];
+  relationshipToShareholder?: string;
+}
+
+export interface ProxyDocumentHistory {
+  proxyDocumentId: ProxyDocumentId;
+  fromStatus?: ProxyDocumentStatus;
+  toStatus: ProxyDocumentStatus;
+  reason?: string;
+  actorUserId: UserId;
+  occurredAt: string;
 }
 
 export interface QrToken {

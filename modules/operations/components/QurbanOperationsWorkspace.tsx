@@ -46,6 +46,8 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
   const [shareIds, setShareIds] = useState("");
   const [documentId, setDocumentId] = useState("");
   const [storageKey, setStorageKey] = useState("tenant-documents/proxy/");
+  const [proxyMethod, setProxyMethod] = useState("face_to_face");
+  const [policyVersion, setPolicyVersion] = useState("proxy-policy-v1");
   const [qrToken, setQrToken] = useState("");
   const [jobId, setJobId] = useState("");
   const [nextStatus, setNextStatus] = useState("slaughtering");
@@ -131,9 +133,12 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                     <Field label="Hisse ID'leri"><Input value={shareIds} onChange={(e) => setShareIds(e.target.value)} placeholder="share_1, share_2" /></Field>
                     <Field label="Belge ID"><Input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder="proxy_document_..." /></Field>
                     <Field label="Korumalı storage key"><Input value={storageKey} onChange={(e) => setStorageKey(e.target.value)} /></Field>
+                    <Field label="Vekâlet yöntemi"><Input value={proxyMethod} onChange={(e) => setProxyMethod(e.target.value)} placeholder="face_to_face / phone / oral / written / other" /></Field>
+                    <Field label="Metin/politika sürümü"><Input value={policyVersion} onChange={(e) => setPolicyVersion(e.target.value)} /></Field>
                   </Grid>
                   <div className="flex flex-wrap gap-2">
-                    <Button disabled={pending || !permissions.canProxy} onClick={() => post("Vekâlet belgesi", { action: "proxy-document", id: documentId || `proxy_${crypto.randomUUID()}`, seasonId, grantorCustomerId: customerId, shareIds: split(shareIds), method: "face_to_face_oral", storageKey, status: "signed" })}>Sözlü/yüz yüze vekâlet kaydet</Button>
+                    <Button disabled={pending || !permissions.canProxy} onClick={() => post("Vekâlet belgesi", { action: "proxy-document", id: documentId || `proxy_${crypto.randomUUID()}`, seasonId, grantorCustomerId: customerId, shareIds: split(shareIds), grantors: [{ customerId, shareIds: split(shareIds) }], method: proxyMethod, policyVersion, receivedAt: new Date().toISOString(), description: reason || undefined, storageKey, status: "received" })}>Vekâleti al ve tarihçeyi başlat</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canProxy || !documentId} onClick={() => post("Vekâleti imzala", { action: "change-proxy-status", id: documentId, seasonId, nextStatus: "signed", reason: reason || "Yetkili personel vekâlet kaydını imzalı duruma aldı" })}>İmzalı duruma al</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canProxy || !documentId} onClick={() => post("Belge iptali", { action: "revoke-proxy-document", id: documentId, seasonId, reason: reason || "Belge yenileme/iptal gerekçesi" })}>Belgeyi iptal et</Button>
                   </div>
                   <Rule>Dosya `public/` altında olamaz; tek kanıt birden fazla hisseye bağlanabilir.</Rule>

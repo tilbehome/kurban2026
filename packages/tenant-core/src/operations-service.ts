@@ -8,6 +8,8 @@ import {
   assertQrTokenUsable,
   assertSlaughterTransition,
   type DeliveryStatus,
+  type ProxyMethod,
+  type ProxyDocumentStatus,
   type QrPurpose,
   type SlaughterStatus,
 } from "./operation-flow";
@@ -33,11 +35,24 @@ export interface CreateProxyDocumentInput {
   seasonId: string;
   grantorCustomerId: string;
   shareIds: string[];
-  method: "face_to_face_oral" | "phone" | "voice_recording";
+  grantors?: Array<{ customerId: string; shareIds: string[]; relationshipToShareholder?: string }>;
+  method: ProxyMethod;
+  policyVersion?: string;
+  receivedAt?: string;
+  receivedPlace?: string;
+  receivedByUserId?: string;
+  description?: string;
   storageKey: string;
   mimeType?: string;
   sizeBytes?: number;
-  status?: "draft" | "signed";
+  status?: "draft" | "received" | "signed";
+}
+
+export interface ChangeProxyDocumentStatusInput {
+  id: string;
+  seasonId: string;
+  nextStatus: ProxyDocumentStatus;
+  reason: string;
 }
 
 export interface IssueQrTokenInput {
@@ -114,6 +129,7 @@ export interface CreateLoadingListInput {
 export interface OperationsRepository {
   createProxyDocument(input: CreateProxyDocumentInput, meta: CommandMeta): Promise<{ id: string; shareIds: string[] }>;
   revokeProxyDocument(input: { id: string; seasonId: string; reason: string }, meta: CommandMeta): Promise<{ id: string }>;
+  changeProxyDocumentStatus(input: ChangeProxyDocumentStatusInput, meta: CommandMeta): Promise<{ id: string; status: ProxyDocumentStatus }>;
   getProxyDocument(input: { id: string; seasonId: string }): Promise<{ id: string; seasonId: string; customerId: string; status: string; storageKey: string; mimeType?: string; sizeBytes?: number } | null>;
   issueQrToken(input: IssueQrTokenInput & { opaqueToken: string }, meta: CommandMeta): Promise<{ id: string; opaqueToken: string }>;
   consumeQrToken(input: { opaqueToken: string; purpose: QrPurpose; now: string }, meta: CommandMeta): Promise<{ id: string; targetId: string }>;
@@ -137,6 +153,11 @@ export class TenantOperationsService {
     await this.authorize(context, "qurban.proxy.manage.operational_period", { operationalPeriodId: input.seasonId });
     assertProtectedStorage(input.storageKey);
     if (input.shareIds.length < 1 || input.shareIds.length > 7) throw new TenantOperationsError("PROXY_SHARE_COUNT_INVALID");
+    const grantors = input.grantors ?? [{ customerId: input.grantorCustomerId, shareIds: input.shareIds }];
+    const grantedShares = new Set(grantors.flatMap((grantor) => grantor.shareIds));
+    if (grantedShares.size !== input.shareIds.length || input.shareIds.some((shareId) => !grantedShares.has(shareId))) {
+      throw new TenantOperationsError("PROXY_GRANTOR_SHARE_SCOPE_INVALID");
+    }
     return this.repository.createProxyDocument(input, commandMeta(context));
   }
 
@@ -145,7 +166,21 @@ export class TenantOperationsService {
     return this.repository.revokeProxyDocument(input, commandMeta(context));
   }
 
+  async changeProxyDocumentStatus(context: TenantUseCaseContext, input: ChangeProxyDocumentStatusInput) {
+    await this.authorize(context, "qurban.document.manage.operational_period", { operationalPeriodId: input.seasonId });
+    return this.repository.changeProxyDocumentStatus(input, commandMeta(context));
+  }
+
   async getProxyDocument(context: TenantUseCaseContext, input: { id: string; seasonId: string }) {
+    await this.authorize(context, "qurban.proxy.read.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "proxy_document", id: input.id } });
+    const document = await this.repository.getProxyDocument(input);
+    if (!document) throw new TenantOperationsError("PROXY_DOCUMENT_NOT_FOUND");
+    assertProtectedStorage(document.storageKey);
+    const { storageKey: _protectedStorageKey, ...safeMetadata } = document;
+    return { ...safeMetadata, downloadAvailable: true };
+  }
+
+  async resolveProxyDocumentDownload(context: TenantUseCaseContext, input: { id: string; seasonId: string }) {
     await this.authorize(context, "qurban.proxy.read.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "proxy_document", id: input.id } });
     const document = await this.repository.getProxyDocument(input);
     if (!document) throw new TenantOperationsError("PROXY_DOCUMENT_NOT_FOUND");

@@ -14,8 +14,9 @@ const approvalSchema = z.object({
 });
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("proxy-document"), id: z.string().min(3), seasonId: z.string().min(3), grantorCustomerId: z.string().min(3), shareIds: z.array(z.string().min(3)).min(1).max(7), method: z.enum(["face_to_face_oral", "phone", "voice_recording"]), storageKey: z.string().min(8).max(500), mimeType: z.string().min(3).max(100).optional(), sizeBytes: z.number().int().positive().max(25_000_000).optional(), status: z.enum(["draft", "signed"]).optional(), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("proxy-document"), id: z.string().min(3), seasonId: z.string().min(3), grantorCustomerId: z.string().min(3), shareIds: z.array(z.string().min(3)).min(1).max(7), grantors: z.array(z.object({ customerId: z.string().min(3), shareIds: z.array(z.string().min(3)).min(1).max(7), relationshipToShareholder: z.string().max(120).optional() })).min(1).max(7).optional(), method: z.enum(["face_to_face", "phone", "oral", "written", "other", "voice_recording", "face_to_face_oral"]), policyVersion: z.string().min(1).max(80), receivedAt: z.string().datetime().optional(), receivedPlace: z.string().max(160).optional(), receivedByUserId: z.string().min(3).optional(), description: z.string().max(500).optional(), storageKey: z.string().min(8).max(500), mimeType: z.string().min(3).max(100).optional(), sizeBytes: z.number().int().positive().max(25_000_000).optional(), status: z.enum(["draft", "received", "signed"]).optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("revoke-proxy-document"), id: z.string().min(3), seasonId: z.string().min(3), reason: z.string().min(8).max(500), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("change-proxy-status"), id: z.string().min(3), seasonId: z.string().min(3), nextStatus: z.enum(["draft", "received", "signed", "revoked", "invalid", "lost"]), reason: z.string().min(8).max(500), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("issue-qr"), id: z.string().min(3), purpose: z.enum(["proxyDocument", "slaughterCheck", "package", "delivery", "customerTracking"]), targetId: z.string().min(3), expiresAt: z.string().datetime().optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("consume-qr"), opaqueToken: z.string().min(20), purpose: z.enum(["proxyDocument", "slaughterCheck", "package", "delivery", "customerTracking"]), now: z.string().datetime().optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("create-slaughter-job"), id: z.string().min(3), seasonId: z.string().min(3), animalId: z.string().min(3), shareCardId: z.string().min(3), queueNo: z.number().int().positive().optional(), assignedUserId: z.string().min(3).optional(), approval: approvalSchema.optional() }),
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
     switch (body.action) {
       case "proxy-document": return NextResponse.json({ ok: true, result: await service.createProxyDocument(context, body) });
       case "revoke-proxy-document": return NextResponse.json({ ok: true, result: await service.revokeProxyDocument(context, body) });
+      case "change-proxy-status": return NextResponse.json({ ok: true, result: await service.changeProxyDocumentStatus(context, body) });
       case "issue-qr": return NextResponse.json({ ok: true, result: await service.issueQrToken(context, body) });
       case "consume-qr": return NextResponse.json({ ok: true, result: await service.consumeQrToken(context, body) });
       case "create-slaughter-job": return NextResponse.json({ ok: true, result: await service.createSlaughterJob(context, body) });

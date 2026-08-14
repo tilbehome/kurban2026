@@ -7,6 +7,7 @@ import {
   type CommandMeta,
   type CreatePackageInput,
   type CreateProxyDocumentInput,
+  type ChangeProxyDocumentStatusInput,
   type CreateSlaughterJobInput,
   type DeliveryCommandInput,
   type IssueQrTokenInput,
@@ -30,8 +31,10 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
     return command(this.db, "proxy.document.create", meta, async (tx) => {
       const shareCount = await tx.share.count({ where: { id: { in: input.shareIds }, shareCard: { seasonId: input.seasonId } } });
       if (shareCount !== input.shareIds.length) throw new TenantOperationsError("PROXY_SHARE_SCOPE_INVALID");
-      const ownedShareCount = await tx.share.count({ where: { id: { in: input.shareIds }, shareCard: { seasonId: input.seasonId }, customerId: input.grantorCustomerId, status: "sold" } });
-      if (ownedShareCount !== input.shareIds.length) throw new TenantOperationsError("PROXY_GRANTOR_SHARE_MISMATCH");
+      const grantors = input.grantors ?? [{ customerId: input.grantorCustomerId, shareIds: input.shareIds }];
+      const grantorCustomerIds = [...new Set(grantors.map((grantor) => grantor.customerId))];
+      const grantorCount = await tx.customer.count({ where: { id: { in: grantorCustomerIds } } });
+      if (grantorCount !== grantorCustomerIds.length) throw new TenantOperationsError("PROXY_GRANTOR_SHARE_MISMATCH");
       await tx.proxyDocument.create({
         data: {
           id: input.id,
@@ -48,7 +51,15 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
           shares: { create: input.shareIds.map((shareId) => ({ shareId })) },
         },
       });
-      await evidence(tx, meta, "proxy.document.created", "ProxyDocument", input.id, { seasonId: input.seasonId, method: input.method, shareIds: input.shareIds });
+      const policyVersion = input.policyVersion?.trim() || "legacy-api-v1";
+      await tx.$executeRaw`UPDATE "ProxyDocument" SET "policyVersion" = ${policyVersion}, "receivedAt" = ${input.receivedAt ? new Date(input.receivedAt) : meta.occurredAt}, "receivedPlace" = ${input.receivedPlace ?? null}, "receivedByUserId" = ${input.receivedByUserId ?? meta.actorUserId}, "description" = ${input.description ?? null} WHERE "id" = ${input.id}`;
+      for (const grantor of grantors) {
+        for (const shareId of grantor.shareIds) {
+          await tx.$executeRaw`INSERT INTO "ProxyGrantor" ("proxyDocumentId", "customerId", "shareId", "relationshipToShareholder", "createdAt") VALUES (${input.id}, ${grantor.customerId}, ${shareId}, ${grantor.relationshipToShareholder ?? null}, ${meta.occurredAt})`;
+        }
+      }
+      await tx.$executeRaw`INSERT INTO "ProxyDocumentHistory" ("id", "proxyDocumentId", "fromStatus", "toStatus", "reason", "actorUserId", "occurredAt") VALUES (${`proxy_history_${randomUUID()}`}, ${input.id}, ${null}, ${input.status ?? "signed"}, ${"Vekâlet kaydı oluşturuldu"}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      await evidence(tx, meta, "proxy.document.created", "ProxyDocument", input.id, { seasonId: input.seasonId, method: input.method, policyVersion, shareIds: input.shareIds, grantorCount: grantors.length });
       return { id: input.id, shareIds: input.shareIds };
     });
   }
@@ -57,8 +68,31 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
     return command(this.db, "proxy.document.revoke", meta, async (tx) => {
       const changed = await tx.proxyDocument.updateMany({ where: { id: input.id, seasonId: input.seasonId, status: { not: "revoked" } }, data: { status: "revoked", revokedAt: meta.occurredAt, revocationReason: input.reason, version: { increment: 1 } } });
       if (changed.count !== 1) throw new TenantOperationsError("PROXY_DOCUMENT_NOT_FOUND_OR_REVOKED");
+      await tx.$executeRaw`INSERT INTO "ProxyDocumentHistory" ("id", "proxyDocumentId", "fromStatus", "toStatus", "reason", "actorUserId", "occurredAt") VALUES (${`proxy_history_${randomUUID()}`}, ${input.id}, ${"signed"}, ${"revoked"}, ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
       await evidence(tx, meta, "proxy.document.revoked", "ProxyDocument", input.id, { seasonId: input.seasonId, reason: input.reason });
       return { id: input.id };
+    });
+  }
+
+  changeProxyDocumentStatus(input: ChangeProxyDocumentStatusInput, meta: CommandMeta) {
+    return command(this.db, "proxy.document.status.change", meta, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{ status: string }>>`SELECT "status" FROM "ProxyDocument" WHERE "id" = ${input.id} AND "seasonId" = ${input.seasonId} FOR UPDATE`;
+      const current = rows[0]?.status;
+      if (!current) throw new TenantOperationsError("PROXY_DOCUMENT_NOT_FOUND");
+      const allowed: Record<string, readonly string[]> = {
+        draft: ["received", "signed", "invalid"],
+        received: ["signed", "invalid"],
+        signed: ["revoked", "invalid", "lost"],
+        revoked: [], invalid: [], lost: [],
+      };
+      if (!(allowed[current] ?? []).includes(input.nextStatus)) throw new TenantOperationsError("PROXY_STATUS_TRANSITION_NOT_ALLOWED");
+      await tx.$executeRaw`UPDATE "ProxyDocument" SET "status" = ${input.nextStatus}, "version" = "version" + 1, "signedAt" = CASE WHEN ${input.nextStatus} = 'signed' THEN ${meta.occurredAt} ELSE "signedAt" END, "revokedAt" = CASE WHEN ${input.nextStatus} IN ('revoked','invalid','lost') THEN ${meta.occurredAt} ELSE "revokedAt" END, "revocationReason" = CASE WHEN ${input.nextStatus} IN ('revoked','invalid','lost') THEN ${input.reason} ELSE "revocationReason" END WHERE "id" = ${input.id}`;
+      await tx.$executeRaw`INSERT INTO "ProxyDocumentHistory" ("id", "proxyDocumentId", "fromStatus", "toStatus", "reason", "actorUserId", "occurredAt") VALUES (${`proxy_history_${randomUUID()}`}, ${input.id}, ${current}, ${input.nextStatus}, ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      if (["revoked", "invalid", "lost"].includes(input.nextStatus)) {
+        await tx.$executeRaw`UPDATE "QrToken" SET "revokedAt" = ${meta.occurredAt} WHERE "purpose" = 'proxyDocument' AND "targetId" = ${input.id} AND "revokedAt" IS NULL`;
+      }
+      await evidence(tx, meta, "proxy.document.status.changed", "ProxyDocument", input.id, { seasonId: input.seasonId, from: current, to: input.nextStatus, reason: input.reason });
+      return { id: input.id, status: input.nextStatus };
     });
   }
 

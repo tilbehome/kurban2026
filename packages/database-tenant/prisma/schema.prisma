@@ -588,6 +588,7 @@ model Customer {
   paymentAllocations     PaymentAllocation[]
   ledgerEntries          LedgerEntry[]
   proxyDocuments         ProxyDocument[]
+  proxyGrantors          ProxyGrantor[]
   deliveries             DeliveryRecord[]
   invoices               PurchaseInvoice[]
 
@@ -1051,6 +1052,7 @@ model Share {
   journalLines           JournalLine[]
   paymentAllocations     PaymentAllocation[]
   proxyDocumentShares    ProxyDocumentShare[]
+  proxyGrantors          ProxyGrantor[]
   packages               PackageRecord[]
   deliveries             DeliveryRecord[]
 
@@ -1501,6 +1503,11 @@ model ProxyDocument {
   status           String
   version          Int
   method           String
+  policyVersion    String               @default("legacy")
+  receivedAt       DateTime?
+  receivedPlace    String?
+  receivedByUserId String?
+  description      String?
   storageKey       String
   mimeType         String?
   sizeBytes        Int?
@@ -1513,8 +1520,38 @@ model ProxyDocument {
   season           Season               @relation(fields: [seasonId], references: [id])
   customer         Customer             @relation(fields: [customerId], references: [id])
   shares           ProxyDocumentShare[]
+  grantors         ProxyGrantor[]
+  history          ProxyDocumentHistory[]
 
   @@index([seasonId, customerId])
+}
+
+model ProxyGrantor {
+  proxyDocumentId          String
+  customerId               String
+  shareId                  String
+  relationshipToShareholder String?
+  createdAt                DateTime      @default(now())
+  proxyDocument            ProxyDocument @relation(fields: [proxyDocumentId], references: [id])
+  customer                 Customer      @relation(fields: [customerId], references: [id])
+  share                    Share         @relation(fields: [shareId], references: [id])
+
+  @@id([proxyDocumentId, customerId, shareId])
+  @@index([customerId])
+  @@index([shareId])
+}
+
+model ProxyDocumentHistory {
+  id              String        @id
+  proxyDocumentId String
+  fromStatus      String?
+  toStatus        String
+  reason          String?
+  actorUserId     String
+  occurredAt      DateTime
+  proxyDocument   ProxyDocument @relation(fields: [proxyDocumentId], references: [id])
+
+  @@index([proxyDocumentId, occurredAt])
 }
 
 model ProxyDocumentShare {
@@ -1528,14 +1565,19 @@ model ProxyDocumentShare {
 
 model QrToken {
   id          String    @id
+  seasonId    String?
   purpose     String
   targetId    String
   opaqueToken String    @unique
   expiresAt   DateTime?
   revokedAt   DateTime?
+  consumedAt  DateTime?
+  createdByUserId String?
+  publicLabel String?
   createdAt   DateTime  @default(now())
 
   @@index([purpose])
+  @@index([seasonId, purpose])
   @@index([targetId])
 }
 
