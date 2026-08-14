@@ -1589,6 +1589,15 @@ model SlaughterJob {
   status         String
   queueNo        Int?
   assignedUserId String?
+  facilityId     String?
+  teamId         String?
+  stationId      String?
+  assignedDeviceId String?
+  blockedReason  String?
+  delayReason    String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  version        Int       @default(1)
   updatedAt      DateTime  @updatedAt
   season         Season    @relation(fields: [seasonId], references: [id])
   animal         Animal    @relation(fields: [animalId], references: [id])
@@ -1598,6 +1607,91 @@ model SlaughterJob {
   @@index([animalId])
   @@index([shareCardId])
   @@index([queueNo])
+}
+
+model SlaughterJobHistory {
+  id             String   @id
+  slaughterJobId String
+  fromStatus     String?
+  toStatus       String
+  reason         String?
+  actorUserId    String
+  occurredAt     DateTime
+
+  @@index([slaughterJobId, occurredAt])
+}
+
+model SlaughterJobAssignment {
+  id               String   @id
+  slaughterJobId   String
+  facilityId       String?
+  teamId           String?
+  stationId        String?
+  assignedUserId   String?
+  assignedDeviceId String?
+  queueNo          Int?
+  reason           String
+  actorUserId      String
+  occurredAt       DateTime
+
+  @@index([slaughterJobId, occurredAt])
+}
+
+model OperationTeam {
+  id         String   @id
+  seasonId   String
+  facilityId String?
+  code       String
+  name       String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([seasonId, code])
+}
+
+model OperationStation {
+  id         String   @id
+  seasonId   String
+  facilityId String?
+  code       String
+  name       String
+  stationType String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([seasonId, code])
+}
+
+model OperationException {
+  id               String   @id
+  seasonId         String
+  slaughterJobId   String?
+  category         String
+  severity         String
+  description      String
+  status           String   @default("open")
+  assignedUserId   String?
+  reportedByUserId String
+  reportedAt       DateTime
+  resolvedByUserId String?
+  resolvedAt       DateTime?
+  resolution       String?
+
+  @@index([seasonId, status, severity])
+  @@index([slaughterJobId])
+}
+
+model OperationModeState {
+  id          String   @id
+  seasonId    String
+  mode        String
+  reason      String
+  actorUserId String
+  updatedAt   DateTime
+
+  @@index([seasonId, updatedAt])
 }
 
 model WeighingRecord {

@@ -51,6 +51,8 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
   const [qrToken, setQrToken] = useState("");
   const [jobId, setJobId] = useState("");
   const [nextStatus, setNextStatus] = useState("slaughtering");
+  const [stationId, setStationId] = useState("");
+  const [teamId, setTeamId] = useState("");
   const [weightKg, setWeightKg] = useState("0.000");
   const [labelNo, setLabelNo] = useState("");
   const [packageRecordId, setPackageRecordId] = useState("");
@@ -165,10 +167,15 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                     <Field label="ShareCard ID"><Input value={shareCardId} onChange={(e) => setShareCardId(e.target.value)} /></Field>
                     <Field label="SlaughterJob ID"><Input value={jobId} onChange={(e) => setJobId(e.target.value)} /></Field>
                     <Field label="Sonraki durum"><Input value={nextStatus} onChange={(e) => setNextStatus(e.target.value)} placeholder="slaughtering/weighing/packing..." /></Field>
+                    <Field label="İstasyon ID"><Input value={stationId} onChange={(e) => setStationId(e.target.value)} /></Field>
+                    <Field label="Ekip ID"><Input value={teamId} onChange={(e) => setTeamId(e.target.value)} /></Field>
                   </Grid>
                   <div className="flex flex-wrap gap-2">
                     <Button disabled={pending || !permissions.canSlaughter} onClick={() => post("Kesim işi oluştur", { action: "create-slaughter-job", id: jobId || `slaughter_${crypto.randomUUID()}`, seasonId, animalId, shareCardId, queueNo: 1 })}>7 vekâlet kontrolüyle hazırla</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canSlaughter || !jobId} onClick={() => post("Kesim durum geçişi", { action: "advance-slaughter", id: jobId, seasonId, nextStatus, reason: reason || "İstasyon geçişi" })}>Durumu ilerlet</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canSlaughter || !jobId} onClick={() => post("İstasyon/ekip atama", { action: "assign-slaughter", id: jobId, seasonId, stationId: stationId || undefined, teamId: teamId || undefined, reason: reason || "Operasyon istasyonu ve ekip ataması" })}>İstasyon ve ekip ata</Button>
+                    <Button variant="destructive" disabled={pending || !permissions.canSlaughter || !jobId} onClick={() => post("Operasyon istisnası", { action: "report-operation-exception", id: `exception_${crypto.randomUUID()}`, seasonId, slaughterJobId: jobId, category: "station_block", severity: "high", description: reason || "İstasyon işlemi güvenli biçimde durduruldu" })}>Sorun bildir ve işi durdur</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canSlaughter} onClick={() => post("Komuta merkezi", { action: "operation-command-center", seasonId }, `command-center:${seasonId}:${Date.now()}`)}>Canlı kuyruğu yenile</Button>
                   </div>
                   <Rule>Hazırlık → vekâlet/uygunluk → kesim → tartım → paketleme → teslime hazır zinciri atlatılamaz.</Rule>
                 </OpCard>

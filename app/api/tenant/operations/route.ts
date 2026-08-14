@@ -20,7 +20,11 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("issue-qr"), id: z.string().min(3), purpose: z.enum(["proxyDocument", "slaughterCheck", "package", "delivery", "customerTracking"]), targetId: z.string().min(3), expiresAt: z.string().datetime().optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("consume-qr"), opaqueToken: z.string().min(20), purpose: z.enum(["proxyDocument", "slaughterCheck", "package", "delivery", "customerTracking"]), now: z.string().datetime().optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("create-slaughter-job"), id: z.string().min(3), seasonId: z.string().min(3), animalId: z.string().min(3), shareCardId: z.string().min(3), queueNo: z.number().int().positive().optional(), assignedUserId: z.string().min(3).optional(), approval: approvalSchema.optional() }),
-  z.object({ action: z.literal("advance-slaughter"), id: z.string().min(3), seasonId: z.string().min(3), nextStatus: z.enum(["waiting", "ready", "slaughtering", "skinning", "cutting", "weighing", "packing", "ready_for_delivery", "delivered", "exception"]), reason: z.string().min(8).max(500), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("advance-slaughter"), id: z.string().min(3), seasonId: z.string().min(3), nextStatus: z.enum(["preparation", "waiting", "ready", "in_slaughter", "slaughtering", "slaughtered", "skinning", "cutting", "weighing", "packaging", "packing", "ready_for_delivery", "delivered", "done", "exception"]), reason: z.string().min(8).max(500), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("assign-slaughter"), id: z.string().min(3), seasonId: z.string().min(3), facilityId: z.string().min(3).optional(), teamId: z.string().min(3).optional(), stationId: z.string().min(3).optional(), assignedUserId: z.string().min(3).optional(), assignedDeviceId: z.string().min(3).optional(), queueNo: z.number().int().positive().optional(), reason: z.string().min(8).max(500), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("report-operation-exception"), id: z.string().min(3), seasonId: z.string().min(3), slaughterJobId: z.string().min(3), category: z.string().min(3).max(80), severity: z.enum(["low", "medium", "high", "critical"]), description: z.string().min(8).max(500), assignedUserId: z.string().min(3).optional(), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("set-operation-mode"), id: z.string().min(3), seasonId: z.string().min(3), mode: z.enum(["normal", "restricted", "read_only", "emergency_stop"]), reason: z.string().min(8).max(500), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("operation-command-center"), seasonId: z.string().min(3) }),
   z.object({ action: z.literal("record-weighing"), id: z.string().min(3), seasonId: z.string().min(3), animalId: z.string().min(3), carcassWeightKg: z.string().regex(/^\d+(\.\d{1,3})?$/), reason: z.string().max(500).optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("create-package"), id: z.string().min(3), seasonId: z.string().min(3), shareId: z.string().min(3), grossWeightKg: z.string().regex(/^\d+(\.\d{1,3})?$/), labelNo: z.string().min(3).max(80), reason: z.string().max(500).optional(), components: z.array(z.object({ id: z.string().min(3), componentType: z.enum(["bone_in", "boneless", "offal", "other"]), weightKg: z.string().regex(/^\d+(\.\d{1,3})?$/), estimatedValue: z.string().regex(/^\d+(\.\d{1,4})?$/).optional() })).max(20).optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("move-package"), id: z.string().min(3), seasonId: z.string().min(3), packageRecordId: z.string().min(3), roomId: z.string().min(3), sectionId: z.string().min(3).optional(), rackId: z.string().min(3).optional(), reason: z.string().min(8).max(500), approval: approvalSchema.optional() }),
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
 
   try {
     const service = tenantOperationsService();
-    const context = tenantUseCaseContext(session, { request, payload: body, readOnly: body.action === "tv-projection", approval: "approval" in body ? body.approval : undefined });
+    const context = tenantUseCaseContext(session, { request, payload: body, readOnly: body.action === "tv-projection" || body.action === "operation-command-center", approval: "approval" in body ? body.approval : undefined });
     switch (body.action) {
       case "proxy-document": return NextResponse.json({ ok: true, result: await service.createProxyDocument(context, body) });
       case "revoke-proxy-document": return NextResponse.json({ ok: true, result: await service.revokeProxyDocument(context, body) });
@@ -74,6 +78,10 @@ export async function POST(request: Request) {
       case "consume-qr": return NextResponse.json({ ok: true, result: await service.consumeQrToken(context, body) });
       case "create-slaughter-job": return NextResponse.json({ ok: true, result: await service.createSlaughterJob(context, body) });
       case "advance-slaughter": return NextResponse.json({ ok: true, result: await service.advanceSlaughter(context, body) });
+      case "assign-slaughter": return NextResponse.json({ ok: true, result: await service.assignSlaughter(context, body) });
+      case "report-operation-exception": return NextResponse.json({ ok: true, result: await service.reportOperationException(context, body) });
+      case "set-operation-mode": return NextResponse.json({ ok: true, result: await service.setOperationMode(context, body) });
+      case "operation-command-center": return NextResponse.json({ ok: true, items: await service.listOperationCommandCenter(context, body.seasonId) });
       case "record-weighing": return NextResponse.json({ ok: true, result: await service.recordWeighing(context, body) });
       case "create-package": return NextResponse.json({ ok: true, result: await service.createPackage(context, body) });
       case "move-package": return NextResponse.json({ ok: true, result: await service.movePackage(context, body) });

@@ -11,6 +11,7 @@ import {
   type ProxyMethod,
   type ProxyDocumentStatus,
   type QrPurpose,
+  type OperationMode,
   type SlaughterStatus,
 } from "./operation-flow";
 
@@ -78,6 +79,28 @@ export interface AdvanceSlaughterInput {
   reason: string;
 }
 
+export interface AssignSlaughterInput {
+  id: string;
+  seasonId: string;
+  facilityId?: string;
+  teamId?: string;
+  stationId?: string;
+  assignedUserId?: string;
+  assignedDeviceId?: string;
+  queueNo?: number;
+  reason: string;
+}
+
+export interface ReportOperationExceptionInput {
+  id: string;
+  seasonId: string;
+  slaughterJobId: string;
+  category: string;
+  severity: "low" | "medium" | "high" | "critical";
+  description: string;
+  assignedUserId?: string;
+}
+
 export interface RecordWeighingInput {
   id: string;
   seasonId: string;
@@ -135,6 +158,10 @@ export interface OperationsRepository {
   consumeQrToken(input: { opaqueToken: string; purpose: QrPurpose; now: string }, meta: CommandMeta): Promise<{ id: string; targetId: string }>;
   createSlaughterJob(input: CreateSlaughterJobInput, meta: CommandMeta): Promise<{ id: string }>;
   advanceSlaughter(input: AdvanceSlaughterInput, meta: CommandMeta): Promise<{ id: string; status: SlaughterStatus }>;
+  assignSlaughter(input: AssignSlaughterInput, meta: CommandMeta): Promise<{ id: string }>;
+  reportOperationException(input: ReportOperationExceptionInput, meta: CommandMeta): Promise<{ id: string }>;
+  setOperationMode(input: { id: string; seasonId: string; mode: OperationMode; reason: string }, meta: CommandMeta): Promise<{ id: string; mode: OperationMode }>;
+  listOperationCommandCenter(seasonId: string): Promise<Array<{ id: string; queueNo?: number; status: string; stationId?: string; assignedUserId?: string; blockedReason?: string; updatedAt: string }>>;
   recordWeighing(input: RecordWeighingInput, meta: CommandMeta): Promise<{ id: string }>;
   createPackage(input: CreatePackageInput, meta: CommandMeta): Promise<{ id: string }>;
   recordDelivery(input: DeliveryCommandInput, meta: CommandMeta): Promise<{ id: string; status: DeliveryStatus }>;
@@ -207,6 +234,27 @@ export class TenantOperationsService {
   async advanceSlaughter(context: TenantUseCaseContext, input: AdvanceSlaughterInput) {
     await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "slaughter_job", id: input.id } });
     return this.repository.advanceSlaughter(input, commandMeta(context));
+  }
+
+  async assignSlaughter(context: TenantUseCaseContext, input: AssignSlaughterInput) {
+    await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "slaughter_job", id: input.id } });
+    return this.repository.assignSlaughter(input, commandMeta(context));
+  }
+
+  async reportOperationException(context: TenantUseCaseContext, input: ReportOperationExceptionInput) {
+    await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "slaughter_job", id: input.slaughterJobId } });
+    return this.repository.reportOperationException(input, commandMeta(context));
+  }
+
+  async setOperationMode(context: TenantUseCaseContext, input: { id: string; seasonId: string; mode: OperationMode; reason: string }) {
+    await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: input.seasonId });
+    if ((input.mode === "emergency_stop" || input.mode === "read_only") && !context.approval?.approved) throw new TenantOperationsError("OPERATION_MODE_APPROVAL_REQUIRED");
+    return this.repository.setOperationMode(input, commandMeta(context));
+  }
+
+  async listOperationCommandCenter(context: TenantUseCaseContext, seasonId: string) {
+    await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: seasonId });
+    return this.repository.listOperationCommandCenter(seasonId);
   }
 
   async recordWeighing(context: TenantUseCaseContext, input: RecordWeighingInput) {

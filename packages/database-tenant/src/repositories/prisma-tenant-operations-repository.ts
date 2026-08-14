@@ -4,6 +4,7 @@ import {
   assertQrUsable,
   TenantOperationsError,
   type AdvanceSlaughterInput,
+  type AssignSlaughterInput,
   type CommandMeta,
   type CreatePackageInput,
   type CreateProxyDocumentInput,
@@ -13,7 +14,9 @@ import {
   type IssueQrTokenInput,
   type CreateLoadingListInput,
   type MovePackageInput,
+  type OperationMode,
   type OperationsRepository,
+  type ReportOperationExceptionInput,
   type RecordWeighingInput,
   type SlaughterStatus,
 } from "@tilbecore/tenant-core";
@@ -150,6 +153,7 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       if (missingProxy) throw new TenantOperationsError("SLAUGHTER_REQUIRES_SEVEN_VALID_PROXY_DOCUMENTS");
       if (shareCard.animal.qurbanEligibility !== "eligible") throw new TenantOperationsError("ANIMAL_QURBAN_ELIGIBILITY_BLOCKED");
       await tx.slaughterJob.create({ data: { id: input.id, seasonId: input.seasonId, animalId: input.animalId, shareCardId: input.shareCardId, status: "ready", queueNo: input.queueNo, assignedUserId: input.assignedUserId } });
+      await tx.$executeRaw`INSERT INTO "SlaughterJobHistory" ("id", "slaughterJobId", "fromStatus", "toStatus", "reason", "actorUserId", "occurredAt") VALUES (${`slaughter_history_${randomUUID()}`}, ${input.id}, ${null}, ${"ready"}, ${"Kesim işi önkoşulları tamamlandı"}, ${meta.actorUserId}, ${meta.occurredAt})`;
       await evidence(tx, meta, "slaughter.job.created", "SlaughterJob", input.id, { seasonId: input.seasonId, queueNo: input.queueNo });
       return { id: input.id };
     });
@@ -157,13 +161,54 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
 
   advanceSlaughter(input: AdvanceSlaughterInput, meta: CommandMeta) {
     return command(this.db, "slaughter.job.advance", meta, async (tx) => {
-      const row = await tx.slaughterJob.findUnique({ where: { id: input.id } });
-      if (!row || row.seasonId !== input.seasonId) throw new TenantOperationsError("SLAUGHTER_JOB_NOT_FOUND");
-      assertOperationTransition(row.status as SlaughterStatus, input.nextStatus);
-      await tx.slaughterJob.update({ where: { id: input.id }, data: { status: input.nextStatus } });
-      await evidence(tx, meta, "slaughter.job.advanced", "SlaughterJob", input.id, { seasonId: input.seasonId, from: row.status, to: input.nextStatus, reason: input.reason });
+      const modeRows = await tx.$queryRaw<Array<{ mode: string }>>`SELECT "mode" FROM "OperationModeState" WHERE "seasonId" = ${input.seasonId} ORDER BY "updatedAt" DESC LIMIT 1 FOR UPDATE`;
+      if (["read_only", "emergency_stop"].includes(modeRows[0]?.mode ?? "normal")) throw new TenantOperationsError("OPERATION_WRITES_DISABLED");
+      const rows = await tx.$queryRaw<Array<{ status: string }>>`SELECT "status" FROM "SlaughterJob" WHERE "id" = ${input.id} AND "seasonId" = ${input.seasonId} FOR UPDATE`;
+      const current = rows[0]?.status;
+      if (!current) throw new TenantOperationsError("SLAUGHTER_JOB_NOT_FOUND");
+      assertOperationTransition(current as SlaughterStatus, input.nextStatus);
+      await tx.$executeRaw`UPDATE "SlaughterJob" SET "status" = ${input.nextStatus}, "version" = "version" + 1, "startedAt" = CASE WHEN ${input.nextStatus} IN ('in_slaughter','slaughtering') THEN COALESCE("startedAt", ${meta.occurredAt}) ELSE "startedAt" END, "completedAt" = CASE WHEN ${input.nextStatus} IN ('done','delivered') THEN ${meta.occurredAt} ELSE "completedAt" END, "updatedAt" = ${meta.occurredAt} WHERE "id" = ${input.id}`;
+      await tx.$executeRaw`INSERT INTO "SlaughterJobHistory" ("id", "slaughterJobId", "fromStatus", "toStatus", "reason", "actorUserId", "occurredAt") VALUES (${`slaughter_history_${randomUUID()}`}, ${input.id}, ${current}, ${input.nextStatus}, ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      await evidence(tx, meta, "slaughter.job.advanced", "SlaughterJob", input.id, { seasonId: input.seasonId, from: current, to: input.nextStatus, reason: input.reason });
       return { id: input.id, status: input.nextStatus };
     });
+  }
+
+  assignSlaughter(input: AssignSlaughterInput, meta: CommandMeta) {
+    return command(this.db, "slaughter.job.assign", meta, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "SlaughterJob" WHERE "id" = ${input.id} AND "seasonId" = ${input.seasonId} FOR UPDATE`;
+      if (!rows[0]) throw new TenantOperationsError("SLAUGHTER_JOB_NOT_FOUND");
+      await tx.$executeRaw`UPDATE "SlaughterJob" SET "facilityId" = ${input.facilityId ?? null}, "teamId" = ${input.teamId ?? null}, "stationId" = ${input.stationId ?? null}, "assignedUserId" = ${input.assignedUserId ?? null}, "assignedDeviceId" = ${input.assignedDeviceId ?? null}, "queueNo" = COALESCE(${input.queueNo ?? null}, "queueNo"), "version" = "version" + 1, "updatedAt" = ${meta.occurredAt} WHERE "id" = ${input.id}`;
+      await tx.$executeRaw`INSERT INTO "SlaughterJobAssignment" ("id", "slaughterJobId", "facilityId", "teamId", "stationId", "assignedUserId", "assignedDeviceId", "queueNo", "reason", "actorUserId", "occurredAt") VALUES (${`slaughter_assignment_${randomUUID()}`}, ${input.id}, ${input.facilityId ?? null}, ${input.teamId ?? null}, ${input.stationId ?? null}, ${input.assignedUserId ?? null}, ${input.assignedDeviceId ?? null}, ${input.queueNo ?? null}, ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      await evidence(tx, meta, "slaughter.job.assigned", "SlaughterJob", input.id, { seasonId: input.seasonId, stationId: input.stationId, teamId: input.teamId, queueNo: input.queueNo, reason: input.reason });
+      return { id: input.id };
+    });
+  }
+
+  reportOperationException(input: ReportOperationExceptionInput, meta: CommandMeta) {
+    return command(this.db, "operation.exception.report", meta, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{ id: string; status: string }>>`SELECT "id", "status" FROM "SlaughterJob" WHERE "id" = ${input.slaughterJobId} AND "seasonId" = ${input.seasonId} FOR UPDATE`;
+      const job = rows[0];
+      if (!job) throw new TenantOperationsError("SLAUGHTER_JOB_NOT_FOUND");
+      await tx.$executeRaw`INSERT INTO "OperationException" ("id", "seasonId", "slaughterJobId", "category", "severity", "description", "status", "assignedUserId", "reportedByUserId", "reportedAt") VALUES (${input.id}, ${input.seasonId}, ${input.slaughterJobId}, ${input.category}, ${input.severity}, ${input.description}, 'open', ${input.assignedUserId ?? null}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      await tx.$executeRaw`UPDATE "SlaughterJob" SET "status" = 'exception', "blockedReason" = ${input.category}, "version" = "version" + 1, "updatedAt" = ${meta.occurredAt} WHERE "id" = ${input.slaughterJobId}`;
+      await tx.$executeRaw`INSERT INTO "SlaughterJobHistory" ("id", "slaughterJobId", "fromStatus", "toStatus", "reason", "actorUserId", "occurredAt") VALUES (${`slaughter_history_${randomUUID()}`}, ${input.slaughterJobId}, ${job.status}, 'exception', ${input.description}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      await evidence(tx, meta, "operation.exception.reported", "OperationException", input.id, { seasonId: input.seasonId, slaughterJobId: input.slaughterJobId, category: input.category, severity: input.severity });
+      return { id: input.id };
+    });
+  }
+
+  setOperationMode(input: { id: string; seasonId: string; mode: OperationMode; reason: string }, meta: CommandMeta) {
+    return command(this.db, "operation.mode.set", meta, async (tx) => {
+      await tx.$executeRaw`INSERT INTO "OperationModeState" ("id", "seasonId", "mode", "reason", "actorUserId", "updatedAt") VALUES (${input.id}, ${input.seasonId}, ${input.mode}, ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      await evidence(tx, meta, "operation.mode.changed", "OperationModeState", input.id, { seasonId: input.seasonId, mode: input.mode, reason: input.reason });
+      return { id: input.id, mode: input.mode };
+    });
+  }
+
+  async listOperationCommandCenter(seasonId: string) {
+    const rows = await this.db.$queryRaw<Array<{ id: string; queueNo: number | null; status: string; stationId: string | null; assignedUserId: string | null; blockedReason: string | null; updatedAt: Date }>>`SELECT "id", "queueNo", "status", "stationId", "assignedUserId", "blockedReason", "updatedAt" FROM "SlaughterJob" WHERE "seasonId" = ${seasonId} ORDER BY "queueNo" ASC NULLS LAST, "updatedAt" ASC LIMIT 250`;
+    return rows.map((row) => ({ id: row.id, queueNo: row.queueNo ?? undefined, status: row.status, stationId: row.stationId ?? undefined, assignedUserId: row.assignedUserId ?? undefined, blockedReason: row.blockedReason ?? undefined, updatedAt: row.updatedAt.toISOString() }));
   }
 
   recordWeighing(input: RecordWeighingInput, meta: CommandMeta) {

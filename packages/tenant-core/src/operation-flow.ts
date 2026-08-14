@@ -23,7 +23,8 @@ export type DeviceAdapterId = Brand<string, "DeviceAdapterId">;
 export type ProxyDocumentStatus = "draft" | "received" | "signed" | "revoked" | "invalid" | "lost";
 export type ProxyMethod = "face_to_face" | "phone" | "oral" | "written" | "other" | "voice_recording" | "face_to_face_oral";
 export type QrPurpose = "proxyDocument" | "slaughterCheck" | "package" | "delivery" | "customerTracking";
-export type SlaughterStatus = "waiting" | "ready" | "slaughtering" | "skinning" | "cutting" | "weighing" | "packing" | "ready_for_delivery" | "delivered" | "exception";
+export type SlaughterStatus = "preparation" | "waiting" | "ready" | "in_slaughter" | "slaughtering" | "slaughtered" | "skinning" | "cutting" | "weighing" | "packaging" | "packing" | "ready_for_delivery" | "delivered" | "done" | "exception";
+export type OperationMode = "normal" | "restricted" | "read_only" | "emergency_stop";
 export type DeliveryStatus = "pending" | "delivered" | "reversed";
 export type OfflineQueueStatus = "queued" | "syncing" | "synced" | "conflict" | "failed";
 export type DeviceAdapterKind = "scale" | "barcode_reader" | "qr_reader" | "label_printer" | "thermal_printer" | "tv_display";
@@ -130,15 +131,20 @@ export interface DeviceAdapterContract {
 }
 
 const SLAUGHTER_TRANSITIONS: Record<SlaughterStatus, readonly SlaughterStatus[]> = {
+  preparation: ["waiting", "exception"],
   waiting: ["ready", "exception"],
-  ready: ["slaughtering", "exception"],
-  slaughtering: ["skinning", "exception"],
+  ready: ["in_slaughter", "slaughtering", "exception"],
+  in_slaughter: ["slaughtered", "exception"],
+  slaughtering: ["slaughtered", "skinning", "exception"],
+  slaughtered: ["skinning", "exception"],
   skinning: ["cutting", "exception"],
   cutting: ["weighing", "exception"],
-  weighing: ["packing", "exception"],
+  weighing: ["packaging", "packing", "exception"],
+  packaging: ["ready_for_delivery", "exception"],
   packing: ["ready_for_delivery", "exception"],
   ready_for_delivery: ["delivered", "exception"],
-  delivered: [],
+  delivered: ["done"],
+  done: [],
   exception: ["waiting", "ready"],
 };
 
