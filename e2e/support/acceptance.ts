@@ -29,7 +29,29 @@ export async function assertKeyboardFocus(page: Page): Promise<void> {
 }
 
 export async function assertNoHorizontalReflow(page: Page): Promise<void> {
-  await page.evaluate(() => { document.documentElement.style.zoom = "2"; });
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 2);
-  expect(overflow, "%200 zoom/reflow yatay taşma").toBe(false);
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error("E2E_VIEWPORT_REQUIRED");
+  await page.setViewportSize({ width: Math.max(320, Math.floor(viewport.width / 2)), height: viewport.height });
+  const overflow = await page.evaluate(() => {
+    const viewportWidth = document.documentElement.clientWidth;
+    const elements = Array.from(document.querySelectorAll<HTMLElement>("body *"))
+      .map((element) => ({
+        tag: element.tagName.toLowerCase(),
+        className: typeof element.className === "string" ? element.className : "",
+        left: element.getBoundingClientRect().left,
+        right: element.getBoundingClientRect().right,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+      }))
+      .filter((element) => element.right > viewportWidth + 2 || element.left < -2 || element.scrollWidth > element.clientWidth + 2)
+      .slice(0, 12);
+    return {
+      viewportWidth,
+      documentScrollWidth: document.documentElement.scrollWidth,
+      elements,
+    };
+  });
+  expect(overflow.documentScrollWidth, `%200 zoom/reflow yatay taşma: ${JSON.stringify(overflow)}`).toBeLessThanOrEqual(
+    overflow.viewportWidth + 2,
+  );
 }

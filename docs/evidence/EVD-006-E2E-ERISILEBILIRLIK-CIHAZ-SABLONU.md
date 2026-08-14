@@ -8,7 +8,7 @@ owner: QA
 source_role: evidence_record_or_template
 reviewers: [UX, Accessibility, Product]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: E2E_CIHAZ_MATRISI_DEGISIKLIGINDE
 version: 0.1
@@ -137,3 +137,36 @@ blockers:
 ```
 
 Browser launch assertion yalnız kurulu motorların açılabildiğini gösterir; sayfa açan gerçek E2E veya axe sonucu değildir. Fiziksel passkey için [OPS-RB-008](../runbooks/OPS-RB-008-STAGING-KABUL-VE-FIZIKSEL-PASSKEY.md) içindeki kayıt, giriş, yanlış origin, replay, revoke, recovery code ve re-auth adımları kullanıcı etkileşimiyle uygulanmalıdır.
+
+## EVD-006-RUN-20260814-001
+
+```yaml
+result: PASSED_APPLICABLE_LOCAL_HTTPS_AUTOMATION
+tested_source_sha: 699e0d2298b2dbcf913781134d850aaafbb661a7
+ci_evidence: https://github.com/tilbehome/kurban2026/actions/runs/31822828259
+environment: WINDOWS_LOCAL_MKCERT_CADDY_HTTPS_SYNTHETIC
+playwright_version: 1.62.1
+axe_version: 4.13.0
+projects_configured: 13
+tests_discovered: 40
+tests_executed: 40
+tests_passed: 26
+tests_failed: 0
+tests_skipped_existing_external_prerequisites: 14
+new_skips_added: 0
+projects_run: [chromium-desktop, firefox-desktop, webkit-desktop, android-phone, tablet-portrait, tablet-landscape, platform-admin, tenant-panel, field-pwa, tv-public, locale-tr, locale-en, locale-ar-rtl]
+locales_run: [tr-TR, en-US, ar-SA]
+rtl: PASSED
+keyboard_focus: PASSED
+axe_critical_pages: PASSED_NO_AUTOMATED_A_AA_FINDINGS
+zoom_reflow_320px: PASSED
+form_error_relationship: PASSED
+pwa_offline_chromium: PASSED_2_OF_2
+production_target_guard: PASSED
+artifacts_policy: TRACE_SCREENSHOT_VIDEO_OFF
+real_devices: []
+physical_passkey: NOT_RUN
+printer_qr_scale_devices: []
+```
+
+Playwright servis worker otomasyonu resmî olarak Chromium tabanlı motorlarla sınırlıdır; offline test Android/field Chromium projelerinde koştu. WebKit tabletleri a11y/reflow kapsamını geçti. Emülasyon fiziksel Android, iPad/Safari veya TV kabulü sayılmaz.

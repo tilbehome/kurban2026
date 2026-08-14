@@ -42,7 +42,7 @@ export function ParcalamaSutun({ kartlar, tema }: Props) {
         <p
           className={cn(
             "py-8 text-center text-sm",
-            koyuMu ? "text-slate-400" : "text-stone-400",
+            koyuMu ? "text-slate-400" : "text-stone-600",
           )}
         >
           Şu an parçalamada kurban yok

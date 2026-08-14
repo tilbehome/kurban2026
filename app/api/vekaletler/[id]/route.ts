@@ -30,7 +30,7 @@ export async function GET(req: Request, { params }: RouteParams) {
     if (!seasonId) return apiHataYaniti("VALIDATION_INVALID");
     let document;
     try {
-      document = await tenantOperationsService().getProxyDocument(
+      document = await tenantOperationsService().resolveProxyDocumentDownload(
         tenantUseCaseContext(oturum, { request: req, readOnly: true }),
         { id, seasonId },
       );

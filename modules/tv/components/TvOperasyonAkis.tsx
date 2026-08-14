@@ -102,7 +102,7 @@ export function TvOperasyonAkis({
         </span>
       </div>
 
-      <div className="flex items-stretch justify-between gap-2 overflow-x-auto pb-1">
+      <div className="flex items-stretch justify-between gap-2 overflow-x-auto pb-1" tabIndex={0} aria-label="Operasyon aşamaları">
         {ASAMALAR.map((a, i) => {
           const Ikon = a.ikon;
           const sayi = istatistik[a.id];
@@ -113,7 +113,7 @@ export function TvOperasyonAkis({
                 className={cn(
                   "flex min-w-[110px] flex-1 flex-col items-center gap-1.5 rounded-lg border p-3 transition-all",
                   koyuMu ? a.renkDark : a.renk,
-                  !aktif && "opacity-60",
+                  !aktif && "saturate-50",
                 )}
               >
                 <Ikon

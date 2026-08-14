@@ -8,7 +8,7 @@ owner: QA-and-Operations
 source_role: evidence_record_or_template
 reviewers: [Security, Release]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: HER_RELEASE_ADAYINDA
 version: 0.1
@@ -48,6 +48,10 @@ Bu dizindeki dosyalar kanıt şablonudur; var olmaları bir kontrolün çalışt
 - [Yük ve soak](EVD-009-YUK-SOAK-SABLONU.md)
 - [Kurban Günü provası](EVD-010-KURBAN-GUNU-PROVA-SABLONU.md)
 - [Release go/no-go](EVD-012-RELEASE-GO-NO-GO-SABLONU.md)
+
+## Güncel Faz 12 kanıt seti
+
+PR #5 için repo içi Faz 12 kanıtı `699e0d2298b2dbcf913781134d850aaafbb661a7` ve [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) üzerine kayıtlıdır. Ayrıntılar EVD-001, EVD-002, EVD-003, EVD-004, EVD-005, EVD-006, EVD-009, EVD-010 ve EVD-012 belgelerindeki `RUN-20260814-001` bölümlerindedir. Bu set production veya fiziksel dış kabul değildir.
 - [Faz 2D–6 kapanış kanıtı](EVD-013-FAZ-2D-6-KAPANIS-KANITI.md)
 
 ## Hassas bilgi

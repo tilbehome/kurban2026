@@ -46,10 +46,18 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
   const [shareIds, setShareIds] = useState("");
   const [documentId, setDocumentId] = useState("");
   const [storageKey, setStorageKey] = useState("tenant-documents/proxy/");
+  const [proxyMethod, setProxyMethod] = useState("face_to_face");
+  const [policyVersion, setPolicyVersion] = useState("proxy-policy-v1");
   const [qrToken, setQrToken] = useState("");
   const [jobId, setJobId] = useState("");
   const [nextStatus, setNextStatus] = useState("slaughtering");
+  const [stationId, setStationId] = useState("");
+  const [teamId, setTeamId] = useState("");
   const [weightKg, setWeightKg] = useState("0.000");
+  const [sourceWeighingId, setSourceWeighingId] = useState("");
+  const [targetWeightKg, setTargetWeightKg] = useState("40.000");
+  const [agreedPrice, setAgreedPrice] = useState("0.0000");
+  const [saleId, setSaleId] = useState("");
   const [labelNo, setLabelNo] = useState("");
   const [packageRecordId, setPackageRecordId] = useState("");
   const [componentText, setComponentText] = useState("bone_in:0.000\noffal:0.000");
@@ -59,6 +67,7 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
   const [deliveryId, setDeliveryId] = useState("");
   const [loadingListId, setLoadingListId] = useState("");
   const [packageRecordIds, setPackageRecordIds] = useState("");
+  const [deviceId, setDeviceId] = useState("field-device-unassigned");
   const [reason, setReason] = useState("");
   const [logs, setLogs] = useState<Array<{ id: string; title: string; ok: boolean; detail: string }>>([]);
 
@@ -131,9 +140,12 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                     <Field label="Hisse ID'leri"><Input value={shareIds} onChange={(e) => setShareIds(e.target.value)} placeholder="share_1, share_2" /></Field>
                     <Field label="Belge ID"><Input value={documentId} onChange={(e) => setDocumentId(e.target.value)} placeholder="proxy_document_..." /></Field>
                     <Field label="Korumalı storage key"><Input value={storageKey} onChange={(e) => setStorageKey(e.target.value)} /></Field>
+                    <Field label="Vekâlet yöntemi"><Input value={proxyMethod} onChange={(e) => setProxyMethod(e.target.value)} placeholder="face_to_face / phone / oral / written / other" /></Field>
+                    <Field label="Metin/politika sürümü"><Input value={policyVersion} onChange={(e) => setPolicyVersion(e.target.value)} /></Field>
                   </Grid>
                   <div className="flex flex-wrap gap-2">
-                    <Button disabled={pending || !permissions.canProxy} onClick={() => post("Vekâlet belgesi", { action: "proxy-document", id: documentId || `proxy_${crypto.randomUUID()}`, seasonId, grantorCustomerId: customerId, shareIds: split(shareIds), method: "face_to_face_oral", storageKey, status: "signed" })}>Sözlü/yüz yüze vekâlet kaydet</Button>
+                    <Button disabled={pending || !permissions.canProxy} onClick={() => post("Vekâlet belgesi", { action: "proxy-document", id: documentId || `proxy_${crypto.randomUUID()}`, seasonId, grantorCustomerId: customerId, shareIds: split(shareIds), grantors: [{ customerId, shareIds: split(shareIds) }], method: proxyMethod, policyVersion, receivedAt: new Date().toISOString(), description: reason || undefined, storageKey, status: "received" })}>Vekâleti al ve tarihçeyi başlat</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canProxy || !documentId} onClick={() => post("Vekâleti imzala", { action: "change-proxy-status", id: documentId, seasonId, nextStatus: "signed", reason: reason || "Yetkili personel vekâlet kaydını imzalı duruma aldı" })}>İmzalı duruma al</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canProxy || !documentId} onClick={() => post("Belge iptali", { action: "revoke-proxy-document", id: documentId, seasonId, reason: reason || "Belge yenileme/iptal gerekçesi" })}>Belgeyi iptal et</Button>
                   </div>
                   <Rule>Dosya `public/` altında olamaz; tek kanıt birden fazla hisseye bağlanabilir.</Rule>
@@ -147,7 +159,8 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                     <Field label="Opaque token"><Input value={qrToken} onChange={(e) => setQrToken(e.target.value)} placeholder="consume için" /></Field>
                   </Grid>
                   <div className="flex flex-wrap gap-2">
-                    <Button disabled={pending || !permissions.canProxy} onClick={() => post("Teslim QR üret", { action: "issue-qr", id: `qr_${crypto.randomUUID()}`, purpose: "delivery", targetId: shareId, expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString() })}>Teslim QR üret</Button>
+                    <Button disabled={pending || !permissions.canProxy} onClick={() => post("Teslim QR üret", { action: "issue-qr", id: `qr_${crypto.randomUUID()}`, seasonId, purpose: "delivery", targetId: shareId, expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString() })}>Teslim QR üret</Button>
+                    <Button disabled={pending || !permissions.canProxy} variant="secondary" onClick={() => post("Müşteri takip bağlantısı üret", { action: "issue-qr", id: `qr_${crypto.randomUUID()}`, seasonId, purpose: "customerTracking", targetId: shareId, expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })}>Süreli takip bağlantısı üret</Button>
                     <Button disabled={pending || !permissions.canProxy || !qrToken} variant="secondary" onClick={() => post("QR tüket", { action: "consume-qr", opaqueToken: qrToken, purpose: "delivery" })}>QR tüket / tekrar kullanımı kapat</Button>
                   </div>
                 </OpCard>
@@ -160,10 +173,15 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                     <Field label="ShareCard ID"><Input value={shareCardId} onChange={(e) => setShareCardId(e.target.value)} /></Field>
                     <Field label="SlaughterJob ID"><Input value={jobId} onChange={(e) => setJobId(e.target.value)} /></Field>
                     <Field label="Sonraki durum"><Input value={nextStatus} onChange={(e) => setNextStatus(e.target.value)} placeholder="slaughtering/weighing/packing..." /></Field>
+                    <Field label="İstasyon ID"><Input value={stationId} onChange={(e) => setStationId(e.target.value)} /></Field>
+                    <Field label="Ekip ID"><Input value={teamId} onChange={(e) => setTeamId(e.target.value)} /></Field>
                   </Grid>
                   <div className="flex flex-wrap gap-2">
                     <Button disabled={pending || !permissions.canSlaughter} onClick={() => post("Kesim işi oluştur", { action: "create-slaughter-job", id: jobId || `slaughter_${crypto.randomUUID()}`, seasonId, animalId, shareCardId, queueNo: 1 })}>7 vekâlet kontrolüyle hazırla</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canSlaughter || !jobId} onClick={() => post("Kesim durum geçişi", { action: "advance-slaughter", id: jobId, seasonId, nextStatus, reason: reason || "İstasyon geçişi" })}>Durumu ilerlet</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canSlaughter || !jobId} onClick={() => post("İstasyon/ekip atama", { action: "assign-slaughter", id: jobId, seasonId, stationId: stationId || undefined, teamId: teamId || undefined, reason: reason || "Operasyon istasyonu ve ekip ataması" })}>İstasyon ve ekip ata</Button>
+                    <Button variant="destructive" disabled={pending || !permissions.canSlaughter || !jobId} onClick={() => post("Operasyon istisnası", { action: "report-operation-exception", id: `exception_${crypto.randomUUID()}`, seasonId, slaughterJobId: jobId, category: "station_block", severity: "high", description: reason || "İstasyon işlemi güvenli biçimde durduruldu" })}>Sorun bildir ve işi durdur</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canSlaughter} onClick={() => post("Komuta merkezi", { action: "operation-command-center", seasonId }, `command-center:${seasonId}:${Date.now()}`)}>Canlı kuyruğu yenile</Button>
                   </div>
                   <Rule>Hazırlık → vekâlet/uygunluk → kesim → tartım → paketleme → teslime hazır zinciri atlatılamaz.</Rule>
                 </OpCard>
@@ -174,9 +192,22 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                   <Grid>
                     <Field label="Hayvan ID"><Input value={animalId} onChange={(e) => setAnimalId(e.target.value)} /></Field>
                     <Field label="Karkas kg"><Input value={weightKg} onChange={(e) => setWeightKg(e.target.value)} inputMode="decimal" /></Field>
+                    <Field label="Kaynak tartım ID"><Input value={sourceWeighingId} onChange={(e) => setSourceWeighingId(e.target.value)} /></Field>
                   </Grid>
                   <Field label="Düzeltme/ölçüm gerekçesi"><Textarea value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
-                  <Button disabled={pending || !permissions.canWeigh} onClick={() => post("Tartım kaydı", { action: "record-weighing", id: `weighing_${crypto.randomUUID()}`, seasonId, animalId, carcassWeightKg: weightKg, reason })}>Tartımı append-only kaydet</Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button disabled={pending || !permissions.canWeigh} onClick={() => post("Tartım kaydı", { action: "record-weighing", id: `weighing_${crypto.randomUUID()}`, seasonId, animalId, carcassWeightKg: weightKg, measurementType: "carcass", reason })}>Tartımı append-only kaydet</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canWeigh || !sourceWeighingId} onClick={() => post("Yedi hisse kilo tahsisi", { action: "allocate-carcass-weight", id: `allocation_${crypto.randomUUID()}`, seasonId, animalId, sourceWeighingId, totalWeightKg: weightKg })}>7 hisseye kontrollü dağıt</Button>
+                  </div>
+                  <Grid>
+                    <Field label="Satış ID"><Input value={saleId} onChange={(e) => setSaleId(e.target.value)} /></Field>
+                    <Field label="Hisse ID"><Input value={shareId} onChange={(e) => setShareId(e.target.value)} /></Field>
+                    <Field label="Müşteri ID"><Input value={customerId} onChange={(e) => setCustomerId(e.target.value)} /></Field>
+                    <Field label="Anlaşma bedeli"><Input value={agreedPrice} onChange={(e) => setAgreedPrice(e.target.value)} inputMode="decimal" /></Field>
+                    <Field label="Hedef kg"><Input value={targetWeightKg} onChange={(e) => setTargetWeightKg(e.target.value)} inputMode="decimal" /></Field>
+                    <Field label="Gerçek kg"><Input value={weightKg} onChange={(e) => setWeightKg(e.target.value)} inputMode="decimal" /></Field>
+                  </Grid>
+                  <Button variant="secondary" disabled={pending || !permissions.canWeigh || !shareId || !customerId || !saleId} onClick={() => post("Eksik kilo düzeltmesi", { action: "record-weight-shortfall", id: `shortfall_${crypto.randomUUID()}`, seasonId, shareId, customerId, saleId, agreedPrice, targetWeightKg, actualWeightKg: weightKg, reason: reason || "Bağlayıcı eksik kilo formülüyle kontrol bekleyen düzeltme" })}>Eksik kilo düzeltmesini onaya hazırla</Button>
                 </OpCard>
               )}
 
@@ -204,6 +235,7 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                       post("Paket oluÅŸtur", { action: "create-package", id, seasonId, shareId, grossWeightKg: weightKg, labelNo: labelNo || `LBL-${Date.now()}`, reason, components: packageComponents(componentText) });
                     }}>BileÅŸenli paket/etiket oluÅŸtur</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canPackage || !packageRecordId || !coldRoomId} onClick={() => post("SoÄŸuk odaya taÅŸÄ±", { action: "move-package", id: `move_${crypto.randomUUID()}`, seasonId, packageRecordId, roomId: coldRoomId, sectionId: coldSectionId || undefined, rackId: coldRackId || undefined, reason: reason || "SoÄŸuk oda konum gÃ¼ncellemesi" })}>SoÄŸuk oda/raf konumuna al</Button>
+                    <Button variant="destructive" disabled={pending || !permissions.canPackage || !packageRecordId} onClick={() => post("Kayıp paket bildir", { action: "report-package-exception", id: `package_exception_${crypto.randomUUID()}`, seasonId, packageRecordId, status: "missing", reason: reason || "Paket beklenen konumunda bulunamadı" })}>Kayıp paket bildir</Button>
                   </div>
                   <Rule>Kaynak hayvan → hisse → paket izi korunur; yeniden baskı gerekçesi audit’e gider.</Rule>
                 </OpCard>
@@ -226,7 +258,7 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                       setLoadingListId(id);
                       post("YÃ¼kleme listesi", { action: "create-loading-list", id, seasonId, routeName: reason || "Teslimat aracÄ± gÃ¶revi", packageRecordIds: split(packageRecordIds) });
                     }}>YÃ¼kleme listesi oluÅŸtur</Button>
-                    <Button disabled={pending || !permissions.canDeliver} onClick={() => post("Teslimat", { action: "record-delivery", id: deliveryId || `delivery_${crypto.randomUUID()}`, seasonId, shareId, customerId, receiverName: reason, loadingListId: loadingListId || undefined, proof: { id: `proof_${crypto.randomUUID()}`, proofType: "note", note: reason || "Teslim kanÄ±t notu" } })}>KanÄ±tlÄ± teslim et</Button>
+                    <Button disabled={pending || !permissions.canDeliver || split(packageRecordIds).length === 0} onClick={() => post("Teslimat", { action: "record-delivery", id: deliveryId || `delivery_${crypto.randomUUID()}`, seasonId, shareId, customerId, packageRecordIds: split(packageRecordIds), deliveryType: "on_site", receiverName: reason, receiverRelationship: "authorized_recipient", deviceId, loadingListId: loadingListId || undefined, proof: { id: `proof_${crypto.randomUUID()}`, proofType: "note", note: reason || "Teslim kanıt notu" } })}>Paket checklist’iyle teslim et</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canDeliver || !animalId} onClick={() => post("HayvanÄ± kapat", { action: "close-animal", seasonId, animalId, reason: reason || "Yedi hisse teslim kontrolÃ¼ tamamlandÄ±" })}>7 teslim kontrolÃ¼yle hayvanÄ± kapat</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canDeliver || !deliveryId} onClick={() => post("Teslim geri alma", { action: "reverse-delivery", id: deliveryId, seasonId, reason: reason || "Teslimat düzeltme olayı" })}>Geri alma olayı oluştur</Button>
                   </div>
@@ -236,8 +268,12 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
 
               {panel === "field" && (
                 <OpCard title="Saha PWA offline sınıfları" icon={Smartphone}>
+                  <Field label="Enrolled cihaz ID"><Input value={deviceId} onChange={(e) => setDeviceId(e.target.value)} /></Field>
                   <Field label="Güvenli offline payload"><Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder='{"operation":"station-note","recordId":"..."}' /></Field>
-                  <Button disabled={pending || !permissions.canField} onClick={() => post("Offline kuyruğa al", { action: "enqueue-offline", id: `offline_${crypto.randomUUID()}`, operation: "station-note", payload: safeJson(reason) })}>O1/O2 güvenli komutu kuyruğa al</Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button disabled={pending || !permissions.canField} onClick={() => post("Offline kuyruğa al", { action: "enqueue-offline", id: `offline_${crypto.randomUUID()}`, seasonId, deviceId, sessionVersion: 1, expectedVersion: 0, ttlSeconds: 3600, operation: "task.note", payload: safeJson(reason) })}>Düşük riskli görevi kuyruğa al</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canField} onClick={() => post("Offline kuyruk durumu", { action: "list-offline-queue", seasonId, deviceId }, `offline-list:${seasonId}:${deviceId}:${Date.now()}`)}>Bekleyen/başarısız/çatışanları göster</Button>
+                  </div>
                   <Rule>Kritik satış, finans, kesim onayı ve teslimat offline başarılı gösterilmez.</Rule>
                 </OpCard>
               )}

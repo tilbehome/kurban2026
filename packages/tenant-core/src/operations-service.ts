@@ -8,8 +8,13 @@ import {
   assertQrTokenUsable,
   assertSlaughterTransition,
   type DeliveryStatus,
+  type ProxyMethod,
+  type ProxyDocumentStatus,
   type QrPurpose,
+  type OperationMode,
   type SlaughterStatus,
+  type WeighingType,
+  calculateWeightShortfallAdjustment,
 } from "./operation-flow";
 
 export type OperationsPermission =
@@ -33,15 +38,29 @@ export interface CreateProxyDocumentInput {
   seasonId: string;
   grantorCustomerId: string;
   shareIds: string[];
-  method: "face_to_face_oral" | "phone" | "voice_recording";
+  grantors?: Array<{ customerId: string; shareIds: string[]; relationshipToShareholder?: string }>;
+  method: ProxyMethod;
+  policyVersion?: string;
+  receivedAt?: string;
+  receivedPlace?: string;
+  receivedByUserId?: string;
+  description?: string;
   storageKey: string;
   mimeType?: string;
   sizeBytes?: number;
-  status?: "draft" | "signed";
+  status?: "draft" | "received" | "signed";
+}
+
+export interface ChangeProxyDocumentStatusInput {
+  id: string;
+  seasonId: string;
+  nextStatus: ProxyDocumentStatus;
+  reason: string;
 }
 
 export interface IssueQrTokenInput {
   id: string;
+  seasonId?: string;
   purpose: QrPurpose;
   targetId: string;
   expiresAt?: string;
@@ -63,12 +82,53 @@ export interface AdvanceSlaughterInput {
   reason: string;
 }
 
+export interface AssignSlaughterInput {
+  id: string;
+  seasonId: string;
+  facilityId?: string;
+  teamId?: string;
+  stationId?: string;
+  assignedUserId?: string;
+  assignedDeviceId?: string;
+  queueNo?: number;
+  reason: string;
+}
+
+export interface ReportOperationExceptionInput {
+  id: string;
+  seasonId: string;
+  slaughterJobId: string;
+  category: string;
+  severity: "low" | "medium" | "high" | "critical";
+  description: string;
+  assignedUserId?: string;
+}
+
 export interface RecordWeighingInput {
   id: string;
   seasonId: string;
   animalId: string;
   carcassWeightKg: string;
+  measurementType?: WeighingType;
+  deviceAdapterId?: string;
+  stationId?: string;
   reason?: string;
+}
+
+export interface CorrectWeighingInput extends RecordWeighingInput {
+  supersedesId: string;
+}
+
+export interface RecordWeightShortfallInput {
+  id: string;
+  seasonId: string;
+  shareId: string;
+  customerId: string;
+  saleId: string;
+  agreedPrice: string;
+  targetWeightKg: string;
+  actualWeightKg: string;
+  reason: string;
 }
 
 export interface CreatePackageInput {
@@ -87,10 +147,31 @@ export interface DeliveryCommandInput {
   shareId: string;
   customerId: string;
   receiverName?: string;
+  receiverRelationship?: string;
+  deliveryType?: "on_site" | "address";
+  serviceFee?: string;
+  packageRecordIds?: string[];
+  allowPartial?: boolean;
+  partialExceptionReason?: string;
+  staffUserId?: string;
+  deviceId?: string;
+  latitude?: string;
+  longitude?: string;
   reason?: string;
-  proof?: { id: string; proofType: "signature" | "photo" | "voice" | "note"; storageKey?: string; note?: string };
+  proof?: { id: string; proofType: "signature" | "photo" | "voice" | "note"; storageKey?: string; note?: string; mimeType?: string; sizeBytes?: number; checksumSha256?: string };
   loadingListId?: string;
   debtOverride?: { approvalRequestId: string; reason: string; storageKey?: string };
+}
+
+export interface EnqueueTenantOfflineInput {
+  id: string;
+  seasonId: string;
+  deviceId: string;
+  sessionVersion: number;
+  expectedVersion: number;
+  ttlSeconds: number;
+  operation: "scan.observation" | "task.note" | "device.diagnostic";
+  payload: Record<string, unknown>;
 }
 
 export interface MovePackageInput {
@@ -114,19 +195,30 @@ export interface CreateLoadingListInput {
 export interface OperationsRepository {
   createProxyDocument(input: CreateProxyDocumentInput, meta: CommandMeta): Promise<{ id: string; shareIds: string[] }>;
   revokeProxyDocument(input: { id: string; seasonId: string; reason: string }, meta: CommandMeta): Promise<{ id: string }>;
+  changeProxyDocumentStatus(input: ChangeProxyDocumentStatusInput, meta: CommandMeta): Promise<{ id: string; status: ProxyDocumentStatus }>;
   getProxyDocument(input: { id: string; seasonId: string }): Promise<{ id: string; seasonId: string; customerId: string; status: string; storageKey: string; mimeType?: string; sizeBytes?: number } | null>;
   issueQrToken(input: IssueQrTokenInput & { opaqueToken: string }, meta: CommandMeta): Promise<{ id: string; opaqueToken: string }>;
   consumeQrToken(input: { opaqueToken: string; purpose: QrPurpose; now: string }, meta: CommandMeta): Promise<{ id: string; targetId: string }>;
   createSlaughterJob(input: CreateSlaughterJobInput, meta: CommandMeta): Promise<{ id: string }>;
   advanceSlaughter(input: AdvanceSlaughterInput, meta: CommandMeta): Promise<{ id: string; status: SlaughterStatus }>;
+  assignSlaughter(input: AssignSlaughterInput, meta: CommandMeta): Promise<{ id: string }>;
+  reportOperationException(input: ReportOperationExceptionInput, meta: CommandMeta): Promise<{ id: string }>;
+  setOperationMode(input: { id: string; seasonId: string; mode: OperationMode; reason: string }, meta: CommandMeta): Promise<{ id: string; mode: OperationMode }>;
+  listOperationCommandCenter(seasonId: string): Promise<Array<{ id: string; queueNo?: number; status: string; stationId?: string; assignedUserId?: string; blockedReason?: string; updatedAt: string }>>;
   recordWeighing(input: RecordWeighingInput, meta: CommandMeta): Promise<{ id: string }>;
+  correctWeighing(input: CorrectWeighingInput, meta: CommandMeta): Promise<{ id: string }>;
+  allocateCarcassWeight(input: { id: string; seasonId: string; animalId: string; sourceWeighingId: string; totalWeightKg: string }, meta: CommandMeta): Promise<{ id: string; shareCount: number }>;
+  recordWeightShortfall(input: RecordWeightShortfallInput & { adjustmentAmount: string }, meta: CommandMeta): Promise<{ id: string; adjustmentAmount: string; status: "pending_approval" }>;
   createPackage(input: CreatePackageInput, meta: CommandMeta): Promise<{ id: string }>;
+  reportPackageException(input: { id: string; seasonId: string; packageRecordId: string; status: "missing" | "wrong" | "damaged"; reason: string }, meta: CommandMeta): Promise<{ id: string; status: string }>;
+  recordPackageTransformation(input: { id: string; seasonId: string; sourcePackageIds: string[]; targetPackageIds: string[]; transformation: "split" | "merge"; reason: string }, meta: CommandMeta): Promise<{ id: string }>;
   recordDelivery(input: DeliveryCommandInput, meta: CommandMeta): Promise<{ id: string; status: DeliveryStatus }>;
   reverseDelivery(input: { id: string; seasonId: string; reason: string }, meta: CommandMeta): Promise<{ id: string; status: DeliveryStatus }>;
   movePackage(input: MovePackageInput, meta: CommandMeta): Promise<{ id: string }>;
   createLoadingList(input: CreateLoadingListInput, meta: CommandMeta): Promise<{ id: string; itemCount: number }>;
   closeAnimalIfDelivered(input: { seasonId: string; animalId: string; reason: string }, meta: CommandMeta): Promise<{ animalId: string; closed: true }>;
-  enqueueOffline(input: { id: string; operation: string; payload: Record<string, unknown> }, meta: CommandMeta): Promise<{ id: string }>;
+  enqueueOffline(input: EnqueueTenantOfflineInput & { tenantInstanceId: string; actorUserId: string; sessionId?: string }, meta: CommandMeta): Promise<{ id: string }>;
+  listOfflineQueue(input: { seasonId: string; deviceId: string; actorUserId: string }): Promise<Array<{ id: string; operation: string; status: string; attempts: number; nextAttemptAt?: string; lastErrorCode?: string }>>;
   listTvProjection(seasonId: string): Promise<Array<{ qurbanNo?: string; queueNo?: number; status: string; updatedAt: string }>>;
 }
 
@@ -137,6 +229,11 @@ export class TenantOperationsService {
     await this.authorize(context, "qurban.proxy.manage.operational_period", { operationalPeriodId: input.seasonId });
     assertProtectedStorage(input.storageKey);
     if (input.shareIds.length < 1 || input.shareIds.length > 7) throw new TenantOperationsError("PROXY_SHARE_COUNT_INVALID");
+    const grantors = input.grantors ?? [{ customerId: input.grantorCustomerId, shareIds: input.shareIds }];
+    const grantedShares = new Set(grantors.flatMap((grantor) => grantor.shareIds));
+    if (grantedShares.size !== input.shareIds.length || input.shareIds.some((shareId) => !grantedShares.has(shareId))) {
+      throw new TenantOperationsError("PROXY_GRANTOR_SHARE_SCOPE_INVALID");
+    }
     return this.repository.createProxyDocument(input, commandMeta(context));
   }
 
@@ -145,7 +242,21 @@ export class TenantOperationsService {
     return this.repository.revokeProxyDocument(input, commandMeta(context));
   }
 
+  async changeProxyDocumentStatus(context: TenantUseCaseContext, input: ChangeProxyDocumentStatusInput) {
+    await this.authorize(context, "qurban.document.manage.operational_period", { operationalPeriodId: input.seasonId });
+    return this.repository.changeProxyDocumentStatus(input, commandMeta(context));
+  }
+
   async getProxyDocument(context: TenantUseCaseContext, input: { id: string; seasonId: string }) {
+    await this.authorize(context, "qurban.proxy.read.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "proxy_document", id: input.id } });
+    const document = await this.repository.getProxyDocument(input);
+    if (!document) throw new TenantOperationsError("PROXY_DOCUMENT_NOT_FOUND");
+    assertProtectedStorage(document.storageKey);
+    const { storageKey: _protectedStorageKey, ...safeMetadata } = document;
+    return { ...safeMetadata, downloadAvailable: true };
+  }
+
+  async resolveProxyDocumentDownload(context: TenantUseCaseContext, input: { id: string; seasonId: string }) {
     await this.authorize(context, "qurban.proxy.read.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "proxy_document", id: input.id } });
     const document = await this.repository.getProxyDocument(input);
     if (!document) throw new TenantOperationsError("PROXY_DOCUMENT_NOT_FOUND");
@@ -154,7 +265,7 @@ export class TenantOperationsService {
   }
 
   async issueQrToken(context: TenantUseCaseContext, input: IssueQrTokenInput) {
-    await this.authorize(context, "qurban.qr.issue.operational_period", { operationalPeriodId: context.operationalPeriodId });
+    await this.authorize(context, "qurban.qr.issue.operational_period", { operationalPeriodId: input.seasonId ?? context.operationalPeriodId });
     const opaqueToken = `qr_${randomUUID()}_${randomUUID()}`;
     return this.repository.issueQrToken({ ...input, opaqueToken }, commandMeta(context));
   }
@@ -174,10 +285,49 @@ export class TenantOperationsService {
     return this.repository.advanceSlaughter(input, commandMeta(context));
   }
 
+  async assignSlaughter(context: TenantUseCaseContext, input: AssignSlaughterInput) {
+    await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "slaughter_job", id: input.id } });
+    return this.repository.assignSlaughter(input, commandMeta(context));
+  }
+
+  async reportOperationException(context: TenantUseCaseContext, input: ReportOperationExceptionInput) {
+    await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "slaughter_job", id: input.slaughterJobId } });
+    return this.repository.reportOperationException(input, commandMeta(context));
+  }
+
+  async setOperationMode(context: TenantUseCaseContext, input: { id: string; seasonId: string; mode: OperationMode; reason: string }) {
+    await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: input.seasonId });
+    if ((input.mode === "emergency_stop" || input.mode === "read_only") && !context.approval?.approved) throw new TenantOperationsError("OPERATION_MODE_APPROVAL_REQUIRED");
+    return this.repository.setOperationMode(input, commandMeta(context));
+  }
+
+  async listOperationCommandCenter(context: TenantUseCaseContext, seasonId: string) {
+    await this.authorize(context, "qurban.slaughter.manage.operational_period", { operationalPeriodId: seasonId });
+    return this.repository.listOperationCommandCenter(seasonId);
+  }
+
   async recordWeighing(context: TenantUseCaseContext, input: RecordWeighingInput) {
     await this.authorize(context, "operations.weighing.record.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "animal", id: input.animalId } });
     if (!/^\d+(\.\d{1,3})?$/.test(input.carcassWeightKg)) throw new TenantOperationsError("WEIGHT_PRECISION_INVALID");
     return this.repository.recordWeighing(input, commandMeta(context));
+  }
+
+  async correctWeighing(context: TenantUseCaseContext, input: CorrectWeighingInput) {
+    await this.authorize(context, "operations.weighing.record.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "animal", id: input.animalId } });
+    if (!input.reason?.trim()) throw new TenantOperationsError("WEIGHING_CORRECTION_REASON_REQUIRED");
+    return this.repository.correctWeighing(input, commandMeta(context));
+  }
+
+  async allocateCarcassWeight(context: TenantUseCaseContext, input: { id: string; seasonId: string; animalId: string; sourceWeighingId: string; totalWeightKg: string }) {
+    await this.authorize(context, "operations.weighing.record.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "animal", id: input.animalId } });
+    if (!/^\d+(\.\d{1,3})?$/.test(input.totalWeightKg)) throw new TenantOperationsError("WEIGHT_PRECISION_INVALID");
+    return this.repository.allocateCarcassWeight(input, commandMeta(context));
+  }
+
+  async recordWeightShortfall(context: TenantUseCaseContext, input: RecordWeightShortfallInput) {
+    await this.authorize(context, "operations.weighing.record.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "share", id: input.shareId } });
+    const adjustmentAmount = calculateWeightShortfallAdjustment(input);
+    return this.repository.recordWeightShortfall({ ...input, adjustmentAmount }, commandMeta(context));
   }
 
   async createPackage(context: TenantUseCaseContext, input: CreatePackageInput) {
@@ -189,10 +339,25 @@ export class TenantOperationsService {
     return this.repository.createPackage(input, commandMeta(context));
   }
 
+  async reportPackageException(context: TenantUseCaseContext, input: { id: string; seasonId: string; packageRecordId: string; status: "missing" | "wrong" | "damaged"; reason: string }) {
+    await this.authorize(context, "operations.packaging.manage.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "package", id: input.packageRecordId } });
+    return this.repository.reportPackageException(input, commandMeta(context));
+  }
+
+  async recordPackageTransformation(context: TenantUseCaseContext, input: { id: string; seasonId: string; sourcePackageIds: string[]; targetPackageIds: string[]; transformation: "split" | "merge"; reason: string }) {
+    await this.authorize(context, "operations.packaging.manage.assigned_record", { operationalPeriodId: input.seasonId });
+    if (input.sourcePackageIds.length < 1 || input.targetPackageIds.length < 1) throw new TenantOperationsError("PACKAGE_TRANSFORMATION_SCOPE_INVALID");
+    return this.repository.recordPackageTransformation(input, commandMeta(context));
+  }
+
   async recordDelivery(context: TenantUseCaseContext, input: DeliveryCommandInput) {
     await this.authorize(context, "logistics.delivery.manage.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "share", id: input.shareId } });
     if (input.debtOverride && !context.approval?.approved) throw new TenantOperationsError("DELIVERY_DEBT_OVERRIDE_APPROVAL_REQUIRED");
     if (input.proof?.storageKey?.startsWith("public/")) throw new TenantOperationsError("PROTECTED_DOCUMENT_STORAGE_REQUIRED");
+    if (input.deliveryType === "address" && !input.receiverName?.trim()) throw new TenantOperationsError("DELIVERY_RECEIVER_REQUIRED");
+    if (input.serviceFee && !/^\d+(\.\d{1,4})?$/.test(input.serviceFee)) throw new TenantOperationsError("DELIVERY_SERVICE_FEE_INVALID");
+    if (!input.packageRecordIds?.length) throw new TenantOperationsError("DELIVERY_PACKAGE_CHECKLIST_REQUIRED");
+    if (input.allowPartial && (!input.partialExceptionReason?.trim() || !context.approval?.approved)) throw new TenantOperationsError("PARTIAL_DELIVERY_APPROVAL_REQUIRED");
     return this.repository.recordDelivery(input, commandMeta(context));
   }
 
@@ -217,12 +382,17 @@ export class TenantOperationsService {
     return this.repository.closeAnimalIfDelivered(input, commandMeta(context));
   }
 
-  async enqueueOffline(context: TenantUseCaseContext, input: { id: string; operation: string; payload: Record<string, unknown> }) {
+  async enqueueOffline(context: TenantUseCaseContext, input: EnqueueTenantOfflineInput) {
     await this.authorize(context, "field.pwa.sync.assigned_record", {});
     const serialized = JSON.stringify(input.payload);
     if (/password|secret|token|databaseUrl|connectionString/i.test(serialized)) throw new TenantOperationsError("OFFLINE_QUEUE_SECRET_FORBIDDEN");
-    if (/sale|finance|receipt|slaughter.confirm|delivery.confirm/i.test(input.operation)) throw new TenantOperationsError("CRITICAL_OPERATION_OFFLINE_FORBIDDEN");
-    return this.repository.enqueueOffline(input, commandMeta(context));
+    if (!context.sessionId) throw new TenantOperationsError("OFFLINE_SESSION_REQUIRED");
+    return this.repository.enqueueOffline({ ...input, tenantInstanceId: context.tenantInstanceId, actorUserId: context.actorUserId, sessionId: context.sessionId }, commandMeta(context));
+  }
+
+  async listOfflineQueue(context: TenantUseCaseContext, input: { seasonId: string; deviceId: string }) {
+    await this.authorize(context, "field.pwa.sync.assigned_record", { operationalPeriodId: input.seasonId });
+    return this.repository.listOfflineQueue({ ...input, actorUserId: context.actorUserId });
   }
 
   async listTvProjection(context: TenantUseCaseContext, seasonId: string) {

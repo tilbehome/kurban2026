@@ -96,22 +96,22 @@ function scenarioFor(selected) {
     case "db-pool":
     case "worker-backlog":
     case "report":
-      return { [selected]: { executor: "constant-vus", vus: positiveInt("K6_VUS"), duration: required("K6_DURATION") } };
+      return { [selected]: { executor: "constant-vus", vus: positiveInt("TILBE_K6_VUS"), duration: required("TILBE_K6_DURATION") } };
     case "spike":
       return { spike: { executor: "ramping-vus", startVUs: 0, stages: [
-        { duration: required("K6_RAMP_DURATION"), target: positiveInt("K6_SPIKE_VUS") },
-        { duration: required("K6_HOLD_DURATION"), target: positiveInt("K6_SPIKE_VUS") },
-        { duration: required("K6_RAMP_DOWN_DURATION"), target: 0 },
+        { duration: required("TILBE_K6_RAMP_DURATION"), target: positiveInt("TILBE_K6_SPIKE_VUS") },
+        { duration: required("TILBE_K6_HOLD_DURATION"), target: positiveInt("TILBE_K6_SPIKE_VUS") },
+        { duration: required("TILBE_K6_RAMP_DOWN_DURATION"), target: 0 },
       ] } };
     case "soak":
-      return { soak: { executor: "constant-vus", vus: positiveInt("K6_VUS"), duration: required("K6_DURATION"), gracefulStop: "30s" } };
+      return { soak: { executor: "constant-vus", vus: positiveInt("TILBE_K6_VUS"), duration: required("TILBE_K6_DURATION"), gracefulStop: "30s" } };
     case "concurrency":
     case "idempotency":
     case "tenant-isolation":
     case "read-only":
     case "failure-injection":
     case "offline-sync":
-      return { [selected]: { executor: "per-vu-iterations", vus: positiveInt("K6_VUS"), iterations: positiveInt("K6_ITERATIONS"), maxDuration: required("K6_MAX_DURATION") } };
+      return { [selected]: { executor: "per-vu-iterations", vus: positiveInt("TILBE_K6_VUS"), iterations: positiveInt("TILBE_K6_ITERATIONS"), maxDuration: required("TILBE_K6_MAX_DURATION") } };
     default:
       throw new Error(`K6_PROFILE_INVALID:${selected}`);
   }
@@ -125,7 +125,7 @@ function acceptanceUrl(value, name) {
   const port = match[2];
   if (port && Number(port) > 65535) throw new Error(`${name}_PORT_INVALID`);
   const staging = hostname === "staging.tilbecore.com" || hostname.endsWith(".staging.tilbecore.com");
-  const local = hostname === "tilbecore.test" || hostname.endsWith(".tilbecore.test");
+  const local = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "tilbecore.test" || hostname.endsWith(".tilbecore.test");
   if (!staging && !local) throw new Error(`${name}_MUST_BE_HTTPS_STAGING_OR_LOCAL`);
   if (hostname === "tilbecore.com" || (hostname.endsWith(".tilbecore.com") && !staging)) throw new Error(`${name}_PRODUCTION_FORBIDDEN`);
   return `https://${hostname}${port ? `:${port}` : ""}`;

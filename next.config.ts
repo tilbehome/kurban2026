@@ -10,14 +10,27 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
   // Custom push handler dahil et
   importScripts: ["/push-handler.js"],
+  // Belge gezintisi ağ nedeniyle başarısız olduğunda yalnız sentetik, PII
+  // içermeyen offline yüzeyi gösterilir. API çağrıları aşağıdaki NetworkOnly
+  // kurallarıyla fail-closed kalmaya devam eder.
+  fallbacks: {
+    document: "/offline",
+  },
   // Hassas veya oturum bağlı veri cache'e girmez. API cache politikası
   // deny-by-default'tur; yalnız PII içermediği ayrıca doğrulanan public akış
   // açıkça READ_CACHE listesine alınabilir.
   runtimeCaching: [
     {
+      urlPattern: ({ request }: { request: Request }) => request.mode === "navigate",
+      handler: "NetworkOnly",
+      method: "GET",
+      options: {},
+    },
+    {
       urlPattern: /\/api\/.*/,
       handler: "NetworkOnly",
       method: "POST",
+      options: {},
     },
     {
       urlPattern: /\/api\/public\/operations-tv(?:\?.*)?$/,
@@ -33,6 +46,7 @@ const withPWA = withPWAInit({
       urlPattern: /\/api\/.*/,
       handler: "NetworkOnly",
       method: "GET",
+      options: {},
     },
     // Resimler — CacheFirst
     {

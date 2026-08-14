@@ -20,12 +20,16 @@ export type DeliveryId = Brand<string, "DeliveryId">;
 export type OfflineQueueItemId = Brand<string, "OfflineQueueItemId">;
 export type DeviceAdapterId = Brand<string, "DeviceAdapterId">;
 
-export type ProxyDocumentStatus = "draft" | "signed" | "revoked" | "lost";
+export type ProxyDocumentStatus = "draft" | "received" | "signed" | "revoked" | "invalid" | "lost";
+export type ProxyMethod = "face_to_face" | "phone" | "oral" | "written" | "other" | "voice_recording" | "face_to_face_oral";
 export type QrPurpose = "proxyDocument" | "slaughterCheck" | "package" | "delivery" | "customerTracking";
-export type SlaughterStatus = "waiting" | "ready" | "slaughtering" | "skinning" | "cutting" | "weighing" | "packing" | "ready_for_delivery" | "delivered" | "exception";
-export type DeliveryStatus = "pending" | "delivered" | "reversed";
-export type OfflineQueueStatus = "queued" | "syncing" | "synced" | "conflict" | "failed";
+export type SlaughterStatus = "preparation" | "waiting" | "ready" | "in_slaughter" | "slaughtering" | "slaughtered" | "skinning" | "cutting" | "weighing" | "packaging" | "packing" | "ready_for_delivery" | "delivered" | "done" | "exception";
+export type OperationMode = "normal" | "restricted" | "read_only" | "emergency_stop";
+export type DeliveryStatus = "pending" | "partial" | "delivered" | "reversed";
+export type OfflineQueueStatus = "queued" | "syncing" | "synced" | "conflict" | "failed" | "poisoned" | "expired";
 export type DeviceAdapterKind = "scale" | "barcode_reader" | "qr_reader" | "label_printer" | "thermal_printer" | "tv_display";
+export type WeighingType = "purchase" | "live" | "control" | "carcass" | "share" | "package";
+export type PackageStatus = "created" | "stored" | "picked" | "loaded" | "delivered" | "missing" | "wrong" | "damaged" | "void";
 
 export interface ProxyDocument {
   tenantInstanceId: TenantInstanceId;
@@ -35,8 +39,29 @@ export interface ProxyDocument {
   status: ProxyDocumentStatus;
   version: number;
   storageKey: string;
+  method: ProxyMethod;
+  policyVersion: string;
+  receivedAt?: string;
+  receivedPlace?: string;
+  receivedByUserId?: UserId;
+  description?: string;
   signedAt?: string;
   revokedAt?: string;
+}
+
+export interface ProxyGrantor {
+  customerId: CustomerId;
+  shareIds: readonly ShareId[];
+  relationshipToShareholder?: string;
+}
+
+export interface ProxyDocumentHistory {
+  proxyDocumentId: ProxyDocumentId;
+  fromStatus?: ProxyDocumentStatus;
+  toStatus: ProxyDocumentStatus;
+  reason?: string;
+  actorUserId: UserId;
+  occurredAt: string;
 }
 
 export interface QrToken {
@@ -107,16 +132,59 @@ export interface DeviceAdapterContract {
   enabled: boolean;
 }
 
+export interface ScaleAdapterPort {
+  readKilograms(input: { deviceAdapterId: DeviceAdapterId; operationId: string }): Promise<{ kilograms: KilogramString; measuredAt: string; calibrationRef?: string }>;
+}
+
+export interface CodeScannerAdapterPort {
+  scan(input: { deviceAdapterId: DeviceAdapterId; expected: "barcode" | "qr" }): Promise<{ value: string; scannedAt: string }>;
+}
+
+export interface LabelPrinterAdapterPort {
+  print(input: { deviceAdapterId: DeviceAdapterId; templateVersion: string; packageId: PackageId; copies: number }): Promise<{ providerJobId: string }>;
+}
+
+export function calculateWeightShortfallAdjustment(input: { agreedPrice: string; targetWeightKg: string; actualWeightKg: string }): string {
+  const scale = BigInt(10_000);
+  const money = decimalToScaled(input.agreedPrice, 4);
+  const target = decimalToScaled(input.targetWeightKg, 3);
+  const actual = decimalToScaled(input.actualWeightKg, 3);
+  const zero = BigInt(0);
+  if (target <= zero || money < zero || actual < zero) throw new Error("WEIGHT_SHORTFALL_INPUT_INVALID");
+  const missing = target > actual ? target - actual : zero;
+  const amount = (money * missing) / target;
+  return scaledToDecimal(amount, scale, 4);
+}
+
+function decimalToScaled(value: string, precision: number): bigint {
+  if (!/^\d+(\.\d+)?$/.test(value)) throw new Error("DECIMAL_INVALID");
+  const [whole = "0", fraction = ""] = value.split(".");
+  if (fraction.length > precision) throw new Error("DECIMAL_PRECISION_INVALID");
+  const normalized = `${whole}${fraction.padEnd(precision, "0")}`;
+  return BigInt(normalized);
+}
+
+function scaledToDecimal(value: bigint, scale: bigint, precision: number): string {
+  const whole = value / scale;
+  const fraction = (value % scale).toString().padStart(precision, "0");
+  return `${whole}.${fraction}`;
+}
+
 const SLAUGHTER_TRANSITIONS: Record<SlaughterStatus, readonly SlaughterStatus[]> = {
+  preparation: ["waiting", "exception"],
   waiting: ["ready", "exception"],
-  ready: ["slaughtering", "exception"],
-  slaughtering: ["skinning", "exception"],
+  ready: ["in_slaughter", "slaughtering", "exception"],
+  in_slaughter: ["slaughtered", "exception"],
+  slaughtering: ["slaughtered", "skinning", "exception"],
+  slaughtered: ["skinning", "exception"],
   skinning: ["cutting", "exception"],
   cutting: ["weighing", "exception"],
-  weighing: ["packing", "exception"],
+  weighing: ["packaging", "packing", "exception"],
+  packaging: ["ready_for_delivery", "exception"],
   packing: ["ready_for_delivery", "exception"],
   ready_for_delivery: ["delivered", "exception"],
-  delivered: [],
+  delivered: ["done"],
+  done: [],
   exception: ["waiting", "ready"],
 };
 

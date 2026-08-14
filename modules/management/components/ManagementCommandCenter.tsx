@@ -38,6 +38,11 @@ const reports = [
   { key: "customer-season-balances", label: "Müşteri sezon carileri" },
   { key: "supplier-purchases", label: "Tedarikçi, alış ve borç özeti" },
   { key: "animal-cost-health", label: "Hayvan maliyet, sağlık ve padok" },
+  { key: "cash-bank-pos", label: "Nakit, banka, POS ve karma tahsilat" },
+  { key: "fulfillment-progress", label: "Kesim, tartım, paket ve teslim ilerlemesi" },
+  { key: "reversals-refunds", label: "İptal, iade, reversal ve kilo düzeltmeleri" },
+  { key: "season-comparison", label: "Sezonlar ve yıllar arası karşılaştırma" },
+  { key: "exception-center", label: "Eksik, blokaj ve istisna merkezi" },
   { key: "audit-exceptions", label: "Kullanıcı işlemleri, audit ve istisnalar" },
 ] as const;
 
@@ -144,10 +149,14 @@ export function ManagementCommandCenter({ defaultSeasonId, permissions }: Props)
                     <Metric label="Aktif rezervasyon" value={pick(dashboard, "sales.reservationsActive")} />
                     <Metric label="Doluluk" value={`${pick(dashboard, "sales.occupancySold")}/${pick(dashboard, "sales.occupancyTotal")}`} />
                     <Metric label="Tahsilat" value={pick(dashboard, "sales.receiptTotal")} />
+                    <Metric label="Hayvan" value={pick(dashboard, "entities.animals")} />
+                    <Metric label="Tartım" value={pick(dashboard, "operations.weighings")} />
                     <Metric label="Paket" value={pick(dashboard, "operations.packages")} />
                     <Metric label="Teslim" value={pick(dashboard, "operations.deliveries")} />
                     <Metric label="Soğuk oda" value={pick(dashboard, "operations.coldStored")} />
                     <Metric label="Bekleyen onay" value={pick(dashboard, "approvals.pending")} tone="amber" />
+                    <Metric label="Açık istisna" value={pick(dashboard, "operations.openExceptions")} tone="amber" />
+                    <Metric label="Ledger farkı" value={pick(dashboard, "finance.difference")} tone="amber" />
                   </div>
                   <Button disabled={pending || !permissions.canDashboard} onClick={() => post("Görünüm kaydet", { action: "save-dashboard-view", name: "Faz 11 komuta görünümü", scope: "personal", filters: { seasonId, facilityId }, layout: { note: layoutNote } })}>Görünümü kaydet</Button>
                 </CommandCard>

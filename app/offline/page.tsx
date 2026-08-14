@@ -32,7 +32,7 @@ export default function OfflineSayfa() {
           Tekrar Dene
         </button>
 
-        <p className="mt-12 text-xs text-slate-400">
+        <p className="mt-12 text-xs text-slate-600">
           TilbeCore Kurban 2026 · Adabereket Hayvancılık
         </p>
       </div>

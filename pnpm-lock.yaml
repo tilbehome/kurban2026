@@ -129,6 +129,9 @@ importers:
       '@types/web-push':
         specifier: ^3.6.4
         version: 3.6.4
+      babel-loader:
+        specifier: 8.4.1
+        version: 8.4.1(@babel/core@7.29.0)(webpack@5.107.1(lightningcss@1.32.0))
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2

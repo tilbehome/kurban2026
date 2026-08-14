@@ -15,8 +15,10 @@ export type ManagementPermission =
 
 export interface DashboardSummary {
   selected: { seasonId?: string; facilityId?: string; operationalPeriodId?: string };
+  entities: { animals: number; customers: number; suppliers: number };
   sales: { salesCount: number; reservationsActive: number; occupancySold: number; occupancyTotal: number; listPriceTotal: string; discountTotal: string; netSalesTotal: string; receiptTotal: string };
-  operations: { slaughterJobs: number; bottlenecks: Array<{ status: string; count: number }>; packages: number; deliveries: number; coldStored: number };
+  operations: { slaughterJobs: number; bottlenecks: Array<{ status: string; count: number }>; weighings: number; packages: number; deliveries: number; coldStored: number; openExceptions: number };
+  finance: { journalEntries: number; unbalancedJournalEntries: number; difference: string; reconciled: boolean };
   approvals: { pending: number; overdue: number };
   exceptions: Array<{ id: string; source: string; priority: "low" | "normal" | "high" | "critical"; title: string; status: string; dueAt?: string }>;
   audit: { recentCount: number };

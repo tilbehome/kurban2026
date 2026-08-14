@@ -7,12 +7,12 @@ status: VERIFIED
 owner: QA
 reviewers: [Engineering, Security, Operations, Product]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 next_review: HER_RELEASE_ADAYINDA
 version: 0.1
 source_role: master_test_quality_acceptance_plan
 source_of_truth: true
-verified_against_commit: fef2154ac64c0948f51e42e34c3f93081928e2dd
+verified_against_commit: 699e0d2298b2dbcf913781134d850aaafbb661a7
 related_requirements: [REQ-001, REQ-068, PRO-011, PRO-021, PRO-023, PRO-024, PRO-027, PRO-031]
 related_adrs: [ADR-0002, ADR-0003]
 related_modules: [all]
@@ -28,6 +28,8 @@ Bu plan gereksinim → risk → test → kanıt → release kararını tanımlar
 `fef2154ac64c0948f51e42e34c3f93081928e2dd` için [TilbeCore CI koşusu 31626396792](https://github.com/tilbehome/kurban2026/actions/runs/31626396792) doğrulanmıştır: koşu `completed/success` durumundadır ve `headSha` bu tam commit SHA’sıyla eşleşir. Başarılı job; UTF-8, Platform/Tenant Prisma validate-generate, provisioning CLI dry-run, Platform/Tenant PostgreSQL migration apply, Platform PostgreSQL integration, iki-tenant web/pool/backup-restore izolasyonu, TypeScript, unit/route, lint, ana ve Platform Admin build, PWA artefakt ve Git diff kontrollerini çalıştırmıştır. Koşuda Playwright/axe, fiziksel HTTPS passkey, gerçek cihaz, yük/soak, offline cihaz veya WAL/PITR adımı yoktur; bunlar doğrulanmış sayılmaz.
 
 13 Ağustos 2026 aday dal yerel turunda izole PostgreSQL `16.14` üzerinde platform ve tenant migration deploy, Platform PostgreSQL `9/9` ve iki-tenant provisioning/runtime/pool/logical backup/geçici restore izolasyonu `1/1` geçti. Tam unit/route turu iki kez mevcut bir eşzamanlılık testinin 5 saniyelik timeout'una takıldı; aynı test tek başına `10/10` geçti. Assertion veya timeout değiştirilmeden dosya worker sayısı ikiyle sınırlandı ve varsayılan `pnpm test` turu `242/242` geçti. Bu kayıt önceki flake sonuçlarını gizlemez. Playwright browser binary launch smoke ve 42 test keşfi geçti; gerçek HTTPS E2E/axe koşusu değildir.
+
+14 Ağustos 2026 Faz 12 turunda `699e0d2298b2dbcf913781134d850aaafbb661a7` için [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) tam başarı verdi. Yerelde unit/route `38 dosya / 261 test`, gerçek PostgreSQL `9 + 1 + 6 + 7 = 23 test`, HTTPS Playwright/axe `26 uygulanabilir başarı / 14 mevcut dış ön koşul skip / 0 hata`, iki tenant sentetik prova, OTel runtime redaksiyonu, k6 ölçümü ve disposable restore/PITR tamamlandı. Emülasyon fiziksel cihaz veya gerçek saha kabulü değildir; production release kararı `NO` kaldı.
 
 ## Test katmanları
 

@@ -7,7 +7,7 @@ owner: Product-and-Architecture
 source_role: canonical_document_index
 source_of_truth: true
 last_reviewed: 2026-08-14
-verified_against_commit: 5125093338dc4b4b3b18d635df36cf46533879af
+verified_against_commit: 699e0d2298b2dbcf913781134d850aaafbb661a7
 ```
 
 Bu dosya aktif belge sisteminin tek giriş noktasıdır. Bir belgenin listelenmesi, içindeki hedeflerin kodlandığı veya kabul testlerinin çalıştırıldığı anlamına gelmez. Gerçek durum; belge durumu, kaynak kod/migration/test kanıtı ve doğrulanan commit birlikte okunarak belirlenir.
@@ -87,9 +87,9 @@ Bu özet ayrıntılı domain kurallarının yerine geçmez; bağlayıcı ayrınt
 
 ## Kanıt sınırı ve çalıştırılmamış kabuller
 
-Son doğrulanmış `main` kod referansı `5125093338dc4b4b3b18d635df36cf46533879af` commitidir. [CI koşusu 31791110213](https://github.com/tilbehome/kurban2026/actions/runs/31791110213) `SUCCESS` sonucuyla yalnız koşuda gerçekten yer alan kontroller için kanıttır.
+Son doğrulanmış `main` kod referansı PR #4'ün normal merge commit'i `6fb3493b54a8dfa3795f1d3509a066da5105947a`'dır. [Main CI koşusu 31801130780](https://github.com/tilbehome/kurban2026/actions/runs/31801130780) `SUCCESS` sonucuyla yalnız koşuda gerçekten yer alan kontroller için kanıttır.
 
-Faz 2D–6 repo içi kod kapanış adayı draft [PR #4](https://github.com/tilbehome/kurban2026/pull/4) içindeki `55e984b658f905b2f72409eeae5b3419ec6f3972` commitidir; bu commitin [CI 31796147539](https://github.com/tilbehome/kurban2026/actions/runs/31796147539) sonucu `SUCCESS` durumundadır. PR henüz `main` ile birleştirilmemiştir. Sıradaki geliştirme Faz 7–11 kesintisiz uygulama, toplu genel test ve nihai kabul Faz 12'dir. Faz 7–11 sırasında manuel test/typecheck/lint/build çalıştırılmayacak; mevcut testler ve GitHub CI korunacaktır.
+Faz 7–11 paketi ve uygulanabilir Faz 12 repo kabulü `agent/faz-7-11-continuous-development` dalında tamamlandı. Test edilen kaynak `699e0d2298b2dbcf913781134d850aaafbb661a7`; [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) `SUCCESS`. Migration `0011–0016`, PostgreSQL/tenant/finans invariantları, statik kalite, iki build ve sentetik kabul kanıtlandı. PR #5 açık ve drafttır; `main`e merge edilmemiştir.
 
 Aşağıdakiler bu entegrasyonda `NOT_RUN` durumundadır ve doğrulanmış gösterilemez:
 
@@ -99,5 +99,7 @@ Aşağıdakiler bu entegrasyonda `NOT_RUN` durumundadır ve doğrulanmış göst
 - yük/soak ve çevrimdışı cihaz senaryoları;
 - yönetilen PostgreSQL WAL/PITR denemesi;
 - production restore ve genel Kurban Günü provası.
+
+Faz 12 kanıtları [evidence indeksindeki](evidence/README.md) `RUN-20260814-001` kayıtlarındadır. Gerçek e-Fatura/e-Arşiv sağlayıcısı, resmî UBL-TR eşlemesi, gerçek firma import-mutabakatı, fiziksel passkey/Android/tablet/TV/yazıcı/QR/terazi, gerçek saha provası ve production DNS/TLS/deployment/restore `BLOCKED/NOT_RUN` kalır. Kod merge kararı `YES_WITH_EXTERNAL_ACCEPTANCE_OPEN`; production kararı `NO`.
 
 Arşiv belgeleri güncel karar kaynağı değildir. Bir arşiv belgesi ancak aktif belgede açıkça tarihsel kanıt olarak bağlandığında kullanılabilir.

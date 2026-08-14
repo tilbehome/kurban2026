@@ -27,7 +27,7 @@ model Season {
   archivedAt        DateTime?
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
-  location          Location?               @relation(fields: [locationId], references: [id])
+  location          Location?               @relation(fields: [locationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   legacyCustomers   Customer[]              @relation("LegacyCustomerSeason")
   customerAccounts  CustomerSeasonAccount[]
   animals           Animal[]
@@ -48,6 +48,19 @@ model Season {
   paddocks          Paddock[]
   paddockAssignments AnimalPaddockAssignment[]
   proxyDocuments    ProxyDocument[]
+  closureSnapshot   SeasonClosureSnapshot?
+  operationTeams    OperationTeam[]
+  operationStations OperationStation[]
+  operationExceptions OperationException[]
+  operationModes    OperationModeState[]
+  weighingRecords   WeighingRecord[]
+  shareWeightAllocations ShareWeightAllocation[]
+  weightShortfallAdjustments WeightShortfallAdjustment[]
+  packageRecords    PackageRecord[]
+  packageTransformations PackageTransformation[]
+  packageExceptions PackageExceptionHistory[]
+  deliveryRecords   DeliveryRecord[]
+  offlineQueueItems OfflineQueueItem[]
 
   @@index([locationId])
   @@index([status])
@@ -242,9 +255,9 @@ model ConditionalPolicy {
   validUntil       DateTime?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
-  roleVersion      RoleVersion?    @relation(fields: [roleVersionId], references: [id])
-  membershipRole   MembershipRole? @relation(fields: [membershipRoleId], references: [id])
-  permission       Permission?     @relation(fields: [permissionId], references: [id])
+  roleVersion      RoleVersion?    @relation(fields: [roleVersionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  membershipRole   MembershipRole? @relation(fields: [membershipRoleId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  permission       Permission?     @relation(fields: [permissionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@index([permissionId, active])
   @@index([roleVersionId, active])
@@ -537,7 +550,7 @@ model UnitOfMeasure {
   providerMappings UnitProviderMapping[]
 
   @@unique([tenantId, code])
-  @@index([tenantId, category, isActive, sortOrder])
+  @@index([tenantId, category, isActive, sortOrder], map: "UnitOfMeasure_tenant_category_active_idx")
 }
 
 model UnitProviderMapping {
@@ -551,10 +564,10 @@ model UnitProviderMapping {
   createdByUserId  String
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
-  unitOfMeasure    UnitOfMeasure @relation(fields: [unitOfMeasureId], references: [id])
+  unitOfMeasure    UnitOfMeasure @relation(fields: [unitOfMeasureId], references: [id], map: "UnitProviderMapping_unit_fkey")
 
-  @@unique([tenantId, providerKey, mappingVersion, unitOfMeasureId])
-  @@index([tenantId, providerKey, mappingVersion, isActive])
+  @@unique([tenantId, providerKey, mappingVersion, unitOfMeasureId], map: "UnitProviderMapping_scope_unit_key")
+  @@index([tenantId, providerKey, mappingVersion, isActive], map: "UnitProviderMapping_scope_active_idx")
 }
 
 model Customer {
@@ -571,7 +584,7 @@ model Customer {
   communicationConsentAt DateTime?
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
-  legacySeason           Season?                 @relation("LegacyCustomerSeason", fields: [seasonId], references: [id])
+  legacySeason           Season?                 @relation("LegacyCustomerSeason", fields: [seasonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   phones                 CustomerPhone[]
   addresses              CustomerAddress[]
   seasonAccounts         CustomerSeasonAccount[]
@@ -588,8 +601,11 @@ model Customer {
   paymentAllocations     PaymentAllocation[]
   ledgerEntries          LedgerEntry[]
   proxyDocuments         ProxyDocument[]
+  proxyGrantors          ProxyGrantor[]
   deliveries             DeliveryRecord[]
   invoices               PurchaseInvoice[]
+  packageRecords         PackageRecord[]
+  weightShortfallAdjustments WeightShortfallAdjustment[]
 
   @@index([seasonId])
   @@index([normalizedPhone])
@@ -720,30 +736,31 @@ model PurchaseInvoice {
   cancelledAt        DateTime?
   createdAt          DateTime                     @default(now())
   updatedAt          DateTime                     @updatedAt
-  supplier           Supplier?                    @relation(fields: [supplierId], references: [id])
-  customer           Customer?                    @relation(fields: [customerId], references: [id])
+  supplier           Supplier?                    @relation(fields: [supplierId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  customer           Customer?                    @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   season             Season                       @relation(fields: [seasonId], references: [id])
   location           Location?                    @relation(fields: [locationId], references: [id])
-  journalEntry       JournalEntry?                @relation(fields: [journalEntryId], references: [id])
+  journalEntry       JournalEntry?                @relation(fields: [journalEntryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   lines              PurchaseInvoiceLine[]
   taxComponents      InvoiceTaxComponent[]
   attachments        InvoiceAttachment[]
   timeline           InvoiceTimelineEvent[]
   paymentAllocations InvoicePaymentAllocation[]
   deliveries         ElectronicDocumentDelivery[]
-  originalInvoice    PurchaseInvoice?             @relation("InvoiceOriginal", fields: [originalInvoiceId], references: [id])
+  originalInvoice    PurchaseInvoice?             @relation("InvoiceOriginal", fields: [originalInvoiceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   relatedDocuments   PurchaseInvoice[]            @relation("InvoiceOriginal")
-  reversalOf         PurchaseInvoice?             @relation("PurchaseInvoiceReversal", fields: [reversalOfId], references: [id])
+  reversalOf         PurchaseInvoice?             @relation("PurchaseInvoiceReversal", fields: [reversalOfId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   reversals          PurchaseInvoice[]            @relation("PurchaseInvoiceReversal")
 
   @@unique([organizationId, invoiceNo])
+  @@index([seasonId], map: "PurchaseInvoice_seasonId_idx")
   @@index([seasonId, invoiceDate])
   @@index([locationId])
   @@index([supplierId])
   @@index([customerId])
-  @@index([accountingStatus, paymentStatus, electronicStatus])
-  @@index([providerKey, providerReference])
-  @@index([originalInvoiceId, accountingStatus])
+  @@index([accountingStatus, paymentStatus, electronicStatus], map: "PurchaseInvoice_status_axes_idx")
+  @@index([providerKey, providerReference], map: "PurchaseInvoice_provider_reference_idx")
+  @@index([originalInvoiceId, accountingStatus], map: "PurchaseInvoice_original_status_idx")
 }
 
 model PurchaseInvoiceLine {
@@ -767,8 +784,8 @@ model PurchaseInvoiceLine {
   expenseDocumentId  String?
   createdAt          DateTime              @default(now())
   purchaseInvoice    PurchaseInvoice       @relation(fields: [purchaseInvoiceId], references: [id])
-  animal             Animal?               @relation(fields: [animalId], references: [id])
-  expenseDocument    ExpenseDocument?      @relation(fields: [expenseDocumentId], references: [id])
+  animal             Animal?               @relation(fields: [animalId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  expenseDocument    ExpenseDocument?      @relation(fields: [expenseDocumentId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   unitOfMeasure      UnitOfMeasure         @relation(fields: [unitId], references: [id])
   taxComponents      InvoiceTaxComponent[]
 
@@ -786,11 +803,11 @@ model InvoiceTaxComponent {
   taxAmount         Decimal              @db.Decimal(18, 4)
   exemptionCode     String?
   createdAt         DateTime             @default(now())
-  purchaseInvoice   PurchaseInvoice      @relation(fields: [purchaseInvoiceId], references: [id])
-  line              PurchaseInvoiceLine? @relation(fields: [lineId], references: [id])
+  purchaseInvoice   PurchaseInvoice      @relation(fields: [purchaseInvoiceId], references: [id], map: "InvoiceTaxComponent_invoice_fkey")
+  line              PurchaseInvoiceLine? @relation(fields: [lineId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "InvoiceTaxComponent_line_fkey")
 
-  @@index([purchaseInvoiceId])
-  @@index([lineId, purchaseInvoiceId])
+  @@index([purchaseInvoiceId], map: "InvoiceTaxComponent_invoice_idx")
+  @@index([lineId, purchaseInvoiceId], map: "InvoiceTaxComponent_line_invoice_idx")
 }
 
 model InvoiceAttachment {
@@ -801,9 +818,9 @@ model InvoiceAttachment {
   mediaType         String
   checksum          String
   createdAt         DateTime        @default(now())
-  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
+  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], map: "InvoiceAttachment_invoice_fkey")
 
-  @@unique([purchaseInvoiceId, kind, checksum])
+  @@unique([purchaseInvoiceId, kind, checksum], map: "InvoiceAttachment_invoice_kind_checksum_key")
 }
 
 model InvoiceTimelineEvent {
@@ -816,9 +833,9 @@ model InvoiceTimelineEvent {
   safeMetadata      Json?
   occurredAt        DateTime
   createdAt         DateTime        @default(now())
-  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
+  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], map: "InvoiceTimelineEvent_invoice_fkey")
 
-  @@index([purchaseInvoiceId, occurredAt])
+  @@index([purchaseInvoiceId, occurredAt], map: "InvoiceTimelineEvent_invoice_occurred_idx")
 }
 
 model SupplierPayment {
@@ -835,7 +852,7 @@ model SupplierPayment {
   createdAt          DateTime                   @default(now())
   supplier           Supplier                   @relation(fields: [supplierId], references: [id])
   season             Season                     @relation(fields: [seasonId], references: [id])
-  reversalOf         SupplierPayment?           @relation("SupplierPaymentReversal", fields: [reversalOfId], references: [id])
+  reversalOf         SupplierPayment?           @relation("SupplierPaymentReversal", fields: [reversalOfId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   reversals          SupplierPayment[]          @relation("SupplierPaymentReversal")
   journalEntry       JournalEntry?              @relation(fields: [journalEntryId], references: [id])
   invoiceAllocations InvoicePaymentAllocation[]
@@ -879,7 +896,7 @@ model Animal {
   notes               String?
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
-  season              Season?              @relation(fields: [seasonId], references: [id])
+  season              Season?              @relation(fields: [seasonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   location            Location?            @relation(fields: [locationId], references: [id])
   supplier            Supplier?            @relation(fields: [supplierId], references: [id])
   shareCards          ShareCard[]
@@ -890,6 +907,8 @@ model Animal {
   qurbanAssignments   QurbanAssignment[]
   paddockAssignments  AnimalPaddockAssignment[]
   purchaseInvoiceLine PurchaseInvoiceLine?
+  packageRecords      PackageRecord[]
+  shareWeightAllocations ShareWeightAllocation[]
 
   @@unique([earTag])
   @@index([locationId])
@@ -976,7 +995,7 @@ model QurbanAssignment {
   createdAt        DateTime           @default(now())
   season           Season             @relation(fields: [seasonId], references: [id])
   animal           Animal             @relation(fields: [animalId], references: [id])
-  previous         QurbanAssignment?  @relation("QurbanAssignmentHistory", fields: [previousId], references: [id])
+  previous         QurbanAssignment?  @relation("QurbanAssignmentHistory", fields: [previousId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   nextAssignments  QurbanAssignment[] @relation("QurbanAssignmentHistory")
 
   @@index([seasonId, queueNo])
@@ -1051,8 +1070,11 @@ model Share {
   journalLines           JournalLine[]
   paymentAllocations     PaymentAllocation[]
   proxyDocumentShares    ProxyDocumentShare[]
+  proxyGrantors          ProxyGrantor[]
   packages               PackageRecord[]
   deliveries             DeliveryRecord[]
+  shareWeightAllocations ShareWeightAllocation[]
+  weightShortfallAdjustments WeightShortfallAdjustment[]
 
   @@unique([shareCardId, sequenceNo])
   @@index([customerId])
@@ -1090,6 +1112,7 @@ model Sale {
   paymentAllocations PaymentAllocation[]
   journalLines       JournalLine[]
   ledgerEntries      LedgerEntry[]
+  weightShortfallAdjustments WeightShortfallAdjustment[]
 
   @@index([seasonId])
   @@index([customerId])
@@ -1099,9 +1122,9 @@ model Sale {
 model SaleShare {
   saleId                 String
   shareId                String
-  listPriceSnapshot      Decimal @db.Decimal(18, 4)
+  listPriceSnapshot      Decimal @default(0) @db.Decimal(18, 4)
   discountAmountSnapshot Decimal @default(0) @db.Decimal(18, 4)
-  agreedPriceSnapshot    Decimal @db.Decimal(18, 4)
+  agreedPriceSnapshot    Decimal @default(0) @db.Decimal(18, 4)
   active                  Boolean @default(true)
   endedAt                 DateTime?
   sale                   Sale    @relation(fields: [saleId], references: [id])
@@ -1259,6 +1282,7 @@ model JournalEntry {
   invoice        PurchaseInvoice?
   supplierPayment SupplierPayment?
   expenseDocument ExpenseDocument?
+  weightShortfallAdjustments WeightShortfallAdjustment[]
 
   @@unique([sourceType, sourceId])
   @@index([seasonId, occurredAt])
@@ -1361,13 +1385,13 @@ model InvoicePaymentAllocation {
   currency          String           @default("TRY")
   idempotencyKey    String           @unique
   createdAt         DateTime         @default(now())
-  purchaseInvoice   PurchaseInvoice  @relation(fields: [purchaseInvoiceId], references: [id])
-  receipt           Receipt?         @relation(fields: [receiptId], references: [id])
-  supplierPayment   SupplierPayment? @relation(fields: [supplierPaymentId], references: [id])
+  purchaseInvoice   PurchaseInvoice  @relation(fields: [purchaseInvoiceId], references: [id], map: "InvoicePaymentAllocation_invoice_fkey")
+  receipt           Receipt?         @relation(fields: [receiptId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "InvoicePaymentAllocation_receipt_fkey")
+  supplierPayment   SupplierPayment? @relation(fields: [supplierPaymentId], references: [id], onDelete: Restrict, onUpdate: Cascade, map: "InvoicePaymentAllocation_supplier_payment_fkey")
 
-  @@index([purchaseInvoiceId])
-  @@index([receiptId])
-  @@index([supplierPaymentId])
+  @@index([purchaseInvoiceId], map: "InvoicePaymentAllocation_invoice_idx")
+  @@index([receiptId], map: "InvoicePaymentAllocation_receipt_idx")
+  @@index([supplierPaymentId], map: "InvoicePaymentAllocation_supplier_payment_idx")
 }
 
 model LedgerEntry {
@@ -1449,8 +1473,8 @@ model ElectronicDocumentConnection {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
-  @@unique([organizationId, providerKey, connectionName])
-  @@index([organizationId, active])
+  @@unique([organizationId, providerKey, connectionName], map: "EDocConnection_org_provider_name_key")
+  @@index([organizationId, active], map: "EDocConnection_org_active_idx")
 }
 
 model ElectronicDocumentDelivery {
@@ -1470,10 +1494,10 @@ model ElectronicDocumentDelivery {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   completedAt       DateTime?
-  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
+  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id], map: "ElectronicDocumentDelivery_invoice_fkey")
 
-  @@index([status, nextAttemptAt])
-  @@index([purchaseInvoiceId])
+  @@index([status, nextAttemptAt], map: "ElectronicDocumentDelivery_status_retry_idx")
+  @@index([purchaseInvoiceId], map: "ElectronicDocumentDelivery_invoice_idx")
 }
 
 model ElectronicDocumentWebhookInbox {
@@ -1490,8 +1514,8 @@ model ElectronicDocumentWebhookInbox {
   lastSafeErrorCode String?
   processedAt       DateTime?
 
-  @@unique([organizationId, providerKey, providerEventId])
-  @@index([status, receivedAt])
+  @@unique([organizationId, providerKey, providerEventId], map: "EDocWebhook_org_provider_event_key")
+  @@index([status, receivedAt], map: "EDocWebhook_status_received_idx")
 }
 
 model ProxyDocument {
@@ -1501,6 +1525,11 @@ model ProxyDocument {
   status           String
   version          Int
   method           String
+  policyVersion    String               @default("legacy")
+  receivedAt       DateTime?
+  receivedPlace    String?
+  receivedByUserId String?
+  description      String?
   storageKey       String
   mimeType         String?
   sizeBytes        Int?
@@ -1513,8 +1542,51 @@ model ProxyDocument {
   season           Season               @relation(fields: [seasonId], references: [id])
   customer         Customer             @relation(fields: [customerId], references: [id])
   shares           ProxyDocumentShare[]
+  grantors         ProxyGrantor[]
+  history          ProxyDocumentHistory[]
 
   @@index([seasonId, customerId])
+}
+
+model SeasonClosureSnapshot {
+  id                         String   @id
+  seasonId                   String   @unique
+  financeDifference          Decimal  @db.Decimal(18, 4)
+  unbalancedJournalCount     Int
+  openCriticalExceptionCount Int
+  undeliveredShareCount      Int
+  pendingAdjustmentCount     Int
+  closedByUserId             String
+  closedAt                   DateTime
+  season                     Season   @relation(fields: [seasonId], references: [id])
+}
+
+model ProxyGrantor {
+  proxyDocumentId          String
+  customerId               String
+  shareId                  String
+  relationshipToShareholder String?
+  createdAt                DateTime      @default(now())
+  proxyDocument            ProxyDocument @relation(fields: [proxyDocumentId], references: [id])
+  customer                 Customer      @relation(fields: [customerId], references: [id])
+  share                    Share         @relation(fields: [shareId], references: [id])
+
+  @@id([proxyDocumentId, customerId, shareId])
+  @@index([customerId])
+  @@index([shareId])
+}
+
+model ProxyDocumentHistory {
+  id              String        @id
+  proxyDocumentId String
+  fromStatus      String?
+  toStatus        String
+  reason          String?
+  actorUserId     String
+  occurredAt      DateTime
+  proxyDocument   ProxyDocument @relation(fields: [proxyDocumentId], references: [id])
+
+  @@index([proxyDocumentId, occurredAt])
 }
 
 model ProxyDocumentShare {
@@ -1528,14 +1600,19 @@ model ProxyDocumentShare {
 
 model QrToken {
   id          String    @id
+  seasonId    String?
   purpose     String
   targetId    String
   opaqueToken String    @unique
   expiresAt   DateTime?
   revokedAt   DateTime?
+  consumedAt  DateTime?
+  createdByUserId String?
+  publicLabel String?
   createdAt   DateTime  @default(now())
 
   @@index([purpose])
+  @@index([seasonId, purpose])
   @@index([targetId])
 }
 
@@ -1547,33 +1624,169 @@ model SlaughterJob {
   status         String
   queueNo        Int?
   assignedUserId String?
+  facilityId     String?
+  teamId         String?
+  stationId      String?
+  assignedDeviceId String?
+  blockedReason  String?
+  delayReason    String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  version        Int       @default(1)
   updatedAt      DateTime  @updatedAt
   season         Season    @relation(fields: [seasonId], references: [id])
   animal         Animal    @relation(fields: [animalId], references: [id])
   shareCard      ShareCard @relation(fields: [shareCardId], references: [id])
+  team           OperationTeam? @relation(fields: [teamId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  station        OperationStation? @relation(fields: [stationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  history        SlaughterJobHistory[]
+  assignments    SlaughterJobAssignment[]
+  exceptions     OperationException[]
 
   @@index([seasonId])
   @@index([animalId])
   @@index([shareCardId])
   @@index([queueNo])
+  @@index([seasonId, stationId, status])
+}
+
+model SlaughterJobHistory {
+  id             String   @id
+  slaughterJobId String
+  fromStatus     String?
+  toStatus       String
+  reason         String?
+  actorUserId    String
+  occurredAt     DateTime
+  slaughterJob   SlaughterJob @relation(fields: [slaughterJobId], references: [id])
+
+  @@index([slaughterJobId, occurredAt])
+}
+
+model SlaughterJobAssignment {
+  id               String   @id
+  slaughterJobId   String
+  facilityId       String?
+  teamId           String?
+  stationId        String?
+  assignedUserId   String?
+  assignedDeviceId String?
+  queueNo          Int?
+  reason           String
+  actorUserId      String
+  occurredAt       DateTime
+  slaughterJob     SlaughterJob @relation(fields: [slaughterJobId], references: [id])
+  team             OperationTeam? @relation(fields: [teamId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  station          OperationStation? @relation(fields: [stationId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([slaughterJobId, occurredAt])
+}
+
+model OperationTeam {
+  id         String   @id
+  seasonId   String
+  facilityId String?
+  code       String
+  name       String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  season     Season   @relation(fields: [seasonId], references: [id])
+  slaughterJobs SlaughterJob[]
+  assignments SlaughterJobAssignment[]
+
+  @@unique([seasonId, code])
+}
+
+model OperationStation {
+  id         String   @id
+  seasonId   String
+  facilityId String?
+  code       String
+  name       String
+  stationType String
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  season     Season   @relation(fields: [seasonId], references: [id])
+  slaughterJobs SlaughterJob[]
+  assignments SlaughterJobAssignment[]
+
+  @@unique([seasonId, code])
+}
+
+model OperationException {
+  id               String   @id
+  seasonId         String
+  slaughterJobId   String?
+  category         String
+  severity         String
+  description      String
+  status           String   @default("open")
+  assignedUserId   String?
+  reportedByUserId String
+  reportedAt       DateTime
+  resolvedByUserId String?
+  resolvedAt       DateTime?
+  resolution       String?
+  season           Season @relation(fields: [seasonId], references: [id])
+  slaughterJob     SlaughterJob? @relation(fields: [slaughterJobId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([seasonId, status, severity])
+  @@index([slaughterJobId])
+}
+
+model OperationModeState {
+  id          String   @id
+  seasonId    String
+  mode        String
+  reason      String
+  actorUserId String
+  updatedAt   DateTime
+  season      Season @relation(fields: [seasonId], references: [id])
+
+  @@index([seasonId, updatedAt])
 }
 
 model WeighingRecord {
   id               String   @id
+  seasonId         String
   animalId         String
   carcassWeightKg  Decimal  @db.Decimal(12, 3)
+  measurementType  String   @default("carcass")
+  deviceAdapterId  String?
+  stationId        String?
+  note             String?
+  supersedesId     String?
+  revokedAt        DateTime?
+  revokedByUserId  String?
+  revocationReason String?
   recordedByUserId String
   recordedAt       DateTime
+  season           Season   @relation(fields: [seasonId], references: [id])
   animal           Animal   @relation(fields: [animalId], references: [id])
+  supersedes       WeighingRecord? @relation("WeighingCorrection", fields: [supersedesId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  corrections      WeighingRecord[] @relation("WeighingCorrection")
+  allocations      ShareWeightAllocation[]
 
   @@index([animalId])
+  @@index([seasonId, measurementType, recordedAt])
 }
 
 model PackageRecord {
   id             String              @id
+  seasonId       String
+  animalId       String?
+  customerId     String?
   shareId        String
   grossWeightKg  Decimal             @db.Decimal(12, 3)
   labelNo        String
+  packageNo      String?
+  barcodeValue   String?
+  qrTargetId     String?
+  netWeightKg    Decimal?            @db.Decimal(12, 3)
+  status         String              @default("created")
+  parentPackageId String?
   labelVersion   Int                 @default(1)
   reprintReason  String?
   coldRoomId     String?
@@ -1581,21 +1794,108 @@ model PackageRecord {
   coldRackId     String?
   locationStatus String              @default("not_stored")
   createdAt      DateTime            @default(now())
+  season         Season              @relation(fields: [seasonId], references: [id])
+  animal         Animal?             @relation(fields: [animalId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  customer       Customer?           @relation(fields: [customerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   share          Share               @relation(fields: [shareId], references: [id])
+  parent         PackageRecord?      @relation("PackageHierarchy", fields: [parentPackageId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  children       PackageRecord[]     @relation("PackageHierarchy")
   components     PackageComponent[]
   locations      PackageLocation[]
   coldRoom       ColdStorageRoom?    @relation(fields: [coldRoomId], references: [id])
   coldSection    ColdStorageSection? @relation(fields: [coldSectionId], references: [id])
   coldRack       ColdStorageRack?    @relation(fields: [coldRackId], references: [id])
   loadingItems   LoadingListItem[]
+  deliveryLinks  DeliveryPackageLink[]
+  sourceTransformations PackageTransformation[] @relation("PackageTransformationSource")
+  targetTransformations PackageTransformation[] @relation("PackageTransformationTarget")
+  exceptionHistory PackageExceptionHistory[]
 
   @@unique([labelNo])
   @@index([shareId])
-  @@index([coldRoomId, coldSectionId, coldRackId, locationStatus])
+  @@index([coldRoomId, coldSectionId, coldRackId, locationStatus], map: "PackageRecord_coldRoomId_coldSectionId_coldRackId_locationStatu")
+  @@index([seasonId, animalId, customerId, status])
+}
+
+model ShareWeightAllocation {
+  id                String   @id
+  seasonId          String
+  animalId          String
+  shareId           String
+  sourceWeighingId  String
+  allocatedWeightKg Decimal  @db.Decimal(12, 3)
+  createdByUserId   String
+  createdAt         DateTime
+  season            Season @relation(fields: [seasonId], references: [id])
+  animal            Animal @relation(fields: [animalId], references: [id])
+  share             Share @relation(fields: [shareId], references: [id])
+  sourceWeighing    WeighingRecord @relation(fields: [sourceWeighingId], references: [id])
+
+  @@unique([sourceWeighingId, shareId])
+  @@index([seasonId, animalId])
+}
+
+model WeightShortfallAdjustment {
+  id               String   @id
+  seasonId         String
+  shareId          String
+  customerId       String
+  saleId           String
+  agreedPrice      Decimal  @db.Decimal(18, 4)
+  targetWeightKg   Decimal  @db.Decimal(12, 3)
+  actualWeightKg   Decimal  @db.Decimal(12, 3)
+  adjustmentAmount Decimal  @db.Decimal(18, 4)
+  currency         String   @default("TRY")
+  status           String   @default("pending_approval")
+  journalEntryId   String?
+  reason           String
+  createdByUserId  String
+  createdAt        DateTime
+  season           Season @relation(fields: [seasonId], references: [id])
+  share            Share @relation(fields: [shareId], references: [id])
+  customer         Customer @relation(fields: [customerId], references: [id])
+  sale             Sale @relation(fields: [saleId], references: [id])
+  journalEntry     JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([seasonId, status])
+  @@index([shareId])
+}
+
+model PackageTransformation {
+  id              String   @id
+  seasonId        String
+  sourcePackageId String
+  targetPackageId String
+  transformation  String
+  reason          String
+  actorUserId     String
+  occurredAt      DateTime
+  season          Season @relation(fields: [seasonId], references: [id])
+  sourcePackage   PackageRecord @relation("PackageTransformationSource", fields: [sourcePackageId], references: [id])
+  targetPackage   PackageRecord @relation("PackageTransformationTarget", fields: [targetPackageId], references: [id])
+
+  @@index([sourcePackageId, occurredAt])
+  @@index([targetPackageId])
+}
+
+model PackageExceptionHistory {
+  id              String   @id
+  seasonId        String
+  packageRecordId String
+  status          String
+  reason          String
+  actorUserId     String
+  occurredAt      DateTime
+  season          Season @relation(fields: [seasonId], references: [id])
+  packageRecord   PackageRecord @relation(fields: [packageRecordId], references: [id])
+
+  @@index([packageRecordId, occurredAt])
+  @@index([seasonId, status])
 }
 
 model DeliveryRecord {
   id                 String          @id
+  seasonId           String
   shareId            String
   customerId         String
   status             String
@@ -1603,18 +1903,42 @@ model DeliveryRecord {
   reversedAt         DateTime?
   reversalReason     String?
   receiverName       String?
+  receiverRelationship String?
+  deliveryType       String          @default("on_site")
+  serviceFee         Decimal         @default(0) @db.Decimal(18, 4)
+  staffUserId        String?
+  deviceId           String?
+  latitude           Decimal?        @db.Decimal(10, 7)
+  longitude          Decimal?        @db.Decimal(10, 7)
+  partialExceptionReason String?
   debtOverrideReason String?
   approvalRequestId  String?
   proofDocumentId    String?
   loadingListId      String?
+  season             Season          @relation(fields: [seasonId], references: [id])
   share              Share           @relation(fields: [shareId], references: [id])
   customer           Customer        @relation(fields: [customerId], references: [id])
   loadingList        LoadingList?    @relation(fields: [loadingListId], references: [id])
   proofs             DeliveryProof[]
+  packages           DeliveryPackageLink[]
 
   @@index([shareId])
   @@index([customerId])
   @@index([loadingListId])
+  @@index([seasonId, deliveryType, status])
+}
+
+model DeliveryPackageLink {
+  deliveryRecordId String
+  packageRecordId  String
+  scannedAt        DateTime
+  scannedByUserId  String
+  deviceId         String?
+  deliveryRecord   DeliveryRecord @relation(fields: [deliveryRecordId], references: [id])
+  packageRecord    PackageRecord  @relation(fields: [packageRecordId], references: [id])
+
+  @@id([deliveryRecordId, packageRecordId])
+  @@index([packageRecordId])
 }
 
 model PackageComponent {
@@ -1637,7 +1961,7 @@ model ColdStorageRoom {
   name       String
   active     Boolean              @default(true)
   createdAt  DateTime             @default(now())
-  updatedAt  DateTime             @updatedAt
+  updatedAt  DateTime             @default(now()) @updatedAt
   sections   ColdStorageSection[]
   racks      ColdStorageRack[]
   packages   PackageRecord[]
@@ -1701,6 +2025,11 @@ model DeliveryProof {
   proofType        String
   storageKey       String?
   note             String?
+  mimeType         String?
+  sizeBytes        Int?
+  checksumSha256   String?
+  capturedByUserId String?
+  deviceId         String?
   capturedAt       DateTime
   deliveryRecord   DeliveryRecord @relation(fields: [deliveryRecordId], references: [id])
 
@@ -1762,7 +2091,7 @@ model SavedDashboardView {
   filters                  Json
   layout                   Json
   createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  updatedAt                DateTime @default(now()) @updatedAt
 
   @@index([organizationMembershipId, scope])
 }
@@ -1773,9 +2102,37 @@ model OfflineQueueItem {
   operation      String
   payload        Json
   status         String
+  tenantInstanceId String?
+  seasonId       String?
+  actorUserId    String?
+  deviceId       String?
+  sessionId      String?
+  sessionVersion Int       @default(1)
+  expectedVersion Int      @default(0)
+  attempts       Int       @default(0)
+  nextAttemptAt  DateTime?
+  expiresAt      DateTime?
+  lastErrorCode  String?
+  conflictCode   String?
+  serverResultId String?
   createdAt      DateTime @default(now())
+  season         Season? @relation(fields: [seasonId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  attemptHistory OfflineQueueAttempt[]
 
   @@index([status])
+  @@index([seasonId, actorUserId, deviceId, status])
+}
+
+model OfflineQueueAttempt {
+  id                 String   @id
+  offlineQueueItemId String
+  attemptNo          Int
+  outcome            String
+  safeErrorCode      String?
+  occurredAt         DateTime
+  offlineQueueItem   OfflineQueueItem @relation(fields: [offlineQueueItemId], references: [id])
+
+  @@unique([offlineQueueItemId, attemptNo], map: "OfflineQueueAttempt_item_attempt_key")
 }
 
 model DeviceAdapter {

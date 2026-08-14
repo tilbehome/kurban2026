@@ -8,7 +8,7 @@ owner: QA
 source_role: test_plan
 reviewers: [Operations, Architecture, Product, Security]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: ILK_STAGING_BASELINE_SONRASI
 version: 0.1
@@ -61,3 +61,7 @@ Yük testi sonunda performans kadar şu mutabakatlar zorunludur: satılan hisse 
 ## Çıktı
 
 Rapor; commit/artifact, ortam topolojisi, veri profili, script sürümü, yük aşamaları, ölçümler, hata örnekleri, bottleneck, kapasite baş mesafesi ve önerilen eşikleri içerir. Sonuç [EVD-009](../evidence/EVD-009-YUK-SOAK-SABLONU.md) ile tutulur.
+
+## 14 Ağustos 2026 yerel ölçümü
+
+Baseline, 5 VU load, 0→10 VU spike ve 3 VU/60 saniye kısa soak yerel sentetik HTTPS hedefinde hata oranı `0` ile ölçüldü; production hedef koruması istekten önce reddetti. Onaylı SLO ve production topolojisi olmadığı için kapasite kabulü verilmedi. Tam sayılar `EVD-009-RUN-20260814-001` kaydındadır.

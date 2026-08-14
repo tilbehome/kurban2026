@@ -55,7 +55,7 @@ export function SiradakilerSutun({ satirlar, tema }: SiradakilerSutunProps) {
         <p
           className={cn(
             "py-8 text-center text-sm",
-            koyuMu ? "text-slate-400" : "text-stone-400",
+            koyuMu ? "text-slate-400" : "text-stone-600",
           )}
         >
           Sırada kurban yok

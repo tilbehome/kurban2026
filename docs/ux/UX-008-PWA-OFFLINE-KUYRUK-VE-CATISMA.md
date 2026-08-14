@@ -1,11 +1,11 @@
 ---
 id: UX-008
 title: PWA, Offline Kuyruk ve Çatışma UX Standardı
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: UX-and-Frontend
 source_role: ux_contract
 source_of_truth: false
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 related_requirements: [REQ-044, REQ-045, PRO-033, PRO-034, PRO-035]
 ---
@@ -14,7 +14,7 @@ related_requirements: [REQ-044, REQ-045, PRO-033, PRO-034, PRO-035]
 
 ## PWA sınırı
 
-Hedef Saha PWA aynı tenant origin altında `/saha` yüzeyidir. Service worker scope’unun panel, TV, takip veya API’yi kontrol etmemesi hedeflenir; mevcut kodda bu kapsamın tam uygulandığı kanıtlanmadığı için `PLANNED` kabul edilir.
+Saha yüzeyi aynı tenant origin altında `/saha` olarak bağlıdır. Service worker scope ve gerçek HTTPS/update davranışı Faz 12'de doğrulanmadığı için yüzey `IMPLEMENTED_UNVERIFIED`, gerçek PWA kabulü `NOT_RUN` kabul edilir.
 
 ## Kullanıcıya gösterilen bağlantı durumları
 
@@ -60,9 +60,9 @@ Aktif görev veya bekleyen kuyruk varken service worker zorla yenilenmez. Yeni s
 
 ## Gerçek uygulama durumu
 
-- PWA manifest/service worker güncelleme ve push parçaları: `IMPLEMENTING`.
-- Tenant `OfflineQueueItem`, unique idempotency ve secret guard: `IMPLEMENTED_UNVERIFIED`.
-- IndexedDB local store, beyaz liste, sync engine, conflict UI ve offline E2E: `PLANNED`.
+- PWA manifest/service worker güncelleme ve push parçaları: `IMPLEMENTED_UNVERIFIED`; gerçek update kabulü `NOT_RUN`.
+- Tenant `OfflineQueueItem`, unique idempotency, secret guard, session/device bağı ve görünür queue state: `IMPLEMENTED_UNVERIFIED`.
+- IndexedDB local store, beyaz liste, sync engine, retry/backoff/poison/conflict sözleşmesi: `IMPLEMENTED_UNVERIFIED`; gerçek offline E2E `NOT_RUN`.
 
 ## Kabul ölçütleri
 

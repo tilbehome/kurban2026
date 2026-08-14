@@ -5,7 +5,7 @@ status: PLANNED
 owner: UX-and-Frontend
 source_role: ux_contract
 source_of_truth: false
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 related_requirements: [REQ-001, REQ-008, REQ-015, REQ-028, PRO-001, PRO-005]
 ---
@@ -36,7 +36,7 @@ related_requirements: [REQ-001, REQ-008, REQ-015, REQ-028, PRO-001, PRO-005]
 
 **Hızlı eylemler:** tartım ekle, uygunluk değiştir, sıra değiştir, hisse aç, sorun bildir. Geçersiz eylem gizlenmekle kalmaz; server da reddeder.
 
-**Durum:** Legacy `/hayvanlar/[id]` hisse odaklı kısmi detaydır (`IMPLEMENTING`). Tam tedarik/sağlık/timeline/kârlılık sözleşmesi `PLANNED`.
+**Durum:** Tenant yönetim read-model'i hayvan maliyet/sağlık/padok ve fulfillment ilerleme raporlarını `IMPLEMENTED_UNVERIFIED` olarak sağlar. Tam Hayvan 360 sayfa sözleşmesi ve Faz 12 UI kabulü `PLANNED/NOT_RUN` kalır.
 
 ## Müşteri 360
 
@@ -48,7 +48,7 @@ related_requirements: [REQ-001, REQ-008, REQ-015, REQ-028, PRO-001, PRO-005]
 
 **Hızlı eylemler:** satış başlat, tahsilat al, belge/vekalet, hatırlatma, veri talebi. Ödeyen/hissedar/teslim alan ayrımları görünürdür.
 
-**Durum:** Legacy `/musteriler/[id]` çok sekmeli kısmi çalışma alanıdır (`IMPLEMENTING`); sezon carisi, privacy ve yeni tenant ledger bağlantısı `PLANNED`.
+**Durum:** Yetki filtreli evrensel arama ve müşteri sezon bakiyesi read-model'i `IMPLEMENTED_UNVERIFIED`; tam Müşteri 360 privacy/timeline UI kabulü `PLANNED/NOT_RUN` kalır.
 
 ## Hisse 360
 
@@ -60,7 +60,7 @@ related_requirements: [REQ-001, REQ-008, REQ-015, REQ-028, PRO-001, PRO-005]
 
 **Hızlı eylemler:** rezervasyon oluştur/uzat/bırak, pozitif kaporayla satışı kesinleştir, tahsilat, transfer, iptal talebi, belge, teslim hazırlığı. İşletme envanterinde müşteri/vekâlet eylemi satıştan önce açılmaz. Ödemeli iptal veya teslim reversal doğrudan buton değil, etki önizlemeli sihirbazdır.
 
-**Durum:** PostgreSQL modelde rezervasyon/satış alanları vardır; ancak kapora şartı, tam yedi kaydın zorunluluğu ve işletme envanteri ayrımı tamamlanmadığı için domain davranışı `IMPLEMENTING`; birleşik Hisse 360 UI `PLANNED`.
+**Durum:** PostgreSQL rezervasyon/satış, tam yedi hisse, vekâlet/paket/teslim ve yetki filtreli hisse araması `IMPLEMENTED_UNVERIFIED`; birleşik Hisse 360 UI ve Faz 12 kabulü `PLANNED/NOT_RUN`.
 
 ## Kasa 360
 

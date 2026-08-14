@@ -32,12 +32,12 @@ process.exitCode = result.status ?? 1;
 function assertSafeTarget(value) {
   const url = new URL(value);
   const staging = url.hostname === "staging.tilbecore.com" || url.hostname.endsWith(".staging.tilbecore.com");
-  const localTarget = url.hostname === "tilbecore.test" || url.hostname.endsWith(".tilbecore.test");
+  const localTarget = url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "tilbecore.test" || url.hostname.endsWith(".tilbecore.test");
   if (url.protocol !== "https:" || (!staging && !localTarget)) throw new Error("K6_PRODUCTION_OR_UNSAFE_TARGET_FORBIDDEN");
 }
 
 function environmentArgs() {
   return Object.entries(process.env)
-    .filter(([key]) => key.startsWith("K6_"))
+    .filter(([key]) => key.startsWith("K6_") || key.startsWith("TILBE_K6_"))
     .flatMap(([key, value]) => ["-e", `${key}=${value}`]);
 }

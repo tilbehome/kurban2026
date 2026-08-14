@@ -20,7 +20,7 @@ export const operationsModule: ModuleConfig = {
   anaRota: "/operasyon",
   izinler: ["admin", "kasiyer", "izleyici"],
   bagimliliklar: ["tahsilat", "hayvanlar"],
-  sayfalar: [{ yol: "/operasyon", ad: "Kurban Operasyon Merkezi" }],
+  sayfalar: [{ yol: "/operasyon", ad: "Kurban Operasyon Merkezi" }, { yol: "/saha", ad: "Saha PWA" }],
   authorizationManifest: OPERATIONS_AUTHORIZATION_MANIFEST,
   olaylar: {
     yayinla: ["proxy.document.created", "qr.token.issued", "slaughter.job.advanced", "weighing.recorded", "package.created", "delivery.recorded"],

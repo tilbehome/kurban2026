@@ -35,11 +35,11 @@ processors:
     trace_statements:
       - context: spanevent
         conditions:
-          - name == "exception"
+          - spanevent.name == "exception"
         statements:
-          - set(attributes["exception.type"], "OBSERVED_OPERATION_FAILED")
-          - set(attributes["exception.message"], "OBSERVED_OPERATION_FAILED")
-          - delete_key(attributes, "exception.stacktrace")
+          - set(spanevent.attributes["exception.type"], "OBSERVED_OPERATION_FAILED")
+          - set(spanevent.attributes["exception.message"], "OBSERVED_OPERATION_FAILED")
+          - delete_key(spanevent.attributes, "exception.stacktrace")
   batch: {}
 
 exporters:

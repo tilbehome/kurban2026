@@ -9,7 +9,7 @@ import { TenantManagementAnalyticsError } from "@/packages/tenant-core/src";
 import type { HataKodu } from "@/shared/lib/hata-katalogu";
 
 const Query = z.object({
-  reportKey: z.enum(["sales-occupancy", "operations-bottleneck", "delivery-cold-storage", "audit-exceptions", "finance-reconciliation", "customer-season-balances", "supplier-purchases", "animal-cost-health"]),
+  reportKey: z.enum(["sales-occupancy", "operations-bottleneck", "delivery-cold-storage", "audit-exceptions", "finance-reconciliation", "customer-season-balances", "supplier-purchases", "animal-cost-health", "cash-bank-pos", "fulfillment-progress", "reversals-refunds", "season-comparison", "exception-center"]),
   format: z.enum(["csv", "xlsx", "pdf"]),
   seasonId: z.string().min(3).optional(),
   facilityId: z.string().min(1).optional(),
@@ -37,13 +37,14 @@ export async function GET(request: Request) {
     };
     const context = tenantUseCaseContext(session, { request, payload: query, readOnly: true });
     const report = await tenantManagementAnalyticsService().exportReport(context, { reportKey: query.reportKey, filters, format: query.format });
+    const safeRows = report.rows.map((row) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key, safeExportValue(value)])));
     const basename = `tilbecore-${query.reportKey}-${new Date().toISOString().slice(0, 10)}`;
 
     if (query.format === "csv") {
-      return download(csv(report.rows), "text/csv; charset=utf-8", `${basename}.csv`);
+      return download(csv(safeRows), "text/csv; charset=utf-8", `${basename}.csv`);
     }
     if (query.format === "xlsx") {
-      const worksheet = XLSX.utils.json_to_sheet(report.rows);
+      const worksheet = XLSX.utils.json_to_sheet(safeRows);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Rapor");
       const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" }) as Buffer;
@@ -55,11 +56,11 @@ export async function GET(request: Request) {
     pdf.text(`TilbeCore Rapor: ${query.reportKey}`, 40, 40);
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(9);
-    const headers = columns(report.rows);
+    const headers = columns(safeRows);
     let y = 70;
     pdf.text(headers.join(" | ").slice(0, 110), 40, y);
     y += 18;
-    for (const row of report.rows.slice(0, 60)) {
+    for (const row of safeRows.slice(0, 60)) {
       if (y > 780) {
         pdf.addPage();
         y = 40;
@@ -101,6 +102,11 @@ function csv(rows: Array<Record<string, string | number | null>>): string {
 function csvCell(value: string | number | null): string {
   const text = String(value ?? "");
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, "\"\"")}"` : text;
+}
+
+function safeExportValue(value: string | number | null): string | number | null {
+  if (typeof value !== "string") return value;
+  return /^[\t\r\n ]*[=+\-@]/.test(value) ? `'${value}` : value;
 }
 
 function toBody(buffer: Buffer): ArrayBuffer {

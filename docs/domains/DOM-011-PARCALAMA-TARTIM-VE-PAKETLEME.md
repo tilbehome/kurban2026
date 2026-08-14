@@ -1,11 +1,11 @@
 ---
 id: DOM-011
 title: Parçalama, Tartım ve Paketleme Domain Sözleşmesi
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: Domain-and-Fulfillment
 source_role: domain_contract
 source_of_truth: false
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 related_requirements: [REQ-013, REQ-037, REQ-038, REQ-039, REQ-040, PRO-035]
 ---
@@ -31,11 +31,11 @@ Kaynak hayvan/karkastan hisse paketine kadar her tartım ve paket kimliği korun
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| `WeighingRecord`, `PackageRecord`, kilo tipi ve unique etiket | `IMPLEMENTED_UNVERIFIED` | Tenant core `operation-flow.ts` ve PostgreSQL şeması. |
-| Kilo farkı ledger adjustment sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `createWeightDifferenceLedgerEntry`; tam formül/orchestrasyon yok. |
+| Ölçüm türleri, append-only düzeltme/revoke zinciri ve yedi hisse allocation | `IMPLEMENTED_UNVERIFIED` | `0013_faz_9_weighing_packaging_traceability`, tenant service/repository/API/UI. |
+| Alt kilo formülü ve kontrollü finans adjustment kaydı | `IMPLEMENTED_UNVERIFIED` | `calculateWeightShortfallAdjustment`; sonuç `pending_approval`, kontrolsüz ledger posting yok. |
 | Legacy tartım ve paket API’leri | `IMPLEMENTING` | `/api/kesim/tartim-kaydet`, `/api/hisseler/[id]/paket`; toplamı eşit bölüyor, legacy `Float` kullanıyor. |
-| Parça türü/değer dengesi ve çoklu alt paket | `PLANNED` | Ayrı model/runtime yok; `/kesim/parcalama` ve `/kesim/paketleme` placeholder. |
-| Terazi/etiket yazıcı gerçek adapteri | `PLANNED` | `DeviceAdapterContract` var; fiziksel cihaz kabulü yok. |
+| Paket snapshot, bileşen, böl/split-birleştir/merge ve kayıp/yanlış/hasarlı geçmişi | `IMPLEMENTED_UNVERIFIED` | `PackageTransformation`, `PackageExceptionHistory`; genel doğrulama yapılmadı. |
+| Gerçek terazi/tarayıcı/etiket yazıcı adapteri | `NOT_RUN` | Provider-bağımsız portlar kodlandı; fiziksel cihaz kabulü Faz 12'ye kaldı. |
 
 ## İstasyon akışı
 
