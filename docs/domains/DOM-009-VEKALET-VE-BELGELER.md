@@ -1,11 +1,11 @@
 ---
 id: DOM-009
 title: Vekâlet ve Belgeler Domain Sözleşmesi
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: Domain-and-Religious-Operations
 source_role: domain_contract
 source_of_truth: false
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 related_requirements: [REQ-029, REQ-030, REQ-031, REQ-032, REQ-033, REQ-034, REQ-061]
 ---
@@ -31,11 +31,12 @@ Vekâlet hisse bazlı dinî operasyon kaydıdır. Belge; onay metni/politika sü
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| `ProxyDocument`, çoklu hisse bağı, sürüm ve korumalı storage guard | `IMPLEMENTED_UNVERIFIED` | `packages/tenant-core/src/operation-flow.ts`, PostgreSQL tenant şeması. |
-| Amaç bağlı, süreli/iptal edilebilir `QrToken` sözleşmesi | `IMPLEMENTED_UNVERIFIED` | Tenant core ve tenant şeması. |
+| `ProxyDocument`, çoklu hisse/veren bağı, yöntem/politika, alım metadata'sı, sürüm/tarihçe ve korumalı storage guard | `IMPLEMENTED_UNVERIFIED` | `0011_faz_7_proxy_governance`, tenant service/repository/API ve operasyon UI. |
+| Amaç bağlı, süreli/iptal edilebilir `QrToken` sözleşmesi | `IMPLEMENTED_UNVERIFIED` | Tenant core, `0011`, üretim/tüketim ve belge iptalinde bağlı token iptali. |
 | Legacy korumalı dosya okuma ve yetki/audit | `IMPLEMENTING` | `/api/vekaletler/[id]`, `shared/lib/vekalet-dosya.ts`, ilgili testler. |
 | Legacy yükleme/yenileme | `IMPLEMENTING` | `/api/vekaletler`; mevcut kayıt fiziksel silinebildiği için hedef versiyonlama kuralını tam karşılamıyor. |
-| Çoklu veren, kanal/politika sürümü, A4 iki aşamalı QR runtime | `PLANNED` | Bağlı tam model/UI/E2E kanıtı yok. |
+| Çoklu veren, yöntem/politika sürümü ve durum geçmişi | `IMPLEMENTED_UNVERIFIED` | Kodlandı; bu paket sırasında test/E2E çalıştırılmadı. |
+| A4/iki A5 belge baskısı, TR/EN/AR ve gerçek QR browser kabulü | `NOT_RUN` | Faz 12 dış kabul borcudur. |
 
 ## Durumlar
 

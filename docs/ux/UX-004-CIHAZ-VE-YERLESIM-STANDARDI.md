@@ -5,7 +5,7 @@ status: PLANNED
 owner: UX-and-Frontend
 source_role: ux_contract
 source_of_truth: false
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 related_requirements: [REQ-036, REQ-044, REQ-045, PRO-005, PRO-011, PRO-035]
 ---
@@ -80,7 +80,7 @@ Yerleşim cihaz adına göre yalnız küçülmez; göreve, giriş yöntemine, iz
 
 ## Gerçek uygulama durumu
 
-Legacy responsive/PWA/TV parçaları `IMPLEMENTING`; rol bazlı cihaz kabuğu, kiosk kilidi, gerçek RTL ve fiziksel cihaz kabulü `PLANNED` durumundadır. Route varlığı veya placeholder ekran cihaz kabulü değildir.
+Responsive operasyon/komuta çalışma alanı, `/saha`, PII'siz TV/takip projection ve provider-bağımsız cihaz portları `IMPLEMENTED_UNVERIFIED` durumundadır. Kiosk kilidi, gerçek RTL ve fiziksel terazi/yazıcı/tarayıcı/TV/telefon/tablet kabulü `NOT_RUN` durumundadır; route varlığı cihaz kabulü değildir.
 
 ## Kabul matrisi
 

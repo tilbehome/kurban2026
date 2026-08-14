@@ -1,11 +1,11 @@
 ---
 id: DOM-012
 title: Soğuk Oda, Yükleme ve Teslimat Domain Sözleşmesi
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: Domain-and-Fulfillment
 source_role: domain_contract
 source_of_truth: false
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 related_requirements: [REQ-041, REQ-042, REQ-043, REQ-034, PRO-032, PRO-033, PRO-035]
 ---
@@ -34,17 +34,17 @@ PACKED → COLD_STORAGE → PICKED → LOADED → OUT_FOR_DELIVERY
 → READY_FOR_HANDOFF → DELIVERED
 ```
 
-`MISSING`, `DAMAGED`, `WRONG_LOCATION`, `DELIVERY_EXCEPTION`, `REVERSED` açık istisna durumlarıdır. Soğuk oda ve yükleme modelleri henüz kodlanmadığı için bu durum makinesi `PLANNED` kabul edilir.
+`MISSING`, `DAMAGED`, `WRONG_LOCATION`, `DELIVERY_EXCEPTION`, `REVERSED` açık istisna durumlarıdır. Soğuk oda, konum geçmişi, yükleme listesi ve paket checklist'i kodlanmış fakat doğrulanmamıştır.
 
 ## Gerçek uygulama durumu
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| `DeliveryRecord` ve teslim reversal saf fonksiyonu | `IMPLEMENTED_UNVERIFIED` | Tenant core ve PostgreSQL tenant şeması. |
+| Checklist bağlı `DeliveryRecord`, kısmi istisna ve reversal | `IMPLEMENTED_UNVERIFIED` | `0014_faz_10_delivery_offline_tracking`, tenant service/repository/API/UI. |
 | Legacy paket/teslim ekran ve API’leri | `IMPLEMENTING` | `/kesim/teslim`, `/api/hisseler/[id]/teslim`; tek kullanımlık QR ve paket checklist’i yok. |
-| Soğuk oda konumu, sıcaklık ve raf hareketi | `PLANNED` | Model, API ve UI yok. |
-| Araç, sürücü, rota ve taramalı yükleme | `PLANNED` | `app/lojistik/*` placeholder; operasyon modeli yok. |
-| Tek kullanımlık teslim kodu/imza/fotoğraf kanıtı | `PLANNED` | QR sözleşmesi var; teslim orkestrasyonu/E2E yok. |
+| Soğuk oda/raf konumu ve append-only hareket | `IMPLEMENTED_UNVERIFIED` | `PackageLocation` ve `movePackage`; sıcaklık cihazı kabulü yok. |
+| Araç/rota ve taramalı yükleme sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `LoadingList`, `LoadingListItem`, checklist kapsam kontrolü; gerçek araç operasyonu `NOT_RUN`. |
+| Süreli QR ve imza/fotoğraf/not kanıt metadata'sı | `IMPLEMENTED_UNVERIFIED` | Korumalı storage metadata'sı ve minimal takip sayfası; gerçek HTTPS/kamera/imza E2E `NOT_RUN`. |
 
 ## Komut ve olaylar
 

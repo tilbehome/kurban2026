@@ -1,11 +1,11 @@
 ---
 id: DOM-010
 title: Kesim ve Kontrol Merkezi Domain Sözleşmesi
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: Domain-and-Slaughter-Operations
 source_role: domain_contract
 source_of_truth: false
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 related_requirements: [REQ-012, REQ-014, REQ-029, REQ-035, REQ-036, PRO-001, PRO-006, PRO-032, PRO-034]
 ---
@@ -39,11 +39,11 @@ Her aktif durumdan `EXCEPTION` açılabilir; `EXCEPTION` yalnız kontrollü olar
 
 | Dilim | Durum | Kanıt ve sınır |
 |---|---|---|
-| Saf kesim geçiş koruması ve PostgreSQL `SlaughterJob` | `IMPLEMENTED_UNVERIFIED` | `operation-flow.ts`, tenant şeması ve `0002_tenant_operation_flow`. |
+| Kilitli kesim geçiş koruması ve PostgreSQL `SlaughterJob` | `IMPLEMENTED_UNVERIFIED` | `operation-flow.ts`, `0012_faz_8_slaughter_command_center`, transaction ve idempotency hattı. |
 | Legacy TV kontrol, sıra ve aşama API’leri | `IMPLEMENTING` | `/tv/kontrol`, `/api/tv/*`; string durumlar ve legacy SQLite kullanıyor. |
-| Operasyon istisna kuyruğu sözleşmesi | `IMPLEMENTED_UNVERIFIED` | `packages/operations/src/dashboard-contracts.ts`; gerçek bağlı kontrol merkezi UI/read model yok. |
-| Kesim Günü gerçek komuta merkezi, cihaz sağlığı ve vardiya devri | `PLANNED` | Bazı kesim sayfaları placeholder; uçtan uca runtime/E2E yok. |
-| Kısıtlı/offline/read-only modların istasyon uygulaması | `PLANNED` | Tenant runtime read-only politikası platform düzeyinde var; saha UX/sync tamam değil. |
+| Sıra/ekip/istasyon geçmişi, kalıcı istisna kuyruğu ve komuta read-model'i | `IMPLEMENTED_UNVERIFIED` | Tenant repository/API ve `QurbanOperationsWorkspace`; manuel doğrulama çalıştırılmadı. |
+| Normal/kısıtlı/salt-okunur/acil durdurma modu | `IMPLEMENTED_UNVERIFIED` | `OperationModeState`; riskli yazılar fail-closed bloke edilir. |
+| Gerçek Kurban Günü, vardiya, yük ve fiziksel cihaz kabulü | `NOT_RUN` | Faz 12 saha/dış kabul borcudur. |
 
 ## Kontrol merkezi read model’i
 
