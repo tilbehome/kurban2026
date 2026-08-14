@@ -84,4 +84,21 @@ export const BESI_AUTHORIZATION_MANIFEST: ModuleAuthorizationManifest = {
   ],
 };
 
-export const TENANT_MODULE_AUTHORIZATION_MANIFESTS = [IDENTITY_AUTHORIZATION_MANIFEST, KURBAN_AUTHORIZATION_MANIFEST, BESI_AUTHORIZATION_MANIFEST] as const;
+export const DEFINITIONS_AUTHORIZATION_MANIFEST: ModuleAuthorizationManifest = {
+  moduleId: "definitions",
+  version: "1.0.0",
+  displayName: "Firma Tanımları",
+  permissions: [
+    { key: "definitions.units.read.organization", description: "Ölçü ve işlem birimlerini görüntüler" },
+    { key: "definitions.units.create.organization", description: "Firma ölçü ve işlem birimi oluşturur", riskLevel: "sensitive" },
+    { key: "definitions.units.update.organization", description: "Kullanılmamış firma birimini günceller", riskLevel: "sensitive" },
+    { key: "definitions.units.activate.organization", description: "Firma birimini etkinleştirir", riskLevel: "sensitive" },
+    { key: "definitions.units.deactivate.organization", description: "Firma birimini fiziksel silmeden pasifleştirir", riskLevel: "sensitive" },
+  ],
+  defaultRoleTemplates: [
+    { templateKey: "definitions-admin", name: "Firma Tanımları Yöneticisi", functionalArea: "organization_definitions", accessLevel: "MANAGER", permissions: ["definitions.units.read.organization", "definitions.units.create.organization", "definitions.units.update.organization", "definitions.units.activate.organization", "definitions.units.deactivate.organization"].map((key) => allow(key as PermissionKey)) },
+    { templateKey: "definitions-viewer", name: "Firma Tanımları İzleyicisi", functionalArea: "organization_definitions", accessLevel: "VIEWER", permissions: [allow("definitions.units.read.organization")] },
+  ],
+};
+
+export const TENANT_MODULE_AUTHORIZATION_MANIFESTS = [IDENTITY_AUTHORIZATION_MANIFEST, KURBAN_AUTHORIZATION_MANIFEST, BESI_AUTHORIZATION_MANIFEST, DEFINITIONS_AUTHORIZATION_MANIFEST] as const;

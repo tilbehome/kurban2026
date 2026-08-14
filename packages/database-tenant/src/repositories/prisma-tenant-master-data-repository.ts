@@ -318,7 +318,12 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
       const invoice = await tx.purchaseInvoice.create({
         data: {
           id: input.id, supplierId: input.supplierId, seasonId: input.seasonId,
+          organizationId: meta.organizationId ?? "tenant-local",
+          uuid: input.id,
           invoiceNo: input.invoiceNo.trim(), invoiceDate: new Date(input.invoiceDate),
+          accountingStatus: "POSTED", paymentStatus: "UNPAID", electronicStatus: "NOT_APPLICABLE",
+          partySnapshot: { supplierId: input.supplierId }, requestId: meta.requestId,
+          createdByUserId: meta.actorUserId, postedByUserId: meta.actorUserId, postedAt: meta.occurredAt,
           subtotal: input.subtotal, taxTotal: input.taxTotal ?? "0", grandTotal: input.grandTotal,
           idempotencyKey: meta.idempotencyKey,
         },
@@ -340,6 +345,7 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
           data: {
             id: line.id, purchaseInvoiceId: invoice.id, lineNo: index + 1,
             description: line.description, animalId, quantity: line.quantity,
+            unitId: "uom_system_adet", unitCodeSnapshot: "ADET", unitNameSnapshot: "Adet", unitSymbolSnapshot: "ad",
             unitPrice: line.unitPrice, lineTotal: line.lineTotal,
           },
         });
@@ -349,6 +355,19 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
         create: { id: `supplier_account_${input.supplierId}_${input.seasonId}`, supplierId: input.supplierId, seasonId: input.seasonId, debitTotal: input.grandTotal, balance: input.grandTotal },
         update: { debitTotal: { increment: input.grandTotal }, balance: { increment: input.grandTotal } },
       });
+      const inventory = await tx.financialAccount.upsert({ where: { code: "INVENTORY" }, create: { id: "financial_account_inventory", code: "INVENTORY", name: "Stok ve Hayvan Maliyeti", type: "asset", normalSide: "debit", currency: "TRY" }, update: {} });
+      const payable = await tx.financialAccount.upsert({ where: { code: "ACCOUNTS_PAYABLE" }, create: { id: "financial_account_accounts_payable", code: "ACCOUNTS_PAYABLE", name: "Tedarikçi Borçları", type: "liability", normalSide: "credit", currency: "TRY" }, update: {} });
+      const journalEntryId = `journal_invoice_${invoice.id}`;
+      await tx.journalEntry.create({ data: {
+        id: journalEntryId, seasonId: input.seasonId, sourceType: "invoice", sourceId: invoice.id,
+        currency: "TRY", memo: "PURCHASE_INVOICE_POSTED", idempotencyKey: meta.idempotencyKey,
+        occurredAt: new Date(input.invoiceDate), postedAt: meta.occurredAt,
+        lines: { create: [
+          { id: `${journalEntryId}_debit`, accountId: inventory.id, side: "debit", amount: input.grandTotal, currency: "TRY", memo: "PURCHASE_COST" },
+          { id: `${journalEntryId}_credit`, accountId: payable.id, side: "credit", amount: input.grandTotal, currency: "TRY", memo: "SUPPLIER_PAYABLE" },
+        ] },
+      } });
+      await tx.purchaseInvoice.update({ where: { id: invoice.id }, data: { journalEntryId } });
       await evidence(tx, meta, "purchase.invoice.posted", "PurchaseInvoice", invoice.id, { supplierId: input.supplierId, seasonId: input.seasonId, animalCount: animalIds.length });
       return { id: invoice.id, animalIds };
     });

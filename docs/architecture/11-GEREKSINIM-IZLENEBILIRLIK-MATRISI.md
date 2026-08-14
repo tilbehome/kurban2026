@@ -6,7 +6,7 @@ status: IMPLEMENTING
 owner: Product-and-QA
 source_role: requirement_traceability_matrix
 source_of_truth: true
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 verified_against_commit: fef2154ac64c0948f51e42e34c3f93081928e2dd
 ```
 
@@ -136,10 +136,12 @@ Bu bölüm kullanıcı tarafından sonradan onaylanan profesyonel panel, teknolo
 | PRO-034 | Planlandı: Acil durum / yalnızca okuma modu | Firma Admin / saha PWA / TV | Firma sahibi, operasyon sorumlusu, platform operatörü | `operasyon.readonly.ac`, `operasyon.readonly.kapat` | Mod değişikliği, gerekçe, etkilenen ekranlar, çıktı alma | Feature flag, E2E, yetki, çıktı smoke | Arıza veya bakım sırasında güvenli görüntüleme, listeleme, çıktı alma ve operasyon devamlılığı sağlanır; yeni riskli yazma işlemleri kontrollü biçimde durur | Faz 10, Faz 12, Faz 15 |
 | PRO-035 | Planlandı: Donanım adaptör katmanı | Firma Admin / saha cihazları | Firma admini, teknik operatör, saha personeli | `donanim.adapter.yonet`, `donanim.okuma.kaydet` | Cihaz kaydı, okuma/yazdırma olayı, hata, yeniden deneme | Adapter contract, mock cihaz, E2E smoke | Terazi, barkod/QR okuyucu, etiket yazıcısı, termal yazıcı ve TV cihazları domain koduna doğrudan bağlanmadan adapter sözleşmeleriyle yönetilir | Faz 9, Faz 10, Faz 12 |
 | PRO-036 | Planlandı: Güvenli entegrasyon merkezi | Firma Admin / Platform | Firma admini, platform operatörü, entegrasyon sorumlusu | `entegrasyon.yonet`, `webhook.dogrula`, `outbox.tekrar_dene` | Webhook, imza doğrulama, outbox olayı, retry, idempotency, hata | Contract, webhook signature, outbox retry, rate-limit, security test | SMS, e-posta, ödeme ve muhasebe entegrasyonları imzalı, idempotent, retry edilebilir ve PII/secret sızdırmadan izlenebilir olur | Faz 10, Faz 12, Faz 15 |
+| PRO-037 | `IMPLEMENTED_UNVERIFIED`: Faturalar 360 ve sağlayıcı bağımsız e-Belge çekirdeği | Firma Admin / finans | Firma sahibi, muhasebe, yetkili finans operatörü | `invoice.invoice.*.organization`, `invoice.einvoice.*.organization` | Fatura timeline, journal, tahsis, delivery, webhook, retry/dead-letter | Domain unit, gerçek PostgreSQL, tenant isolation, provider contract, security | Alış/satış/iade eksenleri ile muhasebe/ödeme/e-Belge durumları ayrıdır; posting dengeli ledger üretir; gerçek sağlayıcı olmadan entegrasyon tamamlandı sayılmaz | Faz 4, Faz 6, Faz 10, Faz 12 |
+| PRO-038 | `IMPLEMENTED_UNVERIFIED`: Tenant-aware ölçü ve işlem birimleri | Firma Admin / tanımlar | Firma admini, satın alma, satış, stok ve operasyon sorumluları | `definitions.units.read/create/update/activate/deactivate.organization` | Birim oluşturma/değişiklik/durum audit'i, fatura satır snapshot'ı | Domain unit, gerçek PostgreSQL constraint/trigger, tenant isolation, invoice snapshot | Sistem ve firma birimleri ayrıdır; kod tenant içinde benzersizdir; kullanılan birim silinmez veya anlamı değişmez; provider mapping eksikse e-Belge fail-closed olur | Faz 2D, Faz 4, Faz 6 |
 
-### PRO-030..PRO-036 geri dönüş yöntemleri
+### PRO-030..PRO-038 geri dönüş yöntemleri
 
-Bu turda eklenen gereksinimler planlandı durumundadır; uygulama kodu başlatılmamıştır. Uygulama fazlarında her biri küçük feature flag, config veya adapter sınırıyla geri alınabilir şekilde tasarlanır.
+`PRO-030..PRO-036` için satırdaki gerçek durum geçerlidir. `PRO-037` ve `PRO-038` kod/migration olarak `IMPLEMENTED_UNVERIFIED` durumundadır; CI ve dış kabul kanıtı tamamlanmamıştır. Her kapsam feature flag, config, permission veya adapter sınırıyla geri alınabilir şekilde tasarlanır; kalıcı finans verisi fiziksel olarak silinmez.
 
 | ID | Geri dönüş yöntemi |
 |---|---|
@@ -150,6 +152,8 @@ Bu turda eklenen gereksinimler planlandı durumundadır; uygulama kodu başlatı
 | PRO-034 | Read-only mod toggle'ı kapatılır; bakım/arıza modundan çıkış auditli yönetici işlemiyle yapılır. |
 | PRO-035 | Donanım adapteri cihaz bazlı devre dışı bırakılır; manuel giriş/yazdırma fallback'i korunur. |
 | PRO-036 | Entegrasyon adapteri kanal bazlı durdurulur; outbox yeniden deneme kuyruğu dondurulur ve manuel mutabakat raporu üretilir. |
+| PRO-037 | `invoice_360` feature flag/entitlement kapatılır; işlenmiş fatura ve ledger kayıtları silinmez, bekleyen outbox işleri dondurulup mutabakat raporlanır. |
+| PRO-038 | Birim yönetimi yazma yetkileri kapatılır; mevcut birim ve fatura snapshot'ları korunur, migration veri geri dönüşü yalnız yedek ve mutabakat planıyla yapılır. |
 
 ### Faz 2A platform–tenant sınır checkpoint'i
 
@@ -233,6 +237,6 @@ Bundan sonra üç kapsam ayrı takip edilir:
 
 1. Kullanıcı görüşmelerinden çıkan 68 iş akışı: Bu dosyadaki `REQ-001..REQ-068` satırlarıdır.
 2. Kaynak kodundan keşfedilen sistem alanları: Sayfa, API, bileşen, modül, Prisma modeli, script, test, PWA ve altyapı envanteri `14-PROGRAM-TAM-KAPSAM-ENVANTERI.md` belgesindedir.
-3. Kullanıcı tarafından onaylanan profesyonel ürün ve işletim gereksinimleri: Bu dosyadaki `PRO-001..PRO-036` satırlarıdır. Bunlar `REQ-001..REQ-068` sayımını değiştirmez ve ilgili fazlarda ayrı kabul kanıtı ister.
+3. Kullanıcı tarafından onaylanan profesyonel ürün ve işletim gereksinimleri: Bu dosyadaki `PRO-001..PRO-038` satırlarıdır. Bunlar `REQ-001..REQ-068` sayımını değiştirmez ve ilgili fazlarda ayrı kabul kanıtı ister.
 
 Programın tamamı analiz edilmeden veya test edilmeden “tüm sistem tamamlandı” ifadesi kullanılmaz.

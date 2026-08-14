@@ -6,7 +6,7 @@ status: IMPLEMENTING
 owner: Architecture-and-Finance
 source_role: finance_ledger_architecture
 source_of_truth: true
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
 ```
 
@@ -25,6 +25,8 @@ verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
 `shared/lib/para.ts` kuruşa yuvarlama yardımcıları içeriyor; ancak kalıcı model hâlâ `Float`.
 
 Tenant PostgreSQL başlangıç şeması Decimal/Numeric para alanları ve ledger modelleri içerir. Buna rağmen legacy SQLite iş akışları ve yukarıdaki `Float` alanları bütünüyle göç etmediği için finans mimarisi tamamlanmış sayılmaz.
+
+Tenant migration `0008_invoice_360_e_document_center`, mevcut `PurchaseInvoice` modelini ikinci bir fatura modeli oluşturmadan Faturalar 360 aggregate'ine genişletir. Fatura yönü/belge niteliği/elektronik kanal, muhasebe durumu, ödeme durumu ve e-Belge durumu ayrı tutulur. Posting dengeli journal üretir; tahsisler fatura toplamını aşamaz; iade ve ters kayıt asıl belgeye bağlanır. Birim tanımı yabancı anahtarı yanında satırda değişmez kod/ad/sembol snapshot'ı bulunur. Ayrıntılı sözleşme [DOM-013](../domains/DOM-013-FATURALAR-360-E-BELGE-VE-OLCU-BIRIMLERI.md) içindedir.
 
 ## Hedef
 

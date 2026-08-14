@@ -39,6 +39,8 @@ const IZINLER: Record<Rol, Izin[]> = {
     "tahsilat.goruntule",
     "tahsilat.olustur",
     "dekont.bas",
+    // Faturalar 360
+    "invoice.invoice.read.organization",
     // Kasa
     "kasa.goruntule",
     "kasa.gider",
@@ -59,6 +61,7 @@ const IZINLER: Record<Rol, Izin[]> = {
     "musteriler.goruntule",
     "hayvanlar.goruntule",
     "tahsilat.goruntule",
+    "invoice.invoice.read.organization",
     "kasa.goruntule",
     "raporlar.goruntule",
     "whatsapp.gecmis",

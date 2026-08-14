@@ -854,7 +854,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 #### Faz 2D — Firma çekirdek şeması
 
-**Mevcut durum:** Başladı — `@tilbecore/tenant-core` domain/command sözleşmeleri ve tenant DB başlangıç modelleri eklendi; genel doğrulama bekliyor. Mevcut tenant uygulaması henüz bu yeni şemaya taşınmadı.
+**Mevcut durum:** `IMPLEMENTED_UNVERIFIED` — `@tilbecore/tenant-core` domain/command sözleşmeleri, tenant DB modelleri ve gerçek PostgreSQL migration/test temeli eklendi. Tenant-aware ölçü ve işlem birimleri, sistem/firma ayrımı, pasifleştirme ve fatura snapshot'ı uygulanmıştır. Legacy uygulamanın tüm yolları henüz bu şemaya taşınmadı.
 
 - Season, customer, supplier, animal, share card, sale ve ledger temeli
 - Sezon durum makinesi sözleşmesi: hazırlık → satış → kesim → teslimat → mutabakat → arşiv
@@ -884,7 +884,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 ### Faz 4 — Tedarikçi, alış faturası, gider ve hayvan
 
-**Mevcut durum:** Başladı — tenant çekirdek command sözleşmelerinde tedarikçi ve hayvan kayıt akışı uygulandı; alış faturası/gider ekran ve API taşımaları henüz tamamlanmadı.
+**Mevcut durum:** `IMPLEMENTED_UNVERIFIED` — tenant çekirdek command sözleşmelerinde tedarikçi ve hayvan kayıt akışı; genişletilmiş alış/satış/iade fatura aggregate'i, Faturalar 360 temel ekran/API'leri, birim snapshot'ı ve gerçek PostgreSQL integration testi uygulandı. Legacy alış/gider ekran ve API'lerinin tamamı henüz taşınmadı; PDF/CSV akışları ve gerçek e-Belge sağlayıcısı tamamlanmış değildir.
 
 - Tedarikçi carisi
 - PDF ve toplu fatura satırları
@@ -919,7 +919,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 ### Faz 6 — Ledger, tahsilat ve kasa
 
-**Mevcut durum:** Başladı — Decimal string para sözleşmesi, ödeme dağıtımı, ledger ters kayıt ve satış iptal reversal akışı uygulandı; mevcut tenant uygulaması henüz ledger'ı tek finans kaynağı olarak kullanacak şekilde taşınmadı.
+**Mevcut durum:** `IMPLEMENTING` — Decimal string para sözleşmesi, ödeme dağıtımı, ledger ters kayıt, satış iptal reversal akışı ile Faturalar 360 dengeli posting ve fatura ödeme tahsisi uygulandı. Mevcut tenant uygulamasının bütün finans yolları henüz ledger'ı tek kaynak kullanacak şekilde taşınmadı; kasa/banka/POS mutabakatı tamamlanmadı.
 
 - Çift taraflı ledger
 - Tek makbuz ve yöntem parçaları

@@ -8,14 +8,14 @@ owner: QA
 source_role: test_plan
 reviewers: [Finance, Domain, Data, Security]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: HER_FINANS_VE_DURUM_MAKINESI_DEGISIKLIGINDE
-version: 0.1
+version: 0.2
 source_of_truth: false
-related_requirements: [REQ-001, REQ-040, REQ-068, PRO-002, PRO-032]
+related_requirements: [REQ-001, REQ-040, REQ-068, PRO-002, PRO-032, PRO-037, PRO-038]
 related_adrs: []
-related_modules: [tenant-core, finance-ledger, share-sales, slaughter-packaging-delivery]
+related_modules: [tenant-core, finance-ledger, share-sales, faturalar, slaughter-packaging-delivery]
 related_tests: [TST-003, TST-006]
 supersedes: []
 superseded_by: null
@@ -35,6 +35,8 @@ Hedef tenant şemasında Decimal/Numeric ve ledger sözleşmeleri vardır; legac
 - İptal/iade/düzeltme fiziksel silme değil bağlantılı ters kayıt üretir.
 - Kasa, banka/POS, müşteri carisi ve rapor aynı ledger kaynağından sıfır açıklanamayan fark verir.
 - Kapalı sezona/döneme doğrudan posting yapılmaz.
+- Onaylı fatura posting'i dengeli journal üretir; ödeme/tahsilat tahsisleri açık, kısmi, ödenmiş veya görünür fazla ödeme durumuyla mutabık kalır ve fazla tutar sessizce kaybolmaz.
+- Fatura satırındaki birim kod/ad/sembol snapshot'ı, birim tanımı daha sonra pasifleştirilse bile değişmez.
 
 ## Operasyon invariant’ları
 
@@ -57,6 +59,8 @@ Hedef tenant şemasında Decimal/Numeric ve ledger sözleşmeleri vardır; legac
 | Reverse | Tam/kısmi iade, iptal, transfer, kg eksiği, POS vade farkı |
 | Reconciliation | Ledger ↔ cari ↔ kasa ↔ banka/POS ↔ rapor |
 | Lifecycle | Sezon kilidi, paket/teslim kapanışı, pasif kayıt yeniden aktifleştirme |
+| Fatura 360 ve birim | Alış/satış/iade eksenleri, onay/posting, ödeme tahsisi, 20 satır → 20 hayvan/140 hisse, tenant birim izolasyonu, snapshot ve kullanılan birim değişmezliği |
+| e-Belge sözleşmesi | Provider capability, eksik birim mapping fail-closed, idempotent gönderim, retry/dead-letter, imzalı webhook/replay; gerçek sağlayıcı kabulü ayrı dış kapıdır |
 
 ## Hata enjeksiyonu
 
