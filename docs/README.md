@@ -7,7 +7,7 @@ owner: Product-and-Architecture
 source_role: canonical_document_index
 source_of_truth: true
 last_reviewed: 2026-08-14
-verified_against_commit: 885b55e2cc027cb7782e625d84c1073b74107e8c
+verified_against_commit: 5125093338dc4b4b3b18d635df36cf46533879af
 ```
 
 Bu dosya aktif belge sisteminin tek giriş noktasıdır. Bir belgenin listelenmesi, içindeki hedeflerin kodlandığı veya kabul testlerinin çalıştırıldığı anlamına gelmez. Gerçek durum; belge durumu, kaynak kod/migration/test kanıtı ve doğrulanan commit birlikte okunarak belirlenir.
@@ -87,7 +87,9 @@ Bu özet ayrıntılı domain kurallarının yerine geçmez; bağlayıcı ayrınt
 
 ## Kanıt sınırı ve çalıştırılmamış kabuller
 
-Son doğrulanmış `main` kod referansı `fef2154ac64c0948f51e42e34c3f93081928e2dd` commitidir. [CI koşusu 31626396792](https://github.com/tilbehome/kurban2026/actions/runs/31626396792) yalnız koşuda gerçekten yer alan kontroller için kanıttır. Staging kabul aday dalındaki yeni altyapı ayrıca aday commit ve PR CI kanıtı bekler.
+Son doğrulanmış `main` kod referansı `5125093338dc4b4b3b18d635df36cf46533879af` commitidir. [CI koşusu 31791110213](https://github.com/tilbehome/kurban2026/actions/runs/31791110213) `SUCCESS` sonucuyla yalnız koşuda gerçekten yer alan kontroller için kanıttır.
+
+Faz 2D–6 repo içi kod kapanış adayı draft [PR #4](https://github.com/tilbehome/kurban2026/pull/4) içindeki `55e984b658f905b2f72409eeae5b3419ec6f3972` commitidir; bu commitin [CI 31796147539](https://github.com/tilbehome/kurban2026/actions/runs/31796147539) sonucu `SUCCESS` durumundadır. PR henüz `main` ile birleştirilmemiştir. Sıradaki geliştirme Faz 7–11 kesintisiz uygulama, toplu genel test ve nihai kabul Faz 12'dir. Faz 7–11 sırasında manuel test/typecheck/lint/build çalıştırılmayacak; mevcut testler ve GitHub CI korunacaktır.
 
 Aşağıdakiler bu entegrasyonda `NOT_RUN` durumundadır ve doğrulanmış gösterilemez:
 

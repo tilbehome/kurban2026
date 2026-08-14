@@ -6,8 +6,8 @@ status: IMPLEMENTING
 owner: Product-and-Architecture
 source_role: repository_entrypoint_and_product_overview
 source_of_truth: false
-last_reviewed: 2026-08-12
-verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+last_reviewed: 2026-08-14
+verified_against_commit: 5125093338dc4b4b3b18d635df36cf46533879af
 ```
 
 > Büyükbaş kurban işletmeleri için hayvan tedarikinden sezon kapanışına kadar satış, finans ve kesim operasyonunu tek zincirde yöneten; mobil saha kullanımı, yerel ağ dayanıklılığı ve çok firma veri izolasyonu hedefli profesyonel yönetim platformu.
@@ -72,7 +72,7 @@ TilbeCore Kurban’ın başarı ölçüsü yalnızca kayıt tutmak değildir. Si
 
 ## Güncel proje durumu
 
-Bu bölüm, **10 Ağustos 2026** tarihli repo ve uygulama takip kayıtlarını özetler. Durum işaretleri şu anlama gelir:
+Bu bölüm, **14 Ağustos 2026** tarihli repo ve uygulama takip kayıtlarını özetler. Son doğrulanmış `main` referansı `5125093338dc4b4b3b18d635df36cf46533879af` ve [CI 31791110213](https://github.com/tilbehome/kurban2026/actions/runs/31791110213) sonucudur. Faz 2D–6 repo içi kod kapanış adayı draft [PR #4](https://github.com/tilbehome/kurban2026/pull/4) içindeki `55e984b658f905b2f72409eeae5b3419ec6f3972` commitidir ve bu commitin [CI 31796147539](https://github.com/tilbehome/kurban2026/actions/runs/31796147539) sonucu başarılıdır; PR henüz `main` ile birleştirilmemiştir. Durum işaretleri şu anlama gelir:
 
 | İşaret | Anlamı |
 |---|---|
@@ -87,11 +87,11 @@ Bu bölüm, **10 Ağustos 2026** tarihli repo ve uygulama takip kayıtlarını �
 | P0 güvenlik ve teknik stabilizasyon | ✅ | API yetkileri, kritik transaction’lar, idempotency, korumalı vekâlet dosyaları, hata kataloğu ve UTF-8 kapısı tamamlandı |
 | Mevcut tek işletme operasyonu | ✅ | Müşteri, hayvan/hisse, tahsilat, kasa, rapor, PWA, TV ve temel kesim takibi çalışıyor |
 | Modüler monolit sınırları | ✅ | Domain/application/infrastructure yönü ve workspace paket sınır testleri kuruldu |
-| Platform PostgreSQL temeli | 🧪 | Platform domaini, şema, migration ve repository temeli var; gerçek PostgreSQL CI/canlı kanıtı tamamlanmadan hazır sayılmaz |
-| Firma başına ayrı PostgreSQL | 🧪 | Tenant sözleşmesi ve veritabanı başlangıcı var; mevcut ekranların tamamı yeni altyapıya taşınmış değil |
-| Müşteri, satış ve ledger çekirdeği | 🧪 | Decimal tabanlı yeni sözleşmeler kodlandı; eski SQLite akışlarıyla tam bütünleşme bekliyor |
-| Vekâlet, kesim, tartım, paket, teslim | 🧪 | Yeni domain sözleşmeleri ve migration temeli mevcut; tüm saha ekranlarına uçtan uca bağlanması gerekiyor |
-| Operasyon merkezi ve observability | 🧪 | KPI, istisna kuyruğu, trace ve release gate sözleşmeleri var; çalışma zamanı araçları tamamlanmadı |
+| Platform PostgreSQL temeli | 🧪 | Platform migration/repository ve gerçek PostgreSQL CI doğrulaması başarılıdır; canlı DNS/TLS, production restore ve dış altyapı kabulü tamamlanmadı |
+| Firma başına ayrı PostgreSQL | 🧪 | Tenant provisioning, iki firma izolasyonu ve backup/restore gerçek PostgreSQL CI'da başarılıdır; tüm legacy ekranların taşınması ve production kabulü tamamlanmadı |
+| Faz 2D–6 operasyon ve finans çekirdeği | 🧪 | Satış, tahsilat, reversal, ledger, satın alma, padok, vekâlet kapsamı ve Faturalar 360 kapanış adayı PR #4 CI'ında başarılıdır; draft PR henüz `main` ile birleşmedi |
+| Vekâlet, kesim, tartım, paket, teslim | 🚧/🧪 | Mevcut sözleşme ve kısmi runtime temeli korunur; sıradaki kesintisiz uygulama paketi Faz 7–11'dir |
+| Operasyon merkezi ve observability | 🚧/🧪 | KPI, istisna kuyruğu, trace ve release gate temeli var; Faz 7–11 uygulaması ile gerçek çalışma zamanı bağlantıları devam edecektir |
 | Canlıya hazır sürüm | 🚧 | Restore provası, gerçek cihaz testleri, yük testi, kesim günü simülasyonu ve kabul kapıları tamamlanmadan ilan edilmez |
 
 > **Önemli:** `Belgelendi`, `kodlandı`, `test edildi` ve `canlıya hazır` aynı durum değildir. README’deki hiçbir hedef, kabul kanıtı olmadan tamamlanmış sayılmaz.
@@ -727,13 +727,14 @@ kurban2026/
 |---|---|---:|
 | **1 / P0** | Güvenlik, yetki, transaction, idempotency, vekâlet dosyası, UTF-8 ve hata kataloğu | ✅ |
 | **2A** | Workspace, mimari sınırlar, domain ayrıştırma, domain/origin ve tenant sözleşmeleri | ✅ |
-| **2B** | Platform domaini, PostgreSQL, Süper Admin kimlik/rol ve control-plane metadata | 🚧/🧪 |
-| **2C–2D** | Tenant çözümleme, firma DB, sezon, müşteri, tedarikçi, hayvan ve hisse çekirdeği | 🚧/🧪 |
-| **3–6** | Satış, fiyat kilidi, cari, ledger, tahsilat, kasa, banka/POS ve finans mutabakatı | 🚧/🧪 |
-| **7–10** | Vekâlet, belge, QR, kesim motoru, tartım, paketleme, teslim ve offline sözleşmeleri | 🚧/🧪 |
-| **11–12** | Operasyon merkezi, raporlar, observability, güvenlik kabulü, release ve simülasyon | 🚧/🧪 |
+| **2B–2C** | Platform PostgreSQL, Süper Admin, provisioning, tenant çözümleme ve firma başına ayrı PostgreSQL | 🧪 |
+| **2D–6** | Tenant çekirdeği, satış, fiyat kilidi, cari, ledger, tahsilat, satın alma ve finans mutabakatı | 🧪 — PR #4 kapanış adayı |
+| **7–11** | Vekâlet, belge, QR, kesim, tartım, paketleme, teslim, offline, operasyon merkezi, rapor ve observability | 🚧 — sıradaki kesintisiz uygulama |
+| **12** | Toplu genel test, sertleştirme, nihai kabul, release ve simülasyon | 📋 |
 | **Canlı kabul** | Restore, yük/soak, gerçek cihaz ve tam Kurban Günü provası | 📋 |
 | **İleri ürün** | Çok şube, resmî WhatsApp/SMS, termal yazıcı, rota/GPS, AI ve dış entegrasyonlar | 📋 |
+
+Faz 7–11 uygulaması sırasında manuel test, typecheck, lint veya build çalıştırılmayacaktır. Mevcut testler silinmeyecek, GitHub CI devre dışı bırakılmayacak; toplu manuel doğrulama ve nihai kabul Faz 12'de yürütülecektir.
 
 ### İlk canlı sürümde zorunlu
 
@@ -781,7 +782,7 @@ kurban2026/
 | PWA build zinciri | `next-pwa` nedeniyle production build Webpack kullanıyor; tip uyumsuzluğu bastırılmış | Next.js 16 uyumlu aktif service worker çözümüne kontrollü geçiş yap |
 | Eski para/kilo modeli | Mevcut SQLite şemasında bazı alanlar `Float` | Decimal/Numeric modele migration + veri mutabakatı yap |
 | Çok firma hedefi | Platform/tenant paketleri var; tüm ekranlar yeni runtime’a bağlı değil | Ekran ve route’ları tenant bağlamına aşamalı taşı |
-| PostgreSQL kabulü | Test ve CI kapısı mevcut; canlı kanıt tamamlanmadan hazır değil | Migration, drift, isolation ve restore testlerini gerçek DB’de doğrula |
+| PostgreSQL kabulü | Migration, drift, izolasyon ve geçici restore gerçek PostgreSQL CI'da başarılı; gerçek staging/production kabulü tamamlanmadı | Yönetilen staging WAL/PITR, production restore ve ölçülmüş dış ortam kabulünü ayrıca kanıtla |
 | SQLite WAL sürümü | Çok bağlantılı WAL için kullanılan gömülü SQLite sürümü açıkça doğrulanmıyor | SQLite `3.51.3+` veya resmi backport düzeyini doğrula |
 | Yedek doğrulama | `VACUUM INTO` güvenli; doğrulama şu an ağırlıkla boyut/header kontrolü | `integrity_check` + otomatik restore + invariant doğrulaması ekle |
 | Observability | Sözleşmeler var; OpenTelemetry çalışma zamanı kurulumu tamamlanmadı | Trace/metric/log, redaction ve yerel health dashboard’u bağla |

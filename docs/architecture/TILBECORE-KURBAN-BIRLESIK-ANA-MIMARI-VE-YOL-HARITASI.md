@@ -7,11 +7,12 @@ owner: Product-and-Architecture
 source_role: binding_phase_1_12_architecture_roadmap
 source_of_truth: true
 last_reviewed: 2026-08-14
-verified_against_commit: 885b55e2cc027cb7782e625d84c1073b74107e8c
+verified_against_commit: 5125093338dc4b4b3b18d635df36cf46533879af
 ```
 
 **Belge tarihi:** 10 Ağustos 2026
-**Son kanıt incelemesi:** 14 Ağustos 2026, `885b55e2cc027cb7782e625d84c1073b74107e8c`
+**Son `main` kanıt incelemesi:** 14 Ağustos 2026, `5125093338dc4b4b3b18d635df36cf46533879af`, [CI 31791110213](https://github.com/tilbehome/kurban2026/actions/runs/31791110213) `SUCCESS`
+**Faz 2D–6 kod kapanış adayı:** draft [PR #4](https://github.com/tilbehome/kurban2026/pull/4) içindeki `55e984b658f905b2f72409eeae5b3419ec6f3972`, [CI 31796147539](https://github.com/tilbehome/kurban2026/actions/runs/31796147539) `SUCCESS`
 **Belge durumu:** Bağlayıcı ana mimari ve yol haritası
 **Ürün adı:** TilbeCore – Kurban Takip
 **Kısa ad:** TilbeCore Kurban
@@ -1115,36 +1116,21 @@ docs/
 
 ## 14. Şu anki gerçek konum ve sonraki doğru adım
 
-10 Ağustos 2026 dokümantasyon uyumlandırması itibarıyla:
+10 Ağustos 2026 tarihli Faz 1/Faz 2A başlangıç anlatımı tarihsel checkpoint'tir; güncel uygulama konumu değildir ve Faz 2A/2B'ye yeniden başlanacağı anlamına gelmez.
 
-- Faz 1 tamamlandı ve `origin/main` dalına gönderildi,
-- Faz 1 commit’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`,
-- Faz 2A workspace/sözleşme/sınır paketi kapanış kriterleri dokümantasyon ve sözleşme düzeyinde karşılandı; Platform DB, PostgreSQL, tenant routing ve gerçek app taşıması Faz 2B/2C veya sonraki taşıma paketlerine aittir,
-- merkezi hata/i18n yalnız beş pilot route’ta,
-- finansal `Float` dönüşümü ve mevcut uygulamanın yeni ledger/tenant runtime’a taşınması yapılmadı; PostgreSQL provisioning ile iki firma izolasyon integration kapısı uygulandı, geniş E2E/prova dönemi henüz yapılmadı,
-- 69 placeholder/yakında sayfası gerçek özellik kabul edilmiyor.
+14 Ağustos 2026 itibarıyla güncel kanıt zinciri:
 
-Doğru sıra:
+- Son doğrulanmış `origin/main`: `5125093338dc4b4b3b18d635df36cf46533879af`; [CI 31791110213](https://github.com/tilbehome/kurban2026/actions/runs/31791110213) sonucu `SUCCESS`.
+- Faz 2D–6 repo içi kod kapanış adayı: draft [PR #4](https://github.com/tilbehome/kurban2026/pull/4) içindeki commit `55e984b658f905b2f72409eeae5b3419ec6f3972`; bu commitin [CI 31796147539](https://github.com/tilbehome/kurban2026/actions/runs/31796147539) sonucu `SUCCESS`.
+- PR #4 henüz `main` ile birleştirilmediği için Faz 2D–6 durumu kapanış adayıdır; production veya dış kabul tamamlandı anlamına gelmez.
+- Sıradaki geliştirme paketi Faz 7–11 kesintisiz uygulamadır.
+- Genel test ve nihai kabul Faz 12'de toplu yürütülecektir.
+- Faz 7–11 sırasında manuel test, typecheck, lint veya build çalıştırılmaz; mevcut testler ve GitHub CI korunur, silinmez veya devre dışı bırakılmaz.
+- Gerçek HTTPS staging, OpenTelemetry collector/export, k6 yük profilleri, fiziksel passkey/cihazlar, Kurban Günü provası, gerçek e-Belge sağlayıcısı ve production deployment kanıtlanana kadar `BLOCKED/NOT_RUN` kalır.
 
-1. Bu birleşik mimariyi ayrı dokümantasyon değişikliğiyle ana belgelere işle.
-2. Eski “çok firma/SaaS sonra” cümlesini “çok firma izolasyon temeli şimdi; self-service ticari SaaS sonra” şeklinde düzelt.
-3. Faz 2A’da önce mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planını davranış değiştirmeden kur.
-4. Faz 2B/2C’de Platform DB, Süper Admin, provisioning ve firma başına ayrı PostgreSQL’i testlerle oluştur.
-5. Ancak bundan sonra müşteri/finans gibi yeni çekirdek domain geliştirmesine geç.
+### 14.1 Tarihsel Faz 2A uygulama sınıflandırması
 
-Faz 2 başlamadan önce verilecek zorunlu kanıtlar:
-
-- Faz 1 commit hash’i: `a6720378123f01fb4e19db3fd782a910f18c0acf`,
-- Faz 2A için temiz veya bilinçli kapsamlandırılmış `git status`,
-- yedek ve geri yükleme sonucu,
-- CI sonucu,
-- mevcut import grafiği,
-- kök dizin tasnifi ve taşıma matrisi,
-- yeni dizin taşıma matrisi,
-- platform/tenant veri sınırı ADR’si,
-- tenant isolation test planı.
-
-### 14.1 Faz 2A uygulama sınıflandırması
+Bu alt bölüm Faz 2A'nın kapanış izini korur; güncel veya sıradaki uygulama paketi değildir.
 
 - `b536078` commit’i erken tamamlanan saha satış modüler pilotudur.
 - Bu pilot `/api/saha-satis` için route adaptörü, application/use-case ve domain kural ayrımını kanıtlar.

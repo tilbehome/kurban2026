@@ -7,7 +7,7 @@ owner: Product-and-Architecture
 source_role: implementation_evidence_ledger
 source_of_truth: true
 last_reviewed: 2026-08-14
-verified_against_commit: fef2154ac64c0948f51e42e34c3f93081928e2dd
+verified_against_commit: 5125093338dc4b4b3b18d635df36cf46533879af
 ```
 
 Mimari hedef görev yönlendirmesi: [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md). Kaynak çelişkileri [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile çözülür.
@@ -83,11 +83,9 @@ Bu P0 paketi tek commit olarak tutulur. Geri alma gerektiğinde commit revert ed
 
 ## Faz 2 durumu
 
-**Durum:** Başladı.
+**Güncel konum:** Faz 2D–6 repo içi kapanış adayı tamamlandı. `origin/main` referansı `5125093338dc4b4b3b18d635df36cf46533879af`; draft [PR #4](https://github.com/tilbehome/kurban2026/pull/4) içindeki kod kapanış commit'i `55e984b658f905b2f72409eeae5b3419ec6f3972` ve bu commitin [CI 31796147539](https://github.com/tilbehome/kurban2026/actions/runs/31796147539) sonucu `SUCCESS` durumundadır. PR henüz `main` ile birleştirilmemiştir.
 
-**Sıradaki aşama:** Faz 2A — mimari sözleşme, gelişmiş dizin/monorepo iskeleti ve taşıma planı.
-
-Faz 2A gerçek workspace/sözleşme/sınır paketi `120afa16e8b635823a80b0967cbfe18e651bd2ad` başlangıç commit’i üzerinden başlatıldı. Kapanış paketiyle Faz 2A’nın davranış değiştirmeyen sözleşme, dokümantasyon, import grafiği, taşıma matrisi ve tenant izolasyon test planı çıkış kriterleri karşılandı. Platform DB, PostgreSQL kurulumu, tenant routing, Süper Admin ekranı ve gerçek app taşıması Faz 2A kapsamında değildir; Faz 2B, Faz 2C veya sonraki küçük taşıma paketlerine aittir.
+**Sıradaki uygulama paketi:** Faz 7–11 kesintisiz uygulama. Faz 2A, Faz 2B veya Faz 2C yeniden başlatılmayacaktır; bu fazların tarihsel kanıtları aşağıda korunur. Genel test ve nihai kabul Faz 12'de toplu olarak yürütülecektir.
 
 ### Faz 2A pilot — saha satış route ayrıştırması
 
@@ -162,21 +160,28 @@ Bu matris yalnız kaynak kod, migration, test ve takip belgesi kanıtıyla tutul
 |---|---|---|---|---|---|
 | 1 | Faz 2B | Platform PostgreSQL `0001..0007`, ayrı Platform Admin, parola+TOTP+passkey/recovery, DB session/device, komuta merkezi, firma 360°, provisioning, plan/lisans, domain, backup, SupportSession, kullanıcı/audit, incident/bakım/acil durdurma, yapılandırma farkı ve onaylı firma operasyon akışları. | Provisioning sonrası ilk backup işi ve davet hazırlığı gerçek worker zincirine; tenant erişim modu gerçek request runtime’a bağlandı. | Data export içeriğini üreten tenant tarafı executor Faz 2D–6 modül taşımasına bağlıdır; Platform yalnız güvenli işi ve metadata’yı yönetir. | Fiziksel passkey cihaz kabulü, canlı DNS/TLS/deployment, production restore onayı, gerçek abonelik/faturalama ve genel E2E/güvenlik kabulü. |
 | 2 | Faz 2C | Gerçek tenant DB create/exists/migrate/verify/rollback adapteri, ownership marker, idempotent/resumable provisioning, kontrollü CLI’lar, host/custom-domain resolution, request-local context, session/databaseRef fail-closed guard, auditli SupportSession, gözlemlenebilir tenant Prisma pool’u, tenant bazlı dump/geçici restore doğrulaması ve iki firma PostgreSQL web/backup isolation CI testi. | Platform metadata–tenant request composition bridge’i; pool event/metric portu ve tenant ops CLI sözleşme düzeyinden çalışan altyapıya taşındı. OpenTelemetry Node SDK ve collector paketi eklendi, gerçek staging trace kanıtı bekliyor. | Mevcut legacy route’lar yeni runtime’a toplu taşınmamıştır. | Legacy route’ların modül bazlı runtime’a taşınması, pool kapasite eşikleri/alarmları, ölçülmüş RPO/RTO, production restore onay akışı ve canlı DNS/TLS/deployment. |
-| 3 | Faz 2D–6 | BusinessProfile/Location/Setting/Season, Customer/Phone/Address/SeasonAccount, Supplier/Account/PurchaseInvoice/Payment/ExpenseDocument, Animal/Weight/Health/QurbanAssignment/Paddock, rezervasyon/satış/tahsilat/reversal ve tenant-aware `UnitOfMeasure`; atomik authorization/audit/idempotency/outbox use-case'leri kodlandı. Faturalar 360 alış/satış/iade modeli ve temel ekranları eklendi. | PostgreSQL modunda müşteri, hayvan, satın alma, satış-finans, vekâlet metadata'sı, rapor ve birim akışları tenant repository'ye bağlıdır; güvenli karşılığı olmayan eski hisse API'leri fail-closed davranır. | Migration `0010` ve gerçek PostgreSQL kapanış testi eklendi; aday commit/CI doğrulaması beklediği için durum `IMPLEMENTED_UNVERIFIED`. | Legacy gerçek firma verisi dry-run/import/mutabakatı ve gerçek sağlayıcı e-Belge bağlantısı ayrı dış kabul olarak kalır. |
+| 3 | Faz 2D–6 | BusinessProfile/Location/Setting/Season, Customer/Phone/Address/SeasonAccount, Supplier/Account/PurchaseInvoice/Payment/ExpenseDocument, Animal/Weight/Health/QurbanAssignment/Paddock, rezervasyon/satış/tahsilat/reversal ve tenant-aware `UnitOfMeasure`; atomik authorization/audit/idempotency/outbox use-case'leri kodlandı. Faturalar 360 alış/satış/iade modeli ve temel ekranları eklendi. | PostgreSQL modunda müşteri, hayvan, satın alma, satış-finans, vekâlet metadata'sı, rapor ve birim akışları tenant repository'ye bağlıdır; güvenli karşılığı olmayan eski hisse API'leri fail-closed davranır. | Migration `0010`, gerçek PostgreSQL kapanış testleri ve PR #4 CI'ı başarılıdır; draft PR henüz `main` ile birleşmediği için paket repo içi kapanış adayıdır. | Legacy gerçek firma verisi dry-run/import/mutabakatı ve gerçek sağlayıcı e-Belge bağlantısı ayrı dış kabul olarak kalır. |
 | 4 | Faz 7–10 | Proxy document, QR token, slaughter state machine, weighing/package/delivery/offline/device adapter sözleşmeleri ve tenant DB `0002`. | Tenant/sezon/kullanıcı/cihaz bağlı, TTL/idempotency/retry/conflict/poison kurallı güvenli offline runtime paketi ve görünür durum bileşeni eklendi. | TV/customer tracking ve cihaz doğrulama sözleşme düzeyinde. | Offline runtime’ın gerçek oturum ve saha ekranlarına bağlanması, vekâlet belge runtime, kesim/paket/teslim API taşıması ve cihaz adapter uygulamaları. |
 | 5 | Faz 11–12 | Operations package: dashboard KPI, exception queue, universal search, observability, release, backup/restore, simulation readiness ve acil durum runbook. | OpenTelemetry Node SDK/collector, Playwright 13 proje, axe, k6 profilleri, sentetik staging compose ve WAL/PITR hazırlık paketi eklendi. | ASVS/WCAG manuel kabul ve fiziksel cihaz matrisi dış ortam bekliyor. | Gerçek staging deployment/E2E/prova/yük/PITR tatbikatı, fiziksel cihaz-passkey kabulü ve ölçülmüş sonuçlar. |
 
 Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 geliştirmesini durdurmaz; nihai CI/altyapı temizlik aşamasına bırakıldı.
 
+### Faz 7–12 doğrulama çalışma kararı
+
+- Faz 7–11 kesintisiz uygulama sırasında manuel test, typecheck, lint veya build komutu çalıştırılmayacaktır.
+- Mevcut testler silinmeyecek, gevşetilmeyecek; GitHub CI devre dışı bırakılmayacaktır.
+- Toplu manuel doğrulama, genel test ve nihai kabul Faz 12'de yapılacaktır.
+- Gerçek staging, sağlayıcı, cihaz, yük, prova ve production kabulleri kanıt üretilene kadar `BLOCKED/NOT_RUN` kalacaktır.
+
 ## Faz 3–6 durumu
 
-**Durum:** Başladı — ticari domain ve finans çekirdeği uygulandı — genel doğrulama bekliyor.
+**Durum:** Faz 2D–6 repo içi kapanış adayı PR #4 üzerinde tamamlandı; `main` birleşimi ve Faz 12 genel kabulü bekliyor.
 
 | İş | Durum | Kanıt |
 |---|---|---|
 | Müşteri/sezon cari sözleşmesi | Uygulandı — genel doğrulama bekliyor | `@tilbecore/tenant-core` içinde müşteri oluşturma, telefon normalizasyonu ve sezon bazlı cari hesap özet sözleşmesi eklendi. |
 | Satış ve hisse kuralı | Uygulandı — genel doğrulama bekliyor | `confirmSale` akışı satılabilir hisse kontrolü, fiyat snapshot'ı, idempotency key ve ledger satış kaydı üretir. |
-| Rezervasyon–kesin satış ve işletme envanteri hedef farkı | `IMPLEMENTED_UNVERIFIED` | Tenant `confirmSale` pozitif kaporayı zorunlu kılar; rezervasyon finans üretmez. PostgreSQL modunda legacy doğrudan hisse atama/transfer/iptal yüzeyleri tenant çalışma alanına yönlenir veya fail-closed olur. Migration `0010` ve PostgreSQL kapanış testi CI bekler. |
+| Rezervasyon–kesin satış ve işletme envanteri hedef farkı | `IMPLEMENTED_UNVERIFIED` | Tenant `confirmSale` pozitif kaporayı zorunlu kılar; rezervasyon finans üretmez. PostgreSQL modunda legacy doğrudan hisse atama/transfer/iptal yüzeyleri tenant çalışma alanına yönlenir veya fail-closed olur. Migration `0010` ve PostgreSQL kapanış testi PR #4 kod kapanış CI'ında başarılıdır; `main` birleşimi ve Faz 12 genel kabulü bekler. |
 | Ledger/tahsilat temeli | `IMPLEMENTED_UNVERIFIED` | Decimal string para sözleşmesi, transaction içi satış/müşteri/sezon/hisse tahsis kapsamı ve kümülatif limit kilidi, ödeme journal'ları, satış/tahsilat reversal iptali ve silinmeyen transfer geçmişi eklendi. Yeni `Float` para modeli eklenmedi. |
 | Faturalar 360, ledger posting ve ödeme tahsisi | `IMPLEMENTED_UNVERIFIED` | Tenant migration `0008` + hardening `0009`; kaynak limitli ve yarış korumalı tahsis, kümülatif iade sınırı, vergili alış/satış/iade hesap sınıfları, vergi satırı DB kapsamı ve TRY-only fail-closed davranış gerçek PostgreSQL testine bağlandı. Çoklu para ve legacy finans akışlarının tamamı henüz taşınmadı. |
 | Sağlayıcı bağımsız e-Belge merkezi | `IMPLEMENTED_UNVERIFIED` | Provider portu, yalnız `mock-sandbox`, secret referanslı ayar, idempotent outbox/retry/dead-letter ve webhook sözleşmesi eklendi. Gerçek entegratör, resmî kod eşlemesi ve dış sandbox/production kabulü `BLOCKED`/`NOT_RUN` durumundadır. |
