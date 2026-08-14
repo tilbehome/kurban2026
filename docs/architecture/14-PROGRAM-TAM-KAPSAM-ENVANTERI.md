@@ -6,13 +6,17 @@ status: IMPLEMENTING
 owner: Product-and-Architecture
 source_role: program_scope_inventory
 source_of_truth: true
-last_reviewed: 2026-08-12
-verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+last_reviewed: 2026-08-14
+verified_against_commit: 699e0d2298b2dbcf913781134d850aaafbb661a7
 ```
 
 Bu belge, TilbeCore – Kurban Takip yazılımını yalnızca görüşmelerde geçen 68 iş akışıyla değil, mevcut repo, veritabanı şeması, altyapı ve profesyonel ürün beklentileriyle birlikte izlemek için oluşturuldu.
 
 Bu belge bir tamamlanma beyanı değildir. Amaç, bulunan alanları görünür kılmak, durumlarını sınıflandırmak ve sonraki fazlara güvenli dönüşüm listesi vermektir.
+
+## 14 Ağustos 2026 Faz 12 kapsam notu
+
+Faz 7–11'in repo/sentetik kabul kapsamı `699e0d2298b2dbcf913781134d850aaafbb661a7` ve [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) üzerinde doğrulandı. Envanter satırlarındaki `IMPLEMENTED_UNVERIFIED` ifadeleri tarihsel/kapsam-altı durumu gösterebilir; Faz 7–11 için güncel üst kayıt TRK-001 Faz 12 checkpoint'i ve `EVD-001..012` içindeki `RUN-20260814-001` kanıtlarıdır. Placeholder/legacy yüzeyler, gerçek e-Belge sağlayıcısı, gerçek firma verisi, fiziksel cihazlar ve production işletimi tamamlanmış sayılmaz.
 
 Bu envanterin görev bağlamı [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), kaynak ve kanıt değerlendirme kuralı [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md)’tür. Bu envanterde görünen kod, ekran veya route varlığı tek başına ürün kararını veya tamamlanmış özelliği kanıtlamaz.
 

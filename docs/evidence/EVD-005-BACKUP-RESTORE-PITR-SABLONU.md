@@ -8,7 +8,7 @@ owner: Operations
 source_role: evidence_record_or_template
 reviewers: [Data-Operations, Security, Tenant-Owner]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: BACKUP_DR_STANDARDI_DEGISIKLIGINDE
 version: 0.1
@@ -162,3 +162,44 @@ artifacts:
 ```
 
 Bu koşu production kapasitesi veya production restore yetkisi kanıtı değildir. RTO yalnız disposable restore sürecinin PostgreSQL logundaki başlangıç ile yazılabilir bağlantıya hazır olma zamanları arasındadır; doğrulama süresi ayrıca kaydedilmiştir.
+
+## EVD-005-RUN-20260814-001
+
+```yaml
+result: PASSED_LOCAL_DISPOSABLE_BACKUP_RESTORE_AND_TIME_PITR
+tested_source_sha: 699e0d2298b2dbcf913781134d850aaafbb661a7
+ci_evidence: https://github.com/tilbehome/kurban2026/actions/runs/31822828259
+environment: WINDOWS_LOCAL_POSTGRESQL_16_14
+data_profile: SYNTHETIC_PLATFORM_AND_TWO_TENANTS
+logical_backup_checksum_verification:
+  platform: PASSED
+  tenant_a: PASSED
+  tenant_b: PASSED
+logical_restore: PASSED_THREE_FRESH_DATABASES
+restored_schema_counts:
+  platform: 34_TABLES_135_CONSTRAINTS
+  tenant_a: 109_TABLES_416_CONSTRAINTS
+  tenant_b: 108_TABLES_415_CONSTRAINTS
+row_count_manifest_reconciliation: PASSED_ALL_THREE
+base_backup: PASSED
+pg_verifybackup: PASSED
+backup_manifest_sha256: 2344DF12656433F540935DE49C19AE659DBCA50636DABA60F85ACA9DC349B6C7
+wal_archiving: PASSED_6_SEGMENTS_AT_CHECKPOINT
+recovery_target_kind: TIME
+recovery_target: 2026-08-14T19:00:20.696652+03:00
+timeline_after_promote: 2
+target_before_row_retained: PASSED
+target_after_row_excluded: PASSED
+other_tenant_unchanged: PASSED
+post_restore_write_and_rollback_health: PASSED
+measured_rto_ms: 1602
+measured_rpo: TARGET_TIME_BOUNDARY_CONFIRMED_NOT_PRODUCTION_SLO
+first_restore_attempt: FAILED_WINDOWS_FORWARD_SLASH_COPY_PATH_TARGET_NOT_REACHED
+final_restore_attempt: PASSED_WINDOWS_CMD_COPY_AND_PROMOTE
+cleanup_processes_and_ports: PASSED
+cleanup_temporary_roots: PASSED
+production_restore: NOT_RUN
+production_write: false
+```
+
+İlk restore denemesi gizlenmemiştir. Uygulama health kontrolü DB-only sentetik kümede `NOT_RUN`; production veya yönetilen PostgreSQL restore kabulü değildir.

@@ -8,7 +8,7 @@ owner: Data-Operations
 source_role: evidence_record_or_template
 reviewers: [QA, Release, Finance]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: MIGRATION_STANDARDI_DEGISIKLIGINDE
 version: 0.1
@@ -47,3 +47,31 @@ artifacts: []
 ```
 
 Ham connection string, SQL içindeki hassas değer veya gerçek kayıt örneği eklenmez. Production migration çalıştırılmadan bu kayıt ön kontrol olarak `NOT_RUN/NOT_DECIDED` kalabilir; belge varlığı uygulama onayı değildir.
+
+## EVD-002-RUN-20260814-001
+
+```yaml
+result: PASSED_LOCAL_AND_CI_DISPOSABLE
+tested_source_sha: 699e0d2298b2dbcf913781134d850aaafbb661a7
+ci_evidence: https://github.com/tilbehome/kurban2026/actions/runs/31822828259
+environment: WINDOWS_LOCAL_POSTGRESQL_16_14_AND_GITHUB_POSTGRESQL_16
+data_profile: SYNTHETIC_ONLY
+migration_sets:
+  platform: 0001_0007
+  tenant: 0001_0016
+empty_platform_apply: PASSED
+empty_tenant_apply: PASSED
+supported_upgrade_0010_to_0015: PASSED
+upgrade_fixture_scope: PROXY_SALE_RECEIPT_ANIMAL_SHARE_OPERATION
+backfill_record_preservation: PASSED
+tenant_season_link_preservation: PASSED
+constraint_and_trigger_checks: PASSED
+duplicate_object_negative_case: PASSED_FAILED_CLOSED_SQLSTATE_42710
+failed_migration_transaction_rollback: PASSED
+drift_check: PASSED_NO_DIFFERENCE
+schema_migration_alignment: PASSED
+production_write: false
+cleanup: PASSED
+```
+
+İlk hata `0011` içinde mevcut `ProxyDocument_status_check` adının tekrar eklenmesiydi. `0011`, eski constraint'i açıkça düşürüp genişletilmiş listeyle aynı ad altında yeniden kurar. Eski `0001..0010` dosyaları değiştirilmedi. `0016`, `0008` içinde constraint sanılarak düşürülemeyen eski unique index'i ileri yönlü ve ayrı migration ile kaldırır.

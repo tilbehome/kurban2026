@@ -7,12 +7,12 @@ owner: Product-and-Architecture
 source_role: binding_phase_1_12_architecture_roadmap
 source_of_truth: true
 last_reviewed: 2026-08-14
-verified_against_commit: 5125093338dc4b4b3b18d635df36cf46533879af
+verified_against_commit: 699e0d2298b2dbcf913781134d850aaafbb661a7
 ```
 
 **Belge tarihi:** 10 Ağustos 2026
-**Son `main` kanıt incelemesi:** 14 Ağustos 2026, `5125093338dc4b4b3b18d635df36cf46533879af`, [CI 31791110213](https://github.com/tilbehome/kurban2026/actions/runs/31791110213) `SUCCESS`
-**Faz 2D–6 kod kapanış adayı:** draft [PR #4](https://github.com/tilbehome/kurban2026/pull/4) içindeki `55e984b658f905b2f72409eeae5b3419ec6f3972`, [CI 31796147539](https://github.com/tilbehome/kurban2026/actions/runs/31796147539) `SUCCESS`
+**Son `main` kanıt incelemesi:** 14 Ağustos 2026, `6fb3493b54a8dfa3795f1d3509a066da5105947a`, [CI 31801130780](https://github.com/tilbehome/kurban2026/actions/runs/31801130780) `SUCCESS`
+**Faz 7–12 repo kabul adayı:** draft [PR #5](https://github.com/tilbehome/kurban2026/pull/5) içindeki `699e0d2298b2dbcf913781134d850aaafbb661a7`, [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) `SUCCESS`
 **Belge durumu:** Bağlayıcı ana mimari ve yol haritası
 **Ürün adı:** TilbeCore – Kurban Takip
 **Kısa ad:** TilbeCore Kurban
@@ -938,7 +938,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 ### Faz 7 — Vekâlet, korumalı belge ve QR
 
-**Mevcut durum:** `IMPLEMENTED_UNVERIFIED` — migration `0011`, çoklu veren/hisse bağı, yöntem/politika metadata'sı, değişmez durum geçmişi, korumalı indirme ayrımı ve iptal bağlantılı QR uygulanmıştır. A4/PDF/RTL ve gerçek browser kabulü Faz 12'de `NOT_RUN` durumundadır.
+**Mevcut durum:** `VERIFIED` — migration `0011` ve bağlı çoklu veren/hisse, durum geçmişi, dosya/QR sınırları sentetik PostgreSQL Faz 12 kabulünde geçti. Fiziksel baskı/QR cihazı `NOT_RUN`.
 
 - Çok yöntemli ve çok hisseli vekâlet
 - Korumalı dosya deposu
@@ -952,7 +952,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 ### Faz 8 — Kesim operasyon motoru
 
-**Mevcut durum:** `IMPLEMENTED_UNVERIFIED` — migration `0012`, kilitli durum geçişleri, sıra/ekip/istasyon geçmişi, kalıcı istisna masası, operasyon modu ve tenant komuta read-model'i mevcut servis/API/UI hattına bağlanmıştır. Saha provası yapılmamıştır.
+**Mevcut durum:** `VERIFIED` — migration `0012`, kilitli geçiş, sıra/ekip/istasyon, eşzamanlı komut, istisna ve operasyon modları sentetik PostgreSQL Faz 12 kabulünde geçti. Gerçek saha provası yapılmadı.
 
 - Kontrollü aşama makinesi
 - Sıra havuzu ve geçmişi
@@ -967,7 +967,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 ### Faz 9 — Tartım, paketleme ve kilo farkı
 
-**Mevcut durum:** `IMPLEMENTED_UNVERIFIED` — migration `0013`, append-only ölçüm/düzeltme, yedi hisse ağırlık tahsisi, eksik kilo formülüyle onay bekleyen finans adjustment'ı, paket snapshot/dönüşüm/istisna ve cihaz portları uygulanmıştır. Fiziksel cihaz kabulü `NOT_RUN` durumundadır.
+**Mevcut durum:** `VERIFIED` — migration `0013`, append-only ölçüm/düzeltme, yedi hisse tahsisi, 2.200 TL kilo farkı ve paket izlenebilirliği sentetik PostgreSQL Faz 12 kabulünde geçti. Fiziksel cihaz kabulü `NOT_RUN`.
 
 - Ürün/bileşen tartımı
 - Terazi ve etiket yazıcı adapter sözleşmeleri
@@ -982,7 +982,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 ### Faz 10 — Teslimat, saha PWA, TV ve müşteri takip
 
-**Mevcut durum:** `IMPLEMENTED_UNVERIFIED` — migration `0014`, paket checklist'li yerinde/adres teslim, kanıt metadata'sı, kısmi istisna/reversal, `/saha`, enrolled cihaz ve aktif oturuma bağlı offline server kuyruğu ile süreli/iptal edilebilir PII'siz `/takip/{token}` uygulanmıştır. Gerçek HTTPS, ağ kesintisi ve fiziksel cihaz kabulü `NOT_RUN` durumundadır.
+**Mevcut durum:** `VERIFIED` — migration `0014`, teslim/reversal, bağlı offline kuyruk ve PII'siz takip sınırları PostgreSQL ile; HTTPS PWA offline fallback'i Chromium otomasyonuyla doğrulandı. Fiziksel cihaz/ağ kabulü `NOT_RUN`.
 
 - Çiftlikten ve adrese teslim
 - Hazır/yüklendi/teslim edildi akışı
@@ -1002,7 +1002,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 ### Faz 11 — Raporlama ve firma yönetim paneli
 
-**Mevcut durum:** `IMPLEMENTED_UNVERIFIED` — migration `0015`; tenant PostgreSQL dashboard KPI, ledger mutabakatı, operasyon/finans/sezon raporları, yetki filtreli evrensel arama, güvenli export, sezon kapanış snapshot'ı ve arşiv sezon yazma blokajı yönetim UI/API hattına bağlanmıştır. Genel doğrulama Faz 12'ye bırakılmıştır.
+**Mevcut durum:** `VERIFIED` — migration `0015`; KPI/read-model, sıfır ledger farkı, güvenli export, sezon snapshot ve arşiv yazma engeli sentetik PostgreSQL Faz 12 kabulünde geçti.
 
 - Yönetici dashboard
 - Operasyon Kontrol Merkezi
@@ -1020,7 +1020,7 @@ Canlı altyapıya veya sonraki paketlere kalan maddeler: legacy Next.js API’le
 
 ### Faz 12 — Sertleştirme, platform işletimi ve canlıya geçiş
 
-**Mevcut durum:** Başladı — observability, WCAG/ASVS kabul hedefleri, release gate, rollback, backup/restore drill, sezon simülasyonu ve acil durum runbook hazırlığı uygulandı; genel doğrulama bekliyor. Canlı DNS/TLS/deployment veya gerçek firma açılışı yapılmadı.
+**Mevcut durum:** Repo içi uygulanabilir kabul tamamlandı; karar `YES_WITH_EXTERNAL_ACCEPTANCE_OPEN`. CI, local HTTPS Playwright/axe, gerçek collector runtime, kısa k6 profilleri, disposable backup/restore/PITR ve iki tenant sentetik yazılım provası kanıtlandı. Production kararı `NO`; canlı DNS/TLS/deployment, gerçek firma, sağlayıcı ve fiziksel cihaz/saha kabulleri yapılmadı.
 
 - Platform ve firma UAT
 - Gerçek uçtan uca kurban provası
@@ -1121,12 +1121,10 @@ docs/
 14 Ağustos 2026 itibarıyla güncel kanıt zinciri:
 
 - Faz 2D–6 kapanışı normal merge commit `6fb3493b54a8dfa3795f1d3509a066da5105947a` ile `main` üzerindedir; [CI 31801130780](https://github.com/tilbehome/kurban2026/actions/runs/31801130780) sonucu `SUCCESS`.
-- Faz 7–11 kod paketi `agent/faz-7-11-continuous-development` dalında migration `0011..0015` ve faz bazlı commitlerle `IMPLEMENTED_UNVERIFIED` durumundadır.
-- Kullanıcı kararı uyarınca bu paket sırasında manuel test, typecheck, lint, build, Prisma validate/generate, migration/tenant/PostgreSQL veya dokümantasyon doğrulaması çalıştırılmamıştır. Kod varlığı test/kabul kanıtı değildir.
-- Sıradaki aşama Faz 12 toplu doğrulama, sertleştirme ve nihai kabuldür.
-- Genel test ve nihai kabul Faz 12'de toplu yürütülecektir.
-- Faz 7–11 sırasında manuel test, typecheck, lint veya build çalıştırılmaz; mevcut testler ve GitHub CI korunur, silinmez veya devre dışı bırakılmaz.
-- Gerçek HTTPS staging, OpenTelemetry collector/export, k6 yük profilleri, fiziksel passkey/cihazlar, Kurban Günü provası, gerçek e-Belge sağlayıcısı ve production deployment kanıtlanana kadar `BLOCKED/NOT_RUN` kalır.
+- Faz 7–11 kod paketi ile uygulanabilir Faz 12 repo/sentetik kabulü `699e0d2298b2dbcf913781134d850aaafbb661a7` üzerinde tamamlandı; [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) `SUCCESS`.
+- Migration/tenant/PostgreSQL, TypeScript, unit, lint, build, dokümantasyon, local HTTPS Playwright/axe, OTel runtime, kısa k6 profilleri, backup/PITR ve sentetik yazılım provası kanıtlandı.
+- Sıradaki aşama draft PR #5 için kontrollü merge ve ayrı dış kabul planıdır; merge kararı `YES_WITH_EXTERNAL_ACCEPTANCE_OPEN`, production kararı `NO`.
+- Gerçek staging/production deployment, fiziksel passkey/cihazlar, gerçek firma verisi, Kurban Günü saha provası, gerçek e-Belge sağlayıcısı ve uzun süreli kapasite kabulü `BLOCKED/NOT_RUN` kalır.
 
 ### 14.1 Tarihsel Faz 2A uygulama sınıflandırması
 

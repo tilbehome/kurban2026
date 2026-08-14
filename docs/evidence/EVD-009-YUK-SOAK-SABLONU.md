@@ -8,7 +8,7 @@ owner: QA-and-Reliability
 source_role: evidence_record_or_template
 reviewers: [Operations, Architecture, Product]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: YUK_MODELI_DEGISIKLIGINDE
 version: 0.1
@@ -20,6 +20,30 @@ related_tests: [TST-011]
 supersedes: []
 superseded_by: null
 ```
+
+## EVD-009-RUN-20260814-001
+
+```yaml
+result: MEASURED_LOCAL_SYNTHETIC_NO_CAPACITY_ACCEPTANCE
+tested_source_sha: 699e0d2298b2dbcf913781134d850aaafbb661a7
+ci_evidence: https://github.com/tilbehome/kurban2026/actions/runs/31822828259
+environment_topology: LOCAL_HTTPS_NEXT_CADDY_SYNTHETIC
+k6_version: 2.2.0
+script_version: performance/k6/tilbecore-staging.js
+production_target_guard: PASSED_REJECTED_BEFORE_NETWORK
+profiles:
+  baseline: { requests: 2, p50_ms: 641.99, p95_ms: 1184.80, p99_ms: 1233.05, max_ms: 1245.11, error_rate: 0 }
+  load_5vu_15s: { requests: 430, rate_per_second: 28.43, p50_ms: 52.11, p95_ms: 110.09, p99_ms: 348.64, max_ms: 425.26, error_rate: 0 }
+  spike_0_10vu_20s: { requests: 806, rate_per_second: 39.93, p50_ms: 30.98, p95_ms: 156.91, p99_ms: 257.58, max_ms: 277.61, error_rate: 0 }
+  short_soak_3vu_60s: { requests: 1258, rate_per_second: 20.87, p50_ms: 12.74, p95_ms: 41.18, p99_ms: 65.60, max_ms: 756.62, error_rate: 0 }
+checks_rate: 1.0
+approved_slo: NOT_DEFINED
+capacity_headroom: NOT_MEASURED
+data_integrity_after_run: COVERED_BY_SEPARATE_POSTGRESQL_AND_REHEARSAL_EVIDENCE
+production_capacity_inference: FORBIDDEN_AND_NOT_MADE
+```
+
+Bu kısa yerel sentetik ölçümler staging/production kapasite kabulü değildir; dış bağımlılık kesintisi ve uzun süreli soak ayrıca açıktır.
 
 ```yaml
 evidence_record: EVD-009-RUN-YYYYMMDD-NNN

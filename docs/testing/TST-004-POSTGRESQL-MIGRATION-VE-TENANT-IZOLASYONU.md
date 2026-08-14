@@ -8,7 +8,7 @@ owner: QA
 source_role: test_plan
 reviewers: [Data, Security, Platform, Operations]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: HER_SCHEMA_VE_TENANT_RUNTIME_DEGISIKLIGINDE
 version: 0.1
@@ -75,3 +75,7 @@ Ortam değişkenlerinin tam adları test dosyası ve güncel CI tanımından do�
 - Migration sonucu [EVD-002](../evidence/EVD-002-MIGRATION-SABLONU.md) ile; tenant sınırı ayrı [EVD-003](../evidence/EVD-003-TENANT-IZOLASYON-SABLONU.md) ile kaydedilir.
 
 WAL/PITR bu testin tamamlandığı anlamına gelmez; ayrı [restore/WAL/PITR planı](../operations/OPS-008-RESTORE-WAL-PITR.md) ve tatbikat kanıtı gerekir.
+
+## 14 Ağustos 2026 koşusu
+
+`699e0d2298b2dbcf913781134d850aaafbb661a7` üzerinde boş platform `0001–0007`, boş tenant `0001–0016`, sentetik `0010 → 0015` upgrade/backfill, mükerrer nesne fail-closed rollback ve drift kontrolleri geçti. CI kanıtı [31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259), ayrıntı `EVD-002-RUN-20260814-001`.

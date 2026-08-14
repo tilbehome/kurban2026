@@ -7,7 +7,7 @@ owner: Product-and-Architecture
 source_role: implementation_evidence_ledger
 source_of_truth: true
 last_reviewed: 2026-08-14
-verified_against_commit: 5125093338dc4b4b3b18d635df36cf46533879af
+verified_against_commit: 699e0d2298b2dbcf913781134d850aaafbb661a7
 ```
 
 Mimari hedef görev yönlendirmesi: [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md). Kaynak çelişkileri [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile çözülür.
@@ -83,9 +83,9 @@ Bu P0 paketi tek commit olarak tutulur. Geri alma gerektiğinde commit revert ed
 
 ## Faz 2 durumu
 
-**Güncel konum:** Faz 7–11 kod paketi `agent/faz-7-11-continuous-development` dalında `IMPLEMENTED_UNVERIFIED` durumundadır. Başlangıç `main` SHA'sı `6fb3493b54a8dfa3795f1d3509a066da5105947a`; bu tabanın [CI 31801130780](https://github.com/tilbehome/kurban2026/actions/runs/31801130780) sonucu `SUCCESS` durumundadır. Faz 7–11 değişiklikleri üzerinde kullanıcı kararı gereği manuel test, typecheck, lint, build, Prisma doğrulama/üretme veya dokümantasyon doğrulaması çalıştırılmamıştır.
+**Güncel konum:** Faz 7–11 kod paketi ve uygulanabilir Faz 12 repo kabul kapıları `agent/faz-7-11-continuous-development` dalında doğrulandı. Test edilen kaynak `699e0d2298b2dbcf913781134d850aaafbb661a7`; [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) `SUCCESS`. PR #5 açık, draft ve merge edilmemiştir.
 
-**Sıradaki aşama:** Faz 12 toplu doğrulama, sertleştirme ve nihai kabul. Faz 7–11 kodlanmış olmakla birlikte test edilmiş, kabul edilmiş veya production'a hazır sayılmaz.
+**Sıradaki aşama:** PR #5 için ayrı kontrollü merge kararı ve dış kabul planı. Repo içi sonuç `YES_WITH_EXTERNAL_ACCEPTANCE_OPEN`; production sonucu `NO`.
 
 ### Faz 2A pilot — saha satış route ayrıştırması
 
@@ -161,8 +161,8 @@ Bu matris yalnız kaynak kod, migration, test ve takip belgesi kanıtıyla tutul
 | 1 | Faz 2B | Platform PostgreSQL `0001..0007`, ayrı Platform Admin, parola+TOTP+passkey/recovery, DB session/device, komuta merkezi, firma 360°, provisioning, plan/lisans, domain, backup, SupportSession, kullanıcı/audit, incident/bakım/acil durdurma, yapılandırma farkı ve onaylı firma operasyon akışları. | Provisioning sonrası ilk backup işi ve davet hazırlığı gerçek worker zincirine; tenant erişim modu gerçek request runtime’a bağlandı. | Data export içeriğini üreten tenant tarafı executor Faz 2D–6 modül taşımasına bağlıdır; Platform yalnız güvenli işi ve metadata’yı yönetir. | Fiziksel passkey cihaz kabulü, canlı DNS/TLS/deployment, production restore onayı, gerçek abonelik/faturalama ve genel E2E/güvenlik kabulü. |
 | 2 | Faz 2C | Gerçek tenant DB create/exists/migrate/verify/rollback adapteri, ownership marker, idempotent/resumable provisioning, kontrollü CLI’lar, host/custom-domain resolution, request-local context, session/databaseRef fail-closed guard, auditli SupportSession, gözlemlenebilir tenant Prisma pool’u, tenant bazlı dump/geçici restore doğrulaması ve iki firma PostgreSQL web/backup isolation CI testi. | Platform metadata–tenant request composition bridge’i; pool event/metric portu ve tenant ops CLI sözleşme düzeyinden çalışan altyapıya taşındı. OpenTelemetry Node SDK ve collector paketi eklendi, gerçek staging trace kanıtı bekliyor. | Mevcut legacy route’lar yeni runtime’a toplu taşınmamıştır. | Legacy route’ların modül bazlı runtime’a taşınması, pool kapasite eşikleri/alarmları, ölçülmüş RPO/RTO, production restore onay akışı ve canlı DNS/TLS/deployment. |
 | 3 | Faz 2D–6 | BusinessProfile/Location/Setting/Season, Customer/Phone/Address/SeasonAccount, Supplier/Account/PurchaseInvoice/Payment/ExpenseDocument, Animal/Weight/Health/QurbanAssignment/Paddock, rezervasyon/satış/tahsilat/reversal ve tenant-aware `UnitOfMeasure`; atomik authorization/audit/idempotency/outbox use-case'leri kodlandı. Faturalar 360 alış/satış/iade modeli ve temel ekranları eklendi. | PostgreSQL modunda müşteri, hayvan, satın alma, satış-finans, vekâlet metadata'sı, rapor ve birim akışları tenant repository'ye bağlıdır; güvenli karşılığı olmayan eski hisse API'leri fail-closed davranır. | Migration `0010` ve repo içi kontroller tamamlanarak PR #4 normal merge commit `6fb3493b54a8dfa3795f1d3509a066da5105947a` ile `main`e alınmıştır; main CI 31801130780 `SUCCESS` durumundadır. | Legacy gerçek firma verisi dry-run/import/mutabakatı ve gerçek sağlayıcı e-Belge bağlantısı ayrı dış kabul olarak kalır. |
-| 4 | Faz 7–10 | `IMPLEMENTED_UNVERIFIED`: migration `0011..0014`; çoklu verenli/sürümlü vekâlet, korumalı belge metadata'sı, kesim komuta durumu/atama/istisna geçmişi, tartım düzeltmesi ve yedi hisse tahsisi, kilo eksikliği onay kaydı, paket dönüşüm/istisnası, checklist bağlı teslim, `/saha`, bağlı offline kuyruk ve `/takip/{token}`. | Mevcut tenant service/repository/API ve operasyon çalışma alanına bağlandı; kritik offline işlemler fail-closed kaldı. | Terazi/tarayıcı/yazıcı provider portları kodlandı; fiziksel cihaz çalışması yapılmadı. | Faz 12 testleri, gerçek HTTPS/PWA/ağ/cihaz kabulleri, PDF/A4 baskı ve fiziksel adapterler. |
-| 5 | Faz 11–12 | Faz 11 `IMPLEMENTED_UNVERIFIED`: migration `0015`; tenant PostgreSQL KPI/read-model, genişletilmiş arama/raporlar, güvenli export, sezon kapanış mutabakat snapshot'ı ve arşiv sezon DB yazma kapıları. Faz 12 başlamadı. | OpenTelemetry, Playwright/axe, k6, sentetik staging ve WAL/PITR hazırlıkları önceki paketlerden korunur. | Bu turda hiçbir manuel/genel doğrulama çalıştırılmadı. | Faz 12 toplu test/kabul; gerçek staging deployment/E2E/prova/yük/PITR, fiziksel cihaz/passkey ve ölçülmüş sonuçlar. |
+| 4 | Faz 7–10 | `VERIFIED`: migration `0011..0014`; çoklu verenli/sürümlü vekâlet, korumalı belge metadata'sı, kesim komuta durumu/atama/istisna geçmişi, tartım düzeltmesi ve yedi hisse tahsisi, kilo eksikliği onay kaydı, paket dönüşüm/istisnası, checklist bağlı teslim, `/saha`, bağlı offline kuyruk ve `/takip/{token}` repo/sentetik Faz 12 kabulünde doğrulandı. | Mevcut tenant service/repository/API ve operasyon çalışma alanına bağlandı; kritik offline işlemler fail-closed kaldı. | Terazi/tarayıcı/yazıcı provider portları kodlandı; fiziksel cihaz çalışması yapılmadı. | Fiziksel cihaz/ağ, PDF/A4 baskı ve gerçek adapter kabulleri `NOT_RUN`. |
+| 5 | Faz 11–12 | Faz 11 ve uygulanabilir Faz 12 repo kapıları `VERIFIED`: migration `0015`; tenant PostgreSQL KPI/read-model, arama/raporlar, güvenli export, sezon kapanış snapshot'ı ve arşiv sezon yazma kapıları doğrulandı. | CI, local HTTPS Playwright/axe, gerçek collector runtime, kısa k6 profilleri, sentetik prova ve disposable WAL/PITR çalıştırıldı. | Fiziksel cihaz, gerçek sağlayıcı, gerçek firma verisi ve production işletimi doğrulanmadı. | Gerçek staging/production deployment, uzun soak, fiziksel passkey/cihaz ve saha Kurban Günü provası `BLOCKED/NOT_RUN`. |
 
 Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 geliştirmesini durdurmaz; nihai CI/altyapı temizlik aşamasına bırakıldı.
 
@@ -188,7 +188,7 @@ Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 gel
 
 ## Faz 7–10 durumu
 
-**Durum:** `IMPLEMENTED_UNVERIFIED` — migration `0011..0014`, domain/application/repository/API/UI bağlantıları kodlandı; bu paket üzerinde manuel doğrulama çalıştırılmadı.
+**Durum:** `VERIFIED` — yalnız `699e0d2298b2dbcf913781134d850aaafbb661a7` repo/sentetik Faz 12 kapsamı için. Dış sağlayıcı, fiziksel cihaz ve gerçek saha kabulleri açık kalır.
 
 | İş | Durum | Kanıt |
 |---|---|---|
@@ -199,12 +199,12 @@ Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 gel
 
 ## Faz 11–12 durumu
 
-**Durum:** Faz 11 `IMPLEMENTED_UNVERIFIED`; Faz 12 doğrulama ve dış kabul aşamasıdır ve henüz başlamamıştır.
+**Durum:** Faz 11 repo içi/sentetik Faz 12 kapılarında `VERIFIED`; dış ve fiziksel kabuller `BLOCKED/NOT_RUN`.
 
 | İş | Durum | Kanıt |
 |---|---|---|
 | Yönetim paneli/operasyon merkezi | `IMPLEMENTED_UNVERIFIED` | `0015`; gerçek tenant PostgreSQL KPI'ları, ledger sıfır fark göstergesi, operasyon/finans/sezon raporları, yetki filtreli müşteri/hayvan/hisse/tedarikçi/fatura/sezon araması, CSV/XLSX/PDF formula-injection koruması, kapanış snapshot'ı ve arşiv sezona DB düzeyi yazma blokajı. |
-| Observability, erişilebilirlik ve güvenlik kabul hedefleri | `IMPLEMENTED_UNVERIFIED` | Trace context/redaction sözleşmelerine ek olarak OpenTelemetry Node SDK ve collector; 13 Playwright projesi, axe/keyboard/zoom/form-error kontrolleri ve sentetik kabul korumaları eklendi. Gerçek staging/browser/fiziksel cihaz koşuları `BLOCKED` veya `NOT_RUN` durumundadır. |
+| Observability, erişilebilirlik ve güvenlik kabul hedefleri | `VERIFIED` — repo/sentetik kapsam | OpenTelemetry Collector 0.132.0 runtime redaksiyonu ile güvenilir local HTTPS üzerindeki Playwright/axe matrisi doğrulandı. Gerçek staging/production, dış kimlik, fiziksel passkey ve cihaz koşuları `BLOCKED/NOT_RUN`. |
 | Release, backup/restore ve simülasyon hazırlığı | `IMPLEMENTED_UNVERIFIED` | Release gate ve tenant dump doğrulamasına ek olarak iki tenant PostgreSQL, reverse proxy/TLS, worker, telemetry, sentetik provisioning, WAL arşivi, base-backup ve izole PITR profilli tekrar üretilebilir staging paketi eklendi. Deployment, restore tatbikatı ve ölçülmüş RPO/RTO dış altyapı olmadığı için tamamlanmış sayılmaz. |
 | Runbook | Uygulandı — genel doğrulama bekliyor | `docs/runbooks/KURBAN-GUNU-ACIL-DURUM-RUNBOOK.md` eklendi. |
 
@@ -232,3 +232,9 @@ Bu checkpoint YN-00–YN-26'yı başlatmaz ve bu yol haritasındaki YN durumlar�
 `d87b1c4ca5cd8d7b2865d506c17ba4967dddb296` kaynak commit'i üzerinde, kalıcı `127.0.0.1:55433` test kümesine dokunmadan iki disposable PostgreSQL 16.14 tenant kümesi çalıştırıldı. Platform PostgreSQL integration 9/9 ve iki-tenant provisioning/runtime/backup/restore izolasyon testi 1/1 geçti. Checksum'lı base backup ile WAL arşivi üretildi; `0/8000360` LSN hedefindeki PITR yeni timeline'a promote oldu. Hedef öncesi kayıt korundu, hedef sonrası kayıt yoktu, tenant B marker ve `2/1000.00` ledger toplamı değişmedi. Ölçülen yerel RPO 847 ms, PostgreSQL başlangıcından yazılabilir hazır durumuna RTO 1.425 ms ve son doğrulama sorguları 501 ms'dir. Ayrıntı `EVD-005-RUN-20260813-002` kaydındadır.
 
 Docker/Compose, Caddy, güvenilir local HTTPS ve `.test` DNS/hosts hazırlığı bulunmadığından Playwright sayfa assertion'ları, axe, gerçek OpenTelemetry collector/export ve k6 baseline/load/spike/soak çalıştırılmadı. Browser binary launch kontrolü E2E sayılmadı; k6 için hiçbir VU/süre veya kapasite sonucu üretilmedi. Windows Hello/passkey `MANUAL_ACCEPTANCE_REQUIRED`, mevcut olmayan fiziksel Android/tablet/TV/yazıcı/QR/terazi hücreleri `NOT_RUN` kaldı. Ayrıntılar `EVD-006-RUN-20260813-002`, `EVD-009-RUN-20260813-002` ve `EVD-012-RUN-20260813-002` kayıtlarındadır.
+
+### 2026-08-14 Faz 12 repo kabul kapanışı
+
+`699e0d2298b2dbcf913781134d850aaafbb661a7` üzerinde [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) bütün repo kapılarını geçti. Yerelde PostgreSQL 16.14 migration/upgrade/drift, 23 koşullu PostgreSQL testi, iki tenant sentetik prova, gerçek OTel Collector 0.132.0 redaksiyon runtime'ı, k6 baseline/load/spike/kısa soak, logical restore ve zaman hedefli PITR çalıştırıldı. Güvenilir local HTTPS üzerinde Playwright/axe matrisi 40 testten uygulanabilir 26 testi geçti; dış kimlik/provisioning/fiziksel passkey ön koşullu mevcut 14 test açık kaldı, yeni skip eklenmedi.
+
+Karar: kodun `main`e merge hazırlığı `YES_WITH_EXTERNAL_ACCEPTANCE_OPEN`; production release hazırlığı `NO`. Gerçek e-Belge sağlayıcısı/UBL-TR, gerçek firma import-mutabakatı, fiziksel passkey ve cihazlar, gerçek saha Kurban Günü provası, production DNS/TLS/deployment/restore ile uzun staging dayanıklılık kabulü tamamlanmamıştır. Ayrıntılı kanıt `EVD-001..006`, `EVD-009`, `EVD-010` ve `EVD-012` belgelerindeki `RUN-20260814-001` kayıtlarındadır.

@@ -8,7 +8,7 @@ owner: QA-and-Security
 source_role: test_plan
 reviewers: [Platform, Data-Operations, Privacy]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: HER_TENANT_RUNTIME_VE_SUPPORTSESSION_DEGISIKLIGINDE
 version: 0.1
@@ -66,3 +66,7 @@ Route, worker, scheduled job, export, dosya/object storage, cache, queue, offlin
 - Pool/worker cleanup tamamlanmış, geçici hedef kalmamıştır.
 - Secret/PII canary değerleri hata/log/trace/artefakta çıkmamıştır.
 - Sonuç [EVD-003](../evidence/EVD-003-TENANT-IZOLASYON-SABLONU.md) ile commit ve ortam bazında kaydedilmiştir.
+
+## 14 Ağustos 2026 koşusu
+
+İki disposable PostgreSQL tenant DB'sinde aynı kayıt kimlikleriyle izolasyon, host/session/ref, pool, backup/restore ve diğer tenant'ın değişmemesi doğrulandı. PostgreSQL testlerinde skip yoktu; CI [31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259), ayrıntı `EVD-003-RUN-20260814-001`.

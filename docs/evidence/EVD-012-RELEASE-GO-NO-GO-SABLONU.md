@@ -8,7 +8,7 @@ owner: Release
 source_role: evidence_record_or_template
 reviewers: [Product, QA, Security, Operations, Data-Operations]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-13
+last_reviewed: 2026-08-14
 verified_against_commit: not_applicable
 next_review: RELEASE_KAPISI_DEGISIKLIGINDE
 version: 0.1
@@ -113,4 +113,35 @@ production_release_blockers:
   - Fiziksel passkey, cihaz ve Kurban Günü provası tamamlanmadı.
 ```
 
-`code_merge_ready` kararı yalnız mevcut staging kabul altyapısı PR’ının kod kapsamına ilişkindir. Production release kararı değildir; PR draft durumda kalır ve bağımsız merge kararı sonraki adımda verilir.
+`code_merge_ready` kararı yalnız mevcut staging kabul altyapısı PR'ının kod kapsamına ilişkindir. Production release kararı değildir; PR draft durumda kalır ve bağımsız merge kararı sonraki adımda verilir.
+
+## EVD-012-RUN-20260814-001
+
+```yaml
+result: REPOSITORY_ACCEPTANCE_COMPLETE_EXTERNAL_ACCEPTANCE_OPEN
+tested_source_sha: 699e0d2298b2dbcf913781134d850aaafbb661a7
+ci_evidence: https://github.com/tilbehome/kurban2026/actions/runs/31822828259
+release: PR_5_FAZ_7_12_CANDIDATE
+code_merge_ready: YES_WITH_EXTERNAL_ACCEPTANCE_OPEN
+production_release_ready: NO
+migration_evidence: EVD-002-RUN-20260814-001
+tenant_isolation_evidence: EVD-003-RUN-20260814-001
+financial_integrity_evidence: EVD-004-RUN-20260814-001
+backup_restore_evidence: EVD-005-RUN-20260814-001
+e2e_accessibility_evidence: EVD-006-RUN-20260814-001
+load_evidence: EVD-009-RUN-20260814-001_MEASUREMENT_ONLY
+simulation_evidence: EVD-010-RUN-20260814-001_SYNTHETIC_ONLY
+telemetry_collector_config_and_runtime: PASSED_LOCAL_OTELCOL_CONTRIB_0_132_0
+telemetry_sensitive_values_exported: 0
+telemetry_stacktrace_keys_exported: 0
+merge_blockers: []
+production_release_blockers:
+  - Gerçek e-Fatura/e-Arşiv sağlayıcısı ve resmî UBL-TR eşlemesi yok.
+  - Gerçek firma verisi import ve mutabakatı yapılmadı.
+  - Fiziksel passkey, Android, tablet, TV, yazıcı, QR okuyucu ve terazi kabulü yapılmadı.
+  - Gerçek saha Kurban Günü provası yapılmadı.
+  - Production DNS/TLS, deployment ve restore yapılmadı.
+  - Uzun süreli staging soak/dayanıklılık ve onaylı kapasite SLO'su yok.
+production_write: false
+pr_state: OPEN_DRAFT_NOT_MERGED
+```

@@ -7,10 +7,14 @@ owner: Product-and-QA
 source_role: requirement_traceability_matrix
 source_of_truth: true
 last_reviewed: 2026-08-14
-verified_against_commit: fef2154ac64c0948f51e42e34c3f93081928e2dd
+verified_against_commit: 699e0d2298b2dbcf913781134d850aaafbb661a7
 ```
 
 Bu matris [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md) içindeki kesin kararları kalıcı takip nesnelerine dönüştürür; kaynak çelişkileri [GOV-003](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) ile çözülür. Detaylar fazlarda genişletilecek; hiçbir madde sessizce kapsam dışına çıkarılamaz.
+
+## 14 Ağustos 2026 Faz 12 kanıt checkpoint'i
+
+`REQ-001..REQ-068` ve `PRO-030..PRO-038` için repo içindeki uygulanabilir otomatik/sentetik kabul `699e0d2298b2dbcf913781134d850aaafbb661a7` ve [CI 31822828259](https://github.com/tilbehome/kurban2026/actions/runs/31822828259) ile ilişkilidir. Migration, PostgreSQL invariant/tenant/finans, HTTPS Playwright/axe, PWA, telemetry redaksiyonu, kısa yerel yük, backup/PITR ve sentetik yazılım provası kapsamı `VERIFIED` sayılır. Bu checkpoint satırlardaki dış kullanıcı kabulini değiştirmez: `PRO-026`, `PRO-029`, `PRO-031`, `PRO-035..PRO-037` içindeki gerçek sağlayıcı, yönetilen production PostgreSQL, fiziksel passkey/cihaz, gerçek firma verisi ve saha provası `BLOCKED/NOT_RUN` kalır.
 
 ## 10 Ağustos 2026 uyum notu
 
@@ -72,8 +76,8 @@ Bu matris [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md) iç
 | REQ-045 | Kurban Günü Güvenli Modu | UI/Operasyon | operasyon modu | Sade saha yüzeyi, read-only ve acil durdurma | Operasyon servisi | Komuta merkezi | `/saha` | Rol | Görev bitir | Geri al/durdur | Var | Var | 20 cihaz prova ve saha rol testi `NOT_RUN` | `IMPLEMENTED_UNVERIFIED` | Faz 8/10/12 |
 | REQ-046 | Yedek/geri yükleme | Sistem | backup | Yedek test edilir | Yedek | Ayarlar | Yok | Yönetici | Yedek al | Restore | Zorunlu | Yok | Restore prova | Kısmi | Faz 15 |
 | REQ-047 | Demo/test veri yönetimi | Veri | seed profili | Demo canlıdan ayrı | Seed | Admin | Yok | Teknik | Seed reset | Canlı engeli | Var | Yok | Test reset | Kısmi | Faz 9 |
-| REQ-048 | Firma başına ayrı PostgreSQL | Tenant | tenant DB | Operasyon veri izolasyonu | Provision | Platform | Yok | Platform | DB oluştur | Hata rollback | Zorunlu | Var | İki firma izolasyon | Uygulandı — genel doğrulama bekliyor | Faz 2C |
-| REQ-049 | Platform operasyon verisi tutmaz | Platform | Platform DB | PII/operasyon yok | Platform | Platform | Yok | Platform | Firma meta | Destek onayı | Zorunlu | Var | PII yok | Uygulandı — genel doğrulama bekliyor | Faz 2B |
+| REQ-048 | Firma başına ayrı PostgreSQL | Tenant | tenant DB | Operasyon veri izolasyonu | Provision | Platform | Yok | Platform | DB oluştur | Hata rollback | Zorunlu | Var | İki firma izolasyon | `VERIFIED` — `699e0d2`, CI 31822828259 | Faz 2C |
+| REQ-049 | Platform operasyon verisi tutmaz | Platform | Platform DB | PII/operasyon yok | Platform | Platform | Yok | Platform | Firma meta | Destek onayı | Zorunlu | Var | PII yok | `VERIFIED` — `699e0d2`, CI 31822828259 | Faz 2B |
 | REQ-050 | Platform Süper Admin ayrı | Platform IAM | PlatformUser | Firma rolü değildir | Auth | Platform | Yok | Platform | Giriş | MFA | Zorunlu | Var | Ayrı cookie | Uygulandı — fiziksel passkey kabulü bekliyor | Faz 2B |
 | REQ-051 | Lisans toleransı | Lisans | License | Bayram günü aniden durmaz | Lisans | Platform | Yerel uyarı | Platform | Check | Offline grace | Var | Yok | İnternetsiz kullanım | Yok | Faz 15 |
 | REQ-052 | UTF-8 kaynak | i18n | Yok | Mojibake engel | Build/test | Tüm UI | Tüm UI | Teknik | Tarama | Hata fail | Yok | Yok | Mojibake testi | Kısmi | Faz 1 |
@@ -83,14 +87,14 @@ Bu matris [RMP-001](TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md) iç
 | REQ-056 | Firma marka ayrımı | Branding | Ayar | Ürün/firma ayrılır | Branding | Shell/belge | PWA | Firma admin | Logo ayarla | Snapshot | Var | Yok | Firma değişimi | Kısmi | Faz 4 |
 | REQ-057 | Modüler monolit | Mimari | Yok | Route ince kalır | Use-case | Yok | Yok | Teknik | Servis çağır | Hata map | Yok | Kısmi | Route testleri | Kısmi | Faz 2A |
 | REQ-058 | Domain olayları | Mimari | Event | Yan etkiler olaylı | Event bus | Yok | Yok | Teknik | Event publish | Retry | Var | Yok | Audit/event uyum | Kısmi | Faz 2A |
-| REQ-059 | Destek erişimi onaylı | Platform | SupportAccess | Sessiz erişim yok | Support | Platform | Firma onay | Platform+firma | Onay aç | İptal | Zorunlu | Var | Süreli erişim | Uygulandı — genel doğrulama bekliyor | Faz 2B |
+| REQ-059 | Destek erişimi onaylı | Platform | SupportAccess | Sessiz erişim yok | Support | Platform | Firma onay | Platform+firma | Onay aç | İptal | Zorunlu | Var | Süreli erişim | `VERIFIED` — `699e0d2`, CI 31822828259 | Faz 2B |
 | REQ-060 | Route yetkileri | Güvenlik | Permission | API her zaman kontrol eder | Middleware/use-case | Tüm | Tüm | Rol | İzinli | 403 | Zorunlu | Kısmi | Yetkisiz test | Kısmi | Faz 2A |
 | REQ-061 | Dosya güvenliği | Belge | FileRef | Fiziksel yol sızmaz | Dosya API | Belge | Mobil | Vekâlet | Yetkili oku | 403/404 | Var | Var | Public erişim yok | P0 | Faz 7 |
 | REQ-062 | PII loglara çıkmaz | Güvenlik | Log policy | Secret/DB URL yok | Logger | Yok | Yok | Teknik | Maskeli log | Hata | Zorunlu | Yok | Log inceleme | Kısmi | Faz 2A |
 | REQ-063 | Migration dry-run | Veri | MigrationLog | Önce rapor | Script | Teknik | Yok | Teknik | Dry-run | Apply | Var | Kısmi | Rapor üretir | Kısmi | Faz 2C |
 | REQ-064 | Yedek öncesi güncelleme | Sistem | BackupLog | Migration öncesi yedek | Update | Platform | Yok | Platform | Yedek al | Durdur | Zorunlu | Yok | Yedeksiz migrate yok | Yok | Faz 15 |
 | REQ-065 | Placeholder kapsam ve canlı menü denetimi | Ürün | FeatureFlag/registry | Tamamlanmayan yüzey canlı menüde kullanıcıya sunulmaz | Menü/registry | Menü | Menü | Admin | Yalnız etkin ve hazır modül görünür | Doğrudan URL güvenli planlı durum | Var | Yok | Placeholder menüde görünmez | `PLANNED` | Faz 2A/11 |
-| REQ-066 | Test PostgreSQL | Test | Test DB | Mock yetmez | Test infra | Yok | Yok | Teknik | CI test | Rollback | Yok | Var | PG integration | Uygulandı — genel doğrulama bekliyor | Faz 2C |
+| REQ-066 | Test PostgreSQL | Test | Test DB | Mock yetmez | Test infra | Yok | Yok | Teknik | CI test | Rollback | Yok | Var | PG integration | `VERIFIED` — 23/23 PostgreSQL, CI 31822828259 | Faz 2C |
 | REQ-067 | 5–20 cihaz yük | Test | Senaryo | Bayram LAN provası | Load script | Yok | Cihazlar | Teknik | Prova | Kesinti | Var | Yok | Yük raporu | Yok | Faz 16 |
 | REQ-068 | Denetim ve olay inceleme | Audit | Audit/Event | Kim, neyi, neden | Timeline | Timeline | Özet | Yetkili | İncele | Export | Var | Kısmi | Kayıt izi | Kısmi | Faz 14 |
 
@@ -141,7 +145,7 @@ Bu bölüm kullanıcı tarafından sonradan onaylanan profesyonel panel, teknolo
 
 ### PRO-030..PRO-038 geri dönüş yöntemleri
 
-`PRO-030`, `PRO-032..PRO-035`, `PRO-037` ve `PRO-038` kod/migration olarak `IMPLEMENTED_UNVERIFIED` durumundadır. `PRO-031` ile gerçek prova ve `PRO-036` içindeki gerçek dış sağlayıcı entegrasyonları planlıdır; CI, manuel genel doğrulama ve dış kabul kanıtı tamamlanmamıştır. Her kapsam feature flag, config, permission veya adapter sınırıyla geri alınabilir şekilde tasarlanır; kalıcı finans verisi fiziksel olarak silinmez.
+`PRO-030`, `PRO-032..PRO-035`, `PRO-037` ve `PRO-038` yalnız `699e0d2298b2dbcf913781134d850aaafbb661a7` repo/sentetik Faz 12 kabul kapsamı için `VERIFIED` durumundadır. `PRO-031` içindeki sentetik yazılım provası tamamlandı; gerçek saha provası ile `PRO-036` içindeki dış sağlayıcı entegrasyonları `BLOCKED/NOT_RUN` kalır. Her kapsam feature flag, config, permission veya adapter sınırıyla geri alınabilir şekilde tasarlanır; kalıcı finans verisi fiziksel olarak silinmez.
 
 | ID | Geri dönüş yöntemi |
 |---|---|
