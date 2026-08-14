@@ -178,7 +178,7 @@ Node.js 20 GitHub Actions annotation'ı CI'yı bozmadığı için Faz 2–12 gel
 | Satış ve hisse kuralı | Uygulandı — genel doğrulama bekliyor | `confirmSale` akışı satılabilir hisse kontrolü, fiyat snapshot'ı, idempotency key ve ledger satış kaydı üretir. |
 | Rezervasyon–kesin satış ve işletme envanteri hedef farkı | `IMPLEMENTING` | Tenant `confirmSale` pozitif kaporayı zorunlu kılar ve süre sonu domain komutu finans reversal'ı üretmez; legacy saha satış hâlâ taşınmadığı için uçtan uca Faz 5 hedefi tamamlanmış sayılmaz. |
 | Ledger/tahsilat temeli | Uygulandı — genel doğrulama bekliyor | Decimal string para sözleşmesi, ödeme dağıtımı toplam kontrolü, ödeme ledger kayıtları ve ters kayıt/reversal akışı eklendi. Yeni `Float` para modeli eklenmedi. |
-| Faturalar 360, ledger posting ve ödeme tahsisi | `IMPLEMENTED_UNVERIFIED` | Tenant migration `0008`; alış/satış/iade eksenleri, ayrı muhasebe/ödeme/e-Belge durumları, dengeli journal, satır/parti snapshot'ları ve ödeme tahsisi gerçek PostgreSQL testine bağlandı. Legacy finans akışlarının tamamı taşınmadı. |
+| Faturalar 360, ledger posting ve ödeme tahsisi | `IMPLEMENTED_UNVERIFIED` | Tenant migration `0008` + hardening `0009`; kaynak limitli ve yarış korumalı tahsis, kümülatif iade sınırı, vergili alış/satış/iade hesap sınıfları, vergi satırı DB kapsamı ve TRY-only fail-closed davranış gerçek PostgreSQL testine bağlandı. Çoklu para ve legacy finans akışlarının tamamı henüz taşınmadı. |
 | Sağlayıcı bağımsız e-Belge merkezi | `IMPLEMENTED_UNVERIFIED` | Provider portu, yalnız `mock-sandbox`, secret referanslı ayar, idempotent outbox/retry/dead-letter ve webhook sözleşmesi eklendi. Gerçek entegratör, resmî kod eşlemesi ve dış sandbox/production kabulü `BLOCKED`/`NOT_RUN` durumundadır. |
 
 ## Faz 7–10 durumu

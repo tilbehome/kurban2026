@@ -26,6 +26,10 @@ Taslak + taraf/satır/birim snapshot'ı
 - Aynı idempotency anahtarı ve aynı payload ikinci fatura üretmez; farklı payload reddedilir.
 - Posting yalnız `APPROVED` durumundan ve yakın zamanlı yeniden doğrulamayla yapılır.
 - Toplamlar satır, indirim ve vergi bileşenlerinden kesin Decimal aritmetiğiyle hesaplanır.
+- Alışta matrah + indirilecek vergi tedarikçi borcuna; satışta müşteri alacağı matrah + hesaplanan vergiye dengeli yazılır. İade aynı hesapları ve gerçek tutarları ters çevirir.
+- Tahsis transaction'ı hedef faturayı ve kaynak Receipt/SupplierPayment satırını kilitler; bütün faturalardaki kaynak tahsis toplamı kaynak tutarı aşamaz.
+- İade taraf/sezon/organization/ticaret türü/para birimi kapsamını ve asıl faturanın ters yönünü korur; işlenmiş iadelerin kümülatif toplamı kalan iade edilebilir tutarı aşamaz.
+- Çoklu para birimi `PLANNED` durumundadır; bu akış yalnız TRY için açıktır.
 - İşlenmiş belge, ödeme ve ledger hareketi fiziksel olarak silinmez.
 - Alış faturasından hayvan üretimi fatura, hayvan, hisse, tedarikçi borcu, audit/outbox ve journal ile atomiktir.
 
@@ -51,11 +55,15 @@ Fatura okuma/oluşturma/onay/posting/ters kayıt/ödeme yetkileri ile e-Belge g�
 
 ## Kabul kanıtları
 
-- Gerçek PostgreSQL'de migration `0001..0008` boş veritabanına uygulanır.
+- Gerçek PostgreSQL'de migration `0001..0009` boş veritabanına uygulanır.
 - İki tenant aynı birim/fatura kimliği veya koduyla birbirini görmez.
 - 20 satırlı alış faturası 20 hayvan, 140 hisse, doğru tedarikçi borcu ve dengeli journal üretir.
 - Kullanılmış birim anlamı değiştirilemez; silme reddedilir, pasifleştirme mümkündür.
 - Fatura birim snapshot'ı sonradan tanım değişse de aynı kalır.
+- Aynı ödeme kaynağının birden fazla faturaya fazla veya eşzamanlı tahsisi reddedilir; aynı idempotent replay mevcut sonucu döndürür.
+- Farklı taraf kapsamındaki, ters yön taşımayan, fazla veya eşzamanlı kümülatif iade reddedilir.
+- Vergili alış/satış/iade journal hesap kodu, hesap sınıfı, vergi tutarı ve borç/alacak dengesi doğrulanır.
+- Başka faturanın satırına vergi bileşeni bağlanması DB trigger'ı tarafından reddedilir.
 - Mock sağlayıcı sözleşme/retry/webhook/idempotency testleri geçer.
 
 Gerçek sağlayıcı sandbox'ı, güncel resmî birim kodları, production credential, gerçek gönderim/alım, mali mühür/e-imza ve dış mutabakat testleri bu paketin kanıtı değildir; `BLOCKED` veya `NOT_RUN` kalır.

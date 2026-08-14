@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, test } from "vitest";
 import { PrismaClient } from "../generated/client";
-import { InvoiceService, type InvoiceActorContext } from "../../../modules/faturalar/application/invoice-service";
+import { InvoiceService, type InvoiceActorContext, type InvoiceDraftInput } from "../../../modules/faturalar/application/invoice-service";
 import { PrismaInvoiceRepository } from "../../../modules/faturalar/infrastructure/prisma/prisma-invoice-repository";
 import { PrismaTenantMasterDataRepository } from "../src/repositories/prisma-tenant-master-data-repository";
 import { PrismaUnitOfMeasureRepository } from "../src/repositories/prisma-unit-of-measure-repository";
@@ -41,7 +41,7 @@ describePostgres("Faturalar 360 gerçek PostgreSQL", () => {
     const debit = journal.lines.filter((line) => line.side === "debit").reduce((sum, line) => sum + Number(line.amount), 0);
     const credit = journal.lines.filter((line) => line.side === "credit").reduce((sum, line) => sum + Number(line.amount), 0);
     expect(debit).toBe(credit);
-    expect(journal.lines).toHaveLength(2);
+    expect(journal.lines).toHaveLength(3);
     await expect(service.get(context(`${organizationId}_other`, "read"), created.id)).rejects.toThrowError("INVOICE_NOT_FOUND");
 
     const supplierPaymentId = `supplier_payment_${suffix}`;
@@ -100,6 +100,115 @@ describePostgres("Faturalar 360 gerçek PostgreSQL", () => {
     await expect(db.unitOfMeasure.delete({ where: { id: unitId } })).rejects.toThrow();
     expect(await units.setActive(manageContext, unitId, false)).toMatchObject({ isActive: false });
   });
+
+  test("ödeme kaynağı toplamı, idempotency ve eşzamanlı tahsis yarışı fail-closed korunur", async () => {
+    if (!db) throw new Error("TEST_DATABASE_REQUIRED");
+    const caseId = `allocation_${suffix}`;
+    const organizationId = `org_${caseId}`;
+    const seasonId = `season_${caseId}`;
+    const supplierId = `supplier_${caseId}`;
+    const customerId = `customer_${caseId}`;
+    await db.season.create({ data: { id: seasonId, name: "Tahsis bütünlük sezonu", status: "sales" } });
+    await db.supplier.create({ data: { id: supplierId, displayName: "Tahsis Tedarikçisi", normalizedName: "tahsis tedarikcisi" } });
+    await db.customer.create({ data: { id: customerId, displayName: "Tahsis Müşterisi", normalizedName: "tahsis musterisi" } });
+    const service = new InvoiceService(new PrismaInvoiceRepository(db));
+    const invoiceA = await createPostedInvoice(service, organizationId, `${caseId}_a`, purchaseDraft(caseId, "A", seasonId, supplierId, "100.0000"));
+    const invoiceB = await createPostedInvoice(service, organizationId, `${caseId}_b`, purchaseDraft(caseId, "B", seasonId, supplierId, "100.0000"));
+    const paymentId = `payment_${caseId}`;
+    await db.supplierPayment.create({ data: { id: paymentId, supplierId, seasonId, amount: "100.0000", method: "bank_transfer", occurredAt: new Date(), idempotencyKey: `payment_idem_${caseId}` } });
+
+    const replayContext = context(organizationId, `${caseId}_replay`);
+    const allocation = { id: invoiceA, allocationId: `allocation_replay_${caseId}`, supplierPaymentId: paymentId, amount: "60.0000" };
+    const first = await service.allocatePayment(replayContext, allocation);
+    expect(await service.allocatePayment(replayContext, allocation)).toEqual(first);
+    await expect(service.allocatePayment(replayContext, { ...allocation, amount: "61.0000" })).rejects.toThrowError("IDEMPOTENCY_KEY_REUSED");
+    await expect(service.allocatePayment(context(organizationId, `${caseId}_excess`), { id: invoiceB, allocationId: `allocation_excess_${caseId}`, supplierPaymentId: paymentId, amount: "50.0000" })).rejects.toThrowError("INVOICE_PAYMENT_SOURCE_EXCEEDED");
+    expect((await db.invoicePaymentAllocation.aggregate({ where: { supplierPaymentId: paymentId }, _sum: { amount: true } }))._sum.amount?.toString()).toBe("60");
+
+    const salesA = await createPostedInvoice(service, organizationId, `${caseId}_sales_a`, salesDraft(caseId, "ALLOCATION-A", seasonId, customerId, "100.0000"));
+    const salesB = await createPostedInvoice(service, organizationId, `${caseId}_sales_b`, salesDraft(caseId, "ALLOCATION-B", seasonId, customerId, "100.0000"));
+    const receiptJournalId = `receipt_journal_${caseId}`;
+    const receiptId = `receipt_${caseId}`;
+    await db.journalEntry.create({ data: { id: receiptJournalId, seasonId, sourceType: "invoice_allocation_test_receipt", sourceId: receiptId, currency: "TRY", idempotencyKey: `receipt_journal_idem_${caseId}`, occurredAt: new Date(), postedAt: new Date() } });
+    await db.receipt.create({ data: { id: receiptId, seasonId, customerId, journalEntryId: receiptJournalId, receiptNo: `RCPT-${caseId}`, totalAmount: "100.0000", currency: "TRY", occurredAt: new Date(), idempotencyKey: `receipt_idem_${caseId}` } });
+    await service.allocatePayment(context(organizationId, `${caseId}_receipt_first`), { id: salesA, allocationId: `allocation_receipt_first_${caseId}`, receiptId, amount: "60.0000" });
+    await expect(service.allocatePayment(context(organizationId, `${caseId}_receipt_excess`), { id: salesB, allocationId: `allocation_receipt_excess_${caseId}`, receiptId, amount: "50.0000" })).rejects.toThrowError("INVOICE_PAYMENT_SOURCE_EXCEEDED");
+    expect((await db.invoicePaymentAllocation.aggregate({ where: { receiptId }, _sum: { amount: true } }))._sum.amount?.toString()).toBe("60");
+
+    const racePaymentId = `payment_race_${caseId}`;
+    await db.supplierPayment.create({ data: { id: racePaymentId, supplierId, seasonId, amount: "100.0000", method: "bank_transfer", occurredAt: new Date(), idempotencyKey: `payment_race_idem_${caseId}` } });
+    const race = await Promise.allSettled([
+      service.allocatePayment(context(organizationId, `${caseId}_race_a`), { id: invoiceA, allocationId: `allocation_race_a_${caseId}`, supplierPaymentId: racePaymentId, amount: "70.0000" }),
+      service.allocatePayment(context(organizationId, `${caseId}_race_b`), { id: invoiceB, allocationId: `allocation_race_b_${caseId}`, supplierPaymentId: racePaymentId, amount: "70.0000" }),
+    ]);
+    expect(race.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(race.filter((result) => result.status === "rejected")).toHaveLength(1);
+    expect((await db.invoicePaymentAllocation.aggregate({ where: { supplierPaymentId: racePaymentId }, _sum: { amount: true } }))._sum.amount?.toString()).toBe("70");
+  });
+
+  test("iade kapsamı, taraflar, ters yön ve kümülatif tutar eşzamanlı olarak korunur", async () => {
+    if (!db) throw new Error("TEST_DATABASE_REQUIRED");
+    const caseId = `return_${suffix}`;
+    const organizationId = `org_${caseId}`;
+    const seasonId = `season_${caseId}`;
+    const supplierA = `supplier_a_${caseId}`;
+    const supplierB = `supplier_b_${caseId}`;
+    const customerA = `customer_a_${caseId}`;
+    const customerB = `customer_b_${caseId}`;
+    await db.season.create({ data: { id: seasonId, name: "İade bütünlük sezonu", status: "sales" } });
+    await db.supplier.createMany({ data: [{ id: supplierA, displayName: "İade Tedarikçisi A", normalizedName: "iade tedarikcisi a" }, { id: supplierB, displayName: "İade Tedarikçisi B", normalizedName: "iade tedarikcisi b" }] });
+    await db.customer.createMany({ data: [{ id: customerA, displayName: "İade Müşterisi A", normalizedName: "iade musterisi a" }, { id: customerB, displayName: "İade Müşterisi B", normalizedName: "iade musterisi b" }] });
+    const service = new InvoiceService(new PrismaInvoiceRepository(db));
+    const purchaseOriginal = await createPostedInvoice(service, organizationId, `${caseId}_purchase`, purchaseDraft(caseId, "ORIGINAL", seasonId, supplierA, "100.0000"));
+    const salesOriginal = await createPostedInvoice(service, organizationId, `${caseId}_sales`, salesDraft(caseId, "ORIGINAL", seasonId, customerA, "100.0000"));
+
+    await expect(service.createDraft(context(organizationId, `${caseId}_wrong_supplier`), { ...purchaseDraft(caseId, "WRONG-SUPPLIER", seasonId, supplierB, "10.0000"), documentNature: "RETURN", direction: "OUTBOUND", originalInvoiceId: purchaseOriginal })).rejects.toThrowError("INVOICE_RETURN_SCOPE_MISMATCH");
+    await expect(service.createDraft(context(organizationId, `${caseId}_wrong_direction`), { ...purchaseDraft(caseId, "WRONG-DIRECTION", seasonId, supplierA, "10.0000"), documentNature: "RETURN", direction: "INBOUND", originalInvoiceId: purchaseOriginal })).rejects.toThrowError("INVOICE_RETURN_DIRECTION_INVALID");
+    await expect(service.createDraft(context(organizationId, `${caseId}_wrong_customer`), { ...salesDraft(caseId, "WRONG-CUSTOMER", seasonId, customerB, "10.0000"), documentNature: "RETURN", direction: "INBOUND", originalInvoiceId: salesOriginal })).rejects.toThrowError("INVOICE_RETURN_SCOPE_MISMATCH");
+
+    const returnA = { ...purchaseDraft(caseId, "RETURN-A", seasonId, supplierA, "60.0000"), documentNature: "RETURN" as const, direction: "OUTBOUND" as const, originalInvoiceId: purchaseOriginal };
+    const returnB = { ...purchaseDraft(caseId, "RETURN-B", seasonId, supplierA, "60.0000"), documentNature: "RETURN" as const, direction: "OUTBOUND" as const, originalInvoiceId: purchaseOriginal };
+    await service.createDraft(context(organizationId, `${caseId}_return_a_create`), returnA);
+    await service.createDraft(context(organizationId, `${caseId}_return_b_create`), returnB);
+    for (const [id, key] of [[returnA.id, "a"], [returnB.id, "b"]] as const) {
+      await service.submit(context(organizationId, `${caseId}_return_${key}_submit`), id);
+      await service.approve(context(organizationId, `${caseId}_return_${key}_approve`), id);
+    }
+    const posted = await Promise.allSettled([
+      service.post(context(organizationId, `${caseId}_return_a_post`), returnA.id),
+      service.post(context(organizationId, `${caseId}_return_b_post`), returnB.id),
+    ]);
+    expect(posted.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(posted.filter((result) => result.status === "rejected")).toHaveLength(1);
+    expect((await db.purchaseInvoice.aggregate({ where: { originalInvoiceId: purchaseOriginal, accountingStatus: "POSTED" }, _sum: { grandTotal: true } }))._sum.grandTotal?.toString()).toBe("60");
+    await expect(service.createDraft(context(organizationId, `${caseId}_return_excess`), { ...purchaseDraft(caseId, "RETURN-EXCESS", seasonId, supplierA, "50.0000"), documentNature: "RETURN", direction: "OUTBOUND", originalInvoiceId: purchaseOriginal })).rejects.toThrowError("INVOICE_RETURN_AMOUNT_EXCEEDED");
+  });
+
+  test("vergili alış/satış/iade journal sınıfları, TRY sınırı ve vergi satırı DB kapsamı korunur", async () => {
+    if (!db) throw new Error("TEST_DATABASE_REQUIRED");
+    const caseId = `tax_${suffix}`;
+    const organizationId = `org_${caseId}`;
+    const seasonId = `season_${caseId}`;
+    const supplierId = `supplier_${caseId}`;
+    const customerId = `customer_${caseId}`;
+    await db.season.create({ data: { id: seasonId, name: "Vergi journal sezonu", status: "sales" } });
+    await db.supplier.create({ data: { id: supplierId, displayName: "Vergi Tedarikçisi", normalizedName: "vergi tedarikcisi" } });
+    await db.customer.create({ data: { id: customerId, displayName: "Vergi Müşterisi", normalizedName: "vergi musterisi" } });
+    const service = new InvoiceService(new PrismaInvoiceRepository(db));
+    const purchase = await createPostedInvoice(service, organizationId, `${caseId}_purchase`, taxedDraft(purchaseDraft(caseId, "PURCHASE", seasonId, supplierId, "100.0000"), `${caseId}_purchase`));
+    const sale = await createPostedInvoice(service, organizationId, `${caseId}_sale`, taxedDraft(salesDraft(caseId, "SALE", seasonId, customerId, "200.0000"), `${caseId}_sale`));
+    const purchaseReturn = await createPostedInvoice(service, organizationId, `${caseId}_purchase_return`, taxedDraft({ ...purchaseDraft(caseId, "PURCHASE-RETURN", seasonId, supplierId, "25.0000"), documentNature: "RETURN", direction: "OUTBOUND", originalInvoiceId: purchase }, `${caseId}_purchase_return`));
+    const salesReturn = await createPostedInvoice(service, organizationId, `${caseId}_sales_return`, taxedDraft({ ...salesDraft(caseId, "SALES-RETURN", seasonId, customerId, "50.0000"), documentNature: "RETURN", direction: "INBOUND", originalInvoiceId: sale }, `${caseId}_sales_return`));
+
+    await expectJournal(db, purchase, [["ACCOUNTS_PAYABLE", "credit", "120", "liability", "credit"], ["INPUT_TAX", "debit", "20", "asset", "debit"], ["INVENTORY", "debit", "100", "asset", "debit"]]);
+    await expectJournal(db, sale, [["ACCOUNTS_RECEIVABLE", "debit", "240", "asset", "debit"], ["OUTPUT_TAX", "credit", "40", "liability", "credit"], ["SALES_REVENUE", "credit", "200", "revenue", "credit"]]);
+    await expectJournal(db, purchaseReturn, [["ACCOUNTS_PAYABLE", "debit", "30", "liability", "credit"], ["INPUT_TAX", "credit", "5", "asset", "debit"], ["INVENTORY", "credit", "25", "asset", "debit"]]);
+    await expectJournal(db, salesReturn, [["ACCOUNTS_RECEIVABLE", "credit", "60", "asset", "debit"], ["OUTPUT_TAX", "debit", "10", "liability", "credit"], ["SALES_REVENUE", "debit", "50", "revenue", "credit"]]);
+
+    await expect(service.createDraft(context(organizationId, `${caseId}_usd`), { ...purchaseDraft(caseId, "USD", seasonId, supplierId, "10.0000"), currency: "USD" })).rejects.toThrowError("INVOICE_CURRENCY_NOT_SUPPORTED");
+    const foreignLine = await db.purchaseInvoiceLine.findFirstOrThrow({ where: { purchaseInvoiceId: sale } });
+    await expect(db.invoiceTaxComponent.create({ data: { id: `tax_scope_violation_${caseId}`, purchaseInvoiceId: purchase, lineId: foreignLine.id, taxType: "KDV", rate: "20.0000", taxableAmount: "1.0000", taxAmount: "0.2000" } })).rejects.toThrow();
+  });
 });
 
 afterAll(async () => { await db?.$disconnect(); });
@@ -107,4 +216,33 @@ afterAll(async () => { await db?.$disconnect(); });
 function context(organizationId: string, action: string): InvoiceActorContext {
   const all = ["invoice.invoice.read.organization", "invoice.invoice.create.organization", "invoice.invoice.submit.organization", "invoice.invoice.approve.organization", "invoice.invoice.post.organization", "invoice.invoice.pay.organization", "invoice.einvoice.send.organization"];
   return { organizationId, actorUserId: `actor_${suffix}`, requestId: `request_${action}_${suffix}`, idempotencyKey: `idempotency_${action}_${suffix}`, permissions: all, reauthenticatedAt: new Date().toISOString() };
+}
+
+function purchaseDraft(caseId: string, label: string, seasonId: string, supplierId: string, amount: string): InvoiceDraftInput {
+  return { id: `invoice_purchase_${label}_${caseId}`, seasonId, uuid: randomUUID(), invoiceNo: `PURCHASE-${label}-${caseId}`, invoiceDate: new Date().toISOString(), direction: "INBOUND", tradeType: "PURCHASE", documentNature: "STANDARD", electronicChannel: "NONE", currency: "TRY", supplierId, partySnapshot: { displayName: "Sentetik Tedarikçi" }, lines: [{ id: `line_purchase_${label}_${caseId}`, description: `${label} sentetik satır`, quantity: "1.000", unit: "ADET", unitPrice: amount }] };
+}
+
+function salesDraft(caseId: string, label: string, seasonId: string, customerId: string, amount: string): InvoiceDraftInput {
+  return { id: `invoice_sales_${label}_${caseId}`, seasonId, uuid: randomUUID(), invoiceNo: `SALES-${label}-${caseId}`, invoiceDate: new Date().toISOString(), direction: "OUTBOUND", tradeType: "SALES", documentNature: "STANDARD", electronicChannel: "NONE", currency: "TRY", customerId, partySnapshot: { displayName: "Sentetik Müşteri" }, lines: [{ id: `line_sales_${label}_${caseId}`, description: `${label} sentetik satır`, quantity: "1.000", unit: "ADET", unitPrice: amount }] };
+}
+
+function taxedDraft(input: InvoiceDraftInput, taxId: string): InvoiceDraftInput {
+  return { ...input, lines: input.lines.map((line) => ({ ...line, taxes: [{ id: `tax_${taxId}`, type: "KDV", rate: "20.0000" }] })) };
+}
+
+async function createPostedInvoice(service: InvoiceService, organizationId: string, action: string, draft: InvoiceDraftInput): Promise<string> {
+  await service.createDraft(context(organizationId, `${action}_create`), draft);
+  await service.submit(context(organizationId, `${action}_submit`), draft.id);
+  await service.approve(context(organizationId, `${action}_approve`), draft.id);
+  await service.post(context(organizationId, `${action}_post`), draft.id);
+  return draft.id;
+}
+
+async function expectJournal(client: PrismaClient, invoiceId: string, expected: readonly (readonly [string, string, string, string, string])[]) {
+  const invoice = await client.purchaseInvoice.findUniqueOrThrow({ where: { id: invoiceId }, include: { journalEntry: { include: { lines: { include: { account: true } } } } } });
+  const lines = invoice.journalEntry?.lines.map((line) => [line.account.code, line.side, line.amount.toString(), line.account.type, line.account.normalSide] as const).sort((a, b) => a[0].localeCompare(b[0])) ?? [];
+  expect(lines).toEqual([...expected].sort((a, b) => a[0].localeCompare(b[0])));
+  const debit = invoice.journalEntry?.lines.filter((line) => line.side === "debit").reduce((sum, line) => sum + Number(line.amount), 0) ?? 0;
+  const credit = invoice.journalEntry?.lines.filter((line) => line.side === "credit").reduce((sum, line) => sum + Number(line.amount), 0) ?? 0;
+  expect(debit).toBe(credit);
 }

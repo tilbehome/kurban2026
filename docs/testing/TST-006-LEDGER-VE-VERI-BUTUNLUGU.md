@@ -35,7 +35,10 @@ Hedef tenant şemasında Decimal/Numeric ve ledger sözleşmeleri vardır; legac
 - İptal/iade/düzeltme fiziksel silme değil bağlantılı ters kayıt üretir.
 - Kasa, banka/POS, müşteri carisi ve rapor aynı ledger kaynağından sıfır açıklanamayan fark verir.
 - Kapalı sezona/döneme doğrudan posting yapılmaz.
-- Onaylı fatura posting'i dengeli journal üretir; ödeme/tahsilat tahsisleri açık, kısmi, ödenmiş veya görünür fazla ödeme durumuyla mutabık kalır ve fazla tutar sessizce kaybolmaz.
+- Onaylı fatura posting'i dengeli journal üretir; vergili alış/satış matrahı ve vergi hesapları ayrılır, iadeler aynı hesapları ters yönde kullanır.
+- Ödeme/tahsilat tahsislerinin bütün faturalardaki toplamı kaynak Receipt/SupplierPayment tutarını, hedef faturadaki toplamı da fatura tutarını aşmaz; kaynak ve hedef kilitleri yarış koşulunu kapatır.
+- İade organization/sezon/ticaret türü/taraf/para birimi ve ters yön kapsamını korur; işlenmiş kümülatif iade asıl fatura tutarını aşmaz.
+- Çoklu para birimi güvenli hesap/kur ayrıştırması tamamlanana kadar fatura yalnız TRY kabul eder.
 - Fatura satırındaki birim kod/ad/sembol snapshot'ı, birim tanımı daha sonra pasifleştirilse bile değişmez.
 
 ## Operasyon invariant’ları
@@ -55,11 +58,11 @@ Hedef tenant şemasında Decimal/Numeric ve ledger sözleşmeleri vardır; legac
 | Unit/property | Kuruş hassasiyeti, dağıtım, rounding, yedi hisse, geçiş tablosu |
 | PostgreSQL constraint | Unique, FK, check, version ve kapalı dönem |
 | Transaction | Satış + alacak + tahsilat + audit + outbox hata enjeksiyonu |
-| Concurrency | Aynı hisse satışı, aynı idempotency, aynı delivery token, kasa kapanışı |
+| Concurrency | Aynı hisse satışı, aynı ödeme kaynağının çoklu fatura tahsis yarışı, kümülatif iade yarışı, aynı idempotency, aynı delivery token, kasa kapanışı |
 | Reverse | Tam/kısmi iade, iptal, transfer, kg eksiği, POS vade farkı |
 | Reconciliation | Ledger ↔ cari ↔ kasa ↔ banka/POS ↔ rapor |
 | Lifecycle | Sezon kilidi, paket/teslim kapanışı, pasif kayıt yeniden aktifleştirme |
-| Fatura 360 ve birim | Alış/satış/iade eksenleri, onay/posting, ödeme tahsisi, 20 satır → 20 hayvan/140 hisse, tenant birim izolasyonu, snapshot ve kullanılan birim değişmezliği |
+| Fatura 360 ve birim | Vergili alış/satış/iade hesap sınıfları, kaynak limitli ödeme tahsisi, taraf/yön/kümülatif iade, TRY-only fail-closed, vergi satırı DB kapsamı, 20 satır → 20 hayvan/140 hisse, tenant birim izolasyonu ve snapshot değişmezliği |
 | e-Belge sözleşmesi | Provider capability, eksik birim mapping fail-closed, idempotent gönderim, retry/dead-letter, imzalı webhook/replay; gerçek sağlayıcı kabulü ayrı dış kapıdır |
 
 ## Hata enjeksiyonu

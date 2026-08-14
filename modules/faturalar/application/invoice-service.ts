@@ -1,6 +1,7 @@
 import {
   assertAccountingTransition,
   assertInvoiceParties,
+  assertSupportedInvoiceCurrency,
   calculateInvoiceTotals,
   type AccountingStatus,
   type ElectronicChannel,
@@ -113,6 +114,7 @@ export class InvoiceService {
   async createDraft(context: InvoiceActorContext, input: InvoiceDraftInput) {
     requirePermission(context, PERMISSIONS.create);
     assertInvoiceParties(input);
+    assertSupportedInvoiceCurrency(input.currency);
     const totals = calculateInvoiceTotals(input.lines);
     return this.repository.createDraft({ ...input, ...totals }, context);
   }

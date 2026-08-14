@@ -740,6 +740,7 @@ model PurchaseInvoice {
   @@index([customerId])
   @@index([accountingStatus, paymentStatus, electronicStatus])
   @@index([providerKey, providerReference])
+  @@index([originalInvoiceId, accountingStatus])
 }
 
 model PurchaseInvoiceLine {
@@ -786,6 +787,7 @@ model InvoiceTaxComponent {
   line              PurchaseInvoiceLine? @relation(fields: [lineId], references: [id])
 
   @@index([purchaseInvoiceId])
+  @@index([lineId, purchaseInvoiceId])
 }
 
 model InvoiceAttachment {

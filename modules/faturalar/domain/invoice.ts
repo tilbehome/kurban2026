@@ -86,6 +86,10 @@ export function assertInvoiceParties(input: {
   if (input.documentNature === "STANDARD" && input.originalInvoiceId) throw new InvoiceDomainError("INVOICE_STANDARD_ORIGINAL_NOT_ALLOWED");
 }
 
+export function assertSupportedInvoiceCurrency(currency: string): void {
+  if (currency !== "TRY") throw new InvoiceDomainError("INVOICE_CURRENCY_NOT_SUPPORTED");
+}
+
 export function calculateInvoiceTotals(lines: readonly InvoiceLineDraft[]): InvoiceTotals {
   if (lines.length === 0) throw new InvoiceDomainError("INVOICE_LINE_REQUIRED");
   const ids = new Set<string>();

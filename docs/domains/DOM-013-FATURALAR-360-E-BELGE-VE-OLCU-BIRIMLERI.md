@@ -22,11 +22,15 @@ Fatura yönü (`PURCHASE` / `SALE`), ticaret türü, belge niteliği ve elektron
 - ödeme: açık, kısmi, ödendi veya iade durumudur; tahsis toplamından türetilir;
 - elektronik belge: hazırlanmadı, kuyrukta, gönderildi, teslim edildi, kabul/red/iptal/itiraz durumlarıdır.
 
-Onaylanmış veya işlenmiş fatura fiziksel olarak silinmez. İade ve düzeltme, asıl belgeye bağlanan yeni belge veya dengeli ledger ters kaydıdır. Fatura posting'i borç ve alacak toplamı eşit olmayan journal üretmez. Ödeme/tahsilat tahsisi açık, kısmi, ödenmiş veya açıkça görünür fazla ödeme durumunu üretir; fazla tutarın mahsup/iade kararı ayrıca auditli süreç ister.
+Onaylanmış veya işlenmiş fatura fiziksel olarak silinmez. İade ve düzeltme, asıl belgeye bağlanan yeni belge veya dengeli ledger ters kaydıdır. Fatura posting'i borç ve alacak toplamı eşit olmayan journal üretmez. Ödeme/tahsilat tahsisi hem kaynak ödeme/tahsilat tutarını hem hedef fatura toplamını aşamaz; kaynak ve hedef satır kilitleri eşzamanlı fazla tahsisi engeller. Aynı idempotency anahtarı aynı payload için mevcut sonucu döndürür, farklı payload için fail-closed reddedilir.
 
 ## Faturalar 360 görünümü
 
 Kalıcı fatura; taraf snapshot'ları, satırlar, vergi bileşenleri, ekler, zaman çizelgesi, ödeme tahsisleri, ledger bağlantısı ve e-Belge teslimat geçmişiyle tek kimlik altında okunur. Satır, hayvan/hisse/satış/satın alma/gider bağlarını taşıyabilir. 20 satırlı hayvan alışında fatura, 20 hayvan, 140 hisse, tedarikçi borcu ve dengeli journal aynı transaction içinde üretilir.
+
+Vergili alış journal'ı stok/maliyet matrahı ile indirilecek vergiyi borç, tedarikçi borcunu alacak yazar. Vergili satış journal'ı müşteri alacağını borç, satış geliri matrahı ile hesaplanan vergiyi alacak yazar. İadeler aynı hesapları gerçek matrah/vergi tutarlarıyla ters yönde kullanır. İade; aynı organization, sezon, ticaret türü, taraf ve para birimindeki işlenmiş standart faturaya, ters belge yönüyle bağlanır. Asıl faturaya bağlı işlenmiş iadelerin kümülatif toplamı asıl belge tutarını aşamaz.
+
+Finans hesaplarının para birimi bazında güvenli ayrıştırılması bu pakette tamamlanmamıştır. Bu nedenle fatura aggregate'i ve tahsisleri yalnız `TRY` kabul eder; diğer para birimleri `INVOICE_CURRENCY_NOT_SUPPORTED` ile fail-closed sonuç verir. Çoklu para, kur snapshot'ı ve kur farkı muhasebesi ayrı bir `PLANNED` pakettir.
 
 ## Ölçü ve işlem birimleri
 
@@ -56,7 +60,8 @@ Bağlantı ayarı yalnız `secret://` referansı kabul eder; secret değerini te
 
 | Dilim | Durum | Kanıt / sınır |
 |---|---|---|
-| Fatura aggregate, status/invariant, ledger posting ve ödeme tahsisi | `IMPLEMENTED_UNVERIFIED` | Tenant migration `0008`, Faturalar modülü ve gerçek PostgreSQL integration testleri. |
+| Fatura aggregate, status/invariant, vergili ledger posting ve ödeme tahsisi | `IMPLEMENTED_UNVERIFIED` | Tenant migration `0008` + hardening migration `0009`, Faturalar modülü ve gerçek PostgreSQL integration testleri. |
+| Çoklu para birimi, kur snapshot'ı ve kur farkı | `PLANNED` | Mevcut paket yalnız TRY kabul eder; hesap/ledger ayrıştırması tamamlanmadan etkinleştirilmez. |
 | Tenant-aware birimler, snapshot ve güvenli genel dönüşümler | `IMPLEMENTED_UNVERIFIED` | `UnitOfMeasure`, repository/service/API/temel UI ve PostgreSQL constraint/trigger testleri. |
 | Sağlayıcı sözleşmesi, mock/sandbox, outbox worker ve webhook | `IMPLEMENTED_UNVERIFIED` | Yalnız sentetik `mock-sandbox`; gerçek sağlayıcı değildir. |
 | Gerçek GİB/özel entegratör bağlantısı ve güncel kod eşlemesi | `BLOCKED` | Sağlayıcı seçimi, credential, sözleşme, resmî kılavuz doğrulaması ve test ortamı yoktur. |

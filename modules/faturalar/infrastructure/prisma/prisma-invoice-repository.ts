@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import type { Prisma, PrismaClient } from "@/packages/database-tenant/generated/client";
+import { Prisma, type PrismaClient } from "@/packages/database-tenant/generated/client";
 import { paymentStatus, reverseSide, type AccountingStatus } from "../../domain/invoice";
 import type { CalculatedInvoiceDraftInput, InvoiceActorContext, InvoiceDraftInput, InvoiceListFilter, InvoiceRecord, InvoiceRepository } from "../../application/invoice-service";
 
@@ -141,17 +141,28 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
       if (!invoice) throw new Error("INVOICE_NOT_FOUND");
       if (invoice.journalEntryId) return { journalEntryId: invoice.journalEntryId };
       if (invoice.accountingStatus !== "APPROVED") throw new Error("INVOICE_NOT_APPROVED");
+      if (invoice.currency !== "TRY") throw new Error("INVOICE_CURRENCY_NOT_SUPPORTED");
       const isPurchase = invoice.tradeType === "PURCHASE";
       const isReturn = invoice.documentNature === "RETURN";
-      const debitCode = isPurchase ? "INVENTORY" : "ACCOUNTS_RECEIVABLE";
-      const creditCode = isPurchase ? "ACCOUNTS_PAYABLE" : "SALES_REVENUE";
-      const debit = await financialAccount(tx, debitCode, isPurchase ? "Stok ve Hayvan Maliyeti" : "Müşteri Alacakları", "asset", "debit", invoice.currency);
-      const credit = await financialAccount(tx, creditCode, isPurchase ? "Tedarikçi Borçları" : "Satış Gelirleri", isPurchase ? "liability" : "revenue", "credit", invoice.currency);
+      if (isReturn) await assertReturnPostable(tx, invoice);
+      const taxableBase = fromUnits(toUnits(invoice.subtotal.toString()) - toUnits(invoice.discountTotal.toString()));
+      const journalDefinitions = isPurchase
+        ? [
+            { code: "INVENTORY", name: "Stok ve Hayvan Maliyeti", type: "asset", normalSide: "debit", side: "debit" as const, amount: taxableBase, memo: "INVOICE_TAXABLE_BASE" },
+            ...(toUnits(invoice.taxTotal.toString()) > BigInt(0) ? [{ code: "INPUT_TAX", name: "İndirilecek Vergi", type: "asset", normalSide: "debit", side: "debit" as const, amount: invoice.taxTotal.toString(), memo: "INVOICE_INPUT_TAX" }] : []),
+            { code: "ACCOUNTS_PAYABLE", name: "Tedarikçi Borçları", type: "liability", normalSide: "credit", side: "credit" as const, amount: invoice.grandTotal.toString(), memo: "INVOICE_SUPPLIER_PAYABLE" },
+          ]
+        : [
+            { code: "ACCOUNTS_RECEIVABLE", name: "Müşteri Alacakları", type: "asset", normalSide: "debit", side: "debit" as const, amount: invoice.grandTotal.toString(), memo: "INVOICE_CUSTOMER_RECEIVABLE" },
+            { code: "SALES_REVENUE", name: "Satış Gelirleri", type: "revenue", normalSide: "credit", side: "credit" as const, amount: taxableBase, memo: "INVOICE_TAXABLE_BASE" },
+            ...(toUnits(invoice.taxTotal.toString()) > BigInt(0) ? [{ code: "OUTPUT_TAX", name: "Hesaplanan Vergi", type: "liability", normalSide: "credit", side: "credit" as const, amount: invoice.taxTotal.toString(), memo: "INVOICE_OUTPUT_TAX" }] : []),
+          ];
       const journalEntryId = `journal_invoice_${invoice.id}`;
-      const baseLines = [
-        { id: `${journalEntryId}_debit`, accountId: debit.id, side: "debit" as const },
-        { id: `${journalEntryId}_credit`, accountId: credit.id, side: "credit" as const },
-      ];
+      const journalLines = [];
+      for (const definition of journalDefinitions) {
+        const account = await financialAccount(tx, definition.code, definition.name, definition.type, definition.normalSide, invoice.currency);
+        journalLines.push({ id: `${journalEntryId}_${definition.code.toLowerCase()}`, accountId: account.id, side: isReturn ? reverseSide(definition.side) : definition.side, amount: definition.amount, currency: invoice.currency, customerId: invoice.customerId, memo: definition.memo });
+      }
       await tx.journalEntry.create({ data: {
         id: journalEntryId,
         seasonId: invoice.seasonId,
@@ -162,7 +173,7 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
         idempotencyKey: input.idempotencyKey,
         occurredAt: invoice.invoiceDate,
         postedAt: new Date(),
-        lines: { create: baseLines.map((line) => ({ id: line.id, accountId: line.accountId, side: isReturn ? reverseSide(line.side) : line.side, amount: invoice.grandTotal, currency: invoice.currency, customerId: invoice.customerId, memo: "INVOICE_BALANCED_ENTRY" })) },
+        lines: { create: journalLines },
       } });
       if (isPurchase && invoice.supplierId) await updateSupplierBalance(tx, invoice.supplierId, invoice.seasonId, invoice.grandTotal.toString(), isReturn);
       if (!isPurchase && invoice.customerId) await updateCustomerBalance(tx, invoice.customerId, invoice.seasonId, invoice.grandTotal.toString(), isReturn);
@@ -176,26 +187,48 @@ export class PrismaInvoiceRepository implements InvoiceRepository {
 
   async allocatePayment(input: { organizationId: string; id: string; receiptId?: string; supplierPaymentId?: string; amount: string; allocationId: string; actorUserId: string; requestId: string; idempotencyKey: string }): Promise<{ paymentStatus: string; paidTotal: string }> {
     return this.db.$transaction(async (tx) => {
-      const invoice = await tx.purchaseInvoice.findFirst({ where: { id: input.id, organizationId: input.organizationId }, include: { paymentAllocations: true } });
+      if (!/^\d+(?:\.\d{1,4})?$/.test(input.amount) || toUnits(input.amount) <= BigInt(0)) throw new Error("INVOICE_ALLOCATION_AMOUNT_INVALID");
+      await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "PurchaseInvoice" WHERE "id" = ${input.id} FOR UPDATE`);
+      const invoice = await tx.purchaseInvoice.findFirst({ where: { id: input.id, organizationId: input.organizationId } });
       if (!invoice || invoice.accountingStatus !== "POSTED") throw new Error("INVOICE_NOT_POSTED");
+      if (invoice.currency !== "TRY") throw new Error("INVOICE_CURRENCY_NOT_SUPPORTED");
+      await lockPaymentSource(tx, input);
+      const replay = await tx.invoicePaymentAllocation.findUnique({ where: { idempotencyKey: input.idempotencyKey }, include: { purchaseInvoice: true } });
+      if (replay) {
+        const samePayload = replay.id === input.allocationId
+          && replay.purchaseInvoiceId === input.id
+          && replay.receiptId === (input.receiptId ?? null)
+          && replay.supplierPaymentId === (input.supplierPaymentId ?? null)
+          && toUnits(replay.amount.toString()) === toUnits(input.amount)
+          && replay.purchaseInvoice.organizationId === input.organizationId;
+        if (!samePayload) throw new Error("IDEMPOTENCY_KEY_REUSED");
+        return { paymentStatus: replay.purchaseInvoice.paymentStatus, paidTotal: fromUnits(toUnits(replay.purchaseInvoice.paidTotal.toString())) };
+      }
+      let sourceAmount: string;
       if (input.receiptId) {
         const receipt = await tx.receipt.findUnique({ where: { id: input.receiptId } });
-        if (!receipt || receipt.seasonId !== invoice.seasonId || receipt.customerId !== invoice.customerId) throw new Error("INVOICE_RECEIPT_SCOPE_MISMATCH");
-      }
-      if (input.supplierPaymentId) {
+        if (!receipt || receipt.seasonId !== invoice.seasonId || receipt.customerId !== invoice.customerId || receipt.currency !== invoice.currency) throw new Error("INVOICE_RECEIPT_SCOPE_MISMATCH");
+        sourceAmount = receipt.totalAmount.toString();
+      } else if (input.supplierPaymentId) {
         const payment = await tx.supplierPayment.findUnique({ where: { id: input.supplierPaymentId } });
         if (!payment || payment.seasonId !== invoice.seasonId || payment.supplierId !== invoice.supplierId) throw new Error("INVOICE_SUPPLIER_PAYMENT_SCOPE_MISMATCH");
+        sourceAmount = payment.amount.toString();
+      } else {
+        throw new Error("INVOICE_PAYMENT_SOURCE_REQUIRED");
       }
-      if (!/^\d+(?:\.\d{1,4})?$/.test(input.amount) || toUnits(input.amount) <= BigInt(0)) throw new Error("INVOICE_ALLOCATION_AMOUNT_INVALID");
+      const sourceAggregate = await tx.invoicePaymentAllocation.aggregate({ where: input.receiptId ? { receiptId: input.receiptId } : { supplierPaymentId: input.supplierPaymentId }, _sum: { amount: true } });
+      if (toUnits(sourceAggregate._sum.amount?.toString() ?? "0") + toUnits(input.amount) > toUnits(sourceAmount)) throw new Error("INVOICE_PAYMENT_SOURCE_EXCEEDED");
+      const invoiceAggregate = await tx.invoicePaymentAllocation.aggregate({ where: { purchaseInvoiceId: invoice.id }, _sum: { amount: true } });
+      if (toUnits(invoiceAggregate._sum.amount?.toString() ?? "0") + toUnits(input.amount) > toUnits(invoice.grandTotal.toString())) throw new Error("INVOICE_TOTAL_EXCEEDED");
       await tx.invoicePaymentAllocation.create({ data: { id: input.allocationId, purchaseInvoiceId: invoice.id, receiptId: input.receiptId, supplierPaymentId: input.supplierPaymentId, amount: input.amount, currency: invoice.currency, idempotencyKey: input.idempotencyKey } });
-      const paidUnits = invoice.paymentAllocations.reduce((sum, item) => sum + toUnits(item.amount.toString()), BigInt(0)) + toUnits(input.amount);
+      const paidUnits = toUnits(invoiceAggregate._sum.amount?.toString() ?? "0") + toUnits(input.amount);
       const paidTotal = fromUnits(paidUnits);
       const status = paymentStatus(invoice.grandTotal.toString(), paidTotal);
       await tx.purchaseInvoice.update({ where: { id: invoice.id }, data: { paidTotal, paymentStatus: status } });
       await tx.invoiceTimelineEvent.create({ data: { id: `invoice_event_${randomUUID()}`, purchaseInvoiceId: invoice.id, type: "PAYMENT_ALLOCATED", outcome: status, actorUserId: input.actorUserId, requestId: input.requestId, occurredAt: new Date(), safeMetadata: { allocationId: input.allocationId } } });
       await evidence(tx, input, "invoice.payment_allocated", invoice.id, { allocationId: input.allocationId, paymentStatus: status });
       return { paymentStatus: status, paidTotal };
-    }, { isolationLevel: "Serializable" });
+    }, { isolationLevel: "ReadCommitted" });
   }
 
   async enqueueElectronicDocument(input: { organizationId: string; id: string; deliveryId: string; providerKey: string; correlationId: string; actorUserId: string; requestId: string; idempotencyKey: string }): Promise<void> {
@@ -222,13 +255,16 @@ function mapInvoice(row: {
   return { id: row.id, organizationId: row.organizationId, accountingStatus: row.accountingStatus as InvoiceRecord["accountingStatus"], paymentStatus: row.paymentStatus, electronicStatus: row.electronicStatus, electronicChannel: row.electronicChannel as InvoiceRecord["electronicChannel"], grandTotal: row.grandTotal.toString(), paidTotal: row.paidTotal.toString(), tradeType: row.tradeType as InvoiceRecord["tradeType"], documentNature: row.documentNature as InvoiceRecord["documentNature"], originalInvoiceId: row.originalInvoiceId ?? undefined, supplierId: row.supplierId ?? undefined, customerId: row.customerId ?? undefined, journalEntryId: row.journalEntryId ?? undefined, invoiceNo: row.invoiceNo, uuid: row.uuid, invoiceDate: row.invoiceDate.toISOString(), dueDate: row.dueDate?.toISOString(), currency: row.currency, direction: row.direction as InvoiceRecord["direction"] };
 }
 
-async function assertReferences(tx: Prisma.TransactionClient, input: InvoiceDraftInput, organizationId: string): Promise<void> {
+async function assertReferences(tx: Prisma.TransactionClient, input: CalculatedInvoiceDraftInput, organizationId: string): Promise<void> {
   const season = await tx.season.findUnique({ where: { id: input.seasonId } });
   if (!season || season.status === "archived") throw new Error("INVOICE_SEASON_NOT_WRITABLE");
   if (input.locationId && season.locationId !== input.locationId) throw new Error("INVOICE_LOCATION_SEASON_MISMATCH");
   if (input.originalInvoiceId) {
-    const original = await tx.purchaseInvoice.findFirst({ where: { id: input.originalInvoiceId, organizationId, seasonId: input.seasonId, tradeType: input.tradeType, documentNature: "STANDARD", accountingStatus: "POSTED" } });
-    if (!original) throw new Error("INVOICE_RETURN_ORIGINAL_INVALID");
+    await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "PurchaseInvoice" WHERE "id" = ${input.originalInvoiceId} FOR UPDATE`);
+    const original = await tx.purchaseInvoice.findUnique({ where: { id: input.originalInvoiceId } });
+    assertReturnMatches(original, input, organizationId);
+    const returned = await tx.purchaseInvoice.aggregate({ where: { originalInvoiceId: input.originalInvoiceId, accountingStatus: "POSTED" }, _sum: { grandTotal: true } });
+    if (toUnits(returned._sum.grandTotal?.toString() ?? "0") + toUnits(input.grandTotal) > toUnits(original!.grandTotal.toString())) throw new Error("INVOICE_RETURN_AMOUNT_EXCEEDED");
   }
 }
 
@@ -251,7 +287,50 @@ function normalizeUnitCode(value: string): string {
 }
 
 async function financialAccount(tx: Prisma.TransactionClient, code: string, name: string, type: string, normalSide: string, currency: string) {
-  return tx.financialAccount.upsert({ where: { code }, create: { id: `financial_account_${code.toLowerCase()}`, code, name, type, normalSide, currency }, update: {} });
+  const existing = await tx.financialAccount.findUnique({ where: { code } });
+  if (existing) {
+    if (existing.type !== type || existing.normalSide !== normalSide || existing.currency !== currency) throw new Error("FINANCIAL_ACCOUNT_CONFIGURATION_INVALID");
+    return existing;
+  }
+  return tx.financialAccount.create({ data: { id: `financial_account_${code.toLowerCase()}`, code, name, type, normalSide, currency } });
+}
+
+async function lockPaymentSource(tx: Prisma.TransactionClient, input: { receiptId?: string; supplierPaymentId?: string }) {
+  if (input.receiptId) {
+    await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "Receipt" WHERE "id" = ${input.receiptId} FOR UPDATE`);
+    return;
+  }
+  if (input.supplierPaymentId) {
+    await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "SupplierPayment" WHERE "id" = ${input.supplierPaymentId} FOR UPDATE`);
+    return;
+  }
+  throw new Error("INVOICE_PAYMENT_SOURCE_REQUIRED");
+}
+
+type ReturnComparable = {
+  organizationId: string;
+  seasonId: string;
+  tradeType: string;
+  supplierId?: string | null;
+  customerId?: string | null;
+  currency: string;
+  direction: string;
+};
+
+function assertReturnMatches(original: (ReturnComparable & { documentNature: string; accountingStatus: string; grandTotal: { toString(): string } }) | null, candidate: Omit<ReturnComparable, "organizationId">, organizationId: string): asserts original is ReturnComparable & { documentNature: string; accountingStatus: string; grandTotal: { toString(): string } } {
+  if (!original || original.organizationId !== organizationId || original.documentNature !== "STANDARD" || original.accountingStatus !== "POSTED") throw new Error("INVOICE_RETURN_ORIGINAL_INVALID");
+  if (original.seasonId !== candidate.seasonId || original.tradeType !== candidate.tradeType || (original.supplierId ?? null) !== (candidate.supplierId ?? null) || (original.customerId ?? null) !== (candidate.customerId ?? null) || original.currency !== candidate.currency) throw new Error("INVOICE_RETURN_SCOPE_MISMATCH");
+  const expectedDirection = original.direction === "INBOUND" ? "OUTBOUND" : "INBOUND";
+  if (candidate.direction !== expectedDirection) throw new Error("INVOICE_RETURN_DIRECTION_INVALID");
+}
+
+async function assertReturnPostable(tx: Prisma.TransactionClient, invoice: ReturnComparable & { id: string; originalInvoiceId: string | null; grandTotal: { toString(): string } }) {
+  if (!invoice.originalInvoiceId) throw new Error("INVOICE_RETURN_ORIGINAL_INVALID");
+  await tx.$queryRaw(Prisma.sql`SELECT "id" FROM "PurchaseInvoice" WHERE "id" = ${invoice.originalInvoiceId} FOR UPDATE`);
+  const original = await tx.purchaseInvoice.findUnique({ where: { id: invoice.originalInvoiceId } });
+  assertReturnMatches(original, invoice, invoice.organizationId);
+  const returned = await tx.purchaseInvoice.aggregate({ where: { originalInvoiceId: invoice.originalInvoiceId, accountingStatus: "POSTED", id: { not: invoice.id } }, _sum: { grandTotal: true } });
+  if (toUnits(returned._sum.grandTotal?.toString() ?? "0") + toUnits(invoice.grandTotal.toString()) > toUnits(original.grandTotal.toString())) throw new Error("INVOICE_RETURN_AMOUNT_EXCEEDED");
 }
 
 async function updateSupplierBalance(tx: Prisma.TransactionClient, supplierId: string, seasonId: string, amount: string, reverse: boolean) {
