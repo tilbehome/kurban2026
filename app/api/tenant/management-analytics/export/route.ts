@@ -9,7 +9,7 @@ import { TenantManagementAnalyticsError } from "@/packages/tenant-core/src";
 import type { HataKodu } from "@/shared/lib/hata-katalogu";
 
 const Query = z.object({
-  reportKey: z.enum(["sales-occupancy", "operations-bottleneck", "delivery-cold-storage", "audit-exceptions"]),
+  reportKey: z.enum(["sales-occupancy", "operations-bottleneck", "delivery-cold-storage", "audit-exceptions", "finance-reconciliation", "customer-season-balances", "supplier-purchases", "animal-cost-health"]),
   format: z.enum(["csv", "xlsx", "pdf"]),
   seasonId: z.string().min(3).optional(),
   facilityId: z.string().min(1).optional(),

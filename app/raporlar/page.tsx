@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { masterDataMode } from "@/shared/lib/tenant-master-data-adapter";
 import { AppShell } from "@/shared/components/AppShell";
 import { SayfaBaslik } from "@/shared/components/SayfaBaslik";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +22,7 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function RaporlarPage() {
+  if (masterDataMode() === "postgres") redirect("/yonetim");
   const [borc, kurban] = await Promise.all([borclular(), kurbanRaporu()]);
 
   const toplamBorc = borc.reduce((s, b) => s + b.kalan, 0);

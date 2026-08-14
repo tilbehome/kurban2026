@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
+import { masterDataMode } from "@/shared/lib/tenant-master-data-adapter";
 import { yuvarla } from "@/shared/lib/para";
 import { yayinla } from "@/shared/lib/events";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
@@ -24,6 +25,7 @@ export async function POST(req: Request) {
   if (!oturum) {
     return apiHataYaniti("AUTH_REQUIRED");
   }
+  if (masterDataMode() === "postgres") return NextResponse.json({ basarili: false, code: "LEGACY_SHARE_ASSIGNMENT_DISABLED", route: "/api/tenant/sales-finance" }, { status: 409 });
   if (!izinKontrol(oturum, "hisseler.ata")) {
     return apiHataYaniti("PERMISSION_DENIED");
   }

@@ -4,6 +4,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { izinKontrol } from "@/shared/lib/izinler";
+import { masterDataMode } from "@/shared/lib/tenant-master-data-adapter";
 import { apiHataGovdesi, apiHataYaniti, zodHataYaniti } from "@/shared/lib/api-hata";
 
 const IptalSchema = z.object({
@@ -28,6 +29,7 @@ export async function POST(req: Request, { params }: RouteParams) {
   if (!oturum) {
     return apiHataYaniti("PERMISSION_DENIED");
   }
+  if (masterDataMode() === "postgres") return NextResponse.json({ basarili: false, code: "LEGACY_SHARE_CANCELLATION_DISABLED", route: "/api/tenant/sales-finance" }, { status: 409 });
   if (!izinKontrol(oturum, "hisseler.iptal")) {
     return apiHataYaniti("PERMISSION_DENIED");
   }

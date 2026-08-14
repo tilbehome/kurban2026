@@ -14,7 +14,7 @@ const approvalSchema = z.object({
 });
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("proxy-document"), id: z.string().min(3), seasonId: z.string().min(3), grantorCustomerId: z.string().min(3), shareIds: z.array(z.string().min(3)).min(1).max(7), method: z.enum(["face_to_face_oral", "phone", "voice_recording"]), storageKey: z.string().min(8).max(500), status: z.enum(["draft", "signed"]).optional(), approval: approvalSchema.optional() }),
+  z.object({ action: z.literal("proxy-document"), id: z.string().min(3), seasonId: z.string().min(3), grantorCustomerId: z.string().min(3), shareIds: z.array(z.string().min(3)).min(1).max(7), method: z.enum(["face_to_face_oral", "phone", "voice_recording"]), storageKey: z.string().min(8).max(500), mimeType: z.string().min(3).max(100).optional(), sizeBytes: z.number().int().positive().max(25_000_000).optional(), status: z.enum(["draft", "signed"]).optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("revoke-proxy-document"), id: z.string().min(3), seasonId: z.string().min(3), reason: z.string().min(8).max(500), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("issue-qr"), id: z.string().min(3), purpose: z.enum(["proxyDocument", "slaughterCheck", "package", "delivery", "customerTracking"]), targetId: z.string().min(3), expiresAt: z.string().datetime().optional(), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("consume-qr"), opaqueToken: z.string().min(20), purpose: z.enum(["proxyDocument", "slaughterCheck", "package", "delivery", "customerTracking"]), now: z.string().datetime().optional(), approval: approvalSchema.optional() }),
@@ -30,6 +30,24 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("enqueue-offline"), id: z.string().min(3), operation: z.string().min(3).max(120), payload: z.record(z.string(), z.unknown()), approval: approvalSchema.optional() }),
   z.object({ action: z.literal("tv-projection"), seasonId: z.string().min(3) }),
 ]);
+
+export async function GET(request: Request) {
+  const session = await aktifOturum();
+  if (!session) return apiHataYaniti("AUTH_REQUIRED");
+  if (masterDataMode() !== "postgres") return apiHataYaniti("TENANT_MASTER_DATA_POSTGRES_NOT_ENABLED");
+  const url = new URL(request.url);
+  const id = url.searchParams.get("proxyDocumentId");
+  const seasonId = url.searchParams.get("seasonId");
+  if (!id || !seasonId) return apiHataYaniti("VALIDATION_INVALID");
+  try {
+    const context = tenantUseCaseContext(session, { request, readOnly: true });
+    const result = await tenantOperationsService().getProxyDocument(context, { id, seasonId });
+    return NextResponse.json({ ok: true, result });
+  } catch (error) {
+    if (error instanceof TenantOperationsError) return apiHataYaniti(error.code as HataKodu);
+    return beklenmeyenHataYaniti(error, "TENANT_OPERATIONS_FAILED", "Vekâlet belgesi okunamadı");
+  }
+}
 
 export async function POST(request: Request) {
   const session = await aktifOturum();

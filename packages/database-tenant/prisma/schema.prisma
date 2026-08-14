@@ -45,6 +45,9 @@ model Season {
   supplierPayments  SupplierPayment[]
   expenseDocuments  ExpenseDocument[]
   qurbanAssignments QurbanAssignment[]
+  paddocks          Paddock[]
+  paddockAssignments AnimalPaddockAssignment[]
+  proxyDocuments    ProxyDocument[]
 
   @@index([locationId])
   @@index([status])
@@ -828,11 +831,13 @@ model SupplierPayment {
   occurredAt         DateTime
   idempotencyKey     String                     @unique
   reversalOfId       String?
+  journalEntryId     String?                    @unique
   createdAt          DateTime                   @default(now())
   supplier           Supplier                   @relation(fields: [supplierId], references: [id])
   season             Season                     @relation(fields: [seasonId], references: [id])
   reversalOf         SupplierPayment?           @relation("SupplierPaymentReversal", fields: [reversalOfId], references: [id])
   reversals          SupplierPayment[]          @relation("SupplierPaymentReversal")
+  journalEntry       JournalEntry?              @relation(fields: [journalEntryId], references: [id])
   invoiceAllocations InvoicePaymentAllocation[]
 
   @@index([supplierId, seasonId])
@@ -850,8 +855,10 @@ model ExpenseDocument {
   sourceRef      String
   occurredAt     DateTime
   idempotencyKey String                @unique
+  journalEntryId String?               @unique
   createdAt      DateTime              @default(now())
   season         Season                @relation(fields: [seasonId], references: [id])
+  journalEntry   JournalEntry?         @relation(fields: [journalEntryId], references: [id])
   purchaseLines  PurchaseInvoiceLine[]
 
   @@unique([sourceType, sourceRef])
@@ -881,12 +888,49 @@ model Animal {
   weights             AnimalWeight[]
   healthEvents        AnimalHealthEvent[]
   qurbanAssignments   QurbanAssignment[]
+  paddockAssignments  AnimalPaddockAssignment[]
   purchaseInvoiceLine PurchaseInvoiceLine?
 
   @@unique([earTag])
   @@index([locationId])
   @@index([seasonId])
   @@index([supplierId])
+}
+
+model Paddock {
+  id          String                    @id
+  seasonId    String
+  code        String
+  name        String
+  capacity    Int?
+  active      Boolean                   @default(true)
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  season      Season                    @relation(fields: [seasonId], references: [id])
+  assignments AnimalPaddockAssignment[]
+
+  @@unique([seasonId, code])
+  @@index([seasonId, active])
+}
+
+model AnimalPaddockAssignment {
+  id               String    @id
+  seasonId         String
+  animalId         String
+  paddockId        String
+  active           Boolean   @default(true)
+  assignedAt       DateTime
+  endedAt          DateTime?
+  reason           String?
+  assignedByUserId String
+  createdAt        DateTime  @default(now())
+  season           Season    @relation(fields: [seasonId], references: [id])
+  animal           Animal    @relation(fields: [animalId], references: [id])
+  paddock          Paddock   @relation(fields: [paddockId], references: [id])
+
+  @@index([seasonId, active])
+  @@index([animalId, active])
+  @@index([paddockId, active])
 }
 
 model AnimalWeight {
@@ -1058,10 +1102,13 @@ model SaleShare {
   listPriceSnapshot      Decimal @db.Decimal(18, 4)
   discountAmountSnapshot Decimal @default(0) @db.Decimal(18, 4)
   agreedPriceSnapshot    Decimal @db.Decimal(18, 4)
+  active                  Boolean @default(true)
+  endedAt                 DateTime?
   sale                   Sale    @relation(fields: [saleId], references: [id])
   share                  Share   @relation(fields: [shareId], references: [id])
 
   @@id([saleId, shareId])
+  @@index([shareId, active])
 }
 
 model PriceTariff {
@@ -1210,6 +1257,8 @@ model JournalEntry {
   lines          JournalLine[]
   receipts       Receipt[]
   invoice        PurchaseInvoice?
+  supplierPayment SupplierPayment?
+  expenseDocument ExpenseDocument?
 
   @@unique([sourceType, sourceId])
   @@index([seasonId, occurredAt])
@@ -1446,19 +1495,26 @@ model ElectronicDocumentWebhookInbox {
 }
 
 model ProxyDocument {
-  id         String               @id
-  customerId String
-  status     String
-  version    Int
-  storageKey String
-  signedAt   DateTime?
-  revokedAt  DateTime?
-  createdAt  DateTime             @default(now())
-  updatedAt  DateTime             @updatedAt
-  customer   Customer             @relation(fields: [customerId], references: [id])
-  shares     ProxyDocumentShare[]
+  id               String               @id
+  seasonId         String
+  customerId       String
+  status           String
+  version          Int
+  method           String
+  storageKey       String
+  mimeType         String?
+  sizeBytes        Int?
+  createdByUserId  String
+  signedAt         DateTime?
+  revokedAt        DateTime?
+  revocationReason String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  season           Season               @relation(fields: [seasonId], references: [id])
+  customer         Customer             @relation(fields: [customerId], references: [id])
+  shares           ProxyDocumentShare[]
 
-  @@index([customerId])
+  @@index([seasonId, customerId])
 }
 
 model ProxyDocumentShare {

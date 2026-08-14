@@ -28,6 +28,7 @@
     "test:platform-postgres": "vitest run packages/database-platform/tests/platform-postgres.integration.test.ts",
     "test:tenant-isolation": "vitest run packages/database-tenant/tests/tenant-isolation.integration.test.ts",
     "test:invoice-postgres": "vitest run packages/database-tenant/tests/invoice-360.integration.test.ts",
+    "test:core-postgres": "vitest run packages/database-tenant/tests/faz-2d-6-closure.integration.test.ts",
     "test:offline": "vitest run packages/offline/tests/offline-sync.test.ts",
     "test:e2e:list": "playwright test --list",
     "test:e2e": "playwright test",

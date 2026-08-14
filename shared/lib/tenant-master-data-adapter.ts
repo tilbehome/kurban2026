@@ -271,7 +271,7 @@ function legacyOperatorPermissions(): readonly string[] {
   return [
     "kurban.season.read.organization", "kurban.customer.read.organization", "kurban.customer.manage.organization",
     "kurban.supplier.read.organization", "kurban.supplier.manage.organization", "kurban.purchase.manage.organization",
-    "kurban.expense.manage.organization", "kurban.animal.read.organization", "kurban.animal.manage.organization",
+    "kurban.expense.manage.organization", "kurban.animal.read.organization", "kurban.animal.manage.organization", "kurban.paddock.manage.organization",
     "kurban.animal-health.manage.assigned_record", "kurban.qurban-queue.manage.operational_period",
     "kurban.pricing.manage.organization", "kurban.share.read.operational_period", "kurban.share.reserve.operational_period",
     "kurban.sale.confirm.operational_period", "kurban.sale.cancel.operational_period", "kurban.sale.transfer.operational_period",

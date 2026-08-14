@@ -6,6 +6,8 @@ import { gunlukRapor } from "@/modules/kasa/lib/kasa.service";
 import { formatPara } from "@/shared/lib/para";
 import { formatTarih } from "@/shared/lib/tarih";
 import { Banknote, ArrowUpRight, CreditCard, TrendingUp } from "lucide-react";
+import { redirect } from "next/navigation";
+import { masterDataMode } from "@/shared/lib/tenant-master-data-adapter";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +16,7 @@ interface PageProps {
 }
 
 export default async function KasaPage({ searchParams }: PageProps) {
+  if (masterDataMode() === "postgres") redirect("/tahsilat/calisma-alani");
   const sp = await searchParams;
   const tarih = sp.tarih ? new Date(sp.tarih) : new Date();
   if (Number.isNaN(tarih.getTime())) tarih.setTime(Date.now());

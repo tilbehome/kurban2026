@@ -37,7 +37,7 @@ Bu envanter `pnpm validate:docs:write` ile deterministik üretilir. Normal `pnpm
 | runbooks | 9 |
 | releases | 2 |
 | training | 2 |
-| evidence | 11 |
+| evidence | 12 |
 | archive | 50 |
 | app-package-readme | 0 |
 | third-party-generated | 0 |
@@ -145,6 +145,7 @@ Bu envanter `pnpm validate:docs:write` ile deterministik üretilir. Normal `pnpm
 | [docs/evidence/EVD-009-YUK-SOAK-SABLONU.md](../evidence/EVD-009-YUK-SOAK-SABLONU.md) | EVD-009 | Yük, Performans ve Soak Kanıt Şablonu | PLANNED | false | evidence_record_or_template | evidence | QA-and-Reliability | 2026-08-13; not_applicable | TST-001 / GOV-003 | TST-001 / GOV-003 | tutulacak |
 | [docs/evidence/EVD-010-KURBAN-GUNU-PROVA-SABLONU.md](../evidence/EVD-010-KURBAN-GUNU-PROVA-SABLONU.md) | EVD-010 | Kurban Günü Prova Kanıt Şablonu | PLANNED | false | evidence_record_or_template | evidence | Operations-and-QA | 2026-08-13; not_applicable | TST-001 / GOV-003 | TST-001 / GOV-003 | tutulacak |
 | [docs/evidence/EVD-012-RELEASE-GO-NO-GO-SABLONU.md](../evidence/EVD-012-RELEASE-GO-NO-GO-SABLONU.md) | EVD-012 | Release Go/No-Go Kanıt Şablonu | PLANNED | false | evidence_record_or_template | evidence | Release | 2026-08-13; not_applicable | TST-001 / GOV-003 | TST-001 / GOV-003 | tutulacak |
+| [docs/evidence/EVD-013-FAZ-2D-6-KAPANIS-KANITI.md](../evidence/EVD-013-FAZ-2D-6-KAPANIS-KANITI.md) | EVD-013 | Faz 2D–6 Kapanış Kanıtı | IMPLEMENTED_UNVERIFIED | false | evidence_record | evidence | Product-and-Architecture | 2026-08-14; not_applicable | TST-001 / GOV-003 | TST-001 / GOV-003 | tutulacak |
 | [docs/evidence/README.md](../evidence/README.md) | EVD-IDX-001 | Test ve Operasyon Kanıt İndeksi | PLANNED | false | evidence_record_or_template | evidence | QA-and-Operations | 2026-08-12; not_applicable | TST-001 / GOV-003 | TST-001 / GOV-003 | tutulacak |
 | [docs/governance/GOV-001-DOKUMANTASYON-POLITIKASI.md](../governance/GOV-001-DOKUMANTASYON-POLITIKASI.md) | GOV-001 | TilbeCore Dokümantasyon Politikası | VERIFIED | true | documentation_lifecycle_source | governance | Product-and-Architecture | 2026-08-12; 74915b6f3f1f8d53116b760b6a6be9797111efa5 | GOV-001 | yok | tutulacak |
 | [docs/governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md](../governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md) | GOV-003 | Kaynak Önceliği ve Kanıt Standardı | VERIFIED | true | source_precedence_and_evidence_source | governance | Product-and-Architecture | 2026-08-13; not_applicable | GOV-001 | GOV-001 | tutulacak |

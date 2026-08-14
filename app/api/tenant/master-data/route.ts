@@ -18,6 +18,8 @@ const CommandSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("animal-weight"), seasonId: z.string().optional(), animalId: z.string().min(3), kind: z.enum(["purchase", "live", "carcass", "control"]), weightKg: z.string(), measuredAt: z.string().optional(), note: z.string().optional() }),
   z.object({ action: z.literal("animal-health"), seasonId: z.string().optional(), animalId: z.string().min(3), eventType: z.string().min(2), status: z.string().min(2), notes: z.string().optional(), occurredAt: z.string().optional() }),
   z.object({ action: z.literal("qurban-assign"), seasonId: z.string().optional(), animalId: z.string().min(3), qurbanNo: z.string().optional(), queueNo: z.number().int().positive().optional(), reason: z.string().optional() }),
+  z.object({ action: z.literal("paddock-create"), seasonId: z.string().optional(), code: z.string().min(1).max(24), name: z.string().min(2).max(100), capacity: z.number().int().positive().optional() }),
+  z.object({ action: z.literal("paddock-assign"), seasonId: z.string().optional(), animalId: z.string().min(3), paddockId: z.string().min(3), reason: z.string().max(500).optional() }),
 ]);
 
 export async function GET(req: Request) {
@@ -28,13 +30,14 @@ export async function GET(req: Request) {
   const context = tenantUseCaseContext(session, { request: req, readOnly: true });
   const url = new URL(req.url);
   const seasonId = url.searchParams.get("seasonId") ?? tenantConfiguredActiveSeasonId();
-  const [seasons, suppliers, animals, customers] = await Promise.all([
+  const [seasons, suppliers, animals, customers, paddocks] = await Promise.all([
     service.listSeasons(context),
     service.listSuppliers(context, seasonId),
     seasonId ? service.listAnimals(context, seasonId) : Promise.resolve([]),
     service.searchCustomers(context, { seasonId, limit: 200 }),
+    seasonId ? service.listPaddocks(context, seasonId) : Promise.resolve([]),
   ]);
-  return NextResponse.json({ mode: "postgres", seasonId, data: { seasons, suppliers, animals, customers } });
+  return NextResponse.json({ mode: "postgres", seasonId, data: { seasons, suppliers, animals, customers, paddocks } });
 }
 
 export async function POST(req: Request) {
@@ -71,6 +74,8 @@ export async function POST(req: Request) {
       case "animal-weight": result = await service.recordAnimalWeight(context, { id: `animal_weight_${randomUUID()}`, animalId: body.animalId, seasonId: selectedSeason ?? tenantActiveSeasonId(), kind: body.kind, weightKg: body.weightKg, measuredAt: body.measuredAt ?? new Date().toISOString(), note: body.note }); break;
       case "animal-health": result = await service.recordAnimalHealthEvent(context, { id: `health_${randomUUID()}`, animalId: body.animalId, seasonId: selectedSeason ?? tenantActiveSeasonId(), eventType: body.eventType, status: body.status, notes: body.notes, occurredAt: body.occurredAt ?? new Date().toISOString() }); break;
       case "qurban-assign": result = await service.assignQurban(context, { id: `assignment_${randomUUID()}`, animalId: body.animalId, seasonId: selectedSeason ?? tenantActiveSeasonId(), qurbanNo: body.qurbanNo, queueNo: body.queueNo, reason: body.reason }); break;
+      case "paddock-create": result = await service.createPaddock(context, { id: `paddock_${randomUUID()}`, seasonId: selectedSeason ?? tenantActiveSeasonId(), code: body.code, name: body.name, capacity: body.capacity }); break;
+      case "paddock-assign": result = await service.assignAnimalToPaddock(context, { id: `paddock_assignment_${randomUUID()}`, seasonId: selectedSeason ?? tenantActiveSeasonId(), animalId: body.animalId, paddockId: body.paddockId, reason: body.reason }); break;
     }
     return NextResponse.json({ success: true, data: result });
   } catch (error) {

@@ -8,12 +8,14 @@ import {
   atamaIstatistik,
 } from "@/modules/hayvanlar/lib/hisse-atama.service";
 import { HisseAtamaClient } from "@/modules/hayvanlar/components/hisse-atama/HisseAtamaClient";
+import { masterDataMode } from "@/shared/lib/tenant-master-data-adapter";
 
 export const dynamic = "force-dynamic";
 
 export default async function HisseAtamaPage() {
   const oturum = await aktifOturum();
   if (!oturum) redirect("/giris");
+  if (masterDataMode() === "postgres") redirect("/tahsilat/calisma-alani");
 
   if (!izinKontrol(oturum, "hayvanlar.goruntule")) {
     return (

@@ -35,6 +35,8 @@ export interface CreateProxyDocumentInput {
   shareIds: string[];
   method: "face_to_face_oral" | "phone" | "voice_recording";
   storageKey: string;
+  mimeType?: string;
+  sizeBytes?: number;
   status?: "draft" | "signed";
 }
 
@@ -112,6 +114,7 @@ export interface CreateLoadingListInput {
 export interface OperationsRepository {
   createProxyDocument(input: CreateProxyDocumentInput, meta: CommandMeta): Promise<{ id: string; shareIds: string[] }>;
   revokeProxyDocument(input: { id: string; seasonId: string; reason: string }, meta: CommandMeta): Promise<{ id: string }>;
+  getProxyDocument(input: { id: string; seasonId: string }): Promise<{ id: string; seasonId: string; customerId: string; status: string; storageKey: string; mimeType?: string; sizeBytes?: number } | null>;
   issueQrToken(input: IssueQrTokenInput & { opaqueToken: string }, meta: CommandMeta): Promise<{ id: string; opaqueToken: string }>;
   consumeQrToken(input: { opaqueToken: string; purpose: QrPurpose; now: string }, meta: CommandMeta): Promise<{ id: string; targetId: string }>;
   createSlaughterJob(input: CreateSlaughterJobInput, meta: CommandMeta): Promise<{ id: string }>;
@@ -140,6 +143,14 @@ export class TenantOperationsService {
   async revokeProxyDocument(context: TenantUseCaseContext, input: { id: string; seasonId: string; reason: string }) {
     await this.authorize(context, "qurban.document.manage.operational_period", { operationalPeriodId: input.seasonId });
     return this.repository.revokeProxyDocument(input, commandMeta(context));
+  }
+
+  async getProxyDocument(context: TenantUseCaseContext, input: { id: string; seasonId: string }) {
+    await this.authorize(context, "qurban.proxy.read.operational_period", { operationalPeriodId: input.seasonId, assignedRecord: { type: "proxy_document", id: input.id } });
+    const document = await this.repository.getProxyDocument(input);
+    if (!document) throw new TenantOperationsError("PROXY_DOCUMENT_NOT_FOUND");
+    assertProtectedStorage(document.storageKey);
+    return document;
   }
 
   async issueQrToken(context: TenantUseCaseContext, input: IssueQrTokenInput) {

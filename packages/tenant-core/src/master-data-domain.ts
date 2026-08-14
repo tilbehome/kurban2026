@@ -1,5 +1,5 @@
 import type { TenantInstanceId, UserId } from "@tilbecore/contracts";
-import type { DecimalString, KilogramString, SeasonId, SeasonStatus } from "./tenant-domain";
+import type { DecimalString, KilogramString, SeasonStatus } from "./tenant-domain";
 import { assertSeasonTransition, decimal, kilogram } from "./tenant-domain";
 
 export type TenantMasterDataPermission =
@@ -14,6 +14,7 @@ export type TenantMasterDataPermission =
   | "kurban.expense.manage.organization"
   | "kurban.animal.read.organization"
   | "kurban.animal.manage.organization"
+  | "kurban.paddock.manage.organization"
   | "kurban.animal-health.manage.assigned_record"
   | "kurban.qurban-queue.manage.operational_period";
 
@@ -204,6 +205,32 @@ export interface QurbanAssignmentInput {
   reason?: string;
 }
 
+export interface PaddockInput {
+  id: string;
+  seasonId: string;
+  code: string;
+  name: string;
+  capacity?: number;
+}
+
+export interface AnimalPaddockAssignmentInput {
+  id: string;
+  seasonId: string;
+  animalId: string;
+  paddockId: string;
+  reason?: string;
+}
+
+export interface PaddockListItem {
+  id: string;
+  seasonId: string;
+  code: string;
+  name: string;
+  capacity?: number;
+  active: boolean;
+  occupied: number;
+}
+
 export interface DuplicateCustomerCandidate {
   id: string;
   displayName: string;
@@ -285,6 +312,7 @@ export interface TenantMasterDataRepository {
   listSeasons(): Promise<SeasonListItem[]>;
   listSuppliers(seasonId?: string): Promise<SupplierListItem[]>;
   listAnimals(seasonId: string): Promise<AnimalListItem[]>;
+  listPaddocks(seasonId: string): Promise<PaddockListItem[]>;
   getAnimal(id: string): Promise<AnimalDetail | null>;
   upsertBusinessProfile(input: BusinessProfileInput, meta: CommandMeta): Promise<{ id: string }>;
   createLocation(input: LocationInput & { id: string }, meta: CommandMeta): Promise<{ id: string }>;
@@ -306,6 +334,8 @@ export interface TenantMasterDataRepository {
   recordAnimalWeight(input: AnimalWeightInput, meta: CommandMeta): Promise<{ id: string }>;
   recordAnimalHealthEvent(input: AnimalHealthEventInput, meta: CommandMeta): Promise<{ id: string }>;
   assignQurban(input: QurbanAssignmentInput, meta: CommandMeta): Promise<{ id: string }>;
+  createPaddock(input: PaddockInput, meta: CommandMeta): Promise<{ id: string }>;
+  assignAnimalToPaddock(input: AnimalPaddockAssignmentInput, meta: CommandMeta): Promise<{ id: string }>;
 }
 
 const WRITEABLE_SEASON_STATES: Record<string, readonly SeasonStatus[]> = {
@@ -316,6 +346,7 @@ const WRITEABLE_SEASON_STATES: Record<string, readonly SeasonStatus[]> = {
   animal: ["preparation", "sales"],
   animal_health: ["preparation", "sales", "slaughter"],
   qurban_queue: ["preparation", "sales", "slaughter"],
+  paddock: ["preparation", "sales", "slaughter"],
 };
 
 export function assertPermission(context: TenantUseCaseContext, permission: TenantMasterDataPermission): void {

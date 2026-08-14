@@ -48,6 +48,7 @@ Bu dizindeki dosyalar kanıt şablonudur; var olmaları bir kontrolün çalışt
 - [Yük ve soak](EVD-009-YUK-SOAK-SABLONU.md)
 - [Kurban Günü provası](EVD-010-KURBAN-GUNU-PROVA-SABLONU.md)
 - [Release go/no-go](EVD-012-RELEASE-GO-NO-GO-SABLONU.md)
+- [Faz 2D–6 kapanış kanıtı](EVD-013-FAZ-2D-6-KAPANIS-KANITI.md)
 
 ## Hassas bilgi
 

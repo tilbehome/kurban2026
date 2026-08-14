@@ -6,6 +6,7 @@ import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 import { izinKontrol } from "@/shared/lib/izinler";
+import { masterDataMode } from "@/shared/lib/tenant-master-data-adapter";
 import {
   VEKALET_DOSYA_KLASOR,
   vekaletDosyaDepoUrl,
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
   if (!oturum || !izinKontrol(oturum, "musteriler.vekalet.yaz")) {
     return NextResponse.json({ basarili: false, hata: "Yetki yok" }, { status: 403 });
   }
+  if (masterDataMode() === "postgres") return NextResponse.json({ basarili: false, code: "LEGACY_PROXY_UPLOAD_DISABLED", route: "/api/tenant/operations" }, { status: 409 });
 
   let form: FormData;
   try {

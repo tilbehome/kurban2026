@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AppShell } from "@/shared/components/AppShell";
 import { SayfaBaslik } from "@/shared/components/SayfaBaslik";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,10 +7,12 @@ import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/shared/lib/prisma";
 import { formatPara } from "@/shared/lib/para";
 import { PackageOpen, UserPlus } from "lucide-react";
+import { masterDataMode } from "@/shared/lib/tenant-master-data-adapter";
 
 export const dynamic = "force-dynamic";
 
 export default async function BosHisselerPage() {
+  if (masterDataMode() === "postgres") redirect("/tahsilat/calisma-alani");
   const bosHisseler = await prisma.hisse.findMany({
     where: { musteriId: null },
     include: {
