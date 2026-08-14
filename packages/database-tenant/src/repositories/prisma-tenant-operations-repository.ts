@@ -30,13 +30,20 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
     return command(this.db, "proxy.document.create", meta, async (tx) => {
       const shareCount = await tx.share.count({ where: { id: { in: input.shareIds }, shareCard: { seasonId: input.seasonId } } });
       if (shareCount !== input.shareIds.length) throw new TenantOperationsError("PROXY_SHARE_SCOPE_INVALID");
+      const ownedShareCount = await tx.share.count({ where: { id: { in: input.shareIds }, shareCard: { seasonId: input.seasonId }, customerId: input.grantorCustomerId, status: "sold" } });
+      if (ownedShareCount !== input.shareIds.length) throw new TenantOperationsError("PROXY_GRANTOR_SHARE_MISMATCH");
       await tx.proxyDocument.create({
         data: {
           id: input.id,
+          seasonId: input.seasonId,
           customerId: input.grantorCustomerId,
           status: input.status ?? "signed",
           version: 1,
+          method: input.method,
           storageKey: input.storageKey,
+          mimeType: input.mimeType,
+          sizeBytes: input.sizeBytes,
+          createdByUserId: meta.actorUserId,
           signedAt: input.status === "draft" ? undefined : meta.occurredAt,
           shares: { create: input.shareIds.map((shareId) => ({ shareId })) },
         },
@@ -48,10 +55,16 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
 
   revokeProxyDocument(input: { id: string; seasonId: string; reason: string }, meta: CommandMeta) {
     return command(this.db, "proxy.document.revoke", meta, async (tx) => {
-      await tx.proxyDocument.update({ where: { id: input.id }, data: { status: "revoked", revokedAt: meta.occurredAt, version: { increment: 1 } } });
+      const changed = await tx.proxyDocument.updateMany({ where: { id: input.id, seasonId: input.seasonId, status: { not: "revoked" } }, data: { status: "revoked", revokedAt: meta.occurredAt, revocationReason: input.reason, version: { increment: 1 } } });
+      if (changed.count !== 1) throw new TenantOperationsError("PROXY_DOCUMENT_NOT_FOUND_OR_REVOKED");
       await evidence(tx, meta, "proxy.document.revoked", "ProxyDocument", input.id, { seasonId: input.seasonId, reason: input.reason });
       return { id: input.id };
     });
+  }
+
+  async getProxyDocument(input: { id: string; seasonId: string }) {
+    const row = await this.db.proxyDocument.findFirst({ where: { id: input.id, seasonId: input.seasonId }, select: { id: true, seasonId: true, customerId: true, status: true, storageKey: true, mimeType: true, sizeBytes: true } });
+    return row ? { ...row, mimeType: row.mimeType ?? undefined, sizeBytes: row.sizeBytes ?? undefined } : null;
   }
 
   issueQrToken(input: IssueQrTokenInput & { opaqueToken: string }, meta: CommandMeta) {

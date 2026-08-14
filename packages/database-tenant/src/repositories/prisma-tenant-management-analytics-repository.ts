@@ -17,13 +17,13 @@ export class PrismaTenantManagementAnalyticsRepository implements ManagementAnal
     const seasonFilter = input.seasonId ? Prisma.sql`WHERE "seasonId" = ${input.seasonId}` : Prisma.empty;
     const shareFilter = input.seasonId ? Prisma.sql`WHERE sc."seasonId" = ${input.seasonId}` : Prisma.empty;
     const [salesCount, reservationsActive, occupancy, listPrice, discount, netSales, receiptTotal, packages, deliveries, coldStored, approvals, overdueApprovals, auditRecent, bottlenecks, exceptions] = await Promise.all([
-      count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "Sale" ${seasonFilter}`),
+      count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "Sale" WHERE "status" = 'confirmed' ${input.seasonId ? Prisma.sql`AND "seasonId" = ${input.seasonId}` : Prisma.empty}`),
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "ShareReservation" WHERE "status" = 'active' ${input.seasonId ? Prisma.sql`AND "seasonId" = ${input.seasonId}` : Prisma.empty}`),
       this.db.$queryRaw<Array<{ sold: bigint | number; total: bigint | number }>>`SELECT COUNT(*) FILTER (WHERE s."status" = 'sold') AS sold, COUNT(*) AS total FROM "Share" s JOIN "ShareCard" sc ON sc."id" = s."shareCardId" ${shareFilter}`.then((rows) => rows[0] ?? { sold: 0, total: 0 }),
-      money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("listPriceSnapshot"), 0) AS value FROM "Sale" ${seasonFilter}`),
-      money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("discountAmount"), 0) AS value FROM "Sale" ${seasonFilter}`),
-      money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("priceSnapshot"), 0) AS value FROM "Sale" ${seasonFilter}`),
-      money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("totalAmount"), 0) AS value FROM "Receipt" ${seasonFilter}`),
+      money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("listPriceSnapshot"), 0) AS value FROM "Sale" WHERE "status" = 'confirmed' ${input.seasonId ? Prisma.sql`AND "seasonId" = ${input.seasonId}` : Prisma.empty}`),
+      money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("discountAmount"), 0) AS value FROM "Sale" WHERE "status" = 'confirmed' ${input.seasonId ? Prisma.sql`AND "seasonId" = ${input.seasonId}` : Prisma.empty}`),
+      money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM("priceSnapshot"), 0) AS value FROM "Sale" WHERE "status" = 'confirmed' ${input.seasonId ? Prisma.sql`AND "seasonId" = ${input.seasonId}` : Prisma.empty}`),
+      money(this.db.$queryRaw<MoneyRow[]>`SELECT COALESCE(SUM(CASE WHEN "reversalOfId" IS NULL AND "status" IN ('posted', 'reversed') THEN "totalAmount" WHEN "reversalOfId" IS NOT NULL AND "status" = 'reversed' THEN -"totalAmount" ELSE 0 END), 0) AS value FROM "Receipt" ${seasonFilter}`),
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "PackageRecord" p JOIN "Share" s ON s."id" = p."shareId" JOIN "ShareCard" sc ON sc."id" = s."shareCardId" ${shareFilter}`),
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "DeliveryRecord" d JOIN "Share" s ON s."id" = d."shareId" JOIN "ShareCard" sc ON sc."id" = s."shareCardId" ${shareFilter} ${input.seasonId ? Prisma.sql`AND d."status" = 'delivered'` : Prisma.sql`WHERE d."status" = 'delivered'`}`),
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "PackageRecord" p JOIN "Share" s ON s."id" = p."shareId" JOIN "ShareCard" sc ON sc."id" = s."shareCardId" ${shareFilter} ${input.seasonId ? Prisma.sql`AND p."locationStatus" = 'stored'` : Prisma.sql`WHERE p."locationStatus" = 'stored'`}`),
@@ -146,6 +146,48 @@ export class PrismaTenantManagementAnalyticsRepository implements ManagementAnal
         LEFT JOIN "DeliveryRecord" d ON d."shareId" = s."id" AND d."status" = 'delivered'
         ${seasonId ? Prisma.sql`WHERE sc."seasonId" = ${seasonId}` : Prisma.empty}
         LIMIT 500
+      `;
+    }
+    if (reportKey === "finance-reconciliation") {
+      return this.db.$queryRaw<Array<Record<string, string | number | null>>>`
+        SELECT je."id", je."sourceType", je."sourceId", je."status", je."occurredAt"::text AS "occurredAt",
+          COALESCE(SUM(jl."amount") FILTER (WHERE jl."side" = 'debit'), 0)::text AS "debit",
+          COALESCE(SUM(jl."amount") FILTER (WHERE jl."side" = 'credit'), 0)::text AS "credit",
+          (COALESCE(SUM(jl."amount") FILTER (WHERE jl."side" = 'debit'), 0) - COALESCE(SUM(jl."amount") FILTER (WHERE jl."side" = 'credit'), 0))::text AS "difference"
+        FROM "JournalEntry" je JOIN "JournalLine" jl ON jl."journalEntryId" = je."id"
+        ${seasonId ? Prisma.sql`WHERE je."seasonId" = ${seasonId}` : Prisma.empty}
+        GROUP BY je."id" ORDER BY je."occurredAt" DESC LIMIT 500
+      `;
+    }
+    if (reportKey === "customer-season-balances") {
+      return this.db.$queryRaw<Array<Record<string, string | number | null>>>`
+        SELECT c."id" AS "customerId", c."displayName", a."debitTotal"::text AS "debit", a."creditTotal"::text AS "credit", a."balance"::text AS "balance"
+        FROM "CustomerSeasonAccount" a JOIN "Customer" c ON c."id" = a."customerId"
+        ${seasonId ? Prisma.sql`WHERE a."seasonId" = ${seasonId}` : Prisma.empty}
+        ORDER BY ABS(a."balance") DESC, c."displayName" LIMIT 500
+      `;
+    }
+    if (reportKey === "supplier-purchases") {
+      return this.db.$queryRaw<Array<Record<string, string | number | null>>>`
+        SELECT s."id" AS "supplierId", s."displayName", COUNT(i."id")::int AS "invoiceCount",
+          COALESCE(SUM(i."subtotal"), 0)::text AS "subtotal", COALESCE(SUM(i."taxTotal"), 0)::text AS "tax",
+          COALESCE(SUM(i."grandTotal"), 0)::text AS "grandTotal", COALESCE(a."balance", 0)::text AS "balance"
+        FROM "Supplier" s LEFT JOIN "PurchaseInvoice" i ON i."supplierId" = s."id" AND i."accountingStatus" = 'POSTED'
+          ${seasonId ? Prisma.sql`AND i."seasonId" = ${seasonId}` : Prisma.empty}
+        LEFT JOIN "SupplierAccount" a ON a."supplierId" = s."id" ${seasonId ? Prisma.sql`AND a."seasonId" = ${seasonId}` : Prisma.empty}
+        GROUP BY s."id", s."displayName", a."balance" ORDER BY SUM(i."grandTotal") DESC NULLS LAST LIMIT 500
+      `;
+    }
+    if (reportKey === "animal-cost-health") {
+      return this.db.$queryRaw<Array<Record<string, string | number | null>>>`
+        SELECT a."id" AS "animalId", a."earTag", a."status", a."purchaseAmount"::text AS "purchaseAmount",
+          a."liveWeightKg"::text AS "liveWeightKg", COUNT(DISTINCT h."id")::int AS "healthEventCount",
+          p."code" AS "paddockCode", p."name" AS "paddockName"
+        FROM "Animal" a LEFT JOIN "AnimalHealthEvent" h ON h."animalId" = a."id"
+        LEFT JOIN "AnimalPaddockAssignment" apa ON apa."animalId" = a."id" AND apa."active" = true
+        LEFT JOIN "Paddock" p ON p."id" = apa."paddockId"
+        ${seasonId ? Prisma.sql`WHERE a."seasonId" = ${seasonId}` : Prisma.empty}
+        GROUP BY a."id", p."code", p."name" ORDER BY a."earTag" LIMIT 500
       `;
     }
     return this.db.$queryRaw<Array<Record<string, string | number | null>>>`

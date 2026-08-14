@@ -500,7 +500,7 @@ function validateBinding(binding: TenantBackupBinding): void {
 function validateStoredMetadata(metadata: TenantBackupMetadata): void {
   validateBackupId(metadata.id);
   validateBinding(metadata);
-  if (!/^000[0-9]_[a-z0-9_]{3,100}$/.test(metadata.migrationVersion)) {
+  if (!/^[0-9]{4}_[a-z0-9_]{3,100}$/.test(metadata.migrationVersion)) {
     throw new TenantBackupError("BACKUP_MIGRATION_VERSION_INVALID");
   }
   if (!/^[a-zA-Z0-9_.-]+\.dump$/.test(metadata.artifactFileName)) {

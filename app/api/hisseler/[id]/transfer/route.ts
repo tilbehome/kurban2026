@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/shared/lib/prisma";
 import { aktifOturum } from "@/shared/lib/session";
 import { izinKontrol } from "@/shared/lib/izinler";
+import { masterDataMode } from "@/shared/lib/tenant-master-data-adapter";
 import { yayinla } from "@/shared/lib/events";
 import { auditLog, ipCikar } from "@/shared/lib/audit";
 
@@ -34,6 +35,7 @@ export async function POST(req: Request, { params }: RouteParams) {
       { status: 401 },
     );
   }
+  if (masterDataMode() === "postgres") return NextResponse.json({ basarili: false, code: "LEGACY_SHARE_TRANSFER_DISABLED", route: "/api/tenant/sales-finance" }, { status: 409 });
   if (!izinKontrol(oturum, "hisseler.transfer")) {
     return NextResponse.json(
       { basarili: false, hata: "Transfer yetkiniz yok" },

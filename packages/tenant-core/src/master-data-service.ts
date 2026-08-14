@@ -16,6 +16,7 @@ import {
   type AnimalHealthEventInput,
   type AnimalInput,
   type AnimalWeightInput,
+  type AnimalPaddockAssignmentInput,
   type BusinessProfileInput,
   type CustomerInput,
   type CustomerPatchInput,
@@ -23,12 +24,14 @@ import {
   type ExpenseDocumentInput,
   type LocationInput,
   type PurchaseInvoiceInput,
+  type PaddockInput,
   type QurbanAssignmentInput,
   type SeasonInput,
   type SupplierInput,
   type SupplierPaymentInput,
   type TenantMasterDataRepository,
   type TenantMasterDataPermission,
+  TenantMasterDataError,
   type TenantUseCaseContext,
 } from "./master-data-domain";
 
@@ -53,6 +56,11 @@ export class TenantMasterDataService {
   async getAnimal(context: TenantUseCaseContext, id: string) {
     await this.authorize(context, "kurban.animal.read.organization", { assignedRecord: { type: "animal", id } });
     return this.repository.getAnimal(id);
+  }
+
+  async listPaddocks(context: TenantUseCaseContext, seasonId: string) {
+    await this.authorize(context, "kurban.animal.read.organization", { operationalPeriodId: seasonId });
+    return this.repository.listPaddocks(seasonId);
   }
 
   async upsertBusinessProfile(context: TenantUseCaseContext, input: BusinessProfileInput) {
@@ -208,6 +216,22 @@ export class TenantMasterDataService {
     await this.assertSeason(input.seasonId, "qurban_queue");
     if (input.queueNo !== undefined && (!Number.isInteger(input.queueNo) || input.queueNo < 1)) throw new Error("QURBAN_QUEUE_INVALID");
     return this.repository.assignQurban(input, commandMeta(context));
+  }
+
+  async createPaddock(context: TenantUseCaseContext, input: PaddockInput) {
+    await this.authorize(context, "kurban.paddock.manage.organization", { operationalPeriodId: input.seasonId });
+    await this.assertSeason(input.seasonId, "paddock");
+    const code = input.code.trim().toLocaleUpperCase("tr-TR");
+    if (!/^[A-Z0-9_-]{1,24}$/.test(code)) throw new TenantMasterDataError("PADDOCK_CODE_INVALID");
+    if (input.name.trim().length < 2) throw new TenantMasterDataError("PADDOCK_NAME_INVALID");
+    if (input.capacity !== undefined && (!Number.isInteger(input.capacity) || input.capacity < 1)) throw new TenantMasterDataError("PADDOCK_CAPACITY_INVALID");
+    return this.repository.createPaddock({ ...input, code, name: input.name.trim() }, commandMeta(context));
+  }
+
+  async assignAnimalToPaddock(context: TenantUseCaseContext, input: AnimalPaddockAssignmentInput) {
+    await this.authorize(context, "kurban.paddock.manage.organization", { operationalPeriodId: input.seasonId, assignedRecord: { type: "animal", id: input.animalId } });
+    await this.assertSeason(input.seasonId, "paddock");
+    return this.repository.assignAnimalToPaddock(input, commandMeta(context));
   }
 
   private async requiredSeason(seasonId: string) {

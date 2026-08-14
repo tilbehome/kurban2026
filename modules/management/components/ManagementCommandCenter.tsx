@@ -34,6 +34,10 @@ const reports = [
   { key: "sales-occupancy", label: "Satış, rezervasyon ve doluluk" },
   { key: "operations-bottleneck", label: "Kesim süreleri ve darboğazlar" },
   { key: "delivery-cold-storage", label: "Soğuk oda, yükleme ve teslimat" },
+  { key: "finance-reconciliation", label: "Ledger borç/alacak mutabakatı" },
+  { key: "customer-season-balances", label: "Müşteri sezon carileri" },
+  { key: "supplier-purchases", label: "Tedarikçi, alış ve borç özeti" },
+  { key: "animal-cost-health", label: "Hayvan maliyet, sağlık ve padok" },
   { key: "audit-exceptions", label: "Kullanıcı işlemleri, audit ve istisnalar" },
 ] as const;
 

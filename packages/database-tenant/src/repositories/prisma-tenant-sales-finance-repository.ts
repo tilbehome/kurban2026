@@ -203,6 +203,7 @@ export class PrismaTenantSalesFinanceRepository implements TenantSalesFinanceRep
   recordReceipt(input: NormalizedRecordReceiptInput, meta: CommandMeta) {
     return this.command("receipt.record", meta, async (tx) => {
       await lockSeason(tx, input.seasonId, ["sales", "slaughter", "delivery", "reconciliation"]);
+      await validateReceiptAllocations(tx, input);
       const receipt = await createReceipt(tx, input, meta);
       await evidence(tx, meta, "receipt.recorded", "Receipt", receipt.id, { customerId: input.customerId, saleId: input.saleId ?? null, totalAmount: input.totalAmount });
       return receipt;
@@ -212,14 +213,45 @@ export class PrismaTenantSalesFinanceRepository implements TenantSalesFinanceRep
   cancelSale(input: CancelSaleInput, meta: CommandMeta) {
     return this.command("sale.cancel", meta, async (tx) => {
       await lockSeason(tx, input.seasonId, ["sales", "slaughter", "delivery", "reconciliation"]);
-      const sale = await tx.sale.findUnique({ where: { id: input.saleId }, include: { shares: true } });
+      const sale = await tx.sale.findUnique({
+        where: { id: input.saleId },
+        include: {
+          shares: { where: { active: true } },
+        },
+      });
       if (!sale || sale.seasonId !== input.seasonId) throw new TenantSalesFinanceError("SALE_NOT_FOUND");
       if (sale.status !== "confirmed") throw new TenantSalesFinanceError("SALE_NOT_CANCELLABLE");
-      const paid = await tx.paymentAllocation.aggregate({ where: { saleId: sale.id }, _sum: { amount: true } });
-      if ((paid._sum.amount?.toString() ?? "0") !== "0" && paid._sum.amount !== null) throw new TenantSalesFinanceError("SALE_WITH_PAYMENT_REQUIRES_REVERSAL_FLOW");
+      const receipts = await tx.receipt.findMany({
+        where: { status: "posted", allocations: { some: { saleId: sale.id } } },
+        include: { journalEntry: { include: { lines: { include: { account: true } } } }, methodSplits: true, allocations: true },
+      });
+      if (receipts.some((receipt) => receipt.allocations.some((allocation) => allocation.saleId !== sale.id))) {
+        throw new TenantSalesFinanceError("SALE_WITH_SHARED_PAYMENT_REQUIRES_REFUND_FLOW");
+      }
+      const originalSaleJournal = await tx.journalEntry.findUnique({ where: { sourceType_sourceId: { sourceType: "sale", sourceId: sale.id } }, include: { lines: { include: { account: true } } } });
+      if (!originalSaleJournal) throw new TenantSalesFinanceError("SALE_JOURNAL_NOT_FOUND");
+      const receiptTotal = receipts.reduce((total, receipt) => total + toUnits(receipt.totalAmount.toString()), BigInt(0));
+      for (const receipt of receipts) {
+        const reversalJournal = await reverseJournal(tx, receipt.journalEntry, "receipt_reversal", receipt.id, `${meta.idempotencyKey}:receipt:${receipt.id}`, meta.occurredAt);
+        await tx.receipt.update({ where: { id: receipt.id }, data: { status: "reversed" } });
+        await tx.receipt.create({ data: {
+          id: `receipt_reversal_${randomUUID()}`, seasonId: receipt.seasonId, customerId: receipt.customerId,
+          payerCustomerId: receipt.payerCustomerId, saleId: receipt.saleId, journalEntryId: reversalJournal.id,
+          receiptNo: `${receipt.receiptNo}-REV-${meta.requestId.slice(-8)}`, status: "reversed",
+          totalAmount: receipt.totalAmount, currency: receipt.currency, occurredAt: meta.occurredAt,
+          idempotencyKey: `${meta.idempotencyKey}:receipt-record:${receipt.id}`, reversalOfId: receipt.id,
+          methodSplits: { create: receipt.methodSplits.map((split) => ({ id: `receipt_split_reversal_${randomUUID()}`, method: split.method, amount: split.amount, referenceNo: split.referenceNo, posInstallmentCount: split.posInstallmentCount, posFeeAmount: split.posFeeAmount })) },
+          allocations: { create: receipt.allocations.map((allocation) => ({ id: `allocation_reversal_${randomUUID()}`, saleId: allocation.saleId, customerId: allocation.customerId, shareId: allocation.shareId, amount: allocation.amount })) },
+        } });
+      }
+      await reverseJournal(tx, originalSaleJournal, "sale_cancellation", sale.id, `${meta.idempotencyKey}:sale`, meta.occurredAt);
       await tx.sale.update({ where: { id: sale.id }, data: { status: "cancelled", cancelledAt: meta.occurredAt, cancellationReason: input.reason } });
       await tx.share.updateMany({ where: { id: { in: sale.shares.map((item) => item.shareId) }, status: "sold" }, data: { status: "available", customerId: null, agreedPrice: null, soldAt: null, cancelledAt: meta.occurredAt, cancellationReason: input.reason } });
-      await tx.customerSeasonAccount.updateMany({ where: { customerId: sale.customerId, seasonId: sale.seasonId }, data: { debitTotal: { decrement: sale.priceSnapshot }, balance: { decrement: sale.priceSnapshot } } });
+      await tx.saleShare.updateMany({ where: { saleId: sale.id, active: true }, data: { active: false, endedAt: meta.occurredAt } });
+      await tx.customerSeasonAccount.updateMany({ where: { customerId: sale.customerId, seasonId: sale.seasonId }, data: {
+        debitTotal: { decrement: sale.priceSnapshot }, creditTotal: { decrement: fromUnits(receiptTotal) },
+        balance: { increment: fromUnits(receiptTotal - toUnits(sale.priceSnapshot.toString())) },
+      } });
       await tx.saleEvent.create({ data: { id: `sale_event_${randomUUID()}`, saleId: sale.id, type: "cancelled", reason: input.reason, actorUserId: meta.actorUserId, occurredAt: meta.occurredAt } });
       await evidence(tx, meta, "sale.cancelled", "Sale", sale.id, { reason: input.reason });
       return { id: sale.id };
@@ -238,12 +270,33 @@ export class PrismaTenantSalesFinanceRepository implements TenantSalesFinanceRep
       if (source.status !== "sold" || !source.customerId) throw new TenantSalesFinanceError("SOURCE_SHARE_NOT_TRANSFERABLE");
       if (target.status !== "available") throw new TenantSalesFinanceError("TARGET_SHARE_NOT_AVAILABLE");
       if (target.shareCard.animal.qurbanEligibility === "blocked" || target.shareCard.animal.qurbanEligibility === "not_eligible") throw new TenantSalesFinanceError("QURBAN_ELIGIBILITY_BLOCKED");
-      const saleShare = await tx.saleShare.findFirst({ where: { shareId: source.id }, include: { sale: true } });
+      const saleShare = await tx.saleShare.findFirst({ where: { shareId: source.id, active: true }, include: { sale: { include: { shares: { where: { active: true } } } } } });
+      if (!saleShare || saleShare.sale.status !== "confirmed") throw new TenantSalesFinanceError("SOURCE_SALE_NOT_TRANSFERABLE");
+      const financialUse = await tx.paymentAllocation.count({ where: { saleId: saleShare.saleId } });
+      const protectedUse = await tx.proxyDocumentShare.count({ where: { shareId: source.id, proxyDocument: { status: "signed" } } });
+      const deliveredUse = await tx.deliveryRecord.count({ where: { shareId: source.id, status: "delivered" } });
+      if (protectedUse > 0 || deliveredUse > 0) throw new TenantSalesFinanceError("TRANSFER_AFTER_OPERATION_NOT_ALLOWED");
+      const targetCustomer = await tx.customer.findUnique({ where: { id: input.toCustomerId }, select: { id: true, active: true } });
+      if (!targetCustomer?.active) throw new TenantSalesFinanceError("TARGET_CUSTOMER_NOT_FOUND");
+      const customerChanges = input.toCustomerId !== source.customerId;
+      if (customerChanges && financialUse > 0) throw new TenantSalesFinanceError("CUSTOMER_TRANSFER_WITH_PAYMENT_REQUIRES_REVERSAL_FLOW");
+      if (customerChanges && saleShare.sale.shares.length !== 1) throw new TenantSalesFinanceError("MULTI_SHARE_CUSTOMER_TRANSFER_REQUIRES_SEPARATE_SALE");
       await tx.share.update({ where: { id: target.id }, data: { status: "sold", customerId: input.toCustomerId, agreedPrice: source.agreedPrice, listPriceSnapshot: source.listPriceSnapshot, discountAmountSnapshot: source.discountAmountSnapshot, soldAt: meta.occurredAt } });
       await tx.share.update({ where: { id: source.id }, data: { status: "available", customerId: null, agreedPrice: null, soldAt: null } });
       if (saleShare) {
-        await tx.saleShare.delete({ where: { saleId_shareId: { saleId: saleShare.saleId, shareId: source.id } } });
-        await tx.saleShare.create({ data: { saleId: saleShare.saleId, shareId: target.id, listPriceSnapshot: saleShare.listPriceSnapshot, discountAmountSnapshot: saleShare.discountAmountSnapshot, agreedPriceSnapshot: saleShare.agreedPriceSnapshot } });
+        await tx.saleShare.update({ where: { saleId_shareId: { saleId: saleShare.saleId, shareId: source.id } }, data: { active: false, endedAt: meta.occurredAt } });
+        await tx.saleShare.create({ data: { saleId: saleShare.saleId, shareId: target.id, listPriceSnapshot: saleShare.listPriceSnapshot, discountAmountSnapshot: saleShare.discountAmountSnapshot, agreedPriceSnapshot: saleShare.agreedPriceSnapshot, active: true } });
+      }
+      if (customerChanges) {
+        const amount = saleShare.agreedPriceSnapshot.toString();
+        const transferJournal = await createJournalEntry(tx, { seasonId: input.seasonId, sourceType: "customer_transfer", sourceId: input.id, idempotencyKey: `${meta.idempotencyKey}:journal`, occurredAt: meta.occurredAt, lines: [
+          { accountCode: "120.01", side: "credit", amount: decimal(amount), customerId: source.customerId as never, saleId: saleShare.saleId as never, shareId: source.id as never, memo: "TRANSFER_FROM_CUSTOMER" },
+          { accountCode: "120.01", side: "debit", amount: decimal(amount), customerId: input.toCustomerId as never, saleId: saleShare.saleId as never, shareId: target.id as never, memo: "TRANSFER_TO_CUSTOMER" },
+        ] });
+        await tx.customerSeasonAccount.upsert({ where: { customerId_seasonId: { customerId: source.customerId, seasonId: input.seasonId } }, create: { id: `account_${source.customerId}_${input.seasonId}`, customerId: source.customerId, seasonId: input.seasonId, creditTotal: amount, balance: `-${amount}` }, update: { creditTotal: { increment: amount }, balance: { decrement: amount } } });
+        await tx.customerSeasonAccount.upsert({ where: { customerId_seasonId: { customerId: input.toCustomerId, seasonId: input.seasonId } }, create: { id: `account_${input.toCustomerId}_${input.seasonId}`, customerId: input.toCustomerId, seasonId: input.seasonId, debitTotal: amount, balance: amount }, update: { debitTotal: { increment: amount }, balance: { increment: amount } } });
+        await tx.sale.update({ where: { id: saleShare.saleId }, data: { customerId: input.toCustomerId, transferredAt: meta.occurredAt } });
+        await tx.saleEvent.create({ data: { id: `sale_event_${randomUUID()}`, saleId: saleShare.saleId, type: "customer_receivable_transferred", actorUserId: meta.actorUserId, occurredAt: meta.occurredAt, payload: { journalEntryId: transferJournal.id, fromCustomerId: source.customerId, toCustomerId: input.toCustomerId } } });
       }
       await tx.shareTransfer.create({ data: { id: input.id, seasonId: input.seasonId, sourceShareId: source.id, targetShareId: target.id, fromCustomerId: source.customerId, toCustomerId: input.toCustomerId, saleId: saleShare?.saleId, reason: input.reason, occurredAt: meta.occurredAt } });
       await tx.saleEvent.create({ data: { id: `sale_event_${randomUUID()}`, saleId: saleShare?.saleId, shareId: target.id, type: "share_transferred", reason: input.reason, actorUserId: meta.actorUserId, occurredAt: meta.occurredAt, payload: { sourceShareId: source.id, targetShareId: target.id } } });
@@ -300,6 +353,47 @@ async function createReceipt(tx: Tx, input: Omit<NormalizedRecordReceiptInput, "
     update: { creditTotal: { increment: input.totalAmount }, balance: { decrement: input.totalAmount } },
   });
   return { id: input.id, journalEntryId: journal.id };
+}
+
+async function validateReceiptAllocations(tx: Tx, input: NormalizedRecordReceiptInput): Promise<void> {
+  if (input.allocations.some((allocation) => allocation.customerId !== input.customerId)) throw new TenantSalesFinanceError("PAYMENT_ALLOCATION_CUSTOMER_MISMATCH");
+  if (input.saleId && input.allocations.some((allocation) => allocation.saleId !== input.saleId)) throw new TenantSalesFinanceError("PAYMENT_ALLOCATION_RECEIPT_SALE_MISMATCH");
+  await tx.$queryRawUnsafe('SELECT "id" FROM "CustomerSeasonAccount" WHERE "customerId" = $1 AND "seasonId" = $2 FOR UPDATE', input.customerId, input.seasonId);
+  const customerAccount = await tx.customerSeasonAccount.findUnique({ where: { customerId_seasonId: { customerId: input.customerId, seasonId: input.seasonId } } });
+  if (!customerAccount || toUnits(customerAccount.balance.toString()) < toUnits(input.totalAmount)) throw new TenantSalesFinanceError("RECEIPT_EXCEEDS_CUSTOMER_BALANCE");
+  const saleIds = [...new Set(input.allocations.flatMap((allocation) => allocation.saleId ? [allocation.saleId] : []))].sort();
+  if (saleIds.length > 0) {
+    const placeholders = saleIds.map((_, index) => `$${index + 1}`).join(", ");
+    await tx.$queryRawUnsafe(`SELECT "id" FROM "Sale" WHERE "id" IN (${placeholders}) ORDER BY "id" FOR UPDATE`, ...saleIds);
+  }
+  for (const saleId of saleIds) {
+    const sale = await tx.sale.findUnique({ where: { id: saleId }, include: { shares: { where: { active: true } } } });
+    if (!sale || sale.status !== "confirmed" || sale.seasonId !== input.seasonId || sale.customerId !== input.customerId) throw new TenantSalesFinanceError("PAYMENT_ALLOCATION_SALE_SCOPE_MISMATCH");
+    const requested = input.allocations.filter((item) => item.saleId === saleId).reduce((sum, item) => sum + toUnits(item.amount), BigInt(0));
+    const existing = await tx.paymentAllocation.aggregate({ where: { saleId, receipt: { status: "posted" } }, _sum: { amount: true } });
+    if (toUnits(existing._sum.amount?.toString() ?? "0") + requested > toUnits(sale.priceSnapshot.toString())) throw new TenantSalesFinanceError("PAYMENT_ALLOCATION_EXCEEDS_SALE");
+    const activeShares = new Set(sale.shares.map((item) => item.shareId));
+    for (const allocation of input.allocations.filter((item) => item.saleId === saleId)) {
+      if (allocation.shareId && !activeShares.has(allocation.shareId)) throw new TenantSalesFinanceError("PAYMENT_ALLOCATION_SHARE_SCOPE_MISMATCH");
+    }
+  }
+  if (input.allocations.some((allocation) => allocation.shareId && !allocation.saleId)) throw new TenantSalesFinanceError("PAYMENT_ALLOCATION_SALE_REQUIRED_FOR_SHARE");
+}
+
+type JournalWithLines = Prisma.JournalEntryGetPayload<{ include: { lines: { include: { account: true } } } }>;
+
+async function reverseJournal(tx: Tx, original: JournalWithLines, sourceType: string, sourceId: string, idempotencyKey: string, occurredAt: Date) {
+  const id = `journal_reversal_${randomUUID()}`;
+  await tx.journalEntry.create({ data: {
+    id, seasonId: original.seasonId, sourceType, sourceId, status: "posted", currency: original.currency,
+    memo: `REVERSAL:${original.sourceType}`, idempotencyKey, reversalOfId: original.id, occurredAt, postedAt: occurredAt,
+    lines: { create: original.lines.map((line) => ({
+      id: `journal_line_${randomUUID()}`, accountId: line.accountId, side: line.side === "debit" ? "credit" : "debit",
+      amount: line.amount, currency: line.currency, customerId: line.customerId, saleId: line.saleId, shareId: line.shareId,
+      memo: `REVERSAL:${line.memo ?? original.sourceType}`,
+    })) },
+  } });
+  return { id };
 }
 
 async function createJournalEntry(tx: Tx, input: { seasonId: string; sourceType: string; sourceId: string; idempotencyKey: string; occurredAt: Date; lines: JournalLineDraft[] }): Promise<{ id: string }> {
@@ -396,6 +490,22 @@ function splitEvenly(total: string, count: number, index: number): DecimalString
   const amountWhole = value / BigInt(10000);
   const amountFraction = (value % BigInt(10000)).toString().padStart(4, "0").replace(/0+$/, "");
   return decimal(`${amountWhole.toString()}${amountFraction ? `.${amountFraction}` : ""}`);
+}
+
+function toUnits(value: string): bigint {
+  const negative = value.startsWith("-");
+  const unsigned = negative ? value.slice(1) : value;
+  const [whole, fraction = ""] = unsigned.split(".");
+  const units = BigInt(whole) * BigInt(10000) + BigInt(fraction.padEnd(4, "0").slice(0, 4));
+  return negative ? -units : units;
+}
+
+function fromUnits(value: bigint): string {
+  const negative = value < BigInt(0);
+  const absolute = negative ? -value : value;
+  const whole = absolute / BigInt(10000);
+  const fraction = (absolute % BigInt(10000)).toString().padStart(4, "0");
+  return `${negative ? "-" : ""}${whole}.${fraction}`;
 }
 
 async function evidence(tx: Tx, meta: CommandMeta, action: string, targetType: string, targetId: string, metadata: Record<string, unknown>): Promise<void> {

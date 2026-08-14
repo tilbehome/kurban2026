@@ -3,6 +3,7 @@ import type {
   AnimalHealthEventInput,
   AnimalInput,
   AnimalWeightInput,
+  AnimalPaddockAssignmentInput,
   BusinessProfileInput,
   CommandMeta,
   CustomerHistoryItem,
@@ -14,6 +15,7 @@ import type {
   ExpenseDocumentInput,
   LocationInput,
   PurchaseInvoiceInput,
+  PaddockInput,
   QurbanAssignmentInput,
   SeasonInput,
   SupplierInput,
@@ -55,6 +57,15 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
       orderBy: { createdAt: "desc" },
     });
     return rows.map((row) => ({ id: row.id, seasonId: row.seasonId ?? row.qurbanAssignments[0]?.seasonId ?? seasonId, earTag: row.earTag, status: row.status, supplierName: row.supplier?.displayName, purchaseAmount: row.purchaseAmount?.toString(), liveWeightKg: row.liveWeightKg?.toString(), qurbanNo: row.qurbanAssignments[0]?.qurbanNo ?? undefined, queueNo: row.qurbanAssignments[0]?.queueNo ?? undefined }));
+  }
+
+  async listPaddocks(seasonId: string) {
+    const rows = await this.db.paddock.findMany({
+      where: { seasonId },
+      include: { _count: { select: { assignments: { where: { active: true } } } } },
+      orderBy: [{ active: "desc" }, { code: "asc" }],
+    });
+    return rows.map((row) => ({ id: row.id, seasonId: row.seasonId, code: row.code, name: row.name, capacity: row.capacity ?? undefined, active: row.active, occupied: row._count.assignments }));
   }
 
   async getAnimal(id: string) {
@@ -356,6 +367,7 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
         update: { debitTotal: { increment: input.grandTotal }, balance: { increment: input.grandTotal } },
       });
       const inventory = await tx.financialAccount.upsert({ where: { code: "INVENTORY" }, create: { id: "financial_account_inventory", code: "INVENTORY", name: "Stok ve Hayvan Maliyeti", type: "asset", normalSide: "debit", currency: "TRY" }, update: {} });
+      const inputTax = await tx.financialAccount.upsert({ where: { code: "INPUT_TAX" }, create: { id: "financial_account_input_tax", code: "INPUT_TAX", name: "İndirilecek Vergi", type: "asset", normalSide: "debit", currency: "TRY" }, update: {} });
       const payable = await tx.financialAccount.upsert({ where: { code: "ACCOUNTS_PAYABLE" }, create: { id: "financial_account_accounts_payable", code: "ACCOUNTS_PAYABLE", name: "Tedarikçi Borçları", type: "liability", normalSide: "credit", currency: "TRY" }, update: {} });
       const journalEntryId = `journal_invoice_${invoice.id}`;
       await tx.journalEntry.create({ data: {
@@ -363,7 +375,8 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
         currency: "TRY", memo: "PURCHASE_INVOICE_POSTED", idempotencyKey: meta.idempotencyKey,
         occurredAt: new Date(input.invoiceDate), postedAt: meta.occurredAt,
         lines: { create: [
-          { id: `${journalEntryId}_debit`, accountId: inventory.id, side: "debit", amount: input.grandTotal, currency: "TRY", memo: "PURCHASE_COST" },
+          { id: `${journalEntryId}_cost`, accountId: inventory.id, side: "debit", amount: input.subtotal, currency: "TRY", memo: "PURCHASE_COST" },
+          ...(toUnits(input.taxTotal ?? "0") > BigInt(0) ? [{ id: `${journalEntryId}_tax`, accountId: inputTax.id, side: "debit", amount: input.taxTotal ?? "0", currency: "TRY", memo: "INVOICE_INPUT_TAX" }] : []),
           { id: `${journalEntryId}_credit`, accountId: payable.id, side: "credit", amount: input.grandTotal, currency: "TRY", memo: "SUPPLIER_PAYABLE" },
         ] },
       } });
@@ -383,6 +396,18 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
       if (!account) throw new TenantMasterDataError("SUPPLIER_ACCOUNT_NOT_FOUND");
       if (toUnits(account.balance.toString()) < toUnits(input.amount)) throw new TenantMasterDataError("SUPPLIER_PAYMENT_EXCEEDS_BALANCE");
       await tx.supplierAccount.update({ where: { id: account.id }, data: { creditTotal: { increment: input.amount }, balance: { decrement: input.amount } } });
+      const payable = await financialAccount(tx, "ACCOUNTS_PAYABLE", "Tedarikçi Borçları", "liability", "credit");
+      const settlement = await settlementAccount(tx, input.method);
+      const journalEntryId = `journal_supplier_payment_${row.id}`;
+      await tx.journalEntry.create({ data: {
+        id: journalEntryId, seasonId: input.seasonId, sourceType: "supplier_payment", sourceId: row.id,
+        currency: "TRY", memo: "SUPPLIER_PAYMENT_POSTED", idempotencyKey: `${meta.idempotencyKey}:journal`, occurredAt: new Date(input.occurredAt), postedAt: meta.occurredAt,
+        lines: { create: [
+          { id: `${journalEntryId}_payable`, accountId: payable.id, side: "debit", amount: input.amount, currency: "TRY", memo: "SUPPLIER_PAYABLE_SETTLEMENT" },
+          { id: `${journalEntryId}_settlement`, accountId: settlement.id, side: "credit", amount: input.amount, currency: "TRY", memo: "SUPPLIER_PAYMENT_OUTFLOW" },
+        ] },
+      } });
+      await tx.supplierPayment.update({ where: { id: row.id }, data: { journalEntryId } });
       await evidence(tx, meta, "supplier.payment.recorded", "SupplierPayment", row.id, { supplierId: input.supplierId, seasonId: input.seasonId });
       return row;
     });
@@ -394,6 +419,18 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
       const row = await tx.expenseDocument.create({
         data: { ...input, occurredAt: new Date(input.occurredAt), idempotencyKey: meta.idempotencyKey }, select: { id: true },
       });
+      const expense = await financialAccount(tx, "OPERATING_EXPENSE", "Faaliyet Giderleri", "expense", "debit");
+      const payable = await financialAccount(tx, "EXPENSE_PAYABLE", "Gider Borçları", "liability", "credit");
+      const journalEntryId = `journal_expense_${row.id}`;
+      await tx.journalEntry.create({ data: {
+        id: journalEntryId, seasonId: input.seasonId, sourceType: "expense", sourceId: row.id,
+        currency: "TRY", memo: "EXPENSE_DOCUMENT_POSTED", idempotencyKey: `${meta.idempotencyKey}:journal`, occurredAt: new Date(input.occurredAt), postedAt: meta.occurredAt,
+        lines: { create: [
+          { id: `${journalEntryId}_expense`, accountId: expense.id, side: "debit", amount: input.amount, currency: "TRY", memo: input.category },
+          { id: `${journalEntryId}_payable`, accountId: payable.id, side: "credit", amount: input.amount, currency: "TRY", memo: "EXPENSE_PAYABLE" },
+        ] },
+      } });
+      await tx.expenseDocument.update({ where: { id: row.id }, data: { journalEntryId } });
       await evidence(tx, meta, "expense.document.recorded", "ExpenseDocument", row.id, { seasonId: input.seasonId, sourceType: input.sourceType, sourceRef: input.sourceRef });
       return row;
     });
@@ -440,6 +477,34 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
       if (previous) await tx.qurbanAssignment.update({ where: { id: previous.id }, data: { active: false, endedAt: meta.occurredAt } });
       const row = await tx.qurbanAssignment.create({ data: { ...input, assignedByUserId: meta.actorUserId, assignedAt: meta.occurredAt, previousId: previous?.id }, select: { id: true } });
       await evidence(tx, meta, "animal.qurban.assigned", "QurbanAssignment", row.id, { animalId: input.animalId, previousId: previous?.id ?? null, queueNo: input.queueNo ?? null });
+      return row;
+    });
+  }
+
+  createPaddock(input: PaddockInput, meta: CommandMeta) {
+    return this.command("paddock.create", meta, async (tx) => {
+      await lockSeason(tx, input.seasonId, ["preparation", "sales", "slaughter"]);
+      const row = await tx.paddock.create({ data: input, select: { id: true } });
+      await evidence(tx, meta, "paddock.created", "Paddock", row.id, { seasonId: input.seasonId, code: input.code });
+      return row;
+    });
+  }
+
+  assignAnimalToPaddock(input: AnimalPaddockAssignmentInput, meta: CommandMeta) {
+    return this.command("paddock.animal.assign", meta, async (tx) => {
+      await lockSeason(tx, input.seasonId, ["preparation", "sales", "slaughter"]);
+      const animal = await tx.animal.findUnique({ where: { id: input.animalId }, select: { seasonId: true } });
+      const paddock = await tx.paddock.findUnique({ where: { id: input.paddockId }, select: { seasonId: true, active: true, capacity: true } });
+      if (!animal || animal.seasonId !== input.seasonId) throw new TenantMasterDataError("ANIMAL_SEASON_MISMATCH");
+      if (!paddock || paddock.seasonId !== input.seasonId || !paddock.active) throw new TenantMasterDataError("PADDOCK_SCOPE_INVALID");
+      await tx.$queryRawUnsafe('SELECT "id" FROM "Paddock" WHERE "id" = $1 FOR UPDATE', input.paddockId);
+      if (paddock.capacity !== null) {
+        const occupied = await tx.animalPaddockAssignment.count({ where: { paddockId: input.paddockId, active: true, animalId: { not: input.animalId } } });
+        if (occupied >= paddock.capacity) throw new TenantMasterDataError("PADDOCK_CAPACITY_EXCEEDED");
+      }
+      await tx.animalPaddockAssignment.updateMany({ where: { animalId: input.animalId, active: true }, data: { active: false, endedAt: meta.occurredAt } });
+      const row = await tx.animalPaddockAssignment.create({ data: { ...input, assignedAt: meta.occurredAt, assignedByUserId: meta.actorUserId }, select: { id: true } });
+      await evidence(tx, meta, "paddock.animal.assigned", "AnimalPaddockAssignment", row.id, { seasonId: input.seasonId, animalId: input.animalId, paddockId: input.paddockId });
       return row;
     });
   }
@@ -495,4 +560,21 @@ function toUnits(value: string): bigint {
 async function invoiceAnimalIds(tx: Tx, invoiceId: string): Promise<string[]> {
   const lines = await tx.purchaseInvoiceLine.findMany({ where: { purchaseInvoiceId: invoiceId, animalId: { not: null } }, select: { animalId: true } });
   return lines.flatMap((line) => line.animalId ? [line.animalId] : []);
+}
+
+async function financialAccount(tx: Tx, code: string, name: string, type: string, normalSide: string) {
+  return tx.financialAccount.upsert({
+    where: { code },
+    create: { id: `financial_account_${code.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9]+/g, "_")}`, code, name, type, normalSide, currency: "TRY" },
+    update: { name, type, normalSide, active: true },
+    select: { id: true },
+  });
+}
+
+async function settlementAccount(tx: Tx, method: string) {
+  const normalized = method.trim().toLocaleUpperCase("tr-TR");
+  if (normalized === "CASH" || normalized === "NAKİT" || normalized === "NAKIT") return financialAccount(tx, "100.01", "Nakit Kasa", "asset", "debit");
+  if (normalized === "BANK" || normalized === "HAVALE" || normalized === "EFT") return financialAccount(tx, "102.01", "Banka/Havale", "asset", "debit");
+  if (normalized === "POS" || normalized === "CARD" || normalized === "KART") return financialAccount(tx, "108.01", "POS Alacakları", "asset", "debit");
+  throw new TenantMasterDataError("SUPPLIER_PAYMENT_METHOD_UNSUPPORTED");
 }
