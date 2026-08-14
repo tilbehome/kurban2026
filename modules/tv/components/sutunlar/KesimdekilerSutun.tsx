@@ -69,7 +69,7 @@ export function KesimdekilerSutun({ kartlar, tema }: Props) {
         <p
           className={cn(
             "py-8 text-center text-sm",
-            koyuMu ? "text-slate-400" : "text-stone-400",
+            koyuMu ? "text-slate-400" : "text-stone-600",
           )}
         >
           Şu an kesimde kurban yok

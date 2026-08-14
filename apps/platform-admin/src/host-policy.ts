@@ -12,5 +12,6 @@ export function platformAdminHostname(environment = platformDeploymentEnvironmen
 export function isAllowedPlatformAdminHost(hostHeader: string | null, environment = platformDeploymentEnvironment()): boolean {
   if (!hostHeader) return false;
   const hostname = hostHeader.trim().toLowerCase().replace(/:\d+$/, "");
+  if (environment === "local" && (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1")) return true;
   return hostname === platformAdminHostname(environment);
 }

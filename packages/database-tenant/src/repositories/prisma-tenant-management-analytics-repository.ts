@@ -38,7 +38,7 @@ export class PrismaTenantManagementAnalyticsRepository implements ManagementAnal
         FROM (SELECT entry."id", COALESCE(SUM(line."amount") FILTER (WHERE line."side" = 'debit'), 0) debit,
           COALESCE(SUM(line."amount") FILTER (WHERE line."side" = 'credit'), 0) credit
           FROM "JournalEntry" entry JOIN "JournalLine" line ON line."journalEntryId" = entry."id"
-          ${input.seasonId ? Prisma.sql`WHERE entry."seasonId" = ${input.seasonId}` : Prisma.empty} GROUP BY entry."id") totals`.then((rows) => rows[0] ?? { entries: 0n, unbalanced: 0n, difference: "0" }),
+          ${input.seasonId ? Prisma.sql`WHERE entry."seasonId" = ${input.seasonId}` : Prisma.empty} GROUP BY entry."id") totals`.then((rows) => rows[0] ?? { entries: BigInt(0), unbalanced: BigInt(0), difference: "0" }),
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "ApprovalRequest" WHERE "status" = 'pending'`),
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "ApprovalRequest" WHERE "status" = 'pending' AND "expiresAt" < now()`),
       count(this.db.$queryRaw<CountRow[]>`SELECT COUNT(*) AS value FROM "TenantAuditLog" WHERE "occurredAt" > now() - interval '24 hours'`),

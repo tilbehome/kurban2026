@@ -1,5 +1,7 @@
 -- Faz 10: delivery package checklist, evidence metadata and bound offline queue state.
 
+BEGIN;
+
 ALTER TABLE "DeliveryRecord"
   ADD COLUMN "seasonId" TEXT,
   ADD COLUMN "receiverRelationship" TEXT,
@@ -13,6 +15,7 @@ ALTER TABLE "DeliveryRecord"
 UPDATE "DeliveryRecord" AS delivery SET "seasonId" = card."seasonId"
 FROM "Share" AS share JOIN "ShareCard" AS card ON card."id" = share."shareCardId"
 WHERE share."id" = delivery."shareId";
+ALTER TABLE "DeliveryRecord" ADD CONSTRAINT "DeliveryRecord_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 ALTER TABLE "DeliveryRecord" DROP CONSTRAINT "DeliveryRecord_status_check";
 ALTER TABLE "DeliveryRecord" ADD CONSTRAINT "DeliveryRecord_status_check" CHECK ("status" IN ('pending','partial','delivered','reversed'));
 ALTER TABLE "DeliveryRecord" ADD CONSTRAINT "DeliveryRecord_deliveryType_check" CHECK ("deliveryType" IN ('on_site','address'));
@@ -59,6 +62,7 @@ ALTER TABLE "OfflineQueueItem" DROP CONSTRAINT "OfflineQueueItem_status_check";
 ALTER TABLE "OfflineQueueItem" ADD CONSTRAINT "OfflineQueueItem_status_check" CHECK ("status" IN ('queued','syncing','synced','conflict','failed','poisoned','expired'));
 ALTER TABLE "OfflineQueueItem" ADD CONSTRAINT "OfflineQueueItem_attempts_check" CHECK ("attempts" >= 0);
 ALTER TABLE "OfflineQueueItem" ADD CONSTRAINT "OfflineQueueItem_sessionVersion_check" CHECK ("sessionVersion" > 0);
+ALTER TABLE "OfflineQueueItem" ADD CONSTRAINT "OfflineQueueItem_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 CREATE INDEX "OfflineQueueItem_seasonId_actorUserId_deviceId_status_idx" ON "OfflineQueueItem"("seasonId", "actorUserId", "deviceId", "status");
 
 CREATE TABLE "OfflineQueueAttempt" (
@@ -71,3 +75,5 @@ CREATE TABLE "OfflineQueueAttempt" (
   CONSTRAINT "OfflineQueueAttempt_offlineQueueItemId_fkey" FOREIGN KEY ("offlineQueueItemId") REFERENCES "OfflineQueueItem"("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 CREATE UNIQUE INDEX "OfflineQueueAttempt_item_attempt_key" ON "OfflineQueueAttempt"("offlineQueueItemId", "attemptNo");
+
+COMMIT;

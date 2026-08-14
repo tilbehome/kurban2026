@@ -14,7 +14,7 @@
   --popover-foreground: oklch(0.18 0 0);
 
   /* Tilbe Orange — marka rengi */
-  --primary: oklch(0.7 0.18 40);
+  --primary: oklch(0.48 0.18 40);
   --primary-foreground: oklch(0.99 0 0);
 
   --secondary: oklch(0.97 0 0);
@@ -36,18 +36,18 @@
 
   --border: oklch(0.92 0 0);
   --input: oklch(0.92 0 0);
-  --ring: oklch(0.7 0.18 40);
+  --ring: oklch(0.48 0.18 40);
 
   --radius: 0.625rem;
 
   --sidebar: oklch(0.98 0 0);
   --sidebar-foreground: oklch(0.18 0 0);
-  --sidebar-primary: oklch(0.7 0.18 40);
+  --sidebar-primary: oklch(0.48 0.18 40);
   --sidebar-primary-foreground: oklch(0.99 0 0);
   --sidebar-accent: oklch(0.94 0 0);
   --sidebar-accent-foreground: oklch(0.18 0 0);
   --sidebar-border: oklch(0.92 0 0);
-  --sidebar-ring: oklch(0.7 0.18 40);
+  --sidebar-ring: oklch(0.48 0.18 40);
 }
 
 @theme inline {
@@ -115,11 +115,11 @@ body {
 
 /* Tilbe Kurban — özel yardımcılar */
 .text-tilbe {
-  color: oklch(0.7 0.18 40);
+  color: oklch(0.48 0.18 40);
 }
 
 .bg-tilbe {
-  background-color: oklch(0.7 0.18 40);
+  background-color: oklch(0.48 0.18 40);
 }
 
 /* Para tutarları için sayı hizalama */

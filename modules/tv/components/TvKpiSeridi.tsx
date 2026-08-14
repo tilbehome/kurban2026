@@ -71,7 +71,7 @@ export function TvKpiSeridi({ kpi, tema }: TvKpiSeridiProps) {
   const koyuMu = tema === "dark";
 
   return (
-    <div className="grid grid-cols-2 gap-3 px-4 py-3 sm:grid-cols-3 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-3 px-4 py-3 sm:grid-cols-3 xl:grid-cols-5">
       {KARTLAR.map((kart) => {
         const Icon = kart.ikon;
         const deger = kpi[kart.id];

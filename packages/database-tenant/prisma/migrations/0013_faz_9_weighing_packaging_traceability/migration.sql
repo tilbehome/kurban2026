@@ -1,5 +1,7 @@
 -- Faz 9: immutable weighing corrections, seven-share allocation and package traceability.
 
+BEGIN;
+
 ALTER TABLE "WeighingRecord"
   ADD COLUMN "seasonId" TEXT,
   ADD COLUMN "measurementType" TEXT NOT NULL DEFAULT 'carcass',
@@ -80,6 +82,9 @@ FROM "Share" AS share JOIN "ShareCard" AS card ON card."id" = share."shareCardId
 WHERE share."id" = package."shareId";
 ALTER TABLE "PackageRecord" ADD CONSTRAINT "PackageRecord_status_check" CHECK ("status" IN ('created','stored','picked','loaded','delivered','missing','wrong','damaged','void'));
 ALTER TABLE "PackageRecord" ADD CONSTRAINT "PackageRecord_parentPackageId_fkey" FOREIGN KEY ("parentPackageId") REFERENCES "PackageRecord"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PackageRecord" ADD CONSTRAINT "PackageRecord_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PackageRecord" ADD CONSTRAINT "PackageRecord_animalId_fkey" FOREIGN KEY ("animalId") REFERENCES "Animal"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "PackageRecord" ADD CONSTRAINT "PackageRecord_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 CREATE UNIQUE INDEX "PackageRecord_packageNo_key" ON "PackageRecord"("packageNo") WHERE "packageNo" IS NOT NULL;
 CREATE UNIQUE INDEX "PackageRecord_barcodeValue_key" ON "PackageRecord"("barcodeValue") WHERE "barcodeValue" IS NOT NULL;
 CREATE INDEX "PackageRecord_seasonId_animalId_customerId_status_idx" ON "PackageRecord"("seasonId", "animalId", "customerId", "status");
@@ -93,6 +98,7 @@ CREATE TABLE "PackageTransformation" (
   "reason" TEXT NOT NULL,
   "actorUserId" TEXT NOT NULL,
   "occurredAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "PackageTransformation_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT "PackageTransformation_sourcePackageId_fkey" FOREIGN KEY ("sourcePackageId") REFERENCES "PackageRecord"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT "PackageTransformation_targetPackageId_fkey" FOREIGN KEY ("targetPackageId") REFERENCES "PackageRecord"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT "PackageTransformation_kind_check" CHECK ("transformation" IN ('split','merge'))
@@ -108,8 +114,11 @@ CREATE TABLE "PackageExceptionHistory" (
   "reason" TEXT NOT NULL,
   "actorUserId" TEXT NOT NULL,
   "occurredAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "PackageExceptionHistory_seasonId_fkey" FOREIGN KEY ("seasonId") REFERENCES "Season"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT "PackageExceptionHistory_packageRecordId_fkey" FOREIGN KEY ("packageRecordId") REFERENCES "PackageRecord"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT "PackageExceptionHistory_status_check" CHECK ("status" IN ('missing','wrong','damaged'))
 );
 CREATE INDEX "PackageExceptionHistory_packageRecordId_occurredAt_idx" ON "PackageExceptionHistory"("packageRecordId", "occurredAt");
 CREATE INDEX "PackageExceptionHistory_seasonId_status_idx" ON "PackageExceptionHistory"("seasonId", "status");
+
+COMMIT;

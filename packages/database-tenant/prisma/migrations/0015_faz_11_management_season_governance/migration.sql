@@ -1,5 +1,7 @@
 -- Faz 11: season closure evidence and database-level archived-season write guards.
 
+BEGIN;
+
 CREATE TABLE "SeasonClosureSnapshot" (
   "id" TEXT NOT NULL PRIMARY KEY,
   "seasonId" TEXT NOT NULL,
@@ -24,10 +26,14 @@ ALTER TABLE "DeliveryRecord" ALTER COLUMN "seasonId" SET NOT NULL;
 
 CREATE OR REPLACE FUNCTION guard_archived_season_write()
 RETURNS trigger AS $$
-DECLARE season_key TEXT;
+DECLARE old_season_key TEXT; new_season_key TEXT;
 BEGIN
-  season_key := CASE WHEN TG_OP = 'DELETE' THEN to_jsonb(OLD) ->> TG_ARGV[0] ELSE to_jsonb(NEW) ->> TG_ARGV[0] END;
-  IF season_key IS NOT NULL AND EXISTS (SELECT 1 FROM "Season" WHERE "id" = season_key AND "status" = 'archived') THEN
+  IF TG_OP IN ('UPDATE', 'DELETE') THEN old_season_key := to_jsonb(OLD) ->> TG_ARGV[0]; END IF;
+  IF TG_OP IN ('INSERT', 'UPDATE') THEN new_season_key := to_jsonb(NEW) ->> TG_ARGV[0]; END IF;
+  IF EXISTS (
+    SELECT 1 FROM "Season"
+    WHERE "status" = 'archived' AND "id" IN (old_season_key, new_season_key)
+  ) THEN
     RAISE EXCEPTION 'SEASON_ARCHIVED_READ_ONLY';
   END IF;
   RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
@@ -52,11 +58,13 @@ CREATE TRIGGER "WeightShortfallAdjustment_archived_season_guard" BEFORE INSERT O
 
 CREATE OR REPLACE FUNCTION guard_archived_season_share_write()
 RETURNS trigger AS $$
-DECLARE card_id TEXT; season_key TEXT;
+DECLARE old_card_id TEXT; new_card_id TEXT; old_season_key TEXT; new_season_key TEXT;
 BEGIN
-  card_id := CASE WHEN TG_OP = 'DELETE' THEN OLD."shareCardId" ELSE NEW."shareCardId" END;
-  SELECT "seasonId" INTO season_key FROM "ShareCard" WHERE "id" = card_id;
-  IF EXISTS (SELECT 1 FROM "Season" WHERE "id" = season_key AND "status" = 'archived') THEN RAISE EXCEPTION 'SEASON_ARCHIVED_READ_ONLY'; END IF;
+  IF TG_OP IN ('UPDATE', 'DELETE') THEN old_card_id := OLD."shareCardId"; END IF;
+  IF TG_OP IN ('INSERT', 'UPDATE') THEN new_card_id := NEW."shareCardId"; END IF;
+  SELECT "seasonId" INTO old_season_key FROM "ShareCard" WHERE "id" = old_card_id;
+  SELECT "seasonId" INTO new_season_key FROM "ShareCard" WHERE "id" = new_card_id;
+  IF EXISTS (SELECT 1 FROM "Season" WHERE "status" = 'archived' AND "id" IN (old_season_key, new_season_key)) THEN RAISE EXCEPTION 'SEASON_ARCHIVED_READ_ONLY'; END IF;
   RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
 END;
 $$ LANGUAGE plpgsql;
@@ -64,12 +72,25 @@ CREATE TRIGGER "Share_archived_season_guard" BEFORE INSERT OR UPDATE OR DELETE O
 
 CREATE OR REPLACE FUNCTION guard_archived_season_journal_line_write()
 RETURNS trigger AS $$
-DECLARE entry_id TEXT; season_key TEXT;
+DECLARE old_entry_id TEXT; new_entry_id TEXT; old_season_key TEXT; new_season_key TEXT;
 BEGIN
-  entry_id := CASE WHEN TG_OP = 'DELETE' THEN OLD."journalEntryId" ELSE NEW."journalEntryId" END;
-  SELECT "seasonId" INTO season_key FROM "JournalEntry" WHERE "id" = entry_id;
-  IF EXISTS (SELECT 1 FROM "Season" WHERE "id" = season_key AND "status" = 'archived') THEN RAISE EXCEPTION 'SEASON_ARCHIVED_READ_ONLY'; END IF;
+  IF TG_OP IN ('UPDATE', 'DELETE') THEN old_entry_id := OLD."journalEntryId"; END IF;
+  IF TG_OP IN ('INSERT', 'UPDATE') THEN new_entry_id := NEW."journalEntryId"; END IF;
+  SELECT "seasonId" INTO old_season_key FROM "JournalEntry" WHERE "id" = old_entry_id;
+  SELECT "seasonId" INTO new_season_key FROM "JournalEntry" WHERE "id" = new_entry_id;
+  IF EXISTS (SELECT 1 FROM "Season" WHERE "status" = 'archived' AND "id" IN (old_season_key, new_season_key)) THEN RAISE EXCEPTION 'SEASON_ARCHIVED_READ_ONLY'; END IF;
   RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
 END;
 $$ LANGUAGE plpgsql;
 CREATE TRIGGER "JournalLine_archived_season_guard" BEFORE INSERT OR UPDATE OR DELETE ON "JournalLine" FOR EACH ROW EXECUTE FUNCTION guard_archived_season_journal_line_write();
+
+CREATE OR REPLACE FUNCTION guard_archived_season_state_write()
+RETURNS trigger AS $$
+BEGIN
+  IF OLD."status" = 'archived' THEN RAISE EXCEPTION 'SEASON_ARCHIVED_READ_ONLY'; END IF;
+  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER "Season_archived_state_guard" BEFORE UPDATE OR DELETE ON "Season" FOR EACH ROW EXECUTE FUNCTION guard_archived_season_state_write();
+
+COMMIT;

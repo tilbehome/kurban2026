@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import { PWAYukleBildirimi } from "@/shared/components/PWAYukleBildirimi";
@@ -48,13 +49,15 @@ export const viewport: Viewport = {
   userScalable: true,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const acceptLanguage = (await headers()).get("accept-language")?.toLowerCase() ?? "tr";
+  const language = acceptLanguage.startsWith("ar") ? "ar" : acceptLanguage.startsWith("en") ? "en" : "tr";
   return (
-    <html lang="tr" className={`${inter.variable} h-full antialiased`}>
+    <html lang={language} dir={language === "ar" ? "rtl" : "ltr"} className={`${inter.variable} h-full antialiased`}>
       <body className="bg-background text-foreground flex min-h-full flex-col">
         {children}
         <PWAYukleBildirimi />

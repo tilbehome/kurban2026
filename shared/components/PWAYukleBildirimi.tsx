@@ -27,6 +27,13 @@ export function PWAYukleBildirimi() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    // App Router yapısında next-pwa kayıt betiği her giriş yüzeyine güvenilir
+    // biçimde enjekte edilmeyebilir. Kayıt çağrısı tarayıcı tarafından
+    // idempotent ele alınır; hata halinde uygulama davranışı etkilenmez.
+    if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js").catch(() => undefined);
+    }
+
     // 24 saat içinde reddetmiş mi?
     try {
       const red = localStorage.getItem(STORAGE_RED_KEY);

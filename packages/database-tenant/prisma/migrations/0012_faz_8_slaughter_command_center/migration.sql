@@ -1,5 +1,7 @@
 -- Faz 8: locked slaughter workflow, assignment history, exception desk and safe operation modes.
 
+BEGIN;
+
 ALTER TABLE "SlaughterJob"
   ADD COLUMN "facilityId" TEXT,
   ADD COLUMN "teamId" TEXT,
@@ -10,6 +12,9 @@ ALTER TABLE "SlaughterJob"
   ADD COLUMN "startedAt" TIMESTAMP(3),
   ADD COLUMN "completedAt" TIMESTAMP(3),
   ADD COLUMN "version" INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE "SlaughterJob" DROP CONSTRAINT "SlaughterJob_status_check";
+ALTER TABLE "SlaughterJob" ADD CONSTRAINT "SlaughterJob_status_check"
+  CHECK ("status" IN ('preparation','waiting','ready','in_slaughter','slaughtering','slaughtered','skinning','cutting','weighing','packaging','packing','ready_for_delivery','delivered','done','exception'));
 CREATE UNIQUE INDEX "SlaughterJob_one_active_per_animal"
   ON "SlaughterJob"("seasonId", "animalId") WHERE "status" NOT IN ('delivered', 'done');
 CREATE INDEX "SlaughterJob_seasonId_stationId_status_idx" ON "SlaughterJob"("seasonId", "stationId", "status");
@@ -106,3 +111,10 @@ CREATE TABLE "OperationModeState" (
   CONSTRAINT "OperationModeState_mode_check" CHECK ("mode" IN ('normal','restricted','read_only','emergency_stop'))
 );
 CREATE INDEX "OperationModeState_seasonId_updatedAt_idx" ON "OperationModeState"("seasonId", "updatedAt");
+
+ALTER TABLE "SlaughterJob" ADD CONSTRAINT "SlaughterJob_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "OperationTeam"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "SlaughterJob" ADD CONSTRAINT "SlaughterJob_stationId_fkey" FOREIGN KEY ("stationId") REFERENCES "OperationStation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "SlaughterJobAssignment" ADD CONSTRAINT "SlaughterJobAssignment_teamId_fkey" FOREIGN KEY ("teamId") REFERENCES "OperationTeam"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "SlaughterJobAssignment" ADD CONSTRAINT "SlaughterJobAssignment_stationId_fkey" FOREIGN KEY ("stationId") REFERENCES "OperationStation"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+COMMIT;

@@ -46,7 +46,7 @@ export default async function GirisPage({ searchParams }: GirisPageProps) {
           </div>
         </div>
         <GirisForm next={next} hata={hata} />
-        <p className="text-muted-foreground/60 mt-6 text-center text-[10px]">
+        <p className="text-muted-foreground mt-6 text-center text-[10px]">
           Bu sistem{" "}
           <span className="font-semibold">TilbeCore</span> Kurban Yönetim
           Sistemi tarafından sağlanmaktadır

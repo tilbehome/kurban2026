@@ -1,5 +1,7 @@
 -- Faz 7: share-scoped proxy governance, multi-grantor evidence and immutable status history.
 
+BEGIN;
+
 ALTER TABLE "ProxyDocument"
   ADD COLUMN "policyVersion" TEXT NOT NULL DEFAULT 'legacy',
   ADD COLUMN "receivedAt" TIMESTAMP(3),
@@ -7,6 +9,7 @@ ALTER TABLE "ProxyDocument"
   ADD COLUMN "receivedByUserId" TEXT,
   ADD COLUMN "description" TEXT;
 
+ALTER TABLE "ProxyDocument" DROP CONSTRAINT "ProxyDocument_status_check";
 ALTER TABLE "ProxyDocument" ADD CONSTRAINT "ProxyDocument_status_check"
   CHECK ("status" IN ('draft', 'received', 'signed', 'revoked', 'invalid', 'lost'));
 ALTER TABLE "ProxyDocument" ADD CONSTRAINT "ProxyDocument_method_check"
@@ -55,3 +58,5 @@ ALTER TABLE "QrToken"
   ADD COLUMN "consumedAt" TIMESTAMP(3),
   ADD COLUMN "publicLabel" TEXT;
 CREATE INDEX "QrToken_seasonId_purpose_idx" ON "QrToken"("seasonId", "purpose");
+
+COMMIT;

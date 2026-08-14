@@ -145,12 +145,13 @@ export interface LabelPrinterAdapterPort {
 }
 
 export function calculateWeightShortfallAdjustment(input: { agreedPrice: string; targetWeightKg: string; actualWeightKg: string }): string {
-  const scale = 10_000n;
+  const scale = BigInt(10_000);
   const money = decimalToScaled(input.agreedPrice, 4);
   const target = decimalToScaled(input.targetWeightKg, 3);
   const actual = decimalToScaled(input.actualWeightKg, 3);
-  if (target <= 0n || money < 0n || actual < 0n) throw new Error("WEIGHT_SHORTFALL_INPUT_INVALID");
-  const missing = target > actual ? target - actual : 0n;
+  const zero = BigInt(0);
+  if (target <= zero || money < zero || actual < zero) throw new Error("WEIGHT_SHORTFALL_INPUT_INVALID");
+  const missing = target > actual ? target - actual : zero;
   const amount = (money * missing) / target;
   return scaledToDecimal(amount, scale, 4);
 }

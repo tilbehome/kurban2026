@@ -41,6 +41,17 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       const grantorCustomerIds = [...new Set(grantors.map((grantor) => grantor.customerId))];
       const grantorCount = await tx.customer.count({ where: { id: { in: grantorCustomerIds } } });
       if (grantorCount !== grantorCustomerIds.length) throw new TenantOperationsError("PROXY_GRANTOR_SHARE_MISMATCH");
+      for (const grantor of grantors) {
+        const ownedShareCount = await tx.share.count({
+          where: {
+            id: { in: [...new Set(grantor.shareIds)] },
+            customerId: grantor.customerId,
+            status: "sold",
+            shareCard: { seasonId: input.seasonId },
+          },
+        });
+        if (ownedShareCount !== grantor.shareIds.length) throw new TenantOperationsError("PROXY_GRANTOR_SHARE_MISMATCH");
+      }
       await tx.proxyDocument.create({
         data: {
           id: input.id,
@@ -109,6 +120,9 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
 
   issueQrToken(input: IssueQrTokenInput & { opaqueToken: string }, meta: CommandMeta) {
     return command(this.db, "qr.token.issue", meta, async (tx) => {
+      if (!input.seasonId || !(await qrTargetBelongsToSeason(tx, input.purpose, input.targetId, input.seasonId))) {
+        throw new TenantOperationsError("QR_TARGET_SCOPE_INVALID");
+      }
       await tx.qrToken.create({
         data: {
           id: input.id,
@@ -126,7 +140,11 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
 
   consumeQrToken(input: { opaqueToken: string; purpose: string; now: string }, meta: CommandMeta) {
     return command(this.db, "qr.token.consume", meta, async (tx) => {
-      const token = await tx.qrToken.findUnique({ where: { opaqueToken: input.opaqueToken } });
+      const tokens = await tx.$queryRaw<Array<{ id: string; purpose: string; targetId: string; opaqueToken: string; expiresAt: Date | null; revokedAt: Date | null }>>`
+        SELECT "id", "purpose", "targetId", "opaqueToken", "expiresAt", "revokedAt"
+        FROM "QrToken" WHERE "opaqueToken" = ${input.opaqueToken} FOR UPDATE
+      `;
+      const token = tokens[0];
       if (!token || token.purpose !== input.purpose) throw new TenantOperationsError("QR_TOKEN_NOT_FOUND");
       assertQrUsable({
         tenantInstanceId: "tenant" as never,
@@ -183,6 +201,14 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
     return command(this.db, "slaughter.job.assign", meta, async (tx) => {
       const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "SlaughterJob" WHERE "id" = ${input.id} AND "seasonId" = ${input.seasonId} FOR UPDATE`;
       if (!rows[0]) throw new TenantOperationsError("SLAUGHTER_JOB_NOT_FOUND");
+      if (input.teamId) {
+        const team = await tx.operationTeam.findFirst({ where: { id: input.teamId, seasonId: input.seasonId, active: true }, select: { id: true } });
+        if (!team) throw new TenantOperationsError("SLAUGHTER_ASSIGNMENT_SCOPE_INVALID");
+      }
+      if (input.stationId) {
+        const station = await tx.operationStation.findFirst({ where: { id: input.stationId, seasonId: input.seasonId, active: true }, select: { id: true } });
+        if (!station) throw new TenantOperationsError("SLAUGHTER_ASSIGNMENT_SCOPE_INVALID");
+      }
       await tx.$executeRaw`UPDATE "SlaughterJob" SET "facilityId" = ${input.facilityId ?? null}, "teamId" = ${input.teamId ?? null}, "stationId" = ${input.stationId ?? null}, "assignedUserId" = ${input.assignedUserId ?? null}, "assignedDeviceId" = ${input.assignedDeviceId ?? null}, "queueNo" = COALESCE(${input.queueNo ?? null}, "queueNo"), "version" = "version" + 1, "updatedAt" = ${meta.occurredAt} WHERE "id" = ${input.id}`;
       await tx.$executeRaw`INSERT INTO "SlaughterJobAssignment" ("id", "slaughterJobId", "facilityId", "teamId", "stationId", "assignedUserId", "assignedDeviceId", "queueNo", "reason", "actorUserId", "occurredAt") VALUES (${`slaughter_assignment_${randomUUID()}`}, ${input.id}, ${input.facilityId ?? null}, ${input.teamId ?? null}, ${input.stationId ?? null}, ${input.assignedUserId ?? null}, ${input.assignedDeviceId ?? null}, ${input.queueNo ?? null}, ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
       await evidence(tx, meta, "slaughter.job.assigned", "SlaughterJob", input.id, { seasonId: input.seasonId, stationId: input.stationId, teamId: input.teamId, queueNo: input.queueNo, reason: input.reason });
@@ -220,8 +246,20 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
     return command(this.db, "weighing.record", meta, async (tx) => {
       const animal = await tx.animal.findUnique({ where: { id: input.animalId }, select: { seasonId: true } });
       if (!animal || animal.seasonId !== input.seasonId) throw new TenantOperationsError("WEIGHING_ANIMAL_SCOPE_INVALID");
-      await tx.weighingRecord.create({ data: { id: input.id, animalId: input.animalId, carcassWeightKg: input.carcassWeightKg, recordedByUserId: meta.actorUserId, recordedAt: meta.occurredAt } });
-      await tx.$executeRaw`UPDATE "WeighingRecord" SET "seasonId" = ${input.seasonId}, "measurementType" = ${input.measurementType ?? "carcass"}, "deviceAdapterId" = ${input.deviceAdapterId ?? null}, "stationId" = ${input.stationId ?? null}, "note" = ${input.reason ?? null} WHERE "id" = ${input.id}`;
+      await tx.weighingRecord.create({
+        data: {
+          id: input.id,
+          seasonId: input.seasonId,
+          animalId: input.animalId,
+          carcassWeightKg: input.carcassWeightKg,
+          measurementType: input.measurementType ?? "carcass",
+          deviceAdapterId: input.deviceAdapterId,
+          stationId: input.stationId,
+          note: input.reason,
+          recordedByUserId: meta.actorUserId,
+          recordedAt: meta.occurredAt,
+        },
+      });
       await tx.animal.update({ where: { id: input.animalId }, data: { carcassWeightKg: input.carcassWeightKg } });
       await evidence(tx, meta, "weighing.recorded", "WeighingRecord", input.id, { seasonId: input.seasonId, animalId: input.animalId, reason: input.reason });
       return { id: input.id };
@@ -273,8 +311,20 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
     return command(this.db, "package.create", meta, async (tx) => {
       const share = await tx.share.findUnique({ where: { id: input.shareId }, include: { shareCard: true } });
       if (!share || share.shareCard.seasonId !== input.seasonId) throw new TenantOperationsError("PACKAGE_SHARE_SCOPE_INVALID");
-      await tx.packageRecord.create({ data: { id: input.id, shareId: input.shareId, grossWeightKg: input.grossWeightKg, labelNo: input.labelNo } });
-      await tx.$executeRaw`UPDATE "PackageRecord" SET "seasonId" = ${input.seasonId}, "animalId" = ${share.shareCard.animalId}, "customerId" = ${share.customerId}, "packageNo" = ${input.labelNo}, "netWeightKg" = ${input.grossWeightKg}::decimal, "status" = 'created' WHERE "id" = ${input.id}`;
+      await tx.packageRecord.create({
+        data: {
+          id: input.id,
+          seasonId: input.seasonId,
+          animalId: share.shareCard.animalId,
+          customerId: share.customerId,
+          shareId: input.shareId,
+          grossWeightKg: input.grossWeightKg,
+          netWeightKg: input.grossWeightKg,
+          labelNo: input.labelNo,
+          packageNo: input.labelNo,
+          status: "created",
+        },
+      });
       for (const component of input.components ?? []) {
         await tx.$executeRaw`INSERT INTO "PackageComponent" ("id", "packageRecordId", "componentType", "weightKg", "estimatedValue", "createdAt") VALUES (${component.id}, ${input.id}, ${component.componentType}, ${component.weightKg}::decimal, ${component.estimatedValue ?? null}::decimal, ${meta.occurredAt})`;
       }
@@ -310,6 +360,7 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
 
   recordDelivery(input: DeliveryCommandInput, meta: CommandMeta) {
     return command(this.db, "delivery.record", meta, async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Share" WHERE "id" = ${input.shareId} FOR UPDATE`;
       const share = await tx.share.findUnique({ where: { id: input.shareId }, include: { shareCard: true, packages: true } });
       if (!share || share.shareCard.seasonId !== input.seasonId) throw new TenantOperationsError("DELIVERY_SHARE_SCOPE_INVALID");
       if (share.customerId !== input.customerId) throw new TenantOperationsError("DELIVERY_CUSTOMER_MISMATCH");
@@ -324,18 +375,35 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       if (!complete && !input.allowPartial) throw new TenantOperationsError("DELIVERY_PACKAGE_CHECKLIST_INCOMPLETE");
       if (input.loadingListId) {
         const loadingRows = await tx.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS "count" FROM "LoadingListItem" AS item JOIN "LoadingList" AS list ON list."id" = item."loadingListId" WHERE list."id" = ${input.loadingListId} AND list."seasonId" = ${input.seasonId} AND item."packageRecordId" = ANY(${scannedPackageIds})`;
-        if (Number(loadingRows[0]?.count ?? 0n) !== scannedPackageIds.length) throw new TenantOperationsError("DELIVERY_LOADING_LIST_SCOPE_INVALID");
+        if (Number(loadingRows[0]?.count ?? BigInt(0)) !== scannedPackageIds.length) throw new TenantOperationsError("DELIVERY_LOADING_LIST_SCOPE_INVALID");
       }
       const alreadyDelivered = await tx.$queryRaw<Array<{ id: string }>>`SELECT link."packageRecordId" AS "id" FROM "DeliveryPackageLink" AS link JOIN "DeliveryRecord" AS delivery ON delivery."id" = link."deliveryRecordId" WHERE link."packageRecordId" = ANY(${scannedPackageIds}) AND delivery."status" IN ('partial','delivered') FOR UPDATE OF delivery`;
       if (alreadyDelivered.length > 0) throw new TenantOperationsError("PACKAGE_ALREADY_DELIVERED");
       const deliveryStatus: DeliveryStatus = complete ? "delivered" : "partial";
-      await tx.deliveryRecord.create({ data: { id: input.id, shareId: input.shareId, customerId: input.customerId, status: deliveryStatus, deliveredAt: complete ? meta.occurredAt : undefined } });
+      await tx.deliveryRecord.create({
+        data: {
+          id: input.id,
+          seasonId: input.seasonId,
+          shareId: input.shareId,
+          customerId: input.customerId,
+          status: deliveryStatus,
+          deliveredAt: complete ? meta.occurredAt : undefined,
+          receiverName: input.receiverName,
+          receiverRelationship: input.receiverRelationship,
+          deliveryType: input.deliveryType ?? "on_site",
+          serviceFee: input.serviceFee ?? "0",
+          staffUserId: input.staffUserId ?? meta.actorUserId,
+          deviceId: input.deviceId,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          partialExceptionReason: input.partialExceptionReason,
+          debtOverrideReason: input.debtOverride?.reason,
+          approvalRequestId: input.debtOverride?.approvalRequestId,
+          loadingListId: input.loadingListId,
+        },
+      });
       for (const packageRecordId of scannedPackageIds) await tx.$executeRaw`INSERT INTO "DeliveryPackageLink" ("deliveryRecordId", "packageRecordId", "scannedAt", "scannedByUserId", "deviceId") VALUES (${input.id}, ${packageRecordId}, ${meta.occurredAt}, ${meta.actorUserId}, ${input.deviceId ?? null})`;
       await tx.$executeRaw`UPDATE "PackageRecord" SET "status" = 'delivered' WHERE "id" = ANY(${scannedPackageIds})`;
-      if (input.receiverName || input.loadingListId || input.debtOverride) {
-        await tx.$executeRaw`UPDATE "DeliveryRecord" SET "receiverName" = ${input.receiverName ?? null}, "loadingListId" = ${input.loadingListId ?? null}, "debtOverrideReason" = ${input.debtOverride?.reason ?? null}, "approvalRequestId" = ${input.debtOverride?.approvalRequestId ?? null} WHERE "id" = ${input.id}`;
-      }
-      await tx.$executeRaw`UPDATE "DeliveryRecord" SET "seasonId" = ${input.seasonId}, "deliveryType" = ${input.deliveryType ?? "on_site"}, "serviceFee" = ${input.serviceFee ?? "0"}::decimal, "receiverRelationship" = ${input.receiverRelationship ?? null}, "staffUserId" = ${input.staffUserId ?? meta.actorUserId}, "deviceId" = ${input.deviceId ?? null}, "latitude" = ${input.latitude ?? null}::decimal, "longitude" = ${input.longitude ?? null}::decimal, "partialExceptionReason" = ${input.partialExceptionReason ?? null} WHERE "id" = ${input.id}`;
       if (input.proof) {
         await tx.$executeRaw`INSERT INTO "DeliveryProof" ("id", "deliveryRecordId", "proofType", "storageKey", "note", "capturedAt") VALUES (${input.proof.id}, ${input.id}, ${input.proof.proofType}, ${input.proof.storageKey ?? input.debtOverride?.storageKey ?? null}, ${input.proof.note ?? input.reason ?? null}, ${meta.occurredAt})`;
         await tx.$executeRaw`UPDATE "DeliveryProof" SET "mimeType" = ${input.proof.mimeType ?? null}, "sizeBytes" = ${input.proof.sizeBytes ?? null}, "checksumSha256" = ${input.proof.checksumSha256 ?? null}, "capturedByUserId" = ${input.staffUserId ?? meta.actorUserId}, "deviceId" = ${input.deviceId ?? null} WHERE "id" = ${input.proof.id}`;
@@ -434,9 +502,11 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
 
 async function command<TResult>(db: PrismaClient, scope: string, meta: CommandMeta, run: (tx: Tx) => Promise<TResult>): Promise<TResult> {
   return db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${meta.idempotencyKey}, 0))`;
     const existing = await tx.tenantIdempotencyRecord.findUnique({ where: { key: meta.idempotencyKey } });
+    if (existing && (existing.scope !== scope || existing.requestHash !== meta.requestHash)) throw new TenantOperationsError("IDEMPOTENCY_CONFLICT");
     if (existing?.status === "completed" && existing.resultPayload) return existing.resultPayload as TResult;
-    if (existing && existing.requestHash !== meta.requestHash) throw new TenantOperationsError("IDEMPOTENCY_CONFLICT");
+    if (existing) throw new TenantOperationsError("IDEMPOTENCY_IN_PROGRESS");
     await tx.tenantIdempotencyRecord.upsert({
       where: { key: meta.idempotencyKey },
       create: { key: meta.idempotencyKey, scope, actorUserId: meta.actorUserId, requestId: meta.requestId, requestHash: meta.requestHash },
@@ -446,6 +516,23 @@ async function command<TResult>(db: PrismaClient, scope: string, meta: CommandMe
     await tx.tenantIdempotencyRecord.update({ where: { key: meta.idempotencyKey }, data: { status: "completed", completedAt: meta.occurredAt, resultPayload: json(result) } });
     return result;
   });
+}
+
+async function qrTargetBelongsToSeason(tx: Tx, purpose: string, targetId: string, seasonId: string): Promise<boolean> {
+  switch (purpose) {
+    case "proxyDocument":
+      return Boolean(await tx.proxyDocument.findFirst({ where: { id: targetId, seasonId }, select: { id: true } }));
+    case "slaughterCheck":
+      return Boolean(await tx.slaughterJob.findFirst({ where: { id: targetId, seasonId }, select: { id: true } }));
+    case "package":
+      return Boolean(await tx.packageRecord.findFirst({ where: { id: targetId, seasonId }, select: { id: true } }));
+    case "delivery":
+      return Boolean(await tx.deliveryRecord.findFirst({ where: { id: targetId, seasonId }, select: { id: true } }));
+    case "customerTracking":
+      return Boolean(await tx.share.findFirst({ where: { id: targetId, shareCard: { seasonId } }, select: { id: true } }));
+    default:
+      return false;
+  }
 }
 
 async function evidence(tx: Tx, meta: CommandMeta, action: string, targetType: string, targetId: string, metadata: Record<string, unknown>) {

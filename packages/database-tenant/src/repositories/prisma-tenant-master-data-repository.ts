@@ -548,11 +548,11 @@ async function assertSeasonArchiveReady(tx: Tx, seasonId: string, meta: CommandM
     tx.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS "count" FROM "Share" AS share JOIN "ShareCard" AS card ON card."id" = share."shareCardId" WHERE card."seasonId" = ${seasonId} AND share."status" = 'sold' AND NOT EXISTS (SELECT 1 FROM "DeliveryRecord" AS delivery WHERE delivery."shareId" = share."id" AND delivery."status" = 'delivered')`,
     tx.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS "count" FROM "WeightShortfallAdjustment" WHERE "seasonId" = ${seasonId} AND "status" = 'pending_approval'`,
   ]);
-  if (Number(finance[0]?.unbalanced ?? 0n) > 0 || Number(finance[0]?.difference ?? "0") !== 0) throw new TenantMasterDataError("SEASON_ARCHIVE_FINANCE_NOT_RECONCILED");
-  if (Number(openExceptions[0]?.count ?? 0n) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_CRITICAL_EXCEPTION_OPEN");
-  if (Number(undelivered[0]?.count ?? 0n) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_DELIVERY_INCOMPLETE");
-  if (Number(pendingAdjustments[0]?.count ?? 0n) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_ADJUSTMENT_PENDING");
-  await tx.$executeRaw`INSERT INTO "SeasonClosureSnapshot" ("id", "seasonId", "financeDifference", "unbalancedJournalCount", "openCriticalExceptionCount", "undeliveredShareCount", "pendingAdjustmentCount", "closedByUserId", "closedAt") VALUES (${`season_closure_${seasonId}`}, ${seasonId}, ${finance[0]?.difference ?? "0"}::decimal, ${Number(finance[0]?.unbalanced ?? 0n)}, ${Number(openExceptions[0]?.count ?? 0n)}, ${Number(undelivered[0]?.count ?? 0n)}, ${Number(pendingAdjustments[0]?.count ?? 0n)}, ${meta.actorUserId}, ${meta.occurredAt}) ON CONFLICT ("seasonId") DO NOTHING`;
+  if (Number(finance[0]?.unbalanced ?? BigInt(0)) > 0 || Number(finance[0]?.difference ?? "0") !== 0) throw new TenantMasterDataError("SEASON_ARCHIVE_FINANCE_NOT_RECONCILED");
+  if (Number(openExceptions[0]?.count ?? BigInt(0)) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_CRITICAL_EXCEPTION_OPEN");
+  if (Number(undelivered[0]?.count ?? BigInt(0)) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_DELIVERY_INCOMPLETE");
+  if (Number(pendingAdjustments[0]?.count ?? BigInt(0)) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_ADJUSTMENT_PENDING");
+  await tx.$executeRaw`INSERT INTO "SeasonClosureSnapshot" ("id", "seasonId", "financeDifference", "unbalancedJournalCount", "openCriticalExceptionCount", "undeliveredShareCount", "pendingAdjustmentCount", "closedByUserId", "closedAt") VALUES (${`season_closure_${seasonId}`}, ${seasonId}, ${finance[0]?.difference ?? "0"}::decimal, ${Number(finance[0]?.unbalanced ?? BigInt(0))}, ${Number(openExceptions[0]?.count ?? BigInt(0))}, ${Number(undelivered[0]?.count ?? BigInt(0))}, ${Number(pendingAdjustments[0]?.count ?? BigInt(0))}, ${meta.actorUserId}, ${meta.occurredAt}) ON CONFLICT ("seasonId") DO NOTHING`;
 }
 
 async function evidence(tx: Tx, meta: CommandMeta, action: string, targetType: string, targetId: string, metadata: Record<string, unknown>): Promise<void> {
