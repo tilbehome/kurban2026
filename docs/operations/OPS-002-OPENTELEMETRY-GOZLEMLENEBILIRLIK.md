@@ -3,14 +3,14 @@
 ```yaml
 id: OPS-002
 title: OpenTelemetry Gözlemlenebilirlik Standardı
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: Operations
 source_role: operations_policy_or_playbook
 reviewers: [Security, Privacy, Architecture, QA]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 verified_against_commit: not_applicable
-next_review: OTEL_COLLECTOR_UYGULAMASINDA
+next_review: ILK_STAGING_TRACE_KANITINDA
 version: 0.1
 source_of_truth: false
 related_requirements: [PRO-016, PRO-017, PRO-022, PRO-027]
@@ -23,7 +23,7 @@ superseded_by: null
 
 ## Durum
 
-Repo `traceId/requestId` ve sağlayıcıdan bağımsız event/metric sözleşmeleri içerir. Gerçek OpenTelemetry SDK/collector/exporter, dashboard ve alarm akışı uygulanmış/çalıştırılmış sayılmaz.
+Repo `packages/observability` altında OpenTelemetry Node SDK, HTTP/Prisma PostgreSQL otomatik enstrümantasyonu, operation metric/span yardımcısı, 64 opaque tenant bucket’ı ve uygulama+collector redaksiyonu içerir. Next.js tenant/platform instrumentation girişleri ve worker başlangıçları OTLP endpoint mevcutsa SDK’yı açar; endpoint yoksa ana işlemi bozmadan `disabled` kalır. Staging collector/Prometheus yapılandırması repo içindedir; gerçek collector trace zinciri, dashboard ve alarm kabulü henüz `NOT_RUN` olduğu için genel durum `IMPLEMENTED_UNVERIFIED`dır.
 
 ## Korelasyon zinciri
 

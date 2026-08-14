@@ -1,0 +1,14 @@
+{
+  "actorUserId": "platform_operator_staging",
+  "requestId": "request_staging_tenant_b_001",
+  "idempotencyKey": "idempotency_staging_tenant_b_001",
+  "occurredAt": "2026-08-13T00:00:00.000Z",
+  "organization": { "id": "org_staging_b", "slug": "sentetik-b", "displayName": "Sentetik Kurban İşletmesi B", "status": "active" },
+  "tenant": {
+    "id": "tenant_staging_b", "organizationId": "org_staging_b", "slug": "sentetik-b", "displayName": "Sentetik Kurban İşletmesi B",
+    "provisioningStatus": "active", "releaseChannel": "pilot",
+    "databaseRef": { "id": "dbref_staging_b", "engine": "postgresql", "managed": true, "region": "staging-local" }
+  },
+  "databaseRef": { "id": "dbref_staging_b", "engine": "postgresql", "managed": true, "region": "staging-local", "status": "active" },
+  "adminUser": { "id": "tenant_admin_staging_b", "email": "admin-b@example.test", "displayName": "Sentetik Firma Admin B", "status": "active" }
+}

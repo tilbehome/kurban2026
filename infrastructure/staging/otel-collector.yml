@@ -1,0 +1,63 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 384
+  filter/drop_sensitive_attributes:
+    error_mode: ignore
+    traces:
+      span:
+        - 'attributes["http.request.header.authorization"] != nil'
+        - 'attributes["db.connection_string"] != nil'
+  attributes/redact:
+    actions:
+      - key: enduser.id
+        action: delete
+      - key: user.email
+        action: delete
+      - key: user.phone
+        action: delete
+      - key: db.connection_string
+        action: delete
+      - key: http.request.header.cookie
+        action: delete
+      - key: http.request.header.authorization
+        action: delete
+  transform/redact_exception_events:
+    error_mode: propagate
+    trace_statements:
+      - context: spanevent
+        conditions:
+          - name == "exception"
+        statements:
+          - set(attributes["exception.type"], "OBSERVED_OPERATION_FAILED")
+          - set(attributes["exception.message"], "OBSERVED_OPERATION_FAILED")
+          - delete_key(attributes, "exception.stacktrace")
+  batch: {}
+
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:9464
+  debug:
+    verbosity: basic
+
+service:
+  telemetry:
+    logs:
+      level: warn
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, filter/drop_sensitive_attributes, attributes/redact, transform/redact_exception_events, batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/redact, batch]
+      exporters: [prometheus]

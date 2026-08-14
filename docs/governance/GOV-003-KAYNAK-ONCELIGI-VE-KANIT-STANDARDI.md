@@ -6,7 +6,7 @@ status: VERIFIED
 owner: Product-and-Architecture
 source_role: source_precedence_and_evidence_source
 source_of_truth: true
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 verified_against_commit: not_applicable
 ```
 
@@ -44,10 +44,10 @@ Kodun mevcut davranışı hedef kararın doğru uygulandığını kendiliğinden
 
 Kanıt kaydı kısa SHA yerine mümkün olduğunda tam SHA kullanır. `main` veya `latest` gibi hareketli referanslar doğrulama referansı değildir. CI kanıtında koşu bağlantısı, commit, sonuç ve kapsanan işler bulunur.
 
-12 Ağustos 2026 doğrulamasında temel referans:
+13 Ağustos 2026 doğrulamasında temel referans:
 
-- Commit: `74915b6f3f1f8d53116b760b6a6be9797111efa5`
-- CI: [TilbeCore CI / 31571606803](https://github.com/tilbehome/kurban2026/actions/runs/31571606803)
+- Commit: `fef2154ac64c0948f51e42e34c3f93081928e2dd`
+- CI: [TilbeCore CI / 31626396792](https://github.com/tilbehome/kurban2026/actions/runs/31626396792)
 - Sonuç: `success`
 - Sınır: Bu koşu canlı DNS/TLS, fiziksel passkey cihazı, production restore, gerçek abonelik/faturalama veya genel Kurban Günü provası değildir.
 

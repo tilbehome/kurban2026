@@ -8,7 +8,7 @@ owner: Operations-and-QA
 source_role: evidence_record_or_template
 reviewers: [Product, Security, Finance, Tenant-Owner]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 verified_against_commit: not_applicable
 next_review: HER_PROVA_ONCESI
 version: 0.1
@@ -51,3 +51,32 @@ signoffs: []
 ```
 
 Gerçek müşteri/veri kullanılmaz. Bir kritik senaryo `NOT_RUN/FAILED/BLOCKED` ise genel sonuç `PASSED` olamaz.
+
+## EVD-010-RUN-20260813-001
+
+```yaml
+result: NOT_RUN
+commit_sha: dce7d539122c1ae263cec566d18e907a5a63b0f1
+release: STAGING_ACCEPTANCE_CANDIDATE
+environment: NOT_DEPLOYED
+synthetic_tenants: 0
+participants_by_role: {}
+devices: []
+scenarios:
+  tenant_setup_and_season: NOT_RUN
+  animal_and_seven_shares: NOT_RUN
+  sale_collection_proxy: NOT_RUN
+  slaughter_weigh_package: NOT_RUN
+  internet_outage_and_sync: NOT_RUN
+  database_read_only_recovery: NOT_RUN
+  printer_qr_device_failure: NOT_RUN
+  wrong_package_share: NOT_RUN
+  delivery: NOT_RUN
+  cash_and_ledger_reconciliation: NOT_RUN
+  backup_restore: NOT_RUN
+  season_close: NOT_RUN
+tenant_isolation: NOT_RUN
+open_blockers:
+  - Staging deployment ve gerçek cihaz katılımcıları hazır değil.
+  - Bu paket YN-00–YN-26 veya genel Kurban Günü provasını başlatmaz.
+```

@@ -74,6 +74,22 @@ jobs:
       - name: Documentation inventory and policy checks
         run: pnpm validate:docs
 
+      - name: Secret scan
+        run: pnpm scan:secrets
+
+      - name: Staging package static validation
+        run: pnpm staging:validate
+
+      - name: OpenTelemetry Collector config validation
+        run: >-
+          docker run --rm
+          --volume "$PWD/infrastructure/staging/otel-collector.yml:/etc/otelcol-contrib/config.yaml:ro"
+          otel/opentelemetry-collector-contrib:0.132.0
+          validate --config=/etc/otelcol-contrib/config.yaml
+
+      - name: Playwright project and test discovery
+        run: pnpm test:e2e:list
+
       - name: Platform Prisma validate
         run: pnpm exec prisma validate --schema packages/database-platform/prisma/schema.prisma
 

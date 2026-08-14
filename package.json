@@ -27,6 +27,15 @@
     "test": "vitest run",
     "test:platform-postgres": "vitest run packages/database-platform/tests/platform-postgres.integration.test.ts",
     "test:tenant-isolation": "vitest run packages/database-tenant/tests/tenant-isolation.integration.test.ts",
+    "test:offline": "vitest run packages/offline/tests/offline-sync.test.ts",
+    "test:e2e:list": "playwright test --list",
+    "test:e2e": "playwright test",
+    "test:a11y": "playwright test --grep @a11y",
+    "test:e2e:install": "playwright install chromium firefox webkit",
+    "staging:validate": "node infrastructure/staging/scripts/validate-package.mjs",
+    "staging:preflight": "node infrastructure/staging/scripts/preflight.mjs",
+    "load:test": "node performance/k6/run-k6.mjs",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
     "provisioning:cli": "tsx apps/provisioning-cli/src/cli.ts",
     "provisioning:worker": "tsx apps/provisioning-cli/src/cli.ts worker --once",
     "tenant:ops": "tsx apps/tenant-ops-cli/src/cli.ts",
@@ -66,9 +75,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4",
     "@tilbecore/config": "workspace:*",
     "@tilbecore/contracts": "workspace:*",
-    "@tailwindcss/postcss": "^4",
+    "@tilbecore/observability": "workspace:*",
+    "@tilbecore/offline": "workspace:*",
     "@types/archiver": "^7.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
@@ -84,6 +97,7 @@
     "tailwindcss": "^4",
     "tsx": "^4.22.3",
     "typescript": "^5",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "yaml": "^2.9.0"
   }
 }

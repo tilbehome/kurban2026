@@ -3,12 +3,12 @@
 ```yaml
 id: OPS-008
 title: Restore, WAL ve PITR Runbook'u
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: Data-Operations
 source_role: operations_policy_or_playbook
 reviewers: [Operations, Security, Finance, Tenant-Owner]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 verified_against_commit: not_applicable
 next_review: CANLI_PITR_TOPOLOJISI_SECIMINDE
 version: 0.1
@@ -24,6 +24,8 @@ superseded_by: null
 ## Güvenlik uyarısı ve mevcut sınır
 
 Repo CLI’ı backup create/status/verify ile destructive olmayan restore plan/verify sağlar. Production DB üzerine restore uygulanmış değildir ve bu belgede çalıştırılabilir destructive komut verilmez. WAL arşivleme/PITR sağlayıcısı seçilmemiş, ayar ve ölçülmüş RPO/RTO yoktur.
+
+`infrastructure/staging` paketi PostgreSQL 16 üzerinde staging-only `archive_mode`, ayrı WAL volume, `pg_basebackup` + `pg_verifybackup`, SHA-256 manifest ve izole PITR hedef hazırlığını tekrar üretilebilir hale getirir. Bu yerel sağlayıcı tatbikat paketidir; yönetilen sağlayıcı kararı veya production restore yetkisi değildir. Docker/staging sunucusu ve gerçek recovery target olmadan tatbikat `BLOCKED`, RPO/RTO `NOT_MEASURED` kalır.
 
 ## Karar noktası
 

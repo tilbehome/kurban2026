@@ -1,0 +1,22 @@
+{
+  admin off
+}
+
+https://console.tilbecore.test {
+  tls internal
+  reverse_proxy platform-admin:3100
+}
+
+https://tilbecore.test, https://demo.tilbecore.test {
+  tls internal
+  reverse_proxy tenant-web-a:3000
+}
+
+https://sentetik-b.tilbecore.test {
+  tls internal
+  reverse_proxy tenant-web-b:3000
+}
+
+http://console.tilbecore.test, http://tilbecore.test, http://demo.tilbecore.test, http://sentetik-b.tilbecore.test {
+  redir https://{host}{uri} permanent
+}

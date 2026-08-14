@@ -3,14 +3,14 @@
 ```yaml
 id: TST-011
 title: Yük, Performans ve Dayanıklılık Test Planı
-status: PLANNED
+status: IMPLEMENTED_UNVERIFIED
 owner: QA
 source_role: test_plan
 reviewers: [Operations, Architecture, Product, Security]
 effective_date: 2026-08-12
-last_reviewed: 2026-08-12
+last_reviewed: 2026-08-13
 verified_against_commit: not_applicable
-next_review: STAGING_BASELINE_ONCESI
+next_review: ILK_STAGING_BASELINE_SONRASI
 version: 0.1
 source_of_truth: false
 related_requirements: [REQ-067, PRO-017, PRO-022, PRO-031]
@@ -24,6 +24,8 @@ superseded_by: null
 ## İlke
 
 Üretim trafiği ve prova ölçümü olmadığı için sayısal latency, throughput, SLO, RPO veya RTO uydurulmaz. Önce sezon/kullanıcı/cihaz davranışından yük modeli ve staging baseline üretilir; hedefler ürün ve operasyon sahiplerince onaylanır.
+
+Araç kararı [ADR-0004](../adr/ADR-0004-STAGING-YUK-TEST-ARACI-SECIMI.md) ile k6 OSS olarak alınmıştır. `performance/k6/tilbecore-staging.js` bütün profil isimlerini ve ölçümleri tanımlar; baseline dışındaki VU/süre değerleri açık environment olmadan başlamaz. Yerel makinede k6/Docker ve erişilebilir sentetik staging bulunmadan performans sonucu `BLOCKED`, sayısal alanlar `NOT_MEASURED` kalır.
 
 ## İş yükü modeli
 

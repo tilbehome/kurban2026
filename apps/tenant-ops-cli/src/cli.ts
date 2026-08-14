@@ -1,4 +1,7 @@
 import path from "node:path";
+import { randomUUID } from "node:crypto";
+import { runObservedOperation } from "@tilbecore/observability";
+import { registerNodeObservability } from "@tilbecore/observability/node";
 import type { TenantDatabaseRefId, TenantInstanceId } from "@tilbecore/contracts";
 import { createPlatformPrismaClient } from "@tilbecore/database-platform";
 import {
@@ -9,7 +12,10 @@ import {
 } from "@tilbecore/database-tenant";
 import { parseTenantOpsCommand } from "./input";
 
-void main().catch((error) => {
+void registerNodeObservability().then(() => runObservedOperation({
+  requestId: `tenant-ops-cli-${randomUUID()}`,
+  operation: "tenant-ops.cli",
+}, main)).catch((error) => {
   process.stderr.write(`${JSON.stringify({ ok: false, code: safeCliError(error) })}\n`);
   process.exitCode = 1;
 });
