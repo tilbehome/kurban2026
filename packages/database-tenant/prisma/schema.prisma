@@ -48,6 +48,7 @@ model Season {
   paddocks          Paddock[]
   paddockAssignments AnimalPaddockAssignment[]
   proxyDocuments    ProxyDocument[]
+  closureSnapshot   SeasonClosureSnapshot?
 
   @@index([locationId])
   @@index([status])
@@ -1526,6 +1527,19 @@ model ProxyDocument {
   @@index([seasonId, customerId])
 }
 
+model SeasonClosureSnapshot {
+  id                         String   @id
+  seasonId                   String   @unique
+  financeDifference          Decimal  @db.Decimal(18, 4)
+  unbalancedJournalCount     Int
+  openCriticalExceptionCount Int
+  undeliveredShareCount      Int
+  pendingAdjustmentCount     Int
+  closedByUserId             String
+  closedAt                   DateTime
+  season                     Season   @relation(fields: [seasonId], references: [id])
+}
+
 model ProxyGrantor {
   proxyDocumentId          String
   customerId               String
@@ -1717,7 +1731,7 @@ model WeighingRecord {
 
 model PackageRecord {
   id             String              @id
-  seasonId       String?
+  seasonId       String
   animalId       String?
   customerId     String?
   shareId        String
@@ -1814,7 +1828,7 @@ model PackageExceptionHistory {
 
 model DeliveryRecord {
   id                 String          @id
-  seasonId           String?
+  seasonId           String
   shareId            String
   customerId         String
   status             String

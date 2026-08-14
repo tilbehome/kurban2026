@@ -147,6 +147,7 @@ export class PrismaTenantMasterDataRepository implements TenantMasterDataReposit
   transitionSeason(input: { seasonId: string; from: SeasonStatus; to: SeasonStatus }, meta: CommandMeta) {
     return this.command("season.transition", meta, async (tx) => {
       await lockSeason(tx, input.seasonId, [input.from]);
+      if (input.to === "archived") await assertSeasonArchiveReady(tx, input.seasonId, meta);
       const changed = await tx.season.updateMany({
         where: { id: input.seasonId, status: input.from },
         data: { status: input.to, archivedAt: input.to === "archived" ? meta.occurredAt : null },
@@ -530,6 +531,28 @@ async function lockSeason(tx: Tx, seasonId: string, allowed: readonly SeasonStat
   const rows = await tx.$queryRawUnsafe<Array<{ status: string }>>('SELECT "status" FROM "Season" WHERE "id" = $1 FOR UPDATE', seasonId);
   if (!rows[0]) throw new TenantMasterDataError("SEASON_NOT_FOUND");
   if (!allowed.includes(rows[0].status as SeasonStatus)) throw new TenantMasterDataError(rows[0].status === "archived" ? "SEASON_ARCHIVED_READ_ONLY" : "SEASON_OPERATION_NOT_ALLOWED");
+}
+
+async function assertSeasonArchiveReady(tx: Tx, seasonId: string, meta: CommandMeta): Promise<void> {
+  const [finance, openExceptions, undelivered, pendingAdjustments] = await Promise.all([
+    tx.$queryRaw<Array<{ unbalanced: bigint; difference: string }>>`
+      SELECT COUNT(*) FILTER (WHERE totals.debit <> totals.credit)::bigint AS "unbalanced",
+        COALESCE(SUM(totals.debit - totals.credit), 0)::text AS "difference"
+      FROM (
+        SELECT entry."id", COALESCE(SUM(line."amount") FILTER (WHERE line."side" = 'debit'), 0) AS debit,
+          COALESCE(SUM(line."amount") FILTER (WHERE line."side" = 'credit'), 0) AS credit
+        FROM "JournalEntry" AS entry JOIN "JournalLine" AS line ON line."journalEntryId" = entry."id"
+        WHERE entry."seasonId" = ${seasonId} GROUP BY entry."id"
+      ) AS totals`,
+    tx.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS "count" FROM "OperationException" WHERE "seasonId" = ${seasonId} AND "status" IN ('open','assigned','reopened') AND "severity" IN ('high','critical')`,
+    tx.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS "count" FROM "Share" AS share JOIN "ShareCard" AS card ON card."id" = share."shareCardId" WHERE card."seasonId" = ${seasonId} AND share."status" = 'sold' AND NOT EXISTS (SELECT 1 FROM "DeliveryRecord" AS delivery WHERE delivery."shareId" = share."id" AND delivery."status" = 'delivered')`,
+    tx.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*)::bigint AS "count" FROM "WeightShortfallAdjustment" WHERE "seasonId" = ${seasonId} AND "status" = 'pending_approval'`,
+  ]);
+  if (Number(finance[0]?.unbalanced ?? 0n) > 0 || Number(finance[0]?.difference ?? "0") !== 0) throw new TenantMasterDataError("SEASON_ARCHIVE_FINANCE_NOT_RECONCILED");
+  if (Number(openExceptions[0]?.count ?? 0n) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_CRITICAL_EXCEPTION_OPEN");
+  if (Number(undelivered[0]?.count ?? 0n) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_DELIVERY_INCOMPLETE");
+  if (Number(pendingAdjustments[0]?.count ?? 0n) > 0) throw new TenantMasterDataError("SEASON_ARCHIVE_ADJUSTMENT_PENDING");
+  await tx.$executeRaw`INSERT INTO "SeasonClosureSnapshot" ("id", "seasonId", "financeDifference", "unbalancedJournalCount", "openCriticalExceptionCount", "undeliveredShareCount", "pendingAdjustmentCount", "closedByUserId", "closedAt") VALUES (${`season_closure_${seasonId}`}, ${seasonId}, ${finance[0]?.difference ?? "0"}::decimal, ${Number(finance[0]?.unbalanced ?? 0n)}, ${Number(openExceptions[0]?.count ?? 0n)}, ${Number(undelivered[0]?.count ?? 0n)}, ${Number(pendingAdjustments[0]?.count ?? 0n)}, ${meta.actorUserId}, ${meta.occurredAt}) ON CONFLICT ("seasonId") DO NOTHING`;
 }
 
 async function evidence(tx: Tx, meta: CommandMeta, action: string, targetType: string, targetId: string, metadata: Record<string, unknown>): Promise<void> {
