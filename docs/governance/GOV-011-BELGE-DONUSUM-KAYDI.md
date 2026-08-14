@@ -6,8 +6,8 @@ status: VERIFIED
 owner: Architecture-and-Documentation
 source_role: documentation_transformation_register
 source_of_truth: true
-last_reviewed: 2026-08-12
-verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+last_reviewed: 2026-08-14
+verified_against_commit: 885b55e2cc027cb7782e625d84c1073b74107e8c
 ```
 
 ## Dönüşüm kararı
@@ -55,6 +55,19 @@ Yeni nesil `YN-00–YN-26` yol haritası bu entegrasyonda bağlayıcı uygulama 
 | `12-BELGE-YONETISIMI-VE-CODEX-UYGULAMA-TALIMATI.md` | `7BCCF4DD051835302B9056DB328ED74D63BFA16EF3F26CB1A7E619A14342F1FC` |
 | `TILBECORE-KURBAN-OS-TEK-BAGLAYICI-YENI-NESIL-YOL-HARITASI.md` | `6F5EDB31138316FCF6E46488034D952D3FC3DBCFCDE2C803D84414971C99E14A` |
 | `TILBECORE-PROFESYONEL-DOKUMANTASYON-SISTEMI-ANA-PLANI.md` | `E73497F589ED8EC8FC9740271038C4BAE8937951C5C069403122E8ABAC346256` |
+
+## 14 Ağustos 2026 EVO kök kaynağı entegrasyonu
+
+Kullanıcının hazırladığı kök `TILBECORE-EVO-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md` dosyası, aşağıdaki bütünlük kaydıyla [EVO-ROADMAP-001](../architecture/EVO-ROADMAP-001-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md) kalıcı belgesine alınmıştır. Kaynağın özgün maddeleri silinmemiş veya yeniden yorumlanarak değiştirilmemiş; yönetişim metadata alanları, mevcut repo kanıtı ayrımı ve Teknoloji Radarı eklenmiştir.
+
+| Kaynak | Boyut | Önceki SHA-256 | Kalıcı hedef | Karar |
+|---|---:|---|---|---|
+| `TILBECORE-EVO-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md` | 31.986 bayt | `07ECCD988F9A4A3C8CEBE905CF8B88C1430AC923132FE8DB3B239CA468434C99` | `docs/architecture/EVO-ROADMAP-001-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md` | İçerik korundu; `PLANNED / NOT_ACTIVE` olarak yönetime alındı; kök mükerrer kopya kaldırıldı |
+
+- Taksonomi kararı: Aktif Faz 1–12 yol haritası ve gelecekteki program kapıları zaten `docs/architecture` altında yönetildiği için yeni `docs/roadmaps` kategorisi açılmadı.
+- Öncelik kararı: EVO, RMP-001 veya YN kaynağının yerine geçmez ve bunların sırasını değiştirmez.
+- Aktivasyon bağımlılığı: **Mevcut Faz 2D–12 tamamlanmadan ve YN-00–YN-26 bitmeden uygulamaya alınmaz.**
+- Kanıt sınırı: `885b55e2cc027cb7782e625d84c1073b74107e8c` yalnız entegrasyon sırasında incelenen gerçek repo fotoğrafıdır; EVO’nun uygulandığını veya production kabulünü kanıtlamaz.
 
 ## Koruma, red ve kanıt sınırı
 

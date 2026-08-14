@@ -6,12 +6,12 @@ status: PLANNED
 owner: Product-and-Architecture
 source_role: binding_phase_1_12_architecture_roadmap
 source_of_truth: true
-last_reviewed: 2026-08-12
-verified_against_commit: 74915b6f3f1f8d53116b760b6a6be9797111efa5
+last_reviewed: 2026-08-14
+verified_against_commit: 885b55e2cc027cb7782e625d84c1073b74107e8c
 ```
 
 **Belge tarihi:** 10 Ağustos 2026
-**Son kanıt incelemesi:** 12 Ağustos 2026, `74915b6f3f1f8d53116b760b6a6be9797111efa5`
+**Son kanıt incelemesi:** 14 Ağustos 2026, `885b55e2cc027cb7782e625d84c1073b74107e8c`
 **Belge durumu:** Bağlayıcı ana mimari ve yol haritası
 **Ürün adı:** TilbeCore – Kurban Takip
 **Kısa ad:** TilbeCore Kurban
@@ -1170,6 +1170,10 @@ Faz 2 başlamadan önce verilecek zorunlu kanıtlar:
 | YN-26 → release | İkinci genel doğrulama ve tam Kurban Günü provası | Değişmez commit, EVD ve go/no-go | `PLANNED` |
 
 Kapı istisnası [GOV-013](../governance/GOV-013-TESLIM-IZLENEBILIRLIK-VE-GITHUB-HEDEFI.md) uyarınca kimlikli, süreli, risk sahibi ve onaylı olmadıkça geçerli değildir. YN fazlarının ayrıntılı kapsamı salt-okunur kaynak pakette `PLANNED` girdi olarak tutulur; bu belge onları uygulandı saymaz.
+
+### 15.2 EVO kurumsal evrim aktivasyon kapısı
+
+[EVO-ROADMAP-001](EVO-ROADMAP-001-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md), YN sonrasındaki kurumsal güvenlik, ölçek ve ekosistem programını içerir. Durumu `PLANNED`, aktivasyon durumu `NOT_ACTIVE` olup mevcut Faz 1–12 veya YN kapsamının yerine geçmez. **Mevcut Faz 2D–12 tamamlanmadan ve YN-00–YN-26 bitmeden uygulamaya alınmaz.** Belgenin repoya alınması herhangi bir EVO geliştirmesini başlatmaz.
 
 - Ürün yalnız tek çiftlik için geçici program değil, çok firmalı TilbeCore Kurban platformudur.
 - Çok firma çekirdeği Faz 2’de, iş domainlerinden önce kurulacaktır.

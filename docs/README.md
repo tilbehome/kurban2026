@@ -6,8 +6,8 @@ status: VERIFIED
 owner: Product-and-Architecture
 source_role: canonical_document_index
 source_of_truth: true
-last_reviewed: 2026-08-13
-verified_against_commit: fef2154ac64c0948f51e42e34c3f93081928e2dd
+last_reviewed: 2026-08-14
+verified_against_commit: 885b55e2cc027cb7782e625d84c1073b74107e8c
 ```
 
 Bu dosya aktif belge sisteminin tek giriş noktasıdır. Bir belgenin listelenmesi, içindeki hedeflerin kodlandığı veya kabul testlerinin çalıştırıldığı anlamına gelmez. Gerçek durum; belge durumu, kaynak kod/migration/test kanıtı ve doğrulanan commit birlikte okunarak belirlenir.
@@ -28,6 +28,10 @@ Bu liste kaynak önceliği değildir; kaynak çelişkileri yalnız [GOV-003](gov
 
 Eski test planı yolu [ARC-010 uyumluluk yönlendirmesi](architecture/10-TEST-KALITE-VE-KABUL-PLANI.md) olarak korunur; test ve kabul konusunda kaynak gerçek `docs/testing/TST-001-MASTER-TEST-PLANI.md` belgesidir.
 
+## Gelecek yol haritaları — aktif değil
+
+Program önceliği değişmez: önce [RMP-001 Faz 1–12](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), ardından aynı belgedeki aktivasyon kapılarıyla `YN-00–YN-26`, ancak bunların kanıtlı kapanışından sonra [EVO-ROADMAP-001](architecture/EVO-ROADMAP-001-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md) değerlendirilir. EVO belgesinin durumu `PLANNED`, aktivasyon durumu `NOT_ACTIVE` olup indekslenmesi uygulamanın başladığı anlamına gelmez.
+
 ## Belge sistemi
 
 Eksiksiz dosya bazlı liste, metadata, sahiplik, güncellik, aynı konu kaynağı ve tasnif kararı [GOV-012 Markdown envanterinde](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md) bulunur.
@@ -35,7 +39,7 @@ Eksiksiz dosya bazlı liste, metadata, sahiplik, güncellik, aynı konu kaynağ�
 | Alan | Dizin | Bağlayıcı belge / erişim |
 |---|---|---|
 | Kök yönetişim | repo kökü | [AGENTS.md](../AGENTS.md), [README.md](../README.md) |
-| Mimari ve izlenebilirlik | `docs/architecture` | [RMP-001](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), [REQ-003](architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md), [TRK-001](architecture/KURBAN2026-UYGULAMA-TAKIP.md), [ARC-017](architecture/17-HEDEF-MODUL-KATALOGU.md), [EXT-001](architecture/18-GUVENLI-EKLENTI-OMURGASI.md) |
+| Mimari ve izlenebilirlik | `docs/architecture` | [RMP-001](architecture/TILBECORE-KURBAN-BIRLESIK-ANA-MIMARI-VE-YOL-HARITASI.md), [REQ-003](architecture/11-GEREKSINIM-IZLENEBILIRLIK-MATRISI.md), [TRK-001](architecture/KURBAN2026-UYGULAMA-TAKIP.md), [ARC-017](architecture/17-HEDEF-MODUL-KATALOGU.md), [EXT-001](architecture/18-GUVENLI-EKLENTI-OMURGASI.md), [EVO-ROADMAP-001 — `PLANNED / NOT_ACTIVE`](architecture/EVO-ROADMAP-001-KURUMSAL-GUVENLIK-OLCEK-VE-EKOSISTEM-YOL-HARITASI.md) |
 | Mimari kararlar | `docs/adr` | [ADR-0001](adr/ADR-0001-PROFESYONEL-SAAS-DOMAIN-URL-ORIGIN-VE-TENANT-HOST-STANDARDI.md), [ADR-0002](adr/ADR-0002-PLATFORM-TENANT-VERI-SINIRI-VE-ERISIM-STANDARDI.md), [ADR-0003](adr/ADR-0003-TENANT-YEDEK-WAL-PITR-VE-RESTORE-DOGRULAMA.md), [ADR-0004](adr/ADR-0004-STAGING-YUK-TEST-ARACI-SECIMI.md) |
 | Yönetişim | `docs/governance` | [GOV-001](governance/GOV-001-DOKUMANTASYON-POLITIKASI.md), [GOV-003](governance/GOV-003-KAYNAK-ONCELIGI-VE-KANIT-STANDARDI.md), [GOV-011](governance/GOV-011-BELGE-DONUSUM-KAYDI.md), [GOV-012](governance/GOV-012-MARKDOWN-ENVANTERI-VE-TASNIF.md), [GOV-013](governance/GOV-013-TESLIM-IZLENEBILIRLIK-VE-GITHUB-HEDEFI.md), [GOV-014](governance/GOV-014-TEKNIK-BORC-VE-ACIK-KARAR-KAYDI.md), [GOV-015](governance/GOV-015-COKLU-AJAN-WORKTREE-VE-DEVIR-PROTOKOLU.md) |
 | Ürün | `docs/product` | [PRD-001](product/PRD-001-URUN-VIZYONU-KAPSAM-VE-BASARI.md), [PRD-005](product/PRD-005-FIRMA-LISANS-VE-SEZON-YASAM-DONGUSU.md) |
