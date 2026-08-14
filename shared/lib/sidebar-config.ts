@@ -496,7 +496,45 @@ export const sidebarMenuleri: SidebarAnaMenu[] = [
     ],
   },
 
-  // 6) KASA & FİNANS — 10 alt
+  // 6) FATURALAR 360 & E-BELGE — operasyon çekirdeği
+  {
+    id: "faturalar",
+    ad: "Faturalar 360",
+    ikon: FileText,
+    izin: "invoice.invoice.read.organization",
+    altMenuler: [
+      {
+        id: "tum-faturalar",
+        ad: "Tüm Faturalar",
+        ikon: List,
+        rota: "/faturalar",
+        izin: "invoice.invoice.read.organization",
+      },
+      {
+        id: "e-belge-merkezi",
+        ad: "e-Belge Merkezi",
+        ikon: Send,
+        rota: "/faturalar/e-belge",
+        izin: "invoice.invoice.read.organization",
+      },
+      {
+        id: "olcu-islem-birimleri",
+        ad: "Ölçü ve İşlem Birimleri",
+        ikon: Scale,
+        rota: "/ayarlar/tanimlar/olcu-birimleri",
+        izin: "ayarlar.degistir",
+      },
+      {
+        id: "e-belge-entegrasyonu",
+        ad: "e-Belge Entegrasyonu",
+        ikon: Plug,
+        rota: "/ayarlar/entegrasyon/e-belge",
+        izin: "ayarlar.degistir",
+      },
+    ],
+  },
+
+  // 7) KASA & FİNANS — 10 alt
   {
     id: "kasa",
     ad: "Kasa & Finans",

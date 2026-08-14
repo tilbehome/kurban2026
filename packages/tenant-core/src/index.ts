@@ -14,3 +14,4 @@ export * from "./authorization-domain";
 export * from "./authorization-service";
 export * from "./module-authorization";
 export * from "./operations-authorization";
+export * from "./unit-of-measure";

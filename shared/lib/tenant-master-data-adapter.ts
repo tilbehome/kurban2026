@@ -5,7 +5,14 @@ import { PrismaTenantAuthorizationRepository } from "@/packages/database-tenant/
 import { PrismaTenantSalesFinanceRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-sales-finance-repository";
 import { PrismaTenantOperationsRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-operations-repository";
 import { PrismaTenantManagementAnalyticsRepository } from "@/packages/database-tenant/src/repositories/prisma-tenant-management-analytics-repository";
-import { IDENTITY_AUTHORIZATION_MANIFEST, TenantAuthorizationService, TenantManagementAnalyticsService, TenantMasterDataService, TenantOperationsService, TenantSalesFinanceService, type AuthorizationActor, type TenantUseCaseContext } from "@/packages/tenant-core/src";
+import { PrismaUnitOfMeasureRepository } from "@/packages/database-tenant/src/repositories/prisma-unit-of-measure-repository";
+import { InvoiceService } from "@/modules/faturalar/application/invoice-service";
+import { ElectronicDocumentConnectionService } from "@/modules/faturalar/application/e-document-connection-service";
+import { PrismaInvoiceRepository } from "@/modules/faturalar/infrastructure/prisma/prisma-invoice-repository";
+import { PrismaElectronicDocumentConnectionRepository } from "@/modules/faturalar/infrastructure/prisma/prisma-e-document-connection";
+import { MockEInvoiceProvider } from "@/modules/faturalar/infrastructure/external/mock-e-invoice-provider";
+import { ProviderRegistry } from "@/modules/faturalar/domain/e-invoice-provider";
+import { IDENTITY_AUTHORIZATION_MANIFEST, TenantAuthorizationService, TenantManagementAnalyticsService, TenantMasterDataService, TenantOperationsService, TenantSalesFinanceService, UnitOfMeasureService, type AuthorizationActor, type TenantUseCaseContext } from "@/packages/tenant-core/src";
 import type { AuthOturum } from "@/shared/types/module.types";
 import type { TenantInstanceId, UserId } from "@tilbecore/contracts";
 
@@ -20,6 +27,10 @@ let salesFinanceService: TenantSalesFinanceService | undefined;
 let operationsService: TenantOperationsService | undefined;
 let managementAnalyticsService: TenantManagementAnalyticsService | undefined;
 let authorizationService: TenantAuthorizationService | undefined;
+let invoiceService: InvoiceService | undefined;
+let unitOfMeasureService: UnitOfMeasureService | undefined;
+let eDocumentConnectionService: ElectronicDocumentConnectionService | undefined;
+let eDocumentProviderRegistry: ProviderRegistry | undefined;
 
 function tenantClient(): TenantPrismaClient {
   const databaseUrl = process.env.TENANT_DATABASE_URL;
@@ -81,6 +92,32 @@ export function tenantAuthorizationService(): TenantAuthorizationService {
   if (masterDataMode() !== "postgres") throw new Error("TENANT_AUTHORIZATION_POSTGRES_NOT_ENABLED");
   if (!authorizationService) authorizationService = new TenantAuthorizationService(new PrismaTenantAuthorizationRepository(tenantClient()));
   return authorizationService;
+}
+
+export function tenantInvoiceService(): InvoiceService {
+  if (masterDataMode() !== "postgres") throw new Error("TENANT_INVOICE_POSTGRES_NOT_ENABLED");
+  if (!invoiceService) invoiceService = new InvoiceService(new PrismaInvoiceRepository(tenantClient()));
+  return invoiceService;
+}
+
+export function tenantUnitOfMeasureService(): UnitOfMeasureService {
+  if (masterDataMode() !== "postgres") throw new Error("TENANT_UNIT_POSTGRES_NOT_ENABLED");
+  if (!unitOfMeasureService) unitOfMeasureService = new UnitOfMeasureService(new PrismaUnitOfMeasureRepository(tenantClient()));
+  return unitOfMeasureService;
+}
+
+export function tenantEDocumentConnectionService(): ElectronicDocumentConnectionService {
+  if (masterDataMode() !== "postgres") throw new Error("TENANT_E_DOCUMENT_POSTGRES_NOT_ENABLED");
+  if (!eDocumentConnectionService) eDocumentConnectionService = new ElectronicDocumentConnectionService(new PrismaElectronicDocumentConnectionRepository(tenantClient()), tenantEDocumentProviderRegistry());
+  return eDocumentConnectionService;
+}
+
+export function tenantEDocumentProviderRegistry(): ProviderRegistry {
+  if (!eDocumentProviderRegistry) {
+    eDocumentProviderRegistry = new ProviderRegistry();
+    eDocumentProviderRegistry.register(new MockEInvoiceProvider());
+  }
+  return eDocumentProviderRegistry;
 }
 
 export function tenantAuthorizationActor(session: AuthOturum, request: Request): AuthorizationActor {
@@ -226,7 +263,7 @@ function tenantIdentityKind(kind: AuthOturum["identityKind"]): TenantUseCaseCont
 function permissionsForRole(role: AuthOturum["rol"]): readonly string[] {
   if (role === "admin") return legacyAdminPermissions();
   if (role === "kasiyer") return legacyOperatorPermissions();
-  if (role === "izleyici") return ["kurban.season.read.organization", "kurban.customer.read.organization", "kurban.supplier.read.organization", "kurban.animal.read.organization", "kurban.share.read.operational_period", "kurban.finance.ledger.read.organization", "public.tv.read.organization", "public.tracking.read.assigned_record", "management.dashboard.read.organization", "management.reporting.read.organization", "management.search.read.organization"];
+  if (role === "izleyici") return ["kurban.season.read.organization", "kurban.customer.read.organization", "kurban.supplier.read.organization", "kurban.animal.read.organization", "kurban.share.read.operational_period", "kurban.finance.ledger.read.organization", "invoice.invoice.read.organization", "invoice.einvoice.audit_read.organization", "definitions.units.read.organization", "public.tv.read.organization", "public.tracking.read.assigned_record", "management.dashboard.read.organization", "management.reporting.read.organization", "management.search.read.organization"];
   return [];
 }
 
@@ -247,6 +284,11 @@ function legacyOperatorPermissions(): readonly string[] {
     "management.dashboard.read.organization", "management.dashboard.manage.organization", "management.reporting.read.organization",
     "management.reporting.export.organization", "management.search.read.organization", "management.exception.manage.organization",
     "management.company.manage.organization",
+    "definitions.units.read.organization", "definitions.units.create.organization", "definitions.units.update.organization",
+    "invoice.invoice.read.organization", "invoice.invoice.create.organization", "invoice.invoice.update_draft.organization",
+    "invoice.invoice.submit.organization", "invoice.invoice.pay.organization", "invoice.invoice.export.organization",
+    "invoice.invoice.return.organization", "invoice.einvoice.send.organization", "invoice.einvoice.respond.organization",
+    "invoice.einvoice.retry.organization", "invoice.einvoice.audit_read.organization",
   ];
 }
 
@@ -266,6 +308,9 @@ function legacyAdminPermissions(): readonly string[] {
     "identity.service-account.manage.organization",
     "identity.device.manage.organization",
     "identity.external-user.manage.organization",
+    "invoice.invoice.approve.organization", "invoice.invoice.post.organization", "invoice.invoice.reverse.organization",
+    "invoice.invoice.cancel.organization", "invoice.einvoice.cancel.organization", "invoice.einvoice.settings_manage.organization",
+    "definitions.units.activate.organization", "definitions.units.deactivate.organization",
   ];
 }
 

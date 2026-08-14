@@ -485,18 +485,19 @@ model BusinessProfile {
 }
 
 model Location {
-  id          String   @id
-  code        String   @unique
+  id          String            @id
+  code        String            @unique
   name        String
   addressLine String?
   district    String?
   city        String?
   phone       String?
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   seasons     Season[]
   animals     Animal[]
+  invoices    PurchaseInvoice[]
 }
 
 model Setting {
@@ -510,6 +511,47 @@ model Setting {
   updatedAt   DateTime @updatedAt
 
   @@unique([scope, key])
+}
+
+model UnitOfMeasure {
+  id               String                @id
+  tenantId         String
+  code             String
+  name             String
+  symbol           String
+  category         String
+  decimalPrecision Int                   @default(0)
+  allowsFraction   Boolean               @default(false)
+  isSystem         Boolean               @default(false)
+  isActive         Boolean               @default(true)
+  sortOrder        Int                   @default(0)
+  createdByUserId  String
+  updatedByUserId  String
+  version          Int                   @default(1)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  invoiceLines     PurchaseInvoiceLine[]
+  providerMappings UnitProviderMapping[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, category, isActive, sortOrder])
+}
+
+model UnitProviderMapping {
+  id               String        @id
+  tenantId         String
+  providerKey      String
+  mappingVersion   String
+  unitOfMeasureId  String
+  providerUnitCode String
+  isActive         Boolean       @default(true)
+  createdByUserId  String
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  unitOfMeasure    UnitOfMeasure @relation(fields: [unitOfMeasureId], references: [id])
+
+  @@unique([tenantId, providerKey, mappingVersion, unitOfMeasureId])
+  @@index([tenantId, providerKey, mappingVersion, isActive])
 }
 
 model Customer {
@@ -544,6 +586,7 @@ model Customer {
   ledgerEntries          LedgerEntry[]
   proxyDocuments         ProxyDocument[]
   deliveries             DeliveryRecord[]
+  invoices               PurchaseInvoice[]
 
   @@index([seasonId])
   @@index([normalizedPhone])
@@ -633,63 +676,164 @@ model SupplierAccount {
 }
 
 model PurchaseInvoice {
-  id             String                @id
-  supplierId     String
-  seasonId       String
-  invoiceNo      String
-  invoiceDate    DateTime
-  status         String                @default("posted")
-  currency       String                @default("TRY")
-  subtotal       Decimal               @db.Decimal(18, 4)
-  taxTotal       Decimal               @default(0) @db.Decimal(18, 4)
-  grandTotal     Decimal               @db.Decimal(18, 4)
-  idempotencyKey String                @unique
-  reversalOfId   String?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  supplier       Supplier              @relation(fields: [supplierId], references: [id])
-  season         Season                @relation(fields: [seasonId], references: [id])
-  lines          PurchaseInvoiceLine[]
-  reversalOf     PurchaseInvoice?      @relation("PurchaseInvoiceReversal", fields: [reversalOfId], references: [id])
-  reversals      PurchaseInvoice[]     @relation("PurchaseInvoiceReversal")
+  id                 String                       @id
+  organizationId     String
+  supplierId         String?
+  customerId         String?
+  seasonId           String
+  locationId         String?
+  uuid               String                       @unique
+  invoiceNo          String
+  series             String?
+  invoiceDate        DateTime
+  dueDate            DateTime?
+  direction          String                       @default("INBOUND")
+  tradeType          String                       @default("PURCHASE")
+  documentNature     String                       @default("STANDARD")
+  electronicChannel  String                       @default("NONE")
+  accountingStatus   String                       @default("DRAFT")
+  paymentStatus      String                       @default("UNPAID")
+  electronicStatus   String                       @default("NOT_APPLICABLE")
+  currency           String                       @default("TRY")
+  partyTaxIdentity   String?
+  partySnapshot      Json
+  subtotal           Decimal                      @db.Decimal(18, 4)
+  discountTotal      Decimal                      @default(0) @db.Decimal(18, 4)
+  taxTotal           Decimal                      @default(0) @db.Decimal(18, 4)
+  grandTotal         Decimal                      @db.Decimal(18, 4)
+  paidTotal          Decimal                      @default(0) @db.Decimal(18, 4)
+  idempotencyKey     String                       @unique
+  requestId          String
+  providerKey        String?
+  providerReference  String?
+  originalInvoiceId  String?
+  reversalOfId       String?
+  journalEntryId     String?                      @unique
+  createdByUserId    String
+  approvedByUserId   String?
+  postedByUserId     String?
+  approvedAt         DateTime?
+  postedAt           DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt
+  supplier           Supplier?                    @relation(fields: [supplierId], references: [id])
+  customer           Customer?                    @relation(fields: [customerId], references: [id])
+  season             Season                       @relation(fields: [seasonId], references: [id])
+  location           Location?                    @relation(fields: [locationId], references: [id])
+  journalEntry       JournalEntry?                @relation(fields: [journalEntryId], references: [id])
+  lines              PurchaseInvoiceLine[]
+  taxComponents      InvoiceTaxComponent[]
+  attachments        InvoiceAttachment[]
+  timeline           InvoiceTimelineEvent[]
+  paymentAllocations InvoicePaymentAllocation[]
+  deliveries         ElectronicDocumentDelivery[]
+  originalInvoice    PurchaseInvoice?             @relation("InvoiceOriginal", fields: [originalInvoiceId], references: [id])
+  relatedDocuments   PurchaseInvoice[]            @relation("InvoiceOriginal")
+  reversalOf         PurchaseInvoice?             @relation("PurchaseInvoiceReversal", fields: [reversalOfId], references: [id])
+  reversals          PurchaseInvoice[]            @relation("PurchaseInvoiceReversal")
 
-  @@unique([supplierId, invoiceNo])
-  @@index([seasonId])
+  @@unique([organizationId, invoiceNo])
+  @@index([seasonId, invoiceDate])
+  @@index([locationId])
+  @@index([supplierId])
+  @@index([customerId])
+  @@index([accountingStatus, paymentStatus, electronicStatus])
+  @@index([providerKey, providerReference])
+  @@index([originalInvoiceId, accountingStatus])
 }
 
 model PurchaseInvoiceLine {
-  id                String           @id
-  purchaseInvoiceId String
-  lineNo            Int
-  description       String
-  animalId          String?          @unique
-  quantity          Decimal          @default(1) @db.Decimal(12, 3)
-  unitPrice         Decimal          @db.Decimal(18, 4)
-  lineTotal         Decimal          @db.Decimal(18, 4)
-  expenseDocumentId String?
-  createdAt         DateTime         @default(now())
-  purchaseInvoice   PurchaseInvoice  @relation(fields: [purchaseInvoiceId], references: [id])
-  animal            Animal?          @relation(fields: [animalId], references: [id])
-  expenseDocument   ExpenseDocument? @relation(fields: [expenseDocumentId], references: [id])
+  id                 String                @id
+  purchaseInvoiceId  String
+  lineNo             Int
+  description        String
+  animalId           String?               @unique
+  quantity           Decimal               @default(1) @db.Decimal(12, 3)
+  unitPrice          Decimal               @db.Decimal(18, 4)
+  lineTotal          Decimal               @db.Decimal(18, 4)
+  unitId             String
+  unitCodeSnapshot   String
+  unitNameSnapshot   String
+  unitSymbolSnapshot String
+  discountTotal      Decimal               @default(0) @db.Decimal(18, 4)
+  taxTotal           Decimal               @default(0) @db.Decimal(18, 4)
+  saleId             String?
+  shareId            String?
+  purchaseReference  String?
+  expenseDocumentId  String?
+  createdAt          DateTime              @default(now())
+  purchaseInvoice    PurchaseInvoice       @relation(fields: [purchaseInvoiceId], references: [id])
+  animal             Animal?               @relation(fields: [animalId], references: [id])
+  expenseDocument    ExpenseDocument?      @relation(fields: [expenseDocumentId], references: [id])
+  unitOfMeasure      UnitOfMeasure         @relation(fields: [unitId], references: [id])
+  taxComponents      InvoiceTaxComponent[]
 
   @@unique([purchaseInvoiceId, lineNo])
+  @@index([unitId])
+}
+
+model InvoiceTaxComponent {
+  id                String               @id
+  purchaseInvoiceId String
+  lineId            String?
+  taxType           String
+  rate              Decimal              @db.Decimal(9, 4)
+  taxableAmount     Decimal              @db.Decimal(18, 4)
+  taxAmount         Decimal              @db.Decimal(18, 4)
+  exemptionCode     String?
+  createdAt         DateTime             @default(now())
+  purchaseInvoice   PurchaseInvoice      @relation(fields: [purchaseInvoiceId], references: [id])
+  line              PurchaseInvoiceLine? @relation(fields: [lineId], references: [id])
+
+  @@index([purchaseInvoiceId])
+  @@index([lineId, purchaseInvoiceId])
+}
+
+model InvoiceAttachment {
+  id                String          @id
+  purchaseInvoiceId String
+  kind              String
+  storageKey        String
+  mediaType         String
+  checksum          String
+  createdAt         DateTime        @default(now())
+  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
+
+  @@unique([purchaseInvoiceId, kind, checksum])
+}
+
+model InvoiceTimelineEvent {
+  id                String          @id
+  purchaseInvoiceId String
+  type              String
+  outcome           String
+  actorUserId       String?
+  requestId         String
+  safeMetadata      Json?
+  occurredAt        DateTime
+  createdAt         DateTime        @default(now())
+  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
+
+  @@index([purchaseInvoiceId, occurredAt])
 }
 
 model SupplierPayment {
-  id             String            @id
-  supplierId     String
-  seasonId       String
-  amount         Decimal           @db.Decimal(18, 4)
-  method         String
-  referenceNo    String?
-  occurredAt     DateTime
-  idempotencyKey String            @unique
-  reversalOfId   String?
-  createdAt      DateTime          @default(now())
-  supplier       Supplier          @relation(fields: [supplierId], references: [id])
-  season         Season            @relation(fields: [seasonId], references: [id])
-  reversalOf     SupplierPayment?  @relation("SupplierPaymentReversal", fields: [reversalOfId], references: [id])
-  reversals      SupplierPayment[] @relation("SupplierPaymentReversal")
+  id                 String                     @id
+  supplierId         String
+  seasonId           String
+  amount             Decimal                    @db.Decimal(18, 4)
+  method             String
+  referenceNo        String?
+  occurredAt         DateTime
+  idempotencyKey     String                     @unique
+  reversalOfId       String?
+  createdAt          DateTime                   @default(now())
+  supplier           Supplier                   @relation(fields: [supplierId], references: [id])
+  season             Season                     @relation(fields: [seasonId], references: [id])
+  reversalOf         SupplierPayment?           @relation("SupplierPaymentReversal", fields: [reversalOfId], references: [id])
+  reversals          SupplierPayment[]          @relation("SupplierPaymentReversal")
+  invoiceAllocations InvoicePaymentAllocation[]
 
   @@index([supplierId, seasonId])
 }
@@ -1048,23 +1192,24 @@ model FinancialAccount {
 }
 
 model JournalEntry {
-  id             String         @id
+  id             String           @id
   seasonId       String
   sourceType     String
   sourceId       String
-  status         String         @default("posted")
-  currency       String         @default("TRY")
+  status         String           @default("posted")
+  currency       String           @default("TRY")
   memo           String?
-  idempotencyKey String         @unique
+  idempotencyKey String           @unique
   reversalOfId   String?
   occurredAt     DateTime
   postedAt       DateTime
-  createdAt      DateTime       @default(now())
-  season         Season         @relation(fields: [seasonId], references: [id])
-  reversalOf     JournalEntry?  @relation("JournalReversal", fields: [reversalOfId], references: [id])
-  reversals      JournalEntry[] @relation("JournalReversal")
+  createdAt      DateTime         @default(now())
+  season         Season           @relation(fields: [seasonId], references: [id])
+  reversalOf     JournalEntry?    @relation("JournalReversal", fields: [reversalOfId], references: [id])
+  reversals      JournalEntry[]   @relation("JournalReversal")
   lines          JournalLine[]
   receipts       Receipt[]
+  invoice        PurchaseInvoice?
 
   @@unique([sourceType, sourceId])
   @@index([seasonId, occurredAt])
@@ -1096,29 +1241,30 @@ model JournalLine {
 }
 
 model Receipt {
-  id              String               @id
-  seasonId        String
-  customerId      String
-  payerCustomerId String?
-  saleId          String?
-  journalEntryId  String
-  receiptNo       String
-  status          String               @default("posted")
-  totalAmount     Decimal              @db.Decimal(18, 4)
-  currency        String               @default("TRY")
-  occurredAt      DateTime
-  idempotencyKey  String               @unique
-  reversalOfId    String?
-  createdAt       DateTime             @default(now())
-  season          Season               @relation(fields: [seasonId], references: [id])
-  customer        Customer             @relation(fields: [customerId], references: [id])
-  payerCustomer   Customer?            @relation("ReceiptPayerCustomer", fields: [payerCustomerId], references: [id])
-  sale            Sale?                @relation(fields: [saleId], references: [id])
-  journalEntry    JournalEntry         @relation(fields: [journalEntryId], references: [id])
-  reversalOf      Receipt?             @relation("ReceiptReversal", fields: [reversalOfId], references: [id])
-  reversals       Receipt[]            @relation("ReceiptReversal")
-  methodSplits    ReceiptMethodSplit[]
-  allocations     PaymentAllocation[]
+  id                 String                     @id
+  seasonId           String
+  customerId         String
+  payerCustomerId    String?
+  saleId             String?
+  journalEntryId     String
+  receiptNo          String
+  status             String                     @default("posted")
+  totalAmount        Decimal                    @db.Decimal(18, 4)
+  currency           String                     @default("TRY")
+  occurredAt         DateTime
+  idempotencyKey     String                     @unique
+  reversalOfId       String?
+  createdAt          DateTime                   @default(now())
+  season             Season                     @relation(fields: [seasonId], references: [id])
+  customer           Customer                   @relation(fields: [customerId], references: [id])
+  payerCustomer      Customer?                  @relation("ReceiptPayerCustomer", fields: [payerCustomerId], references: [id])
+  sale               Sale?                      @relation(fields: [saleId], references: [id])
+  journalEntry       JournalEntry               @relation(fields: [journalEntryId], references: [id])
+  reversalOf         Receipt?                   @relation("ReceiptReversal", fields: [reversalOfId], references: [id])
+  reversals          Receipt[]                  @relation("ReceiptReversal")
+  methodSplits       ReceiptMethodSplit[]
+  allocations        PaymentAllocation[]
+  invoiceAllocations InvoicePaymentAllocation[]
 
   @@unique([seasonId, receiptNo])
   @@index([customerId, seasonId])
@@ -1155,6 +1301,24 @@ model PaymentAllocation {
   @@index([saleId])
   @@index([customerId])
   @@index([shareId])
+}
+
+model InvoicePaymentAllocation {
+  id                String           @id
+  purchaseInvoiceId String
+  receiptId         String?
+  supplierPaymentId String?
+  amount            Decimal          @db.Decimal(18, 4)
+  currency          String           @default("TRY")
+  idempotencyKey    String           @unique
+  createdAt         DateTime         @default(now())
+  purchaseInvoice   PurchaseInvoice  @relation(fields: [purchaseInvoiceId], references: [id])
+  receipt           Receipt?         @relation(fields: [receiptId], references: [id])
+  supplierPayment   SupplierPayment? @relation(fields: [supplierPaymentId], references: [id])
+
+  @@index([purchaseInvoiceId])
+  @@index([receiptId])
+  @@index([supplierPaymentId])
 }
 
 model LedgerEntry {
@@ -1202,9 +1366,83 @@ model TenantOutboxMessage {
   idempotencyKey String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  availableAt    DateTime @default(now())
+  attempts       Int      @default(0)
+  lastErrorCode  String?
 
   @@index([status])
   @@index([idempotencyKey])
+}
+
+model ElectronicDocumentConnection {
+  id                     String    @id
+  organizationId         String
+  providerKey            String
+  unitMappingVersion     String
+  connectionName         String
+  environment            String
+  apiEndpoint            String?
+  credentialReference    String?
+  credentialKeyVersion   String?
+  credentialRotatedAt    DateTime?
+  companyTaxIdentity     String
+  senderUnit             String?
+  mailbox                String?
+  invoiceSeries          Json
+  defaults               Json
+  emailOptions           Json
+  webhookVerificationRef String?
+  active                 Boolean   @default(false)
+  capabilities           Json
+  lastConnectionOutcome  String?
+  lastConnectionTestedAt DateTime?
+  createdByUserId        String
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@unique([organizationId, providerKey, connectionName])
+  @@index([organizationId, active])
+}
+
+model ElectronicDocumentDelivery {
+  id                String          @id
+  purchaseInvoiceId String
+  providerKey       String
+  operation         String
+  status            String
+  correlationId     String
+  idempotencyKey    String          @unique
+  providerReference String?
+  normalizedCode    String?
+  attempts          Int             @default(0)
+  nextAttemptAt     DateTime?
+  lastSafeErrorCode String?
+  responseMetadata  Json?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  completedAt       DateTime?
+  purchaseInvoice   PurchaseInvoice @relation(fields: [purchaseInvoiceId], references: [id])
+
+  @@index([status, nextAttemptAt])
+  @@index([purchaseInvoiceId])
+}
+
+model ElectronicDocumentWebhookInbox {
+  id                String    @id
+  organizationId    String
+  providerKey       String
+  providerEventId   String
+  signatureOutcome  String
+  receivedAt        DateTime
+  occurredAt        DateTime
+  payloadHash       String
+  status            String    @default("RECEIVED")
+  attempts          Int       @default(0)
+  lastSafeErrorCode String?
+  processedAt       DateTime?
+
+  @@unique([organizationId, providerKey, providerEventId])
+  @@index([status, receivedAt])
 }
 
 model ProxyDocument {

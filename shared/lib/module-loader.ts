@@ -17,6 +17,7 @@ import { operationsModule } from "@/modules/operations/module.config";
 import { kasaModule } from "@/modules/kasa/module.config";
 import { raporlarModule } from "@/modules/raporlar/module.config";
 import { besiModule } from "@/modules/besi/module.config";
+import { faturalarModule } from "@/modules/faturalar/module.config";
 
 export const tumModuller: ModuleConfig[] = [
   coreModule,
@@ -24,6 +25,7 @@ export const tumModuller: ModuleConfig[] = [
   musterilerModule,
   hayvanlarModule,
   tahsilatModule,
+  faturalarModule,
   operationsModule,
   kasaModule,
   raporlarModule,

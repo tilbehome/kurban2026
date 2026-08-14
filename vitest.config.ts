@@ -11,6 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": resolve(__dirname, "./"),
+      "@tilbecore/tenant-core": resolve(__dirname, "./packages/tenant-core/src/index.ts"),
     },
   },
   test: {

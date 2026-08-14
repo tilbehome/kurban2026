@@ -47,6 +47,7 @@ export interface TenantUseCaseContext {
 }
 
 export interface CommandMeta {
+  organizationId?: string;
   actorUserId: string;
   requestId: string;
   idempotencyKey: string;
@@ -392,7 +393,7 @@ export function commandMeta(context: TenantUseCaseContext): CommandMeta {
   if (!/^[a-fA-F0-9]{32,128}$/.test(context.requestHash)) throw new TenantMasterDataError("REQUEST_HASH_INVALID");
   const occurredAt = new Date(context.occurredAt);
   if (Number.isNaN(occurredAt.getTime())) throw new TenantMasterDataError("OCCURRED_AT_INVALID");
-  return { actorUserId: context.actorUserId, requestId: context.requestId, idempotencyKey: context.idempotencyKey, requestHash: context.requestHash, occurredAt };
+  return { organizationId: context.organizationId, actorUserId: context.actorUserId, requestId: context.requestId, idempotencyKey: context.idempotencyKey, requestHash: context.requestHash, occurredAt };
 }
 
 export class TenantMasterDataError extends Error {
