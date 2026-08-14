@@ -13,3 +13,9 @@ describe("platform admin host sınırı", () => {
     expect(isAllowedPlatformAdminHost("console.attacker.test", environment)).toBe(false);
   });
 });
+
+it("yerel kabul sunucusunda yalnız loopback hostlarına izin verir", () => {
+  expect(isAllowedPlatformAdminHost("localhost:3100", "local")).toBe(true);
+  expect(isAllowedPlatformAdminHost("127.0.0.1:3100", "local")).toBe(true);
+  expect(isAllowedPlatformAdminHost("localhost:3100", "staging")).toBe(false);
+});
