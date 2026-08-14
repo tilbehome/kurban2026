@@ -13,6 +13,8 @@ import {
   type QrPurpose,
   type OperationMode,
   type SlaughterStatus,
+  type WeighingType,
+  calculateWeightShortfallAdjustment,
 } from "./operation-flow";
 
 export type OperationsPermission =
@@ -106,7 +108,26 @@ export interface RecordWeighingInput {
   seasonId: string;
   animalId: string;
   carcassWeightKg: string;
+  measurementType?: WeighingType;
+  deviceAdapterId?: string;
+  stationId?: string;
   reason?: string;
+}
+
+export interface CorrectWeighingInput extends RecordWeighingInput {
+  supersedesId: string;
+}
+
+export interface RecordWeightShortfallInput {
+  id: string;
+  seasonId: string;
+  shareId: string;
+  customerId: string;
+  saleId: string;
+  agreedPrice: string;
+  targetWeightKg: string;
+  actualWeightKg: string;
+  reason: string;
 }
 
 export interface CreatePackageInput {
@@ -163,7 +184,12 @@ export interface OperationsRepository {
   setOperationMode(input: { id: string; seasonId: string; mode: OperationMode; reason: string }, meta: CommandMeta): Promise<{ id: string; mode: OperationMode }>;
   listOperationCommandCenter(seasonId: string): Promise<Array<{ id: string; queueNo?: number; status: string; stationId?: string; assignedUserId?: string; blockedReason?: string; updatedAt: string }>>;
   recordWeighing(input: RecordWeighingInput, meta: CommandMeta): Promise<{ id: string }>;
+  correctWeighing(input: CorrectWeighingInput, meta: CommandMeta): Promise<{ id: string }>;
+  allocateCarcassWeight(input: { id: string; seasonId: string; animalId: string; sourceWeighingId: string; totalWeightKg: string }, meta: CommandMeta): Promise<{ id: string; shareCount: number }>;
+  recordWeightShortfall(input: RecordWeightShortfallInput & { adjustmentAmount: string }, meta: CommandMeta): Promise<{ id: string; adjustmentAmount: string; status: "pending_approval" }>;
   createPackage(input: CreatePackageInput, meta: CommandMeta): Promise<{ id: string }>;
+  reportPackageException(input: { id: string; seasonId: string; packageRecordId: string; status: "missing" | "wrong" | "damaged"; reason: string }, meta: CommandMeta): Promise<{ id: string; status: string }>;
+  recordPackageTransformation(input: { id: string; seasonId: string; sourcePackageIds: string[]; targetPackageIds: string[]; transformation: "split" | "merge"; reason: string }, meta: CommandMeta): Promise<{ id: string }>;
   recordDelivery(input: DeliveryCommandInput, meta: CommandMeta): Promise<{ id: string; status: DeliveryStatus }>;
   reverseDelivery(input: { id: string; seasonId: string; reason: string }, meta: CommandMeta): Promise<{ id: string; status: DeliveryStatus }>;
   movePackage(input: MovePackageInput, meta: CommandMeta): Promise<{ id: string }>;
@@ -263,6 +289,24 @@ export class TenantOperationsService {
     return this.repository.recordWeighing(input, commandMeta(context));
   }
 
+  async correctWeighing(context: TenantUseCaseContext, input: CorrectWeighingInput) {
+    await this.authorize(context, "operations.weighing.record.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "animal", id: input.animalId } });
+    if (!input.reason?.trim()) throw new TenantOperationsError("WEIGHING_CORRECTION_REASON_REQUIRED");
+    return this.repository.correctWeighing(input, commandMeta(context));
+  }
+
+  async allocateCarcassWeight(context: TenantUseCaseContext, input: { id: string; seasonId: string; animalId: string; sourceWeighingId: string; totalWeightKg: string }) {
+    await this.authorize(context, "operations.weighing.record.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "animal", id: input.animalId } });
+    if (!/^\d+(\.\d{1,3})?$/.test(input.totalWeightKg)) throw new TenantOperationsError("WEIGHT_PRECISION_INVALID");
+    return this.repository.allocateCarcassWeight(input, commandMeta(context));
+  }
+
+  async recordWeightShortfall(context: TenantUseCaseContext, input: RecordWeightShortfallInput) {
+    await this.authorize(context, "operations.weighing.record.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "share", id: input.shareId } });
+    const adjustmentAmount = calculateWeightShortfallAdjustment(input);
+    return this.repository.recordWeightShortfall({ ...input, adjustmentAmount }, commandMeta(context));
+  }
+
   async createPackage(context: TenantUseCaseContext, input: CreatePackageInput) {
     await this.authorize(context, "operations.packaging.manage.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "share", id: input.shareId } });
     if (!/^\d+(\.\d{1,3})?$/.test(input.grossWeightKg)) throw new TenantOperationsError("PACKAGE_WEIGHT_PRECISION_INVALID");
@@ -270,6 +314,17 @@ export class TenantOperationsService {
       if (!/^\d+(\.\d{1,3})?$/.test(component.weightKg)) throw new TenantOperationsError("PACKAGE_WEIGHT_PRECISION_INVALID");
     }
     return this.repository.createPackage(input, commandMeta(context));
+  }
+
+  async reportPackageException(context: TenantUseCaseContext, input: { id: string; seasonId: string; packageRecordId: string; status: "missing" | "wrong" | "damaged"; reason: string }) {
+    await this.authorize(context, "operations.packaging.manage.assigned_record", { operationalPeriodId: input.seasonId, assignedRecord: { type: "package", id: input.packageRecordId } });
+    return this.repository.reportPackageException(input, commandMeta(context));
+  }
+
+  async recordPackageTransformation(context: TenantUseCaseContext, input: { id: string; seasonId: string; sourcePackageIds: string[]; targetPackageIds: string[]; transformation: "split" | "merge"; reason: string }) {
+    await this.authorize(context, "operations.packaging.manage.assigned_record", { operationalPeriodId: input.seasonId });
+    if (input.sourcePackageIds.length < 1 || input.targetPackageIds.length < 1) throw new TenantOperationsError("PACKAGE_TRANSFORMATION_SCOPE_INVALID");
+    return this.repository.recordPackageTransformation(input, commandMeta(context));
   }
 
   async recordDelivery(context: TenantUseCaseContext, input: DeliveryCommandInput) {

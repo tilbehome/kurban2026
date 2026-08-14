@@ -28,6 +28,8 @@ export type OperationMode = "normal" | "restricted" | "read_only" | "emergency_s
 export type DeliveryStatus = "pending" | "delivered" | "reversed";
 export type OfflineQueueStatus = "queued" | "syncing" | "synced" | "conflict" | "failed";
 export type DeviceAdapterKind = "scale" | "barcode_reader" | "qr_reader" | "label_printer" | "thermal_printer" | "tv_display";
+export type WeighingType = "purchase" | "live" | "control" | "carcass" | "share" | "package";
+export type PackageStatus = "created" | "stored" | "picked" | "loaded" | "delivered" | "missing" | "wrong" | "damaged" | "void";
 
 export interface ProxyDocument {
   tenantInstanceId: TenantInstanceId;
@@ -128,6 +130,43 @@ export interface DeviceAdapterContract {
   displayName: string;
   capabilities: readonly string[];
   enabled: boolean;
+}
+
+export interface ScaleAdapterPort {
+  readKilograms(input: { deviceAdapterId: DeviceAdapterId; operationId: string }): Promise<{ kilograms: KilogramString; measuredAt: string; calibrationRef?: string }>;
+}
+
+export interface CodeScannerAdapterPort {
+  scan(input: { deviceAdapterId: DeviceAdapterId; expected: "barcode" | "qr" }): Promise<{ value: string; scannedAt: string }>;
+}
+
+export interface LabelPrinterAdapterPort {
+  print(input: { deviceAdapterId: DeviceAdapterId; templateVersion: string; packageId: PackageId; copies: number }): Promise<{ providerJobId: string }>;
+}
+
+export function calculateWeightShortfallAdjustment(input: { agreedPrice: string; targetWeightKg: string; actualWeightKg: string }): string {
+  const scale = 10_000n;
+  const money = decimalToScaled(input.agreedPrice, 4);
+  const target = decimalToScaled(input.targetWeightKg, 3);
+  const actual = decimalToScaled(input.actualWeightKg, 3);
+  if (target <= 0n || money < 0n || actual < 0n) throw new Error("WEIGHT_SHORTFALL_INPUT_INVALID");
+  const missing = target > actual ? target - actual : 0n;
+  const amount = (money * missing) / target;
+  return scaledToDecimal(amount, scale, 4);
+}
+
+function decimalToScaled(value: string, precision: number): bigint {
+  if (!/^\d+(\.\d+)?$/.test(value)) throw new Error("DECIMAL_INVALID");
+  const [whole = "0", fraction = ""] = value.split(".");
+  if (fraction.length > precision) throw new Error("DECIMAL_PRECISION_INVALID");
+  const normalized = `${whole}${fraction.padEnd(precision, "0")}`;
+  return BigInt(normalized);
+}
+
+function scaledToDecimal(value: bigint, scale: bigint, precision: number): string {
+  const whole = value / scale;
+  const fraction = (value % scale).toString().padStart(precision, "0");
+  return `${whole}.${fraction}`;
 }
 
 const SLAUGHTER_TRANSITIONS: Record<SlaughterStatus, readonly SlaughterStatus[]> = {

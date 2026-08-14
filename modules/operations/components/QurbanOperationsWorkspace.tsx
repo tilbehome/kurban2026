@@ -54,6 +54,10 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
   const [stationId, setStationId] = useState("");
   const [teamId, setTeamId] = useState("");
   const [weightKg, setWeightKg] = useState("0.000");
+  const [sourceWeighingId, setSourceWeighingId] = useState("");
+  const [targetWeightKg, setTargetWeightKg] = useState("40.000");
+  const [agreedPrice, setAgreedPrice] = useState("0.0000");
+  const [saleId, setSaleId] = useState("");
   const [labelNo, setLabelNo] = useState("");
   const [packageRecordId, setPackageRecordId] = useState("");
   const [componentText, setComponentText] = useState("bone_in:0.000\noffal:0.000");
@@ -186,9 +190,22 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                   <Grid>
                     <Field label="Hayvan ID"><Input value={animalId} onChange={(e) => setAnimalId(e.target.value)} /></Field>
                     <Field label="Karkas kg"><Input value={weightKg} onChange={(e) => setWeightKg(e.target.value)} inputMode="decimal" /></Field>
+                    <Field label="Kaynak tartım ID"><Input value={sourceWeighingId} onChange={(e) => setSourceWeighingId(e.target.value)} /></Field>
                   </Grid>
                   <Field label="Düzeltme/ölçüm gerekçesi"><Textarea value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
-                  <Button disabled={pending || !permissions.canWeigh} onClick={() => post("Tartım kaydı", { action: "record-weighing", id: `weighing_${crypto.randomUUID()}`, seasonId, animalId, carcassWeightKg: weightKg, reason })}>Tartımı append-only kaydet</Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button disabled={pending || !permissions.canWeigh} onClick={() => post("Tartım kaydı", { action: "record-weighing", id: `weighing_${crypto.randomUUID()}`, seasonId, animalId, carcassWeightKg: weightKg, measurementType: "carcass", reason })}>Tartımı append-only kaydet</Button>
+                    <Button variant="secondary" disabled={pending || !permissions.canWeigh || !sourceWeighingId} onClick={() => post("Yedi hisse kilo tahsisi", { action: "allocate-carcass-weight", id: `allocation_${crypto.randomUUID()}`, seasonId, animalId, sourceWeighingId, totalWeightKg: weightKg })}>7 hisseye kontrollü dağıt</Button>
+                  </div>
+                  <Grid>
+                    <Field label="Satış ID"><Input value={saleId} onChange={(e) => setSaleId(e.target.value)} /></Field>
+                    <Field label="Hisse ID"><Input value={shareId} onChange={(e) => setShareId(e.target.value)} /></Field>
+                    <Field label="Müşteri ID"><Input value={customerId} onChange={(e) => setCustomerId(e.target.value)} /></Field>
+                    <Field label="Anlaşma bedeli"><Input value={agreedPrice} onChange={(e) => setAgreedPrice(e.target.value)} inputMode="decimal" /></Field>
+                    <Field label="Hedef kg"><Input value={targetWeightKg} onChange={(e) => setTargetWeightKg(e.target.value)} inputMode="decimal" /></Field>
+                    <Field label="Gerçek kg"><Input value={weightKg} onChange={(e) => setWeightKg(e.target.value)} inputMode="decimal" /></Field>
+                  </Grid>
+                  <Button variant="secondary" disabled={pending || !permissions.canWeigh || !shareId || !customerId || !saleId} onClick={() => post("Eksik kilo düzeltmesi", { action: "record-weight-shortfall", id: `shortfall_${crypto.randomUUID()}`, seasonId, shareId, customerId, saleId, agreedPrice, targetWeightKg, actualWeightKg: weightKg, reason: reason || "Bağlayıcı eksik kilo formülüyle kontrol bekleyen düzeltme" })}>Eksik kilo düzeltmesini onaya hazırla</Button>
                 </OpCard>
               )}
 
@@ -216,6 +233,7 @@ export function QurbanOperationsWorkspace({ defaultSeasonId, permissions }: Prop
                       post("Paket oluÅŸtur", { action: "create-package", id, seasonId, shareId, grossWeightKg: weightKg, labelNo: labelNo || `LBL-${Date.now()}`, reason, components: packageComponents(componentText) });
                     }}>BileÅŸenli paket/etiket oluÅŸtur</Button>
                     <Button variant="secondary" disabled={pending || !permissions.canPackage || !packageRecordId || !coldRoomId} onClick={() => post("SoÄŸuk odaya taÅŸÄ±", { action: "move-package", id: `move_${crypto.randomUUID()}`, seasonId, packageRecordId, roomId: coldRoomId, sectionId: coldSectionId || undefined, rackId: coldRackId || undefined, reason: reason || "SoÄŸuk oda konum gÃ¼ncellemesi" })}>SoÄŸuk oda/raf konumuna al</Button>
+                    <Button variant="destructive" disabled={pending || !permissions.canPackage || !packageRecordId} onClick={() => post("Kayıp paket bildir", { action: "report-package-exception", id: `package_exception_${crypto.randomUUID()}`, seasonId, packageRecordId, status: "missing", reason: reason || "Paket beklenen konumunda bulunamadı" })}>Kayıp paket bildir</Button>
                   </div>
                   <Rule>Kaynak hayvan → hisse → paket izi korunur; yeniden baskı gerekçesi audit’e gider.</Rule>
                 </OpCard>

@@ -10,6 +10,7 @@ import {
   type CreateProxyDocumentInput,
   type ChangeProxyDocumentStatusInput,
   type CreateSlaughterJobInput,
+  type CorrectWeighingInput,
   type DeliveryCommandInput,
   type IssueQrTokenInput,
   type CreateLoadingListInput,
@@ -18,6 +19,7 @@ import {
   type OperationsRepository,
   type ReportOperationExceptionInput,
   type RecordWeighingInput,
+  type RecordWeightShortfallInput,
   type SlaughterStatus,
 } from "@tilbecore/tenant-core";
 import type { Prisma, PrismaClient } from "../../generated/client";
@@ -216,9 +218,51 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       const animal = await tx.animal.findUnique({ where: { id: input.animalId }, select: { seasonId: true } });
       if (!animal || animal.seasonId !== input.seasonId) throw new TenantOperationsError("WEIGHING_ANIMAL_SCOPE_INVALID");
       await tx.weighingRecord.create({ data: { id: input.id, animalId: input.animalId, carcassWeightKg: input.carcassWeightKg, recordedByUserId: meta.actorUserId, recordedAt: meta.occurredAt } });
+      await tx.$executeRaw`UPDATE "WeighingRecord" SET "seasonId" = ${input.seasonId}, "measurementType" = ${input.measurementType ?? "carcass"}, "deviceAdapterId" = ${input.deviceAdapterId ?? null}, "stationId" = ${input.stationId ?? null}, "note" = ${input.reason ?? null} WHERE "id" = ${input.id}`;
       await tx.animal.update({ where: { id: input.animalId }, data: { carcassWeightKg: input.carcassWeightKg } });
       await evidence(tx, meta, "weighing.recorded", "WeighingRecord", input.id, { seasonId: input.seasonId, animalId: input.animalId, reason: input.reason });
       return { id: input.id };
+    });
+  }
+
+  correctWeighing(input: CorrectWeighingInput, meta: CommandMeta) {
+    return command(this.db, "weighing.correct", meta, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{ animalId: string; revokedAt: Date | null }>>`SELECT "animalId", "revokedAt" FROM "WeighingRecord" WHERE "id" = ${input.supersedesId} FOR UPDATE`;
+      const original = rows[0];
+      if (!original || original.animalId !== input.animalId || original.revokedAt) throw new TenantOperationsError("WEIGHING_CORRECTION_SOURCE_INVALID");
+      await tx.$executeRaw`UPDATE "WeighingRecord" SET "revokedAt" = ${meta.occurredAt}, "revokedByUserId" = ${meta.actorUserId}, "revocationReason" = ${input.reason ?? null} WHERE "id" = ${input.supersedesId}`;
+      await tx.$executeRaw`INSERT INTO "WeighingRecord" ("id", "seasonId", "animalId", "carcassWeightKg", "measurementType", "deviceAdapterId", "stationId", "recordedByUserId", "recordedAt", "note", "supersedesId") VALUES (${input.id}, ${input.seasonId}, ${input.animalId}, ${input.carcassWeightKg}::decimal, ${input.measurementType ?? "carcass"}, ${input.deviceAdapterId ?? null}, ${input.stationId ?? null}, ${meta.actorUserId}, ${meta.occurredAt}, ${input.reason ?? null}, ${input.supersedesId})`;
+      if ((input.measurementType ?? "carcass") === "carcass") await tx.animal.update({ where: { id: input.animalId }, data: { carcassWeightKg: input.carcassWeightKg } });
+      await evidence(tx, meta, "weighing.corrected", "WeighingRecord", input.id, { seasonId: input.seasonId, supersedesId: input.supersedesId, reason: input.reason });
+      return { id: input.id };
+    });
+  }
+
+  allocateCarcassWeight(input: { id: string; seasonId: string; animalId: string; sourceWeighingId: string; totalWeightKg: string }, meta: CommandMeta) {
+    return command(this.db, "weighing.allocate", meta, async (tx) => {
+      const shares = await tx.share.findMany({ where: { shareCard: { seasonId: input.seasonId, animalId: input.animalId, status: "active" } }, select: { id: true }, orderBy: { sequenceNo: "asc" } });
+      if (shares.length !== 7) throw new TenantOperationsError("WEIGHT_ALLOCATION_REQUIRES_SEVEN_SHARES");
+      const source = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "WeighingRecord" WHERE "id" = ${input.sourceWeighingId} AND "animalId" = ${input.animalId} AND "revokedAt" IS NULL FOR UPDATE`;
+      if (!source[0]) throw new TenantOperationsError("WEIGHT_ALLOCATION_SOURCE_INVALID");
+      for (const share of shares) {
+        await tx.$executeRaw`INSERT INTO "ShareWeightAllocation" ("id", "seasonId", "animalId", "shareId", "sourceWeighingId", "allocatedWeightKg", "createdByUserId", "createdAt") VALUES (${`${input.id}_${share.id}`}, ${input.seasonId}, ${input.animalId}, ${share.id}, ${input.sourceWeighingId}, ROUND(${input.totalWeightKg}::numeric / 7, 3), ${meta.actorUserId}, ${meta.occurredAt})`;
+      }
+      await evidence(tx, meta, "weighing.allocated", "Animal", input.animalId, { seasonId: input.seasonId, sourceWeighingId: input.sourceWeighingId, shareCount: shares.length, totalWeightKg: input.totalWeightKg });
+      return { id: input.id, shareCount: shares.length };
+    });
+  }
+
+  recordWeightShortfall(input: RecordWeightShortfallInput & { adjustmentAmount: string }, meta: CommandMeta) {
+    return command(this.db, "weight.shortfall.record", meta, async (tx) => {
+      const share = await tx.share.findUnique({ where: { id: input.shareId }, include: { shareCard: true } });
+      if (!share || share.shareCard.seasonId !== input.seasonId || share.customerId !== input.customerId) throw new TenantOperationsError("WEIGHT_SHORTFALL_SCOPE_INVALID");
+      const sales = await tx.$queryRaw<Array<{ id: string }>>`SELECT sale."id" FROM "Sale" AS sale JOIN "SaleShare" AS link ON link."saleId" = sale."id" AND link."shareId" = ${input.shareId} AND link."active" = true WHERE sale."id" = ${input.saleId} AND sale."seasonId" = ${input.seasonId} AND sale."customerId" = ${input.customerId} AND sale."status" = 'confirmed' AND sale."currency" = 'TRY' FOR UPDATE OF sale`;
+      if (!sales[0]) throw new TenantOperationsError("WEIGHT_SHORTFALL_SALE_SCOPE_INVALID");
+      const limits = await tx.$queryRaw<Array<{ allowed: boolean }>>`SELECT COALESCE(SUM("adjustmentAmount"), 0) + ${input.adjustmentAmount}::numeric <= ${input.agreedPrice}::numeric AS "allowed" FROM "WeightShortfallAdjustment" WHERE "saleId" = ${input.saleId} AND "status" <> 'rejected'`;
+      if (!limits[0]?.allowed) throw new TenantOperationsError("WEIGHT_SHORTFALL_EXCEEDS_AGREED_PRICE");
+      await tx.$executeRaw`INSERT INTO "WeightShortfallAdjustment" ("id", "seasonId", "shareId", "customerId", "saleId", "agreedPrice", "targetWeightKg", "actualWeightKg", "adjustmentAmount", "currency", "status", "reason", "createdByUserId", "createdAt") VALUES (${input.id}, ${input.seasonId}, ${input.shareId}, ${input.customerId}, ${input.saleId}, ${input.agreedPrice}::decimal, ${input.targetWeightKg}::decimal, ${input.actualWeightKg}::decimal, ${input.adjustmentAmount}::decimal, 'TRY', 'pending_approval', ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      await evidence(tx, meta, "weight.shortfall.recorded", "WeightShortfallAdjustment", input.id, { seasonId: input.seasonId, shareId: input.shareId, adjustmentAmount: input.adjustmentAmount, status: "pending_approval" });
+      return { id: input.id, adjustmentAmount: input.adjustmentAmount, status: "pending_approval" as const };
     });
   }
 
@@ -227,10 +271,36 @@ export class PrismaTenantOperationsRepository implements OperationsRepository {
       const share = await tx.share.findUnique({ where: { id: input.shareId }, include: { shareCard: true } });
       if (!share || share.shareCard.seasonId !== input.seasonId) throw new TenantOperationsError("PACKAGE_SHARE_SCOPE_INVALID");
       await tx.packageRecord.create({ data: { id: input.id, shareId: input.shareId, grossWeightKg: input.grossWeightKg, labelNo: input.labelNo } });
+      await tx.$executeRaw`UPDATE "PackageRecord" SET "seasonId" = ${input.seasonId}, "animalId" = ${share.shareCard.animalId}, "customerId" = ${share.customerId}, "packageNo" = ${input.labelNo}, "netWeightKg" = ${input.grossWeightKg}::decimal, "status" = 'created' WHERE "id" = ${input.id}`;
       for (const component of input.components ?? []) {
         await tx.$executeRaw`INSERT INTO "PackageComponent" ("id", "packageRecordId", "componentType", "weightKg", "estimatedValue", "createdAt") VALUES (${component.id}, ${input.id}, ${component.componentType}, ${component.weightKg}::decimal, ${component.estimatedValue ?? null}::decimal, ${meta.occurredAt})`;
       }
       await evidence(tx, meta, "package.created", "PackageRecord", input.id, { seasonId: input.seasonId, shareId: input.shareId, labelNo: input.labelNo, reason: input.reason, components: input.components ?? [] });
+      return { id: input.id };
+    });
+  }
+
+  reportPackageException(input: { id: string; seasonId: string; packageRecordId: string; status: "missing" | "wrong" | "damaged"; reason: string }, meta: CommandMeta) {
+    return command(this.db, "package.exception.report", meta, async (tx) => {
+      const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "PackageRecord" WHERE "id" = ${input.packageRecordId} AND "seasonId" = ${input.seasonId} FOR UPDATE`;
+      if (!rows[0]) throw new TenantOperationsError("PACKAGE_SHARE_SCOPE_INVALID");
+      await tx.$executeRaw`UPDATE "PackageRecord" SET "status" = ${input.status} WHERE "id" = ${input.packageRecordId}`;
+      await tx.$executeRaw`INSERT INTO "PackageExceptionHistory" ("id", "seasonId", "packageRecordId", "status", "reason", "actorUserId", "occurredAt") VALUES (${input.id}, ${input.seasonId}, ${input.packageRecordId}, ${input.status}, ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      await evidence(tx, meta, "package.exception.reported", "PackageRecord", input.packageRecordId, { seasonId: input.seasonId, status: input.status, reason: input.reason });
+      return { id: input.id, status: input.status };
+    });
+  }
+
+  recordPackageTransformation(input: { id: string; seasonId: string; sourcePackageIds: string[]; targetPackageIds: string[]; transformation: "split" | "merge"; reason: string }, meta: CommandMeta) {
+    return command(this.db, "package.transform", meta, async (tx) => {
+      const allIds = [...new Set([...input.sourcePackageIds, ...input.targetPackageIds])];
+      const rows = await tx.$queryRaw<Array<{ id: string }>>`SELECT "id" FROM "PackageRecord" WHERE "id" = ANY(${allIds}) AND "seasonId" = ${input.seasonId} FOR UPDATE`;
+      if (rows.length !== allIds.length) throw new TenantOperationsError("PACKAGE_TRANSFORMATION_SCOPE_INVALID");
+      for (const sourcePackageId of input.sourcePackageIds) for (const targetPackageId of input.targetPackageIds) {
+        await tx.$executeRaw`INSERT INTO "PackageTransformation" ("id", "seasonId", "sourcePackageId", "targetPackageId", "transformation", "reason", "actorUserId", "occurredAt") VALUES (${`${input.id}_${sourcePackageId}_${targetPackageId}`}, ${input.seasonId}, ${sourcePackageId}, ${targetPackageId}, ${input.transformation}, ${input.reason}, ${meta.actorUserId}, ${meta.occurredAt})`;
+      }
+      await tx.$executeRaw`UPDATE "PackageRecord" SET "status" = 'void' WHERE "id" = ANY(${input.sourcePackageIds})`;
+      await evidence(tx, meta, "package.transformed", "PackageTransformation", input.id, { seasonId: input.seasonId, transformation: input.transformation, sourcePackageIds: input.sourcePackageIds, targetPackageIds: input.targetPackageIds, reason: input.reason });
       return { id: input.id };
     });
   }

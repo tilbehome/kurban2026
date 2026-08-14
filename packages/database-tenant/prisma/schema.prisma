@@ -1696,20 +1696,39 @@ model OperationModeState {
 
 model WeighingRecord {
   id               String   @id
+  seasonId         String
   animalId         String
   carcassWeightKg  Decimal  @db.Decimal(12, 3)
+  measurementType  String   @default("carcass")
+  deviceAdapterId  String?
+  stationId        String?
+  note             String?
+  supersedesId     String?
+  revokedAt        DateTime?
+  revokedByUserId  String?
+  revocationReason String?
   recordedByUserId String
   recordedAt       DateTime
   animal           Animal   @relation(fields: [animalId], references: [id])
 
   @@index([animalId])
+  @@index([seasonId, measurementType, recordedAt])
 }
 
 model PackageRecord {
   id             String              @id
+  seasonId       String?
+  animalId       String?
+  customerId     String?
   shareId        String
   grossWeightKg  Decimal             @db.Decimal(12, 3)
   labelNo        String
+  packageNo      String?
+  barcodeValue   String?
+  qrTargetId     String?
+  netWeightKg    Decimal?            @db.Decimal(12, 3)
+  status         String              @default("created")
+  parentPackageId String?
   labelVersion   Int                 @default(1)
   reprintReason  String?
   coldRoomId     String?
@@ -1728,6 +1747,68 @@ model PackageRecord {
   @@unique([labelNo])
   @@index([shareId])
   @@index([coldRoomId, coldSectionId, coldRackId, locationStatus])
+}
+
+model ShareWeightAllocation {
+  id                String   @id
+  seasonId          String
+  animalId          String
+  shareId           String
+  sourceWeighingId  String
+  allocatedWeightKg Decimal  @db.Decimal(12, 3)
+  createdByUserId   String
+  createdAt         DateTime
+
+  @@unique([sourceWeighingId, shareId])
+  @@index([seasonId, animalId])
+}
+
+model WeightShortfallAdjustment {
+  id               String   @id
+  seasonId         String
+  shareId          String
+  customerId       String
+  saleId           String
+  agreedPrice      Decimal  @db.Decimal(18, 4)
+  targetWeightKg   Decimal  @db.Decimal(12, 3)
+  actualWeightKg   Decimal  @db.Decimal(12, 3)
+  adjustmentAmount Decimal  @db.Decimal(18, 4)
+  currency         String   @default("TRY")
+  status           String   @default("pending_approval")
+  journalEntryId   String?
+  reason           String
+  createdByUserId  String
+  createdAt        DateTime
+
+  @@index([seasonId, status])
+  @@index([shareId])
+}
+
+model PackageTransformation {
+  id              String   @id
+  seasonId        String
+  sourcePackageId String
+  targetPackageId String
+  transformation  String
+  reason          String
+  actorUserId     String
+  occurredAt      DateTime
+
+  @@index([sourcePackageId, occurredAt])
+  @@index([targetPackageId])
+}
+
+model PackageExceptionHistory {
+  id              String   @id
+  seasonId        String
+  packageRecordId String
+  status          String
+  reason          String
+  actorUserId     String
+  occurredAt      DateTime
+
+  @@index([packageRecordId, occurredAt])
+  @@index([seasonId, status])
 }
 
 model DeliveryRecord {
